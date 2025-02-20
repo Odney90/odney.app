@@ -1,11 +1,13 @@
 import streamlit as st  
 import numpy as np  
+import pandas as pd  
 import qrcode  
 import io  
 from PIL import Image  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
+import matplotlib.pyplot as plt  
 
 # Fonction pour calculer la mise optimale selon Kelly  
 def calculer_mise_kelly(probabilite, cotes, facteur_kelly=1):  
@@ -108,6 +110,30 @@ tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50
 degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
 tactique_B = st.selectbox("Tactique de l'équipe B", ["3-4-3", "4-4-2", "5-3-2"], key="tactique_B")  
 
+# Historique des confrontations  
+st.subheader("Historique des confrontations")  
+historique = st.radio(  
+    "Résultats des 5 dernières confrontations",  
+    ["Équipe A a gagné 3 fois", "Équipe B a gagné 3 fois", "Équilibré (2-2-1)"],  
+    key="historique"  
+)  
+
+# Facteur domicile/extérieur  
+st.subheader("Lieu du match")  
+domicile = st.radio(  
+    "Quelle équipe joue à domicile ?",  
+    ["Équipe A", "Équipe B", "Terrain neutre"],  
+    key="domicile"  
+)  
+
+# Facteur météo  
+st.subheader("Conditions météorologiques")  
+meteo = st.radio(  
+    "Conditions météo pendant le match",  
+    ["Ensoleillé", "Pluie", "Vent"],  
+    key="meteo"  
+)  
+
 # Préparer les critères pour la prédiction  
 criteres_A = [  
     tirs_cadres_A, possession_A, cartons_jaunes_A, fautes_A, forme_recente_A,  
@@ -125,6 +151,30 @@ probabilite_B = predire_probabilite(modele, criteres_B)
 # Ajuster les probabilités en fonction des tactiques  
 probabilite_A = ajuster_probabilite_tactique(probabilite_A, tactique_A, tactique_B)  
 probabilite_B = ajuster_probabilite_tactique(probabilite_B, tactique_B, tactique_A)  
+
+# Ajuster les probabilités en fonction de l'historique  
+if historique == "Équipe A a gagné 3 fois":  
+    probabilite_A += 0.05  # Avantage pour l'équipe A  
+elif historique == "Équipe B a gagné 3 fois":  
+    probabilite_B += 0.05  # Avantage pour l'équipe B  
+
+# Ajuster les probabilités en fonction du lieu  
+if domicile == "Équipe A":  
+    probabilite_A += 0.10  # Avantage pour l'équipe A  
+    probabilite_B -= 0.10  
+elif domicile == "Équipe B":  
+    probabilite_B += 0.10  # Avantage pour l'équipe B  
+    probabilite_A -= 0.10  
+
+# Ajuster les probabilités en fonction de la météo  
+if meteo == "Pluie":  
+    probabilite_B += 0.03  # Avantage pour une équipe défensive  
+elif meteo == "Vent":  
+    probabilite_A += 0.02  # Avantage pour une équipe offensive  
+
+# Limiter les probabilités entre 0 et 1  
+probabilite_A = max(0, min(1, probabilite_A))  
+probabilite_B = max(0, min(1, probabilite_B))  
 
 # Facteur Kelly  
 facteur_kelly = st.slider("Facteur Kelly (1 = conservateur, 5 = agressif)", 1, 5, 1, key="facteur_kelly")  
@@ -149,4 +199,30 @@ with col2:
     st.write(f"**Équipe B** :")  
     st.write(f"Probabilité de victoire : {probabilite_B * 100:.2f}%")  
     st.write(f"Mise optimale : {mise_B * 100:.2f}% du capital")  
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  
+
+# Simulation de match  
+st.header("Simulation de match")  
+if st.button("Simuler le match"):  
+    resultat = np.random.choice(["Équipe A gagne", "Équipe B gagne", "Match nul"], p=[probabilite_A, probabilite_B, 1 - probabilite_A - probabilite_B])  
+    st.write(f"**Résultat simulé : {resultat}**")  
+
+# Visualisation des probabilités  
+st.header("Visualisation des probabilités")  
+fig, ax = plt.subplots()  
+ax.bar(["Équipe A", "Équipe B"], [probabilite_A * 100, probabilite_B * 100], color=["green", "blue"])  
+ax.set_ylabel("Probabilité (%)")  
+ax.set_title("Probabilités de victoire")  
+st.pyplot(fig)  
+
+# Export des résultats  
+st.header("Exporter les résultats")  
+if st.button("Exporter en CSV"):  
+    data = {  
+        "Équipe": ["A", "B"],  
+        "Probabilité (%)": [probabilite_A * 100, probabilite_B * 100],  
+        "Mise optimale (%)": [mise_A * 100, mise_B * 100]  
+    }  
+    df = pd.DataFrame(data)  
+    csv = df.to_csv(index=False).encode('utf-8')  
+    st.download_button(label="Télécharger les résultats", data=csv, file_name="resultats.csv", mime="text/csv")
