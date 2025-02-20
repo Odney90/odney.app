@@ -51,6 +51,19 @@ cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="c
 fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
 forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
 absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
+arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
+penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
+tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
+degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
+tactique_A = st.selectbox(  
+    "Tactique de l'équipe A",  
+    [  
+        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
+        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
+        "4-1-3-2", "4-3-1-2"  
+    ],  
+    key="tactique_A"  
+)  
 
 # Critères pour l'équipe B  
 st.header("Critères pour l'équipe B")  
@@ -60,11 +73,49 @@ cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="c
 fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
 forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
 absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
+arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
+penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
+tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
+degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
+tactique_B = st.selectbox(  
+    "Tactique de l'équipe B",  
+    [  
+        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
+        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
+        "4-1-3-2", "4-3-1-2"  
+    ],  
+    key="tactique_B"  
+)  
+
+# Historique des confrontations  
+st.subheader("Historique des confrontations")  
+historique = st.radio(  
+    "Résultats des 5 dernières confrontations",  
+    ["Équipe A a gagné 3 fois", "Équipe B a gagné 3 fois", "Équilibré (2-2-1)"],  
+    key="historique"  
+)  
+
+# Facteur domicile/extérieur  
+st.subheader("Lieu du match")  
+domicile = st.radio(  
+    "Quelle équipe joue à domicile ?",  
+    ["Équipe A", "Équipe B", "Terrain neutre"],  
+    key="domicile"  
+)  
+
+# Facteur météo  
+st.subheader("Conditions météorologiques")  
+meteo = st.radio(  
+    "Conditions météo pendant le match",  
+    ["Ensoleillé", "Pluie", "Vent"],  
+    key="meteo"  
+)  
 
 # Préparation des données pour RandomForest  
 st.subheader("Prédiction avec RandomForest")  
 features = [  
-    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences"  
+    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
+    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
 ]  
 
 # Création d'un DataFrame pour les données d'entraînement (exemple fictif)  
@@ -75,6 +126,10 @@ data = {
     "fautes": [15, 18, 12, 20, 14],  
     "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
     "absences": [1, 2, 0, 3, 1],  
+    "arrets": [5, 4, 6, 3, 5],  
+    "penalites_concedees": [1, 2, 0, 3, 1],  
+    "tacles_reussis": [20, 18, 25, 15, 22],  
+    "degagements": [15, 12, 18, 10, 14],  
     "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
 }  
 df = pd.DataFrame(data)  
@@ -92,7 +147,11 @@ input_data = pd.DataFrame({
     "cartons_jaunes": [cartons_jaunes_A - cartons_jaunes_B],  
     "fautes": [fautes_A - fautes_B],  
     "forme_recente": [forme_recente_A - forme_recente_B],  
-    "absences": [absences_A - absences_B]  
+    "absences": [absences_A - absences_B],  
+    "arrets": [arrets_A - arrets_B],  
+    "penalites_concedees": [penalites_concedees_A - penalites_concedees_B],  
+    "tacles_reussis": [tacles_reussis_A - tacles_reussis_B],  
+    "degagements": [degagements_A - degagements_B]  
 })  
 
 # Prédiction  
