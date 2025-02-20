@@ -49,12 +49,19 @@ def predire_probabilite(modele, criteres):
 X, y = generer_donnees_simulees()  
 modele, accuracy = entrainer_modele_random_forest(X, y)  
 
-# Afficher la précision du modèle  
-st.sidebar.write(f"Précision du modèle Random Forest : {accuracy * 100:.2f}%")  
-
 # Titre de l'application  
 st.title("Prédiction de match et gestion des mises avec Random Forest")  
 st.write("Analysez les données des matchs et calculez les mises optimales selon la méthode de Kelly.")  
+
+# Affichage de la précision du modèle sous forme de badge  
+st.markdown(  
+    f"""  
+    <div style="background-color:#4CAF50;padding:10px;border-radius:10px;text-align:center;width:50%;margin:auto;">  
+        <span style="color:white;font-size:16px;font-weight:bold;">Précision du modèle : {accuracy * 100:.2f}%</span>  
+    </div>  
+    """,  
+    unsafe_allow_html=True,  
+)  
 
 # Évaluation des équipes individuelles  
 st.header("Évaluation des équipes individuelles")  
