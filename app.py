@@ -31,6 +31,7 @@ st.write("Analysez les données des matchs et calculez les mises optimales selon
 st.header("Évaluation des équipes individuelles")  
 
 # Entrées pour l'équipe A  
+st.subheader("Critères pour l'équipe A")  
 cotes_A = st.number_input("Cotes pour l'équipe A", min_value=1.01, value=2.0)  
 probabilite_implicite_A = calculer_probabilite_implicite(cotes_A)  
 probabilite_A = st.slider(  
@@ -38,7 +39,31 @@ probabilite_A = st.slider(
     0, 100, int(probabilite_implicite_A * 100)  
 ) / 100  
 
+# Affichage des probabilités implicites pour l'équipe A  
+st.write(f"**Probabilité implicite pour l'équipe A :** {probabilite_implicite_A * 100:.2f}%")  
+
+# Critères pour l'équipe A  
+tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10)  
+possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55)  
+cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2)  
+fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15)  
+forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5)  
+absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1)  
+arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5)  
+penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1)  
+tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20)  
+degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15)  
+interceptions_A = st.slider("Interceptions par match pour l'équipe A", 0, 50, 10)  
+buts_concedes_A = st.slider("Buts concédés sur 100 pour l'équipe A", 0, 100, 30)  
+corners_A = st.slider("Corners sur 300 pour l'équipe A", 0, 300, 150)  
+penalites_obtenues_A = st.slider("Pénalités obtenues par l'équipe A", 0, 10, 3)  
+centres_reussis_A = st.slider("Centres réussis par match pour l'équipe A", 0, 50, 25)  
+passes_longues_A = st.slider("Passes longues précises par match pour l'équipe A", 0, 50, 15)  
+grandes_chances_A = st.slider("Grandes chances de marquer pour l'équipe A", 0, 20, 8)  
+cartons_rouges_A = st.slider("Cartons rouges pour l'équipe A", 0, 5, 1)  
+
 # Entrées pour l'équipe B  
+st.subheader("Critères pour l'équipe B")  
 cotes_B = st.number_input("Cotes pour l'équipe B", min_value=1.01, value=3.0)  
 probabilite_implicite_B = calculer_probabilite_implicite(cotes_B)  
 probabilite_B = st.slider(  
@@ -46,23 +71,28 @@ probabilite_B = st.slider(
     0, 100, int(probabilite_implicite_B * 100)  
 ) / 100  
 
-# Affichage des probabilités implicites  
-st.write(f"**Probabilité implicite pour l'équipe A :** {probabilite_implicite_A * 100:.2f}%")  
+# Affichage des probabilités implicites pour l'équipe B  
 st.write(f"**Probabilité implicite pour l'équipe B :** {probabilite_implicite_B * 100:.2f}%")  
 
-# Critères supplémentaires pour les équipes  
-tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10)  
+# Critères pour l'équipe B  
 tirs_cadres_B = st.slider("Tirs cadrés par l'équipe B", 0, 20, 8)  
-possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55)  
 possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45)  
-cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2)  
 cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3)  
-fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15)  
 fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18)  
-forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5)  
 forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0)  
-absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1)  
 absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2)  
+arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4)  
+penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2)  
+tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18)  
+degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12)  
+interceptions_B = st.slider("Interceptions par match pour l'équipe B", 0, 50, 8)  
+buts_concedes_B = st.slider("Buts concédés sur 100 pour l'équipe B", 0, 100, 40)  
+corners_B = st.slider("Corners sur 300 pour l'équipe B", 0, 300, 140)  
+penalites_obtenues_B = st.slider("Pénalités obtenues par l'équipe B", 0, 10, 2)  
+centres_reussis_B = st.slider("Centres réussis par match pour l'équipe B", 0, 50, 20)  
+passes_longues_B = st.slider("Passes longues précises par match pour l'équipe B", 0, 50, 12)  
+grandes_chances_B = st.slider("Grandes chances de marquer pour l'équipe B", 0, 20, 6)  
+cartons_rouges_B = st.slider("Cartons rouges pour l'équipe B", 0, 5, 0)  
 
 # Facteur Kelly  
 facteur_kelly = st.slider("Facteur Kelly (1 = conservateur, 5 = agressif)", 1, 5, 1)  
