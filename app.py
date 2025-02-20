@@ -5,8 +5,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
-import csv  
-from io import StringIO  
 
 
 # Fonction pour calculer la mise optimale selon Kelly  
@@ -27,18 +25,9 @@ def convertir_mise_en_unites(mise, bankroll, max_unites=5):
     return min(max(unites, 1), max_unites)  # Limiter entre 1 et max_unites  
 
 
-# Fonction pour calculer le retour sur investissement (ROI)  
-def calculer_roi(paris_gagnants, paris_perdants, bankroll_initiale):  
-    gains = sum([pari['gain'] for pari in paris_gagnants])  
-    pertes = sum([pari['mise'] for pari in paris_perdants])  
-    profit = gains - pertes  
-    roi = (profit / bankroll_initiale) * 100  
-    return profit, roi  
-
-
 # Titre de l'application  
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
-st.write("Analysez les données des matchs, simulez les résultats, et suivez vos paris pour optimiser votre bankroll.")  
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match avec plusieurs modèles</h1>", unsafe_allow_html=True)  
+st.write("Analysez les données des matchs, calculez les probabilités et optimisez vos mises.")  
 
 # Partie 1 : Analyse des équipes  
 st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_allow_html=True)  
@@ -56,6 +45,15 @@ arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key=
 penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
 tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
 degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
+tactique_A = st.selectbox(  
+    "Tactique de l'équipe A",  
+    [  
+        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
+        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
+        "4-1-3-2", "4-3-1-2"  
+    ],  
+    key="tactique_A"  
+)  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -70,6 +68,15 @@ arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key=
 penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
 tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
 degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
+tactique_B = st.selectbox(  
+    "Tactique de l'équipe B",  
+    [  
+        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
+        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
+        "4-1-3-2", "4-3-1-2"  
+    ],  
+    key="tactique_B"  
+)  
 
 # Partie 2 : Historique et contexte du match  
 st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
@@ -151,65 +158,47 @@ prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de
 st.write(f"Probabilité de victoire de l'équipe A selon RandomForest : **{prediction_rf * 100:.2f}%**")  
 st.write(f"Probabilité de victoire de l'équipe A selon Logistic Regression : **{prediction_lr * 100:.2f}%**")  
 
-# Partie 4 : Gestion de la bankroll et paris  
-st.markdown("<h2 style='color: #4CAF50;'>4. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
-bankroll_initiale = st.number_input("Entrez votre bankroll initiale (€)", min_value=1.0, value=1000.0, step=1.0)  
-bankroll = bankroll_initiale  
+# Partie 4 : Analyse combinée  
+st.markdown("<h2 style='color: #FFC107;'>4. Analyse combinée</h2>", unsafe_allow_html=True)  
+st.write("Choisissez trois équipes parmi celles analysées pour calculer la probabilité combinée et la mise optimale.")  
 
-# Saisie des paris  
-st.write("Saisissez vos paris :")  
-paris_gagnants = []  
-paris_perdants = []  
+# Sélection des équipes pour le combiné  
+equipe_1 = st.selectbox("Choisissez la première équipe", ["Équipe A", "Équipe B"], key="equipe_1")  
+cote_1 = st.number_input(f"Cote pour {equipe_1}", min_value=1.01, step=0.01, value=2.0, key="cote_1")  
 
-if st.button("Ajouter un pari gagnant"):  
-    mise = st.number_input("Mise (€)", min_value=1.0, value=10.0, step=1.0)  
-    gain = st.number_input("Gain (€)", min_value=1.0, value=20.0, step=1.0)  
-    paris_gagnants.append({"mise": mise, "gain": gain})  
-    bankroll += gain  
+equipe_2 = st.selectbox("Choisissez la deuxième équipe", ["Équipe A", "Équipe B"], key="equipe_2")  
+cote_2 = st.number_input(f"Cote pour {equipe_2}", min_value=1.01, step=0.01, value=1.8, key="cote_2")  
 
-if st.button("Ajouter un pari perdant"):  
-    mise = st.number_input("Mise (€)", min_value=1.0, value=10.0, step=1.0)  
-    paris_perdants.append({"mise": mise})  
-    bankroll -= mise  
+equipe_3 = st.selectbox("Choisissez la troisième équipe", ["Équipe A", "Équipe B"], key="equipe_3")  
+cote_3 = st.number_input(f"Cote pour {equipe_3}", min_value=1.01, step=0.01, value=1.6, key="cote_3")  
 
-# Calcul du ROI  
-profit, roi = calculer_roi(paris_gagnants, paris_perdants, bankroll_initiale)  
-st.write(f"Profit total : **{profit:.2f}€**")  
-st.write(f"Retour sur investissement (ROI) : **{roi:.2f}%**")  
-st.write(f"Bankroll actuelle : **{bankroll:.2f}€**")  
+# Calcul des probabilités implicites  
+prob_1 = 1 / cote_1  
+prob_2 = 1 / cote_2  
+prob_3 = 1 / cote_3  
 
-# Partie 5 : Exportation des données  
-st.markdown("<h2 style='color: #FFC107;'>5. Exportation des données</h2>", unsafe_allow_html=True)  
+# Probabilité combinée  
+prob_combinee = prob_1 * prob_2 * prob_3  
 
-# Préparation des données pour exportation  
-export_data = {  
-    "Bankroll initiale": bankroll_initiale,  
-    "Bankroll actuelle": bankroll,  
-    "Profit": profit,  
-    "ROI (%)": roi,  
-    "Paris gagnants": paris_gagnants,  
-    "Paris perdants": paris_perdants  
-}  
+st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
 
-# Exportation en CSV  
-if st.button("Exporter les données en CSV"):  
-    output = StringIO()  
-    writer = csv.writer(output)  
-    writer.writerow(["Bankroll initiale", "Bankroll actuelle", "Profit", "ROI (%)"])  
-    writer.writerow([bankroll_initiale, bankroll, profit, roi])  
-    writer.writerow([])  
-    writer.writerow(["Paris gagnants"])  
-    writer.writerow(["Mise (€)", "Gain (€)"])  
-    for pari in paris_gagnants:  
-        writer.writerow([pari["mise"], pari["gain"]])  
-    writer.writerow([])  
-    writer.writerow(["Paris perdants"])  
-    writer.writerow(["Mise (€)"])  
-    for pari in paris_perdants:  
-        writer.writerow([pari["mise"]])  
-    st.download_button(  
-        label="Télécharger les données",  
-        data=output.getvalue(),  
-        file_name="bankroll_paris.csv",  
-        mime="text/csv"  
-    )
+# Allocation de mise combinée  
+mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * 1000  
+unites_combinee = convertir_mise_en_unites(mise_combinee, 1000)  
+
+st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")  
+
+# Partie 5 : Gestion de la bankroll  
+st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
+bankroll = st.number_input("Entrez votre bankroll totale (€)", min_value=1.0, value=1000.0, step=1.0)  
+
+# Calcul des mises Kelly  
+mise_rf = calculer_mise_kelly(prediction_rf, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
+mise_lr = calculer_mise_kelly(prediction_lr, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
+
+# Conversion des mises en unités (1 à 5)  
+unites_rf = convertir_mise_en_unites(mise_rf, bankroll)  
+unites_lr = convertir_mise_en_unites(mise_lr, bankroll)  
+
+st.write(f"Mise optimale pour l'équipe A selon RandomForest : {unites_rf} unités (sur 5)")  
+st.write(f"Mise optimale pour l'équipe A selon Logistic Regression : {unites_lr} unités (sur 5)")
