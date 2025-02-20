@@ -116,45 +116,60 @@ meteo = st.radio(
     key="meteo"  
 )  
 
+# Modèle RandomForest  
+st.header("Prédiction avec RandomForest")  
+st.write("Le modèle RandomForest est utilisé pour prédire les probabilités de victoire.")  
 
-### --- AJOUT DE LA PARTIE COMBINÉE --- ###  
-st.header("Analyse combinée (jusqu'à 3 matchs)")  
-st.write("Entrez les cotes pour chaque match pour calculer les probabilités implicites et la probabilité combinée.")  
+# Exemple de données fictives pour entraîner le modèle  
+data = {  
+    "tirs_cadres": [10, 8, 12, 6, 9],  
+    "possession": [55, 45, 60, 40, 50],  
+    "cartons_jaunes": [2, 3, 1, 4, 2],  
+    "fautes": [15, 18, 12, 20, 14],  
+    "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
+    "absences": [1, 2, 0, 3, 1],  
+    "arrets": [5, 4, 6, 3, 5],  
+    "penalites_concedees": [1, 2, 0, 3, 1],  
+    "tacles_reussis": [20, 18, 25, 15, 22],  
+    "degagements": [15, 12, 18, 10, 14],  
+    "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
+}  
+df = pd.DataFrame(data)  
 
-# Match 1  
-st.subheader("Match 1")  
-cote_A1 = st.number_input("Cote pour l'équipe A (Match 1)", min_value=1.01, step=0.01, value=2.0, key="cote_A1")  
-cote_B1 = st.number_input("Cote pour l'équipe B (Match 1)", min_value=1.01, step=0.01, value=3.0, key="cote_B1")  
+# Entraînement du modèle  
+features = [  
+    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
+    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
+]  
+X = df[features]  
+y = df["resultat"]  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+model = RandomForestClassifier(random_state=42)  
+model.fit(X_train, y_train)  
 
-# Match 2  
-st.subheader("Match 2")  
-cote_A2 = st.number_input("Cote pour l'équipe A (Match 2)", min_value=1.01, step=0.01, value=1.8, key="cote_A2")  
-cote_B2 = st.number_input("Cote pour l'équipe B (Match 2)", min_value=1.01, step=0.01, value=2.5, key="cote_B2")  
+# Précision du modèle  
+precision = accuracy_score(y_test, model.predict(X_test))  
+st.write(f"Précision du modèle RandomForest : **{precision * 100:.2f}%**")  
 
-# Match 3  
-st.subheader("Match 3")  
-cote_A3 = st.number_input("Cote pour l'équipe A (Match 3)", min_value=1.01, step=0.01, value=1.6, key="cote_A3")  
-cote_B3 = st.number_input("Cote pour l'équipe B (Match 3)", min_value=1.01, step=0.01, value=2.8, key="cote_B3")  
+# Données utilisateur pour prédiction  
+input_data = pd.DataFrame({  
+    "tirs_cadres": [tirs_cadres_A - tirs_cadres_B],  
+    "possession": [possession_A - possession_B],  
+    "cartons_jaunes": [cartons_jaunes_A - cartons_jaunes_B],  
+    "fautes": [fautes_A - fautes_B],  
+    "forme_recente": [forme_recente_A - forme_recente_B],  
+    "absences": [absences_A - absences_B],  
+    "arrets": [arrets_A - arrets_B],  
+    "penalites_concedees": [penalites_concedees_A - penalites_concedees_B],  
+    "tacles_reussis": [tacles_reussis_A - tacles_reussis_B],  
+    "degagements": [degagements_A - degagements_B]  
+})  
 
-# Calcul des probabilités implicites  
-prob_A1 = 1 / cote_A1  
-prob_B1 = 1 / cote_B1  
-prob_A2 = 1 / cote_A2  
-prob_B2 = 1 / cote_B2  
-prob_A3 = 1 / cote_A3  
-prob_B3 = 1 / cote_B3  
+# Prédiction  
+prediction = model.predict(input_data)[0]  
+probabilites = model.predict_proba(input_data)[0]  
+probabilite_A = probabilites[1]  
+probabilite_B = probabilites[0]  
 
-# Probabilités combinées  
-prob_combinee_A = prob_A1 * prob_A2 * prob_A3  
-prob_combinee_B = prob_B1 * prob_B2 * prob_B3  
-
-st.write(f"Probabilité combinée pour l'équipe A : {prob_combinee_A * 100:.2f}%")  
-st.write(f"Probabilité combinée pour l'équipe B : {prob_combinee_B * 100:.2f}%")  
-
-# Allocation de mise combinée  
-capital_combine = st.number_input("Capital total pour le pari combiné (€)", min_value=1.0, value=100.0, step=1.0)  
-mise_combinee_A = calculer_mise_kelly(prob_combinee_A, cote_A1 * cote_A2 * cote_A3) * capital_combine  
-mise_combinee_B = calculer_mise_kelly(prob_combinee_B, cote_B1 * cote_B2 * cote_B3) * capital_combine  
-
-st.write(f"Mise optimale pour le combiné de l'équipe A : {mise_combinee_A:.2f} €")  
-st.write(f"Mise optimale pour le combiné de l'équipe B : {mise_combinee_B:.2f} €")
+st.write(f"Probabilité de victoire pour l'équipe A : **{probabilite_A * 100:.2f}%**")  
+st.write(f"Probabilité de victoire pour l'équipe B : **{probabilite_B * 100:.2f}%**")
