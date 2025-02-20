@@ -96,13 +96,6 @@ tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10, key="tirs_c
 possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="possession_A")  
 cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="cartons_jaunes_A")  
 fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
-forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
-absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
-arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
-penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
-tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
-degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
-interceptions_A = st.slider("Interceptions par match pour l'équipe A", 0, 50, 10, key="interceptions_A")  
 
 # Entrées pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -121,13 +114,6 @@ tirs_cadres_B = st.slider("Tirs cadrés par l'équipe B", 0, 20, 8, key="tirs_ca
 possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="possession_B")  
 cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="cartons_jaunes_B")  
 fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
-forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
-absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
-arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
-penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
-tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
-degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
-interceptions_B = st.slider("Interceptions par match pour l'équipe B", 0, 50, 8, key="interceptions_B")  
 
 # Facteur Kelly  
 facteur_kelly = st.slider("Facteur Kelly (1 = conservateur, 5 = agressif)", 1, 5, 1, key="facteur_kelly")  
@@ -138,8 +124,19 @@ mise_B = calculer_mise_kelly(probabilite_B, cotes_B, facteur_kelly)
 
 # Affichage des résultats pour les équipes individuelles  
 st.subheader("Résultats des mises individuelles")  
-st.write(f"- **Mise optimale sur l'équipe A :** {mise_A * 100:.2f}% du capital")  
-st.write(f"- **Mise optimale sur l'équipe B :** {mise_B * 100:.2f}% du capital")  
+col1, col2 = st.columns(2)  
+
+with col1:  
+    st.markdown('<div class="result-card">', unsafe_allow_html=True)  
+    st.write(f"<span class='icon'>⚽</span> **Équipe A**")  
+    st.write(f"**Mise optimale :** {mise_A * 100:.2f}% du capital")  
+    st.markdown('</div>', unsafe_allow_html=True)  
+
+with col2:  
+    st.markdown('<div class="result-card">', unsafe_allow_html=True)  
+    st.write(f"<span class='icon'>⚽</span> **Équipe B**")  
+    st.write(f"**Mise optimale :** {mise_B * 100:.2f}% du capital")  
+    st.markdown('</div>', unsafe_allow_html=True)  
 
 # Partie combinée  
 st.header("Combinaison de plusieurs équipes")  
@@ -178,9 +175,9 @@ if len(probabilites) > 0:
     # Affichage des résultats pour la combinaison  
     st.subheader("Résultats de la combinaison")  
     st.markdown('<div class="result-card">', unsafe_allow_html=True)  
-    st.write(f"<span class='icon'>📊</span> **Probabilité combinée :** {prob_combinee * 100:.2f}%", unsafe_allow_html=True)  
-    st.write(f"<span class='icon'>💰</span> **Cotes combinées :** {cotes_combinees:.2f}", unsafe_allow_html=True)  
-    st.write(f"<span class='icon'>🎯</span> **Mise optimale sur la combinaison :** {mise_combinee * 100:.2f}% du capital", unsafe_allow_html=True)  
+    st.write(f"**Probabilité combinée :** {prob_combinee * 100:.2f}%")  
+    st.write(f"**Cotes combinées :** {cotes_combinees:.2f}")  
+    st.write(f"**Mise optimale :** {mise_combinee * 100:.2f}% du capital")  
     st.markdown('</div>', unsafe_allow_html=True)  
 else:  
     st.write("Veuillez fournir au moins une équipe avec une probabilité valide.")  
