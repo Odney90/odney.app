@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
 
+
 # Fonction pour calculer la mise optimale selon Kelly  
 def calculer_mise_kelly(probabilite, cotes, facteur_kelly=1):  
     b = cotes - 1  # Gain net pour 1 unité misée  
@@ -13,6 +14,7 @@ def calculer_mise_kelly(probabilite, cotes, facteur_kelly=1):
     fraction_kelly = (b * probabilite - q) / b  
     fraction_kelly = max(0, fraction_kelly)  # La mise ne peut pas être négative  
     return fraction_kelly * facteur_kelly  
+
 
 # Fonction pour ajuster les probabilités en fonction des tactiques  
 def ajuster_probabilite_tactique(probabilite, tactique_A, tactique_B):  
@@ -41,11 +43,12 @@ def ajuster_probabilite_tactique(probabilite, tactique_A, tactique_B):
 
     return max(0, min(1, probabilite))  
 
+
 # Titre de l'application  
 st.title("Prédiction de match avec RandomForest et gestion des mises")  
 st.write("Analysez les données des matchs, calculez les probabilités et optimisez vos mises.")  
 
-# Critères pour l'équipe A  
+# Section : Critères pour l'équipe A  
 st.header("Critères pour l'équipe A")  
 tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10, key="tirs_cadres_A")  
 possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="possession_A")  
@@ -67,7 +70,7 @@ tactique_A = st.selectbox(
     key="tactique_A"  
 )  
 
-# Critères pour l'équipe B  
+# Section : Critères pour l'équipe B  
 st.header("Critères pour l'équipe B")  
 tirs_cadres_B = st.slider("Tirs cadrés par l'équipe B", 0, 20, 8, key="tirs_cadres_B")  
 possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="possession_B")  
@@ -113,96 +116,45 @@ meteo = st.radio(
     key="meteo"  
 )  
 
-# Préparation des données pour RandomForest  
-st.subheader("Prédiction avec RandomForest")  
-features = [  
-    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
-    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
-]  
 
-# Création d'un DataFrame pour les données d'entraînement (exemple fictif)  
-data = {  
-    "tirs_cadres": [10, 8, 12, 6, 9],  
-    "possession": [55, 45, 60, 40, 50],  
-    "cartons_jaunes": [2, 3, 1, 4, 2],  
-    "fautes": [15, 18, 12, 20, 14],  
-    "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
-    "absences": [1, 2, 0, 3, 1],  
-    "arrets": [5, 4, 6, 3, 5],  
-    "penalites_concedees": [1, 2, 0, 3, 1],  
-    "tacles_reussis": [20, 18, 25, 15, 22],  
-    "degagements": [15, 12, 18, 10, 14],  
-    "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
-}  
-df = pd.DataFrame(data)  
+### --- AJOUT DE LA PARTIE COMBINÉE --- ###  
+st.header("Analyse combinée (jusqu'à 3 matchs)")  
+st.write("Entrez les cotes pour chaque match pour calculer les probabilités implicites et la probabilité combinée.")  
 
-# Modèle RandomForest  
-X = df[features]  
-y = df["resultat"]  
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-model = RandomForestClassifier(random_state=42)  
-model.fit(X_train, y_train)  
+# Match 1  
+st.subheader("Match 1")  
+cote_A1 = st.number_input("Cote pour l'équipe A (Match 1)", min_value=1.01, step=0.01, value=2.0, key="cote_A1")  
+cote_B1 = st.number_input("Cote pour l'équipe B (Match 1)", min_value=1.01, step=0.01, value=3.0, key="cote_B1")  
 
-# Calcul de la précision  
-precision = accuracy_score(y_test, model.predict(X_test))  
-st.write(f"Précision du modèle RandomForest : {precision * 100:.2f}%")  
+# Match 2  
+st.subheader("Match 2")  
+cote_A2 = st.number_input("Cote pour l'équipe A (Match 2)", min_value=1.01, step=0.01, value=1.8, key="cote_A2")  
+cote_B2 = st.number_input("Cote pour l'équipe B (Match 2)", min_value=1.01, step=0.01, value=2.5, key="cote_B2")  
 
-# Données de l'utilisateur  
-input_data = pd.DataFrame({  
-    "tirs_cadres": [tirs_cadres_A - tirs_cadres_B],  
-    "possession": [possession_A - possession_B],  
-    "cartons_jaunes": [cartons_jaunes_A - cartons_jaunes_B],  
-    "fautes": [fautes_A - fautes_B],  
-    "forme_recente": [forme_recente_A - forme_recente_B],  
-    "absences": [absences_A - absences_B],  
-    "arrets": [arrets_A - arrets_B],  
-    "penalites_concedees": [penalites_concedees_A - penalites_concedees_B],  
-    "tacles_reussis": [tacles_reussis_A - tacles_reussis_B],  
-    "degagements": [degagements_A - degagements_B]  
-})  
+# Match 3  
+st.subheader("Match 3")  
+cote_A3 = st.number_input("Cote pour l'équipe A (Match 3)", min_value=1.01, step=0.01, value=1.6, key="cote_A3")  
+cote_B3 = st.number_input("Cote pour l'équipe B (Match 3)", min_value=1.01, step=0.01, value=2.8, key="cote_B3")  
 
-# Prédiction  
-prediction = model.predict(input_data)[0]  
-probabilites = model.predict_proba(input_data)[0]  
-probabilite_A = probabilites[1]  
-probabilite_B = probabilites[0]  
+# Calcul des probabilités implicites  
+prob_A1 = 1 / cote_A1  
+prob_B1 = 1 / cote_B1  
+prob_A2 = 1 / cote_A2  
+prob_B2 = 1 / cote_B2  
+prob_A3 = 1 / cote_A3  
+prob_B3 = 1 / cote_B3  
 
-# Affichage des résultats  
-st.write(f"Probabilité de victoire pour l'équipe A : {probabilite_A * 100:.2f}%")  
-st.write(f"Probabilité de victoire pour l'équipe B : {probabilite_B * 100:.2f}%")  
+# Probabilités combinées  
+prob_combinee_A = prob_A1 * prob_A2 * prob_A3  
+prob_combinee_B = prob_B1 * prob_B2 * prob_B3  
 
-# Partie combinée  
-st.header("Analyse combinée")  
-probabilite_combinee = probabilite_A * probabilite_B  
-st.write(f"Probabilité combinée des deux équipes : {probabilite_combinee * 100:.2f}%")  
+st.write(f"Probabilité combinée pour l'équipe A : {prob_combinee_A * 100:.2f}%")  
+st.write(f"Probabilité combinée pour l'équipe B : {prob_combinee_B * 100:.2f}%")  
 
-# Visualisation des probabilités  
-st.header("Visualisation des probabilités")  
-fig, ax = plt.subplots()  
-ax.bar(["Équipe A", "Équipe B"], [probabilite_A * 100, probabilite_B * 100], color=["green", "blue"])  
-ax.set_ylabel("Probabilité (%)")  
-ax.set_title("Probabilités de victoire")  
-st.pyplot(fig)  
+# Allocation de mise combinée  
+capital_combine = st.number_input("Capital total pour le pari combiné (€)", min_value=1.0, value=100.0, step=1.0)  
+mise_combinee_A = calculer_mise_kelly(prob_combinee_A, cote_A1 * cote_A2 * cote_A3) * capital_combine  
+mise_combinee_B = calculer_mise_kelly(prob_combinee_B, cote_B1 * cote_B2 * cote_B3) * capital_combine  
 
-# Gestion du capital  
-st.header("Gestion du capital")  
-capital_initial = st.number_input("Capital initial (€)", min_value=1.0, value=100.0, step=1.0)  
-mise_A = calculer_mise_kelly(probabilite_A, 2.0)  
-mise_B = calculer_mise_kelly(probabilite_B, 3.0)  
-mise_A_euros = mise_A * capital_initial  
-mise_B_euros = mise_B * capital_initial  
-
-st.write(f"Mise optimale pour l'équipe A : {mise_A_euros:.2f} €")  
-st.write(f"Mise optimale pour l'équipe B : {mise_B_euros:.2f} €")  
-
-# Export des résultats  
-st.header("Exporter les résultats")  
-if st.button("Exporter en CSV"):  
-    data = {  
-        "Équipe": ["A", "B"],  
-        "Probabilité (%)": [probabilite_A * 100, probabilite_B * 100],  
-        "Mise optimale (€)": [mise_A_euros, mise_B_euros]  
-    }  
-    df_export = pd.DataFrame(data)  
-    csv = df_export.to_csv(index=False).encode('utf-8')  
-    st.download_button(label="Télécharger les résultats", data=csv, file_name="resultats.csv", mime="text/csv")
+st.write(f"Mise optimale pour le combiné de l'équipe A : {mise_combinee_A:.2f} €")  
+st.write(f"Mise optimale pour le combiné de l'équipe B : {mise_combinee_B:.2f} €")
