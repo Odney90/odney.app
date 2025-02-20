@@ -39,7 +39,21 @@ possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="posse
 cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="cartons_jaunes_A")  
 fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
 forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
+motivation_A = st.slider("Motivation de l'équipe A (sur 5)", 0.0, 5.0, 4.0, key="motivation_A")  
 absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
+arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
+penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
+tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
+degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
+tactique_A = st.selectbox(  
+    "Tactique de l'équipe A",  
+    [  
+        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
+        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
+        "4-1-3-2", "4-3-1-2"  
+    ],  
+    key="tactique_A"  
+)  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -48,7 +62,21 @@ possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="posse
 cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="cartons_jaunes_B")  
 fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
 forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
+motivation_B = st.slider("Motivation de l'équipe B (sur 5)", 0.0, 5.0, 3.5, key="motivation_B")  
 absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
+arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
+penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
+tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
+degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
+tactique_B = st.selectbox(  
+    "Tactique de l'équipe B",  
+    [  
+        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
+        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
+        "4-1-3-2", "4-3-1-2"  
+    ],  
+    key="tactique_B"  
+)  
 
 # Partie 2 : Historique et contexte du match  
 st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
@@ -79,12 +107,19 @@ data = {
     "fautes": [15, 18, 12, 20, 14],  
     "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
     "absences": [1, 2, 0, 3, 1],  
+    "arrets": [5, 4, 6, 3, 5],  
+    "penalites_concedees": [1, 2, 0, 3, 1],  
+    "tacles_reussis": [20, 18, 25, 15, 22],  
+    "degagements": [15, 12, 18, 10, 14],  
     "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
 }  
 df = pd.DataFrame(data)  
 
 # Entraînement des modèles  
-features = ["tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences"]  
+features = [  
+    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
+    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
+]  
 X = df[features]  
 y = df["resultat"]  
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
@@ -110,7 +145,11 @@ nouvelle_donnee = pd.DataFrame({
     "cartons_jaunes": [cartons_jaunes_A, cartons_jaunes_B],  
     "fautes": [fautes_A, fautes_B],  
     "forme_recente": [forme_recente_A, forme_recente_B],  
-    "absences": [absences_A, absences_B]  
+    "absences": [absences_A, absences_B],  
+    "arrets": [arrets_A, arrets_B],  
+    "penalites_concedees": [penalites_concedees_A, penalites_concedees_B],  
+    "tacles_reussis": [tacles_reussis_A, tacles_reussis_B],  
+    "degagements": [degagements_A, degagements_B]  
 })  
 
 prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
