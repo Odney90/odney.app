@@ -173,10 +173,11 @@ probabilite_B = probabilites[0]
 st.write(f"Probabilité de victoire pour l'équipe A : **{probabilite_A * 100:.2f}%**")  
 st.write(f"Probabilité de victoire pour l'équipe B : **{probabilite_B * 100:.2f}%**")  
 
-# Mise Kelly pour les équipes A et B  
-capital = st.number_input("Capital total pour le pari (€)", min_value=1.0, value=100.0, step=1.0)  
-mise_A = calculer_mise_kelly(probabilite_A, 2.0) * capital  # Exemple : cote de 2.0 pour l'équipe A  
-mise_B = calculer_mise_kelly(probabilite_B, 3.0) * capital  # Exemple : cote de 3.0 pour l'équipe B  
+# Gestion de la bankroll  
+st.header("Gestion de la bankroll")  
+bankroll = st.number_input("Entrez votre bankroll totale (€)", min_value=1.0, value=1000.0, step=1.0)  
+mise_A = calculer_mise_kelly(probabilite_A, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
+mise_B = calculer_mise_kelly(probabilite_B, 3.0) * bankroll  # Exemple : cote de 3.0 pour l'équipe B  
 
 st.write(f"Mise optimale pour l'équipe A : {mise_A:.2f} €")  
 st.write(f"Mise optimale pour l'équipe B : {mise_B:.2f} €")  
@@ -206,7 +207,6 @@ prob_combinee = prob_1 * prob_2 * prob_3
 st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
 
 # Allocation de mise combinée  
-capital_combine = st.number_input("Capital total pour le pari combiné (€)", min_value=1.0, value=100.0, step=1.0)  
-mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * capital_combine  
+mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll  
 
 st.write(f"Mise optimale pour le combiné des trois équipes : {mise_combinee:.2f} €")
