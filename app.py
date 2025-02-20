@@ -193,8 +193,8 @@ ax.legend()
 # Affichage du graphique  
 st.pyplot(fig)  
 
-# Partie 5 : Gestion de la bankroll et paris  
-st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
+# Partie 5 : Gestion de la bankroll et paris combinés  
+st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll et paris combinés</h2>", unsafe_allow_html=True)  
 bankroll_initiale = st.number_input("Entrez votre bankroll initiale (€)", min_value=1.0, value=1000.0, step=1.0)  
 bankroll = bankroll_initiale  
 
@@ -219,6 +219,35 @@ profit, roi = calculer_roi(paris_gagnants, paris_perdants, bankroll_initiale)
 st.write(f"Profit total : **{profit:.2f}€**")  
 st.write(f"Retour sur investissement (ROI) : **{roi:.2f}%**")  
 st.write(f"Bankroll actuelle : **{bankroll:.2f}€**")  
+
+# Partie combinée  
+st.markdown("<h3 style='color: #FF9800;'>Paris combinés</h3>", unsafe_allow_html=True)  
+
+# Sélection des équipes pour le combiné  
+equipe_1 = st.selectbox("Choisissez la première équipe", ["Équipe A", "Équipe B"], key="equipe_1")  
+cote_1 = st.number_input(f"Cote pour {equipe_1}", min_value=1.01, step=0.01, value=2.0, key="cote_1")  
+
+equipe_2 = st.selectbox("Choisissez la deuxième équipe", ["Équipe A", "Équipe B"], key="equipe_2")  
+cote_2 = st.number_input(f"Cote pour {equipe_2}", min_value=1.01, step=0.01, value=1.8, key="cote_2")  
+
+equipe_3 = st.selectbox("Choisissez la troisième équipe", ["Équipe A", "Équipe B"], key="equipe_3")  
+cote_3 = st.number_input(f"Cote pour {equipe_3}", min_value=1.01, step=0.01, value=1.6, key="cote_3")  
+
+# Calcul des probabilités implicites  
+prob_1 = 1 / cote_1  
+prob_2 = 1 / cote_2  
+prob_3 = 1 / cote_3  
+
+# Probabilité combinée  
+prob_combinee = prob_1 * prob_2 * prob_3  
+
+st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
+
+# Allocation de mise combinée  
+mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll  
+unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll)  
+
+st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")  
 
 # Partie 6 : Exportation des données  
 st.markdown("<h2 style='color: #FFC107;'>6. Exportation des données</h2>", unsafe_allow_html=True)  
