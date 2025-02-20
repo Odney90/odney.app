@@ -56,13 +56,17 @@ def ajuster_probabilite_tactique(probabilite, tactique_A, tactique_B):
 st.title("Prédiction de match avec RandomForest et gestion des mises")  
 st.write("Analysez les données des matchs, calculez les probabilités et optimisez vos mises.")  
 
-# Section : Critères pour l'équipe A  
-st.header("Critères pour l'équipe A")  
+# Partie 1 : Analyse des équipes  
+st.header("1. Analyse des équipes")  
+
+# Critères pour l'équipe A  
+st.subheader("Critères pour l'équipe A")  
 tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10, key="tirs_cadres_A")  
 possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="possession_A")  
 cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="cartons_jaunes_A")  
 fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
 forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
+motivation_A = st.slider("Motivation de l'équipe A (sur 5)", 0.0, 5.0, 4.0, key="motivation_A")  
 absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
 arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
 penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
@@ -78,13 +82,14 @@ tactique_A = st.selectbox(
     key="tactique_A"  
 )  
 
-# Section : Critères pour l'équipe B  
-st.header("Critères pour l'équipe B")  
+# Critères pour l'équipe B  
+st.subheader("Critères pour l'équipe B")  
 tirs_cadres_B = st.slider("Tirs cadrés par l'équipe B", 0, 20, 8, key="tirs_cadres_B")  
 possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="possession_B")  
 cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="cartons_jaunes_B")  
 fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
 forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
+motivation_B = st.slider("Motivation de l'équipe B (sur 5)", 0.0, 5.0, 3.5, key="motivation_B")  
 absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
 arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
 penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
@@ -100,8 +105,61 @@ tactique_B = st.selectbox(
     key="tactique_B"  
 )  
 
-# Gestion de la bankroll  
-st.header("Gestion de la bankroll")  
+# Partie 2 : Historique et contexte du match  
+st.header("2. Historique et contexte du match")  
+historique = st.radio(  
+    "Résultats des 5 dernières confrontations",  
+    ["Équipe A a gagné 3 fois", "Équipe B a gagné 3 fois", "Équilibré (2-2-1)"],  
+    key="historique"  
+)  
+domicile = st.radio(  
+    "Quelle équipe joue à domicile ?",  
+    ["Équipe A", "Équipe B", "Terrain neutre"],  
+    key="domicile"  
+)  
+meteo = st.radio(  
+    "Conditions météo pendant le match",  
+    ["Ensoleillé", "Pluie", "Vent"],  
+    key="meteo"  
+)  
+
+# Partie 3 : Prédiction avec RandomForest  
+st.header("3. Prédiction avec RandomForest")  
+st.write("Le modèle RandomForest est utilisé pour prédire les probabilités de victoire.")  
+
+# Exemple de données fictives pour entraîner le modèle  
+data = {  
+    "tirs_cadres": [10, 8, 12, 6, 9],  
+    "possession": [55, 45, 60, 40, 50],  
+    "cartons_jaunes": [2, 3, 1, 4, 2],  
+    "fautes": [15, 18, 12, 20, 14],  
+    "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
+    "absences": [1, 2, 0, 3, 1],  
+    "arrets": [5, 4, 6, 3, 5],  
+    "penalites_concedees": [1, 2, 0, 3, 1],  
+    "tacles_reussis": [20, 18, 25, 15, 22],  
+    "degagements": [15, 12, 18, 10, 14],  
+    "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
+}  
+df = pd.DataFrame(data)  
+
+# Entraînement du modèle  
+features = [  
+    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
+    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
+]  
+X = df[features]  
+y = df["resultat"]  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+model = RandomForestClassifier(random_state=42)  
+model.fit(X_train, y_train)  
+
+# Précision du modèle  
+precision = accuracy_score(y_test, model.predict(X_test))  
+st.write(f"Précision du modèle RandomForest : **{precision * 100:.2f}%**")  
+
+# Partie 4 : Gestion de la bankroll et des mises  
+st.header("4. Gestion de la bankroll et des mises")  
 bankroll = st.number_input("Entrez votre bankroll totale (€)", min_value=1.0, value=1000.0, step=1.0)  
 
 # Calcul des probabilités ajustées  
@@ -117,4 +175,34 @@ unites_A = convertir_mise_en_unites(mise_A, bankroll)
 unites_B = convertir_mise_en_unites(mise_B, bankroll)  
 
 st.write(f"Mise optimale pour l'équipe A : {unites_A} unités (sur 5)")  
-st.write(f"Mise optimale pour l'équipe B : {unites_B} unités (sur 5)")
+st.write(f"Mise optimale pour l'équipe B : {unites_B} unités (sur 5)")  
+
+# Partie 5 : Analyse combinée  
+st.header("5. Analyse combinée")  
+st.write("Choisissez trois équipes parmi celles analysées pour calculer la probabilité combinée et la mise optimale.")  
+
+# Sélection des équipes pour le combiné  
+equipe_1 = st.selectbox("Choisissez la première équipe", ["Équipe A", "Équipe B"], key="equipe_1")  
+cote_1 = st.number_input(f"Cote pour {equipe_1}", min_value=1.01, step=0.01, value=2.0, key="cote_1")  
+
+equipe_2 = st.selectbox("Choisissez la deuxième équipe", ["Équipe A", "Équipe B"], key="equipe_2")  
+cote_2 = st.number_input(f"Cote pour {equipe_2}", min_value=1.01, step=0.01, value=1.8, key="cote_2")  
+
+equipe_3 = st.selectbox("Choisissez la troisième équipe", ["Équipe A", "Équipe B"], key="equipe_3")  
+cote_3 = st.number_input(f"Cote pour {equipe_3}", min_value=1.01, step=0.01, value=1.6, key="cote_3")  
+
+# Calcul des probabilités implicites  
+prob_1 = 1 / cote_1  
+prob_2 = 1 / cote_2  
+prob_3 = 1 / cote_3  
+
+# Probabilité combinée  
+prob_combinee = prob_1 * prob_2 * prob_3  
+
+st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
+
+# Allocation de mise combinée  
+mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll  
+unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll)  
+
+st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")
