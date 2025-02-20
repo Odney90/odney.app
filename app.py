@@ -53,11 +53,11 @@ def ajuster_probabilite_tactique(probabilite, tactique_A, tactique_B):
 
 
 # Titre de l'application  
-st.title("Prédiction de match avec RandomForest et gestion des mises")  
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion des mises</h1>", unsafe_allow_html=True)  
 st.write("Analysez les données des matchs, calculez les probabilités et optimisez vos mises.")  
 
 # Partie 1 : Analyse des équipes  
-st.header("1. Analyse des équipes")  
+st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_allow_html=True)  
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
@@ -106,7 +106,7 @@ tactique_B = st.selectbox(
 )  
 
 # Partie 2 : Historique et contexte du match  
-st.header("2. Historique et contexte du match")  
+st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
 historique = st.radio(  
     "Résultats des 5 dernières confrontations",  
     ["Équipe A a gagné 3 fois", "Équipe B a gagné 3 fois", "Équilibré (2-2-1)"],  
@@ -124,7 +124,7 @@ meteo = st.radio(
 )  
 
 # Partie 3 : Prédiction avec RandomForest  
-st.header("3. Prédiction avec RandomForest")  
+st.markdown("<h2 style='color: #9C27B0;'>3. Prédiction avec RandomForest</h2>", unsafe_allow_html=True)  
 st.write("Le modèle RandomForest est utilisé pour prédire les probabilités de victoire.")  
 
 # Exemple de données fictives pour entraîner le modèle  
@@ -158,27 +158,8 @@ model.fit(X_train, y_train)
 precision = accuracy_score(y_test, model.predict(X_test))  
 st.write(f"Précision du modèle RandomForest : **{precision * 100:.2f}%**")  
 
-# Partie 4 : Gestion de la bankroll et des mises  
-st.header("4. Gestion de la bankroll et des mises")  
-bankroll = st.number_input("Entrez votre bankroll totale (€)", min_value=1.0, value=1000.0, step=1.0)  
-
-# Calcul des probabilités ajustées  
-probabilite_A = 0.55  # Exemple de probabilité pour l'équipe A  
-probabilite_B = 0.45  # Exemple de probabilité pour l'équipe B  
-
-# Calcul des mises Kelly  
-mise_A = calculer_mise_kelly(probabilite_A, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
-mise_B = calculer_mise_kelly(probabilite_B, 3.0) * bankroll  # Exemple : cote de 3.0 pour l'équipe B  
-
-# Conversion des mises en unités (1 à 5)  
-unites_A = convertir_mise_en_unites(mise_A, bankroll)  
-unites_B = convertir_mise_en_unites(mise_B, bankroll)  
-
-st.write(f"Mise optimale pour l'équipe A : {unites_A} unités (sur 5)")  
-st.write(f"Mise optimale pour l'équipe B : {unites_B} unités (sur 5)")  
-
-# Partie 5 : Analyse combinée  
-st.header("5. Analyse combinée")  
+# Partie 4 : Analyse combinée  
+st.markdown("<h2 style='color: #FFC107;'>4. Analyse combinée</h2>", unsafe_allow_html=True)  
 st.write("Choisissez trois équipes parmi celles analysées pour calculer la probabilité combinée et la mise optimale.")  
 
 # Sélection des équipes pour le combiné  
@@ -202,7 +183,26 @@ prob_combinee = prob_1 * prob_2 * prob_3
 st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
 
 # Allocation de mise combinée  
-mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll  
-unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll)  
+mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * 1000  
+unites_combinee = convertir_mise_en_unites(mise_combinee, 1000)  
 
-st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")
+st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")  
+
+# Partie 5 : Gestion de la bankroll  
+st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
+bankroll = st.number_input("Entrez votre bankroll totale (€)", min_value=1.0, value=1000.0, step=1.0)  
+
+# Calcul des probabilités ajustées  
+probabilite_A = 0.55  # Exemple de probabilité pour l'équipe A  
+probabilite_B = 0.45  # Exemple de probabilité pour l'équipe B  
+
+# Calcul des mises Kelly  
+mise_A = calculer_mise_kelly(probabilite_A, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
+mise_B = calculer_mise_kelly(probabilite_B, 3.0) * bankroll  # Exemple : cote de 3.0 pour l'équipe B  
+
+# Conversion des mises en unités (1 à 5)  
+unites_A = convertir_mise_en_unites(mise_A, bankroll)  
+unites_B = convertir_mise_en_unites(mise_B, bankroll)  
+
+st.write(f"Mise optimale pour l'équipe A : {unites_A} unités (sur 5)")  
+st.write(f"Mise optimale pour l'équipe B : {unites_B} unités (sur 5)")
