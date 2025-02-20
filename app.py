@@ -45,6 +45,20 @@ def predire_probabilite(modele, criteres):
     probabilite = modele.predict_proba([criteres])[0][1]  # Probabilité de victoire (classe 1)  
     return probabilite  
 
+# Fonction pour ajuster les probabilités en fonction des tactiques  
+def ajuster_probabilite_tactique(probabilite, tactique_A, tactique_B):  
+    # Logique d'ajustement des probabilités en fonction des tactiques  
+    if tactique_A == "3-4-3" and tactique_B == "5-3-2":  
+        probabilite += 0.05  # Avantage pour 3-4-3 contre 5-3-2  
+    elif tactique_A == "5-3-2" and tactique_B == "3-4-3":  
+        probabilite -= 0.05  # Désavantage pour 5-3-2 contre 3-4-3  
+    elif tactique_A == "4-4-2" and tactique_B == "3-4-3":  
+        probabilite -= 0.03  # Légère faiblesse pour 4-4-2 contre 3-4-3  
+    elif tactique_A == "3-4-3" and tactique_B == "4-4-2":  
+        probabilite += 0.03  # Avantage pour 3-4-3 contre 4-4-2  
+    # Limiter les probabilités entre 0 et 1  
+    return max(0, min(1, probabilite))  
+
 # Charger les données simulées et entraîner le modèle  
 X, y = generer_donnees_simulees()  
 modele, accuracy = entrainer_modele_random_forest(X, y)  
@@ -78,6 +92,7 @@ arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key=
 penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
 tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
 degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
+tactique_A = st.selectbox("Tactique de l'équipe A", ["3-4-3", "4-4-2", "5-3-2"], key="tactique_A")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -91,6 +106,7 @@ arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key=
 penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
 tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
 degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
+tactique_B = st.selectbox("Tactique de l'équipe B", ["3-4-3", "4-4-2", "5-3-2"], key="tactique_B")  
 
 # Préparer les critères pour la prédiction  
 criteres_A = [  
@@ -105,6 +121,10 @@ criteres_B = [
 # Prédire les probabilités de victoire  
 probabilite_A = predire_probabilite(modele, criteres_A)  
 probabilite_B = predire_probabilite(modele, criteres_B)  
+
+# Ajuster les probabilités en fonction des tactiques  
+probabilite_A = ajuster_probabilite_tactique(probabilite_A, tactique_A, tactique_B)  
+probabilite_B = ajuster_probabilite_tactique(probabilite_B, tactique_B, tactique_A)  
 
 # Facteur Kelly  
 facteur_kelly = st.slider("Facteur Kelly (1 = conservateur, 5 = agressif)", 1, 5, 1, key="facteur_kelly")  
@@ -129,57 +149,4 @@ with col2:
     st.write(f"**Équipe B** :")  
     st.write(f"Probabilité de victoire : {probabilite_B * 100:.2f}%")  
     st.write(f"Mise optimale : {mise_B * 100:.2f}% du capital")  
-    st.markdown('</div>', unsafe_allow_html=True)  
-
-# Partie combinée  
-st.header("Combinaison de plusieurs équipes")  
-st.write("Entrez les cotes pour calculer automatiquement les probabilités implicites.")  
-
-# Entrées pour les équipes combinées  
-col1, col2, col3 = st.columns(3)  
-
-with col1:  
-    cotes_equipe_1 = st.number_input("Cotes pour l'équipe 1", min_value=1.01, value=2.0, key="cotes_equipe_1")  
-    prob_equipe_1 = predire_probabilite(modele, criteres_A)  
-
-with col2:  
-    cotes_equipe_2 = st.number_input("Cotes pour l'équipe 2", min_value=1.01, value=3.0, key="cotes_equipe_2")  
-    prob_equipe_2 = predire_probabilite(modele, criteres_B)  
-
-with col3:  
-    cotes_equipe_3 = st.number_input("Cotes pour l'équipe 3", min_value=1.01, value=4.0, key="cotes_equipe_3")  
-    prob_equipe_3 = 0.5  # Exemple : probabilité par défaut  
-
-# Calcul des probabilités et cotes combinées  
-probabilites = [prob_equipe_1, prob_equipe_2, prob_equipe_3]  
-cotes = [cotes_equipe_1, cotes_equipe_2, cotes_equipe_3]  
-
-# Filtrer les équipes avec des probabilités valides  
-probabilites = [p for p in probabilites if p > 0]  
-cotes = [c for c in cotes if c > 1.01]  
-
-if len(probabilites) > 0:  
-    prob_combinee = calculer_probabilite_combinee(probabilites)  
-    cotes_combinees = np.prod(cotes)  
-
-    # Calcul de la mise combinée  
-    mise_combinee = calculer_mise_kelly(prob_combinee, cotes_combinees, facteur_kelly)  
-
-    # Affichage des résultats pour la combinaison  
-    st.subheader("Résultats de la combinaison")  
-    st.markdown('<div style="background-color:#FF9800;padding:10px;border-radius:10px;">', unsafe_allow_html=True)  
-    st.write(f"**Probabilité combinée :** {prob_combinee * 100:.2f}%")  
-    st.write(f"**Cotes combinées :** {cotes_combinees:.2f}")  
-    st.write(f"**Mise optimale :** {mise_combinee * 100:.2f}% du capital")  
-    st.markdown('</div>', unsafe_allow_html=True)  
-else:  
-    st.write("Veuillez fournir au moins une équipe avec une probabilité valide.")  
-
-# Génération de QR code pour accéder à l'application  
-st.subheader("Accédez à cette application sur votre téléphone")  
-url = "http://127.0.0.1:8501"  # Remplacez par votre IP locale si nécessaire  
-qr = qrcode.make(url)  
-buffer = io.BytesIO()  
-qr.save(buffer, format="PNG")  
-buffer.seek(0)  
-st.image(buffer, caption="Scannez ce QR code pour accéder à l'application sur votre téléphone")
+    st.markdown('</div>', unsafe_allow_html=True)
