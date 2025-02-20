@@ -82,7 +82,7 @@ tactique_B = st.selectbox(
 st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
 historique = st.radio(  
     "Résultats des 5 dernières confrontations",  
-    ["Équipe A a gagné 0 fois", "Équipe B a gagné 2 fois", "Équilibré (2-2-1)" 3 matchs nuls],  
+    ["Équipe A a gagné 0 fois", "Équipe B a gagné 2 fois", "Équilibré (2-2-1)" equipe Afait 3 matchs nuls avec equipe B],  
     key="historique"  
 )  
 domicile = st.radio(  
