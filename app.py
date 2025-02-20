@@ -33,31 +33,21 @@ st.markdown(
         background-color: #f7f7f7;  
     }  
 
-    /* Conteneur pour l'équipe A */  
-    .team-a {  
-        background-color: #FFDDC1;  
-        padding: 15px;  
+    /* Conteneur pour les résultats */  
+    .result-card {  
+        background-color: #ffffff;  
+        padding: 20px;  
         border-radius: 10px;  
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  
         margin-bottom: 20px;  
-        border: 2px solid #FFAB76;  
+        border: 2px solid #e0e0e0;  
     }  
 
-    /* Conteneur pour l'équipe B */  
-    .team-b {  
-        background-color: #C1DFFF;  
-        padding: 15px;  
-        border-radius: 10px;  
-        margin-bottom: 20px;  
-        border: 2px solid #76ABFF;  
-    }  
-
-    /* Conteneur pour la partie combinée */  
-    .combined {  
-        background-color: #D4F1C5;  
-        padding: 15px;  
-        border-radius: 10px;  
-        margin-bottom: 20px;  
-        border: 2px solid #76C76B;  
+    /* Icônes */  
+    .icon {  
+        font-size: 24px;  
+        margin-right: 10px;  
+        color: #4CAF50;  
     }  
 
     /* Titres des sections */  
@@ -89,65 +79,55 @@ st.write("Analysez les données des matchs et calculez les mises optimales selon
 # Évaluation des équipes individuelles  
 st.header("Évaluation des équipes individuelles")  
 
-# Conteneur pour l'équipe A  
-with st.container():  
-    st.markdown('<div class="team-a">', unsafe_allow_html=True)  
-    st.subheader("Critères pour l'équipe A")  
-    cotes_A = st.number_input("Cotes pour l'équipe A", min_value=1.01, value=2.0, key="cotes_A")  
-    probabilite_implicite_A = calculer_probabilite_implicite(cotes_A)  
-    probabilite_A = st.slider(  
-        "Probabilité de victoire de l'équipe A (%)",   
-        0, 100, int(probabilite_implicite_A * 100), key="probabilite_A"  
-    ) / 100  
+# Entrées pour l'équipe A  
+st.subheader("Critères pour l'équipe A")  
+cotes_A = st.number_input("Cotes pour l'équipe A", min_value=1.01, value=2.0, key="cotes_A")  
+probabilite_implicite_A = calculer_probabilite_implicite(cotes_A)  
+probabilite_A = st.slider(  
+    "Probabilité de victoire de l'équipe A (%)",   
+    0, 100, int(probabilite_implicite_A * 100), key="probabilite_A"  
+) / 100  
 
-    # Affichage des probabilités implicites pour l'équipe A  
-    st.write(f"**Probabilité implicite pour l'équipe A :** {probabilite_implicite_A * 100:.2f}%")  
+# Affichage des probabilités implicites pour l'équipe A  
+st.write(f"**Probabilité implicite pour l'équipe A :** {probabilite_implicite_A * 100:.2f}%")  
 
-    # Organisation des curseurs en colonnes  
-    col1, col2 = st.columns(2)  
-    with col1:  
-        tirs_cadres_A = st.slider("Tirs cadrés", 0, 20, 10, key="tirs_cadres_A")  
-        possession_A = st.slider("Possession (%)", 0, 100, 55, key="possession_A")  
-        cartons_jaunes_A = st.slider("Cartons jaunes", 0, 10, 2, key="cartons_jaunes_A")  
-        fautes_A = st.slider("Fautes commises", 0, 30, 15, key="fautes_A")  
-        absences_A = st.slider("Absences", 0, 10, 1, key="absences_A")  
-    with col2:  
-        arrets_A = st.slider("Arrêts moyens", 0, 20, 5, key="arrets_A")  
-        penalites_concedees_A = st.slider("Pénalités concédées", 0, 10, 1, key="penalites_concedees_A")  
-        tacles_reussis_A = st.slider("Tacles réussis", 0, 50, 20, key="tacles_reussis_A")  
-        degagements_A = st.slider("Dégagements", 0, 50, 15, key="degagements_A")  
-        interceptions_A = st.slider("Interceptions", 0, 50, 10, key="interceptions_A")  
-    st.markdown('</div>', unsafe_allow_html=True)  
+# Critères pour l'équipe A  
+tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10, key="tirs_cadres_A")  
+possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="possession_A")  
+cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="cartons_jaunes_A")  
+fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
+forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
+absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
+arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
+penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
+tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
+degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
+interceptions_A = st.slider("Interceptions par match pour l'équipe A", 0, 50, 10, key="interceptions_A")  
 
-# Conteneur pour l'équipe B  
-with st.container():  
-    st.markdown('<div class="team-b">', unsafe_allow_html=True)  
-    st.subheader("Critères pour l'équipe B")  
-    cotes_B = st.number_input("Cotes pour l'équipe B", min_value=1.01, value=3.0, key="cotes_B")  
-    probabilite_implicite_B = calculer_probabilite_implicite(cotes_B)  
-    probabilite_B = st.slider(  
-        "Probabilité de victoire de l'équipe B (%)",   
-        0, 100, int(probabilite_implicite_B * 100), key="probabilite_B"  
-    ) / 100  
+# Entrées pour l'équipe B  
+st.subheader("Critères pour l'équipe B")  
+cotes_B = st.number_input("Cotes pour l'équipe B", min_value=1.01, value=3.0, key="cotes_B")  
+probabilite_implicite_B = calculer_probabilite_implicite(cotes_B)  
+probabilite_B = st.slider(  
+    "Probabilité de victoire de l'équipe B (%)",   
+    0, 100, int(probabilite_implicite_B * 100), key="probabilite_B"  
+) / 100  
 
-    # Affichage des probabilités implicites pour l'équipe B  
-    st.write(f"**Probabilité implicite pour l'équipe B :** {probabilite_implicite_B * 100:.2f}%")  
+# Affichage des probabilités implicites pour l'équipe B  
+st.write(f"**Probabilité implicite pour l'équipe B :** {probabilite_implicite_B * 100:.2f}%")  
 
-    # Organisation des curseurs en colonnes  
-    col1, col2 = st.columns(2)  
-    with col1:  
-        tirs_cadres_B = st.slider("Tirs cadrés", 0, 20, 8, key="tirs_cadres_B")  
-        possession_B = st.slider("Possession (%)", 0, 100, 45, key="possession_B")  
-        cartons_jaunes_B = st.slider("Cartons jaunes", 0, 10, 3, key="cartons_jaunes_B")  
-        fautes_B = st.slider("Fautes commises", 0, 30, 18, key="fautes_B")  
-        absences_B = st.slider("Absences", 0, 10, 2, key="absences_B")  
-    with col2:  
-        arrets_B = st.slider("Arrêts moyens", 0, 20, 4, key="arrets_B")  
-        penalites_concedees_B = st.slider("Pénalités concédées", 0, 10, 2, key="penalites_concedees_B")  
-        tacles_reussis_B = st.slider("Tacles réussis", 0, 50, 18, key="tacles_reussis_B")  
-        degagements_B = st.slider("Dégagements", 0, 50, 12, key="degagements_B")  
-        interceptions_B = st.slider("Interceptions", 0, 50, 8, key="interceptions_B")  
-    st.markdown('</div>', unsafe_allow_html=True)  
+# Critères pour l'équipe B  
+tirs_cadres_B = st.slider("Tirs cadrés par l'équipe B", 0, 20, 8, key="tirs_cadres_B")  
+possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="possession_B")  
+cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="cartons_jaunes_B")  
+fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
+forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
+absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
+arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
+penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
+tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
+degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
+interceptions_B = st.slider("Interceptions par match pour l'équipe B", 0, 50, 8, key="interceptions_B")  
 
 # Facteur Kelly  
 facteur_kelly = st.slider("Facteur Kelly (1 = conservateur, 5 = agressif)", 1, 5, 1, key="facteur_kelly")  
@@ -162,46 +142,48 @@ st.write(f"- **Mise optimale sur l'équipe A :** {mise_A * 100:.2f}% du capital"
 st.write(f"- **Mise optimale sur l'équipe B :** {mise_B * 100:.2f}% du capital")  
 
 # Partie combinée  
-with st.container():  
-    st.markdown('<div class="combined">', unsafe_allow_html=True)  
-    st.header("Combinaison de plusieurs équipes")  
-    st.write("Entrez les cotes pour calculer automatiquement les probabilités implicites.")  
+st.header("Combinaison de plusieurs équipes")  
+st.write("Entrez les cotes pour calculer automatiquement les probabilités implicites.")  
 
-    # Entrées pour les équipes combinées  
-    col1, col2, col3 = st.columns(3)  
-    with col1:  
-        cotes_equipe_1 = st.number_input("Cotes pour l'équipe 1", min_value=1.01, value=2.0, key="cotes_equipe_1")  
-        prob_equipe_1 = calculer_probabilite_implicite(cotes_equipe_1)  
-    with col2:  
-        cotes_equipe_2 = st.number_input("Cotes pour l'équipe 2", min_value=1.01, value=3.0, key="cotes_equipe_2")  
-        prob_equipe_2 = calculer_probabilite_implicite(cotes_equipe_2)  
-    with col3:  
-        cotes_equipe_3 = st.number_input("Cotes pour l'équipe 3", min_value=1.01, value=4.0, key="cotes_equipe_3")  
-        prob_equipe_3 = calculer_probabilite_implicite(cotes_equipe_3)  
+# Entrées pour les équipes combinées  
+col1, col2, col3 = st.columns(3)  
 
-    # Calcul des probabilités et cotes combinées  
-    probabilites = [prob_equipe_1, prob_equipe_2, prob_equipe_3]  
-    cotes = [cotes_equipe_1, cotes_equipe_2, cotes_equipe_3]  
+with col1:  
+    cotes_equipe_1 = st.number_input("Cotes pour l'équipe 1", min_value=1.01, value=2.0, key="cotes_equipe_1")  
+    prob_equipe_1 = calculer_probabilite_implicite(cotes_equipe_1)  
 
-    # Filtrer les équipes avec des probabilités valides  
-    probabilites = [p for p in probabilites if p > 0]  
-    cotes = [c for c in cotes if c > 1.01]  
+with col2:  
+    cotes_equipe_2 = st.number_input("Cotes pour l'équipe 2", min_value=1.01, value=3.0, key="cotes_equipe_2")  
+    prob_equipe_2 = calculer_probabilite_implicite(cotes_equipe_2)  
 
-    if len(probabilites) > 0:  
-        prob_combinee = calculer_probabilite_combinee(probabilites)  
-        cotes_combinees = np.prod(cotes)  
+with col3:  
+    cotes_equipe_3 = st.number_input("Cotes pour l'équipe 3", min_value=1.01, value=4.0, key="cotes_equipe_3")  
+    prob_equipe_3 = calculer_probabilite_implicite(cotes_equipe_3)  
 
-        # Calcul de la mise combinée  
-        mise_combinee = calculer_mise_kelly(prob_combinee, cotes_combinees, facteur_kelly)  
+# Calcul des probabilités et cotes combinées  
+probabilites = [prob_equipe_1, prob_equipe_2, prob_equipe_3]  
+cotes = [cotes_equipe_1, cotes_equipe_2, cotes_equipe_3]  
 
-        # Affichage des résultats pour la combinaison  
-        st.subheader("Résultats de la combinaison")  
-        st.write(f"- **Probabilité combinée :** {prob_combinee * 100:.2f}%")  
-        st.write(f"- **Cotes combinées :** {cotes_combinees:.2f}")  
-        st.write(f"- **Mise optimale sur la combinaison :** {mise_combinee * 100:.2f}% du capital")  
-    else:  
-        st.write("Veuillez fournir au moins une équipe avec une probabilité valide.")  
+# Filtrer les équipes avec des probabilités valides  
+probabilites = [p for p in probabilites if p > 0]  
+cotes = [c for c in cotes if c > 1.01]  
+
+if len(probabilites) > 0:  
+    prob_combinee = calculer_probabilite_combinee(probabilites)  
+    cotes_combinees = np.prod(cotes)  
+
+    # Calcul de la mise combinée  
+    mise_combinee = calculer_mise_kelly(prob_combinee, cotes_combinees, facteur_kelly)  
+
+    # Affichage des résultats pour la combinaison  
+    st.subheader("Résultats de la combinaison")  
+    st.markdown('<div class="result-card">', unsafe_allow_html=True)  
+    st.write(f"<span class='icon'>📊</span> **Probabilité combinée :** {prob_combinee * 100:.2f}%", unsafe_allow_html=True)  
+    st.write(f"<span class='icon'>💰</span> **Cotes combinées :** {cotes_combinees:.2f}", unsafe_allow_html=True)  
+    st.write(f"<span class='icon'>🎯</span> **Mise optimale sur la combinaison :** {mise_combinee * 100:.2f}% du capital", unsafe_allow_html=True)  
     st.markdown('</div>', unsafe_allow_html=True)  
+else:  
+    st.write("Veuillez fournir au moins une équipe avec une probabilité valide.")  
 
 # Génération de QR code pour accéder à l'application  
 st.subheader("Accédez à cette application sur votre téléphone")  
