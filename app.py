@@ -96,8 +96,8 @@ meteo = st.radio(
     key="meteo"  
 )  
 
-# Partie 3 : Prédiction avec plusieurs modèles  
-st.markdown("<h2 style='color: #9C27B0;'>3. Prédiction avec plusieurs modèles</h2>", unsafe_allow_html=True)  
+# Partie 3 : Simulateur de match (Prédiction des résultats)  
+st.markdown("<h2 style='color: #9C27B0;'>3. Simulateur de match</h2>", unsafe_allow_html=True)  
 
 # Exemple de données fictives pour entraîner les modèles  
 data = {  
@@ -193,35 +193,8 @@ ax.legend()
 # Affichage du graphique  
 st.pyplot(fig)  
 
-# Partie 5 : Gestion de la bankroll et paris combinés  
-st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll et paris combinés</h2>", unsafe_allow_html=True)  
-bankroll_initiale = st.number_input("Entrez votre bankroll initiale (€)", min_value=1.0, value=1000.0, step=1.0)  
-bankroll = bankroll_initiale  
-
-# Saisie des paris  
-st.write("Saisissez vos paris :")  
-paris_gagnants = []  
-paris_perdants = []  
-
-if st.button("Ajouter un pari gagnant"):  
-    mise = st.number_input("Mise (€)", min_value=1.0, value=10.0, step=1.0)  
-    gain = st.number_input("Gain (€)", min_value=1.0, value=20.0, step=1.0)  
-    paris_gagnants.append({"mise": mise, "gain": gain})  
-    bankroll += gain  
-
-if st.button("Ajouter un pari perdant"):  
-    mise = st.number_input("Mise (€)", min_value=1.0, value=10.0, step=1.0)  
-    paris_perdants.append({"mise": mise})  
-    bankroll -= mise  
-
-# Calcul du ROI  
-profit, roi = calculer_roi(paris_gagnants, paris_perdants, bankroll_initiale)  
-st.write(f"Profit total : **{profit:.2f}€**")  
-st.write(f"Retour sur investissement (ROI) : **{roi:.2f}%**")  
-st.write(f"Bankroll actuelle : **{bankroll:.2f}€**")  
-
-# Partie combinée  
-st.markdown("<h3 style='color: #FF9800;'>Paris combinés</h3>", unsafe_allow_html=True)  
+# Partie 5 : Simulateur de paris combinés  
+st.markdown("<h2 style='color: #4CAF50;'>5. Simulateur de paris combinés</h2>", unsafe_allow_html=True)  
 
 # Sélection des équipes pour le combiné  
 equipe_1 = st.selectbox("Choisissez la première équipe", ["Équipe A", "Équipe B"], key="equipe_1")  
@@ -244,8 +217,8 @@ prob_combinee = prob_1 * prob_2 * prob_3
 st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
 
 # Allocation de mise combinée  
-mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll  
-unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll)  
+mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll_initiale  
+unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll_initiale)  
 
 st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")  
 
@@ -255,32 +228,20 @@ st.markdown("<h2 style='color: #FFC107;'>6. Exportation des données</h2>", unsa
 # Préparation des données pour exportation  
 export_data = {  
     "Bankroll initiale": bankroll_initiale,  
-    "Bankroll actuelle": bankroll,  
-    "Profit": profit,  
-    "ROI (%)": roi,  
-    "Paris gagnants": paris_gagnants,  
-    "Paris perdants": paris_perdants  
+    "Probabilité combinée": prob_combinee,  
+    "Mise combinée": mise_combinee,  
+    "Unité combinée": unites_combinee  
 }  
 
 # Exportation en CSV  
 if st.button("Exporter les données en CSV"):  
     output = StringIO()  
     writer = csv.writer(output)  
-    writer.writerow(["Bankroll initiale", "Bankroll actuelle", "Profit", "ROI (%)"])  
-    writer.writerow([bankroll_initiale, bankroll, profit, roi])  
-    writer.writerow([])  
-    writer.writerow(["Paris gagnants"])  
-    writer.writerow(["Mise (€)", "Gain (€)"])  
-    for pari in paris_gagnants:  
-        writer.writerow([pari["mise"], pari["gain"]])  
-    writer.writerow([])  
-    writer.writerow(["Paris perdants"])  
-    writer.writerow(["Mise (€)"])  
-    for pari in paris_perdants:  
-        writer.writerow([pari["mise"]])  
+    writer.writerow(["Bankroll initiale", "Probabilité combinée", "Mise combinée", "Unité combinée"])  
+    writer.writerow([bankroll_initiale, prob_combinee, mise_combinee, unites_combinee])  
     st.download_button(  
         label="Télécharger les données",  
         data=output.getvalue(),  
-        file_name="bankroll_paris.csv",  
+        file_name="paris_combine.csv",  
         mime="text/csv"  
     )
