@@ -5,7 +5,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
-import matplotlib.pyplot as plt  
 import csv  
 from io import StringIO  
 
@@ -35,12 +34,6 @@ def calculer_roi(paris_gagnants, paris_perdants, bankroll_initiale):
     profit = gains - pertes  
     roi = (profit / bankroll_initiale) * 100  
     return profit, roi  
-
-
-# Fonction pour prédire le nombre de buts  
-def predire_buts(probabilite_victoire):  
-    # On suppose que la probabilité de victoire est proportionnelle au nombre de buts  
-    return round(probabilite_victoire * 5)  # Exemple : max 5 buts  
 
 
 # Titre de l'application  
@@ -155,46 +148,11 @@ nouvelle_donnee = pd.DataFrame({
 prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
 prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
 
-# Prédiction du nombre de buts  
-buts_rf_A = predire_buts(prediction_rf)  
-buts_rf_B = predire_buts(1 - prediction_rf)  
-buts_lr_A = predire_buts(prediction_lr)  
-buts_lr_B = predire_buts(1 - prediction_lr)  
-
 st.write(f"Probabilité de victoire de l'équipe A selon RandomForest : **{prediction_rf * 100:.2f}%**")  
 st.write(f"Probabilité de victoire de l'équipe A selon Logistic Regression : **{prediction_lr * 100:.2f}%**")  
 
-# Partie 4 : Simulateur sous forme de schéma  
-st.markdown("<h2 style='color: #FFC107;'>4. Simulateur de match</h2>", unsafe_allow_html=True)  
-
-# Création du graphique  
-fig, ax = plt.subplots(figsize=(8, 5))  
-bar_width = 0.35  
-index = np.arange(2)  
-
-# Données pour le graphique  
-buts_rf = [buts_rf_A, buts_rf_B]  
-buts_lr = [buts_lr_A, buts_lr_B]  
-
-# Barres pour RandomForest  
-ax.bar(index, buts_rf, bar_width, label="RandomForest", color="blue")  
-
-# Barres pour Logistic Regression  
-ax.bar(index + bar_width, buts_lr, bar_width, label="Logistic Regression", color="orange")  
-
-# Configuration du graphique  
-ax.set_xlabel("Équipes")  
-ax.set_ylabel("Nombre de buts prédit")  
-ax.set_title("Prédiction du nombre de buts par équipe")  
-ax.set_xticks(index + bar_width / 2)  
-ax.set_xticklabels(["Équipe A", "Équipe B"])  
-ax.legend()  
-
-# Affichage du graphique  
-st.pyplot(fig)  
-
-# Partie 5 : Gestion de la bankroll et paris  
-st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
+# Partie 4 : Gestion de la bankroll et paris  
+st.markdown("<h2 style='color: #4CAF50;'>4. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
 bankroll_initiale = st.number_input("Entrez votre bankroll initiale (€)", min_value=1.0, value=1000.0, step=1.0)  
 bankroll = bankroll_initiale  
 
@@ -220,8 +178,8 @@ st.write(f"Profit total : **{profit:.2f}€**")
 st.write(f"Retour sur investissement (ROI) : **{roi:.2f}%**")  
 st.write(f"Bankroll actuelle : **{bankroll:.2f}€**")  
 
-# Partie 6 : Exportation des données  
-st.markdown("<h2 style='color: #FFC107;'>6. Exportation des données</h2>", unsafe_allow_html=True)  
+# Partie 5 : Exportation des données  
+st.markdown("<h2 style='color: #FFC107;'>5. Exportation des données</h2>", unsafe_allow_html=True)  
 
 # Préparation des données pour exportation  
 export_data = {  
