@@ -10,6 +10,18 @@ import csv
 from io import StringIO  
 
 
+# Fonction pour prédire le nombre de buts  
+def predire_buts(probabilite_victoire, attaque, defense):  
+    """  
+    Prédit le nombre de buts en fonction de la probabilité de victoire,  
+    de la force offensive (attaque) et de la force défensive (defense).  
+    """  
+    base_buts = probabilite_victoire * 3  # Base : max 3 buts en fonction de la probabilité  
+    ajustement = (attaque - defense) * 0.5  # Ajustement basé sur la différence attaque/défense  
+    buts = max(0, base_buts + ajustement)  # Les buts ne peuvent pas être négatifs  
+    return round(buts, 1)  # Retourne un nombre avec une décimale  
+
+
 # Fonction pour calculer la mise optimale selon Kelly  
 def calculer_mise_kelly(probabilite, cotes, facteur_kelly=1):  
     b = cotes - 1  # Gain net pour 1 unité misée  
@@ -28,21 +40,6 @@ def convertir_mise_en_unites(mise, bankroll, max_unites=5):
     return min(max(unites, 1), max_unites)  # Limiter entre 1 et max_unites  
 
 
-# Fonction pour calculer le retour sur investissement (ROI)  
-def calculer_roi(paris_gagnants, paris_perdants, bankroll_initiale):  
-    gains = sum([pari['gain'] for pari in paris_gagnants])  
-    pertes = sum([pari['mise'] for pari in paris_perdants])  
-    profit = gains - pertes  
-    roi = (profit / bankroll_initiale) * 100  
-    return profit, roi  
-
-
-# Fonction pour prédire le nombre de buts  
-def predire_buts(probabilite_victoire):  
-    # On suppose que la probabilité de victoire est proportionnelle au nombre de buts  
-    return round(probabilite_victoire * 5)  # Exemple : max 5 buts  
-
-
 # Titre de l'application  
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
 st.write("Analysez les données des matchs, simulez les résultats, et suivez vos paris pour optimiser votre bankroll.")  
@@ -52,31 +49,17 @@ st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_a
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
-tirs_cadres_A = st.slider("Tirs cadrés par l'équipe A", 0, 20, 10, key="tirs_cadres_A")  
-possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="possession_A")  
-cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="cartons_jaunes_A")  
-fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
+attaque_A = st.slider("Force offensive de l'équipe A (attaque)", 0, 100, 70, key="attaque_A")  
+defense_A = st.slider("Force défensive de l'équipe A (défense)", 0, 100, 60, key="defense_A")  
 forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
 motivation_A = st.slider("Motivation de l'équipe A (sur 5)", 0.0, 5.0, 4.0, key="motivation_A")  
-absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
-arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
-penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
-tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
-degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
-tirs_cadres_B = st.slider("Tirs cadrés par l'équipe B", 0, 20, 8, key="tirs_cadres_B")  
-possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="possession_B")  
-cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="cartons_jaunes_B")  
-fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
+attaque_B = st.slider("Force offensive de l'équipe B (attaque)", 0, 100, 65, key="attaque_B")  
+defense_B = st.slider("Force défensive de l'équipe B (défense)", 0, 100, 70, key="defense_B")  
 forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
 motivation_B = st.slider("Motivation de l'équipe B (sur 5)", 0.0, 5.0, 3.5, key="motivation_B")  
-absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
-arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
-penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
-tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
-degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
 
 # Partie 2 : Historique et contexte du match  
 st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
@@ -101,25 +84,16 @@ st.markdown("<h2 style='color: #9C27B0;'>3. Simulateur de match</h2>", unsafe_al
 
 # Exemple de données fictives pour entraîner les modèles  
 data = {  
-    "tirs_cadres": [10, 8, 12, 6, 9],  
-    "possession": [55, 45, 60, 40, 50],  
-    "cartons_jaunes": [2, 3, 1, 4, 2],  
-    "fautes": [15, 18, 12, 20, 14],  
+    "attaque": [70, 65, 80, 60, 75],  
+    "defense": [60, 70, 50, 80, 65],  
     "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
-    "absences": [1, 2, 0, 3, 1],  
-    "arrets": [5, 4, 6, 3, 5],  
-    "penalites_concedees": [1, 2, 0, 3, 1],  
-    "tacles_reussis": [20, 18, 25, 15, 22],  
-    "degagements": [15, 12, 18, 10, 14],  
+    "motivation": [4.0, 3.5, 4.5, 3.0, 4.2],  
     "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
 }  
 df = pd.DataFrame(data)  
 
 # Entraînement des modèles  
-features = [  
-    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
-    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
-]  
+features = ["attaque", "defense", "forme_recente", "motivation"]  
 X = df[features]  
 y = df["resultat"]  
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
@@ -140,26 +114,20 @@ st.write(f"Précision du modèle Logistic Regression : **{precision_lr * 100:.2f
 
 # Prédictions pour les nouvelles données  
 nouvelle_donnee = pd.DataFrame({  
-    "tirs_cadres": [tirs_cadres_A, tirs_cadres_B],  
-    "possession": [possession_A, possession_B],  
-    "cartons_jaunes": [cartons_jaunes_A, cartons_jaunes_B],  
-    "fautes": [fautes_A, fautes_B],  
+    "attaque": [attaque_A, attaque_B],  
+    "defense": [defense_A, defense_B],  
     "forme_recente": [forme_recente_A, forme_recente_B],  
-    "absences": [absences_A, absences_B],  
-    "arrets": [arrets_A, arrets_B],  
-    "penalites_concedees": [penalites_concedees_A, penalites_concedees_B],  
-    "tacles_reussis": [tacles_reussis_A, tacles_reussis_B],  
-    "degagements": [degagements_A, degagements_B]  
+    "motivation": [motivation_A, motivation_B]  
 })  
 
 prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
 prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
 
 # Prédiction du nombre de buts  
-buts_rf_A = predire_buts(prediction_rf)  
-buts_rf_B = predire_buts(1 - prediction_rf)  
-buts_lr_A = predire_buts(prediction_lr)  
-buts_lr_B = predire_buts(1 - prediction_lr)  
+buts_rf_A = predire_buts(prediction_rf, attaque_A, defense_B)  
+buts_rf_B = predire_buts(1 - prediction_rf, attaque_B, defense_A)  
+buts_lr_A = predire_buts(prediction_lr, attaque_A, defense_B)  
+buts_lr_B = predire_buts(1 - prediction_lr, attaque_B, defense_A)  
 
 st.write(f"Probabilité de victoire de l'équipe A selon RandomForest : **{prediction_rf * 100:.2f}%**")  
 st.write(f"Probabilité de victoire de l'équipe A selon Logistic Regression : **{prediction_lr * 100:.2f}%**")  
@@ -193,7 +161,7 @@ ax.legend()
 # Affichage du graphique  
 st.pyplot(fig)  
 
-# Partie 5 : Simulateur de paris combinés  
+# Partie combinée : Calcul des probabilités et mise optimale  
 st.markdown("<h2 style='color: #4CAF50;'>5. Simulateur de paris combinés</h2>", unsafe_allow_html=True)  
 
 # Sélection des équipes pour le combiné  
@@ -206,42 +174,25 @@ cote_2 = st.number_input(f"Cote pour {equipe_2}", min_value=1.01, step=0.01, val
 equipe_3 = st.selectbox("Choisissez la troisième équipe", ["Équipe A", "Équipe B"], key="equipe_3")  
 cote_3 = st.number_input(f"Cote pour {equipe_3}", min_value=1.01, step=0.01, value=1.6, key="cote_3")  
 
-# Calcul des probabilités implicites  
-prob_1 = 1 / cote_1  
-prob_2 = 1 / cote_2  
-prob_3 = 1 / cote_3  
+# Vérification des cotes pour éviter les erreurs  
+if cote_1 > 1 and cote_2 > 1 and cote_3 > 1:  
+    # Calcul des probabilités implicites  
+    prob_1 = 1 / cote_1  
+    prob_2 = 1 / cote_2  
+    prob_3 = 1 / cote_3  
 
-# Probabilité combinée  
-prob_combinee = prob_1 * prob_2 * prob_3  
+    # Probabilité combinée  
+    prob_combinee = prob_1 * prob_2 * prob_3  
 
-st.write(f"Probabilité combinée pour les trois équipes : {prob_combinee * 100:.2f}%")  
+    # Calcul de la mise combinée  
+    cotes_combinees = cote_1 * cote_2 * cote_3  
+    bankroll_initiale = 1000  # Exemple de bankroll initiale  
+    mise_combinee = calculer_mise_kelly(prob_combinee, cotes_combinees) * bankroll_initiale  
+    unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll_initiale)  
 
-# Allocation de mise combinée  
-mise_combinee = calculer_mise_kelly(prob_combinee, cote_1 * cote_2 * cote_3) * bankroll_initiale  
-unites_combinee = convertir_mise_en_unites(mise_combinee, bankroll_initiale)  
-
-st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee} unités (sur 5)")  
-
-# Partie 6 : Exportation des données  
-st.markdown("<h2 style='color: #FFC107;'>6. Exportation des données</h2>", unsafe_allow_html=True)  
-
-# Préparation des données pour exportation  
-export_data = {  
-    "Bankroll initiale": bankroll_initiale,  
-    "Probabilité combinée": prob_combinee,  
-    "Mise combinée": mise_combinee,  
-    "Unité combinée": unites_combinee  
-}  
-
-# Exportation en CSV  
-if st.button("Exporter les données en CSV"):  
-    output = StringIO()  
-    writer = csv.writer(output)  
-    writer.writerow(["Bankroll initiale", "Probabilité combinée", "Mise combinée", "Unité combinée"])  
-    writer.writerow([bankroll_initiale, prob_combinee, mise_combinee, unites_combinee])  
-    st.download_button(  
-        label="Télécharger les données",  
-        data=output.getvalue(),  
-        file_name="paris_combine.csv",  
-        mime="text/csv"  
-    )
+    # Affichage des résultats  
+    st.write(f"Probabilité combinée pour les trois équipes : **{prob_combinee * 100:.2f}%**")  
+    st.write(f"Cotes combinées : **{cotes_combinees:.2f}**")  
+    st.write(f"Mise optimale pour le combiné des trois équipes : **{unites_combinee} unités (sur 5)**")  
+else:  
+    st.error("Les cotes doivent être supérieures à 1 pour calculer les probabilités combinées.")
