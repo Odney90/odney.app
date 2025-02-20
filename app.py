@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np  
 import pandas as pd  
 from sklearn.ensemble import RandomForestClassifier  
+from sklearn.linear_model import LogisticRegression  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
 
@@ -24,36 +25,8 @@ def convertir_mise_en_unites(mise, bankroll, max_unites=5):
     return min(max(unites, 1), max_unites)  # Limiter entre 1 et max_unites  
 
 
-# Fonction pour ajuster les probabilités en fonction des tactiques  
-def ajuster_probabilite_tactique(probabilite, tactique_A, tactique_B):  
-    avantages = {  
-        "4-4-2": {"contre": ["4-3-3", "3-4-3"], "bonus": 0.03},  
-        "4-2-3-1": {"contre": ["4-4-2", "4-5-1"], "bonus": 0.04},  
-        "4-3-3": {"contre": ["4-4-2", "5-3-2"], "bonus": 0.05},  
-        "4-5-1": {"contre": ["3-4-3", "4-3-3"], "bonus": 0.03},  
-        "3-4-3": {"contre": ["5-3-2", "4-5-1"], "bonus": 0.05},  
-        "3-5-2": {"contre": ["4-3-3", "4-4-2"], "bonus": 0.04},  
-        "5-3-2": {"contre": ["3-4-3", "4-3-3"], "bonus": 0.03},  
-        "4-1-4-1": {"contre": ["4-2-3-1", "4-3-3"], "bonus": 0.03},  
-        "4-3-2-1": {"contre": ["4-4-2", "5-3-2"], "bonus": 0.04},  
-        "4-4-1-1": {"contre": ["4-3-3", "3-4-3"], "bonus": 0.03},  
-        "4-2-2-2": {"contre": ["4-5-1", "5-3-2"], "bonus": 0.04},  
-        "3-6-1": {"contre": ["4-4-2", "4-3-3"], "bonus": 0.05},  
-        "5-4-1": {"contre": ["3-4-3", "4-3-3"], "bonus": 0.03},  
-        "4-1-3-2": {"contre": ["4-4-2", "5-3-2"], "bonus": 0.04},  
-        "4-3-1-2": {"contre": ["4-3-3", "3-4-3"], "bonus": 0.04},  
-    }  
-
-    if tactique_B in avantages[tactique_A]["contre"]:  
-        probabilite += avantages[tactique_A]["bonus"]  
-    elif tactique_A in avantages[tactique_B]["contre"]:  
-        probabilite -= avantages[tactique_B]["bonus"]  
-
-    return max(0, min(1, probabilite))  
-
-
 # Titre de l'application  
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion des mises</h1>", unsafe_allow_html=True)  
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match avec plusieurs modèles</h1>", unsafe_allow_html=True)  
 st.write("Analysez les données des matchs, calculez les probabilités et optimisez vos mises.")  
 
 # Partie 1 : Analyse des équipes  
@@ -66,21 +39,7 @@ possession_A = st.slider("Possession de l'équipe A (%)", 0, 100, 55, key="posse
 cartons_jaunes_A = st.slider("Cartons jaunes pour l'équipe A", 0, 10, 2, key="cartons_jaunes_A")  
 fautes_A = st.slider("Fautes commises par l'équipe A", 0, 30, 15, key="fautes_A")  
 forme_recente_A = st.slider("Forme récente de l'équipe A (sur 5)", 0.0, 5.0, 3.5, key="forme_recente_A")  
-motivation_A = st.slider("Motivation de l'équipe A (sur 5)", 0.0, 5.0, 4.0, key="motivation_A")  
 absences_A = st.slider("Nombre d'absences dans l'équipe A", 0, 10, 1, key="absences_A")  
-arrets_A = st.slider("Arrêts moyens par match pour l'équipe A", 0, 20, 5, key="arrets_A")  
-penalites_concedees_A = st.slider("Pénalités concédées par l'équipe A", 0, 10, 1, key="penalites_concedees_A")  
-tacles_reussis_A = st.slider("Tacles réussis par match pour l'équipe A", 0, 50, 20, key="tacles_reussis_A")  
-degagements_A = st.slider("Dégagements par match pour l'équipe A", 0, 50, 15, key="degagements_A")  
-tactique_A = st.selectbox(  
-    "Tactique de l'équipe A",  
-    [  
-        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
-        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
-        "4-1-3-2", "4-3-1-2"  
-    ],  
-    key="tactique_A"  
-)  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -89,21 +48,7 @@ possession_B = st.slider("Possession de l'équipe B (%)", 0, 100, 45, key="posse
 cartons_jaunes_B = st.slider("Cartons jaunes pour l'équipe B", 0, 10, 3, key="cartons_jaunes_B")  
 fautes_B = st.slider("Fautes commises par l'équipe B", 0, 30, 18, key="fautes_B")  
 forme_recente_B = st.slider("Forme récente de l'équipe B (sur 5)", 0.0, 5.0, 3.0, key="forme_recente_B")  
-motivation_B = st.slider("Motivation de l'équipe B (sur 5)", 0.0, 5.0, 3.5, key="motivation_B")  
 absences_B = st.slider("Nombre d'absences dans l'équipe B", 0, 10, 2, key="absences_B")  
-arrets_B = st.slider("Arrêts moyens par match pour l'équipe B", 0, 20, 4, key="arrets_B")  
-penalites_concedees_B = st.slider("Pénalités concédées par l'équipe B", 0, 10, 2, key="penalites_concedees_B")  
-tacles_reussis_B = st.slider("Tacles réussis par match pour l'équipe B", 0, 50, 18, key="tacles_reussis_B")  
-degagements_B = st.slider("Dégagements par match pour l'équipe B", 0, 50, 12, key="degagements_B")  
-tactique_B = st.selectbox(  
-    "Tactique de l'équipe B",  
-    [  
-        "4-4-2", "4-2-3-1", "4-3-3", "4-5-1", "3-4-3", "3-5-2", "5-3-2",  
-        "4-1-4-1", "4-3-2-1", "4-4-1-1", "4-2-2-2", "3-6-1", "5-4-1",  
-        "4-1-3-2", "4-3-1-2"  
-    ],  
-    key="tactique_B"  
-)  
 
 # Partie 2 : Historique et contexte du match  
 st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
@@ -123,11 +68,10 @@ meteo = st.radio(
     key="meteo"  
 )  
 
-# Partie 3 : Prédiction avec RandomForest  
-st.markdown("<h2 style='color: #9C27B0;'>3. Prédiction avec RandomForest</h2>", unsafe_allow_html=True)  
-st.write("Le modèle RandomForest est utilisé pour prédire les probabilités de victoire.")  
+# Partie 3 : Prédiction avec plusieurs modèles  
+st.markdown("<h2 style='color: #9C27B0;'>3. Prédiction avec plusieurs modèles</h2>", unsafe_allow_html=True)  
 
-# Exemple de données fictives pour entraîner le modèle  
+# Exemple de données fictives pour entraîner les modèles  
 data = {  
     "tirs_cadres": [10, 8, 12, 6, 9],  
     "possession": [55, 45, 60, 40, 50],  
@@ -135,28 +79,45 @@ data = {
     "fautes": [15, 18, 12, 20, 14],  
     "forme_recente": [3.5, 3.0, 4.0, 2.5, 3.8],  
     "absences": [1, 2, 0, 3, 1],  
-    "arrets": [5, 4, 6, 3, 5],  
-    "penalites_concedees": [1, 2, 0, 3, 1],  
-    "tacles_reussis": [20, 18, 25, 15, 22],  
-    "degagements": [15, 12, 18, 10, 14],  
     "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
 }  
 df = pd.DataFrame(data)  
 
-# Entraînement du modèle  
-features = [  
-    "tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences",  
-    "arrets", "penalites_concedees", "tacles_reussis", "degagements"  
-]  
+# Entraînement des modèles  
+features = ["tirs_cadres", "possession", "cartons_jaunes", "fautes", "forme_recente", "absences"]  
 X = df[features]  
 y = df["resultat"]  
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-model = RandomForestClassifier(random_state=42)  
-model.fit(X_train, y_train)  
 
-# Précision du modèle  
-precision = accuracy_score(y_test, model.predict(X_test))  
-st.write(f"Précision du modèle RandomForest : **{precision * 100:.2f}%**")  
+# Modèle 1 : RandomForest  
+model_rf = RandomForestClassifier(random_state=42)  
+model_rf.fit(X_train, y_train)  
+precision_rf = accuracy_score(y_test, model_rf.predict(X_test))  
+
+# Modèle 2 : Logistic Regression  
+model_lr = LogisticRegression(random_state=42)  
+model_lr.fit(X_train, y_train)  
+precision_lr = accuracy_score(y_test, model_lr.predict(X_test))  
+
+# Affichage des précisions  
+st.write(f"Précision du modèle RandomForest : **{precision_rf * 100:.2f}%**")  
+st.write(f"Précision du modèle Logistic Regression : **{precision_lr * 100:.2f}%**")  
+
+# Prédictions pour les nouvelles données  
+nouvelle_donnee = pd.DataFrame({  
+    "tirs_cadres": [tirs_cadres_A, tirs_cadres_B],  
+    "possession": [possession_A, possession_B],  
+    "cartons_jaunes": [cartons_jaunes_A, cartons_jaunes_B],  
+    "fautes": [fautes_A, fautes_B],  
+    "forme_recente": [forme_recente_A, forme_recente_B],  
+    "absences": [absences_A, absences_B]  
+})  
+
+prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+
+st.write(f"Probabilité de victoire de l'équipe A selon RandomForest : **{prediction_rf * 100:.2f}%**")  
+st.write(f"Probabilité de victoire de l'équipe A selon Logistic Regression : **{prediction_lr * 100:.2f}%**")  
 
 # Partie 4 : Analyse combinée  
 st.markdown("<h2 style='color: #FFC107;'>4. Analyse combinée</h2>", unsafe_allow_html=True)  
@@ -192,17 +153,13 @@ st.write(f"Mise optimale pour le combiné des trois équipes : {unites_combinee}
 st.markdown("<h2 style='color: #4CAF50;'>5. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
 bankroll = st.number_input("Entrez votre bankroll totale (€)", min_value=1.0, value=1000.0, step=1.0)  
 
-# Calcul des probabilités ajustées  
-probabilite_A = 0.55  # Exemple de probabilité pour l'équipe A  
-probabilite_B = 0.45  # Exemple de probabilité pour l'équipe B  
-
 # Calcul des mises Kelly  
-mise_A = calculer_mise_kelly(probabilite_A, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
-mise_B = calculer_mise_kelly(probabilite_B, 3.0) * bankroll  # Exemple : cote de 3.0 pour l'équipe B  
+mise_rf = calculer_mise_kelly(prediction_rf, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
+mise_lr = calculer_mise_kelly(prediction_lr, 2.0) * bankroll  # Exemple : cote de 2.0 pour l'équipe A  
 
 # Conversion des mises en unités (1 à 5)  
-unites_A = convertir_mise_en_unites(mise_A, bankroll)  
-unites_B = convertir_mise_en_unites(mise_B, bankroll)  
+unites_rf = convertir_mise_en_unites(mise_rf, bankroll)  
+unites_lr = convertir_mise_en_unites(mise_lr, bankroll)  
 
-st.write(f"Mise optimale pour l'équipe A : {unites_A} unités (sur 5)")  
-st.write(f"Mise optimale pour l'équipe B : {unites_B} unités (sur 5)")
+st.write(f"Mise optimale pour l'équipe A selon RandomForest : {unites_rf} unités (sur 5)")  
+st.write(f"Mise optimale pour l'équipe A selon Logistic Regression : {unites_lr} unités (sur 5)")
