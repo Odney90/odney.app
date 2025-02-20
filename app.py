@@ -43,6 +43,17 @@ st.markdown(
         border: 2px solid #e0e0e0;  
     }  
 
+    /* Couleurs dynamiques */  
+    .result-card.team-a {  
+        border-left: 5px solid #4CAF50; /* Vert pour l'équipe A */  
+    }  
+    .result-card.team-b {  
+        border-left: 5px solid #2196F3; /* Bleu pour l'équipe B */  
+    }  
+    .result-card.combination {  
+        border-left: 5px solid #FF9800; /* Orange pour la combinaison */  
+    }  
+
     /* Icônes */  
     .icon {  
         font-size: 24px;  
@@ -141,13 +152,13 @@ st.subheader("Résultats des mises individuelles")
 col1, col2 = st.columns(2)  
 
 with col1:  
-    st.markdown('<div class="result-card">', unsafe_allow_html=True)  
+    st.markdown('<div class="result-card team-a">', unsafe_allow_html=True)  
     st.write(f"<span class='icon'>⚽</span> **Équipe A**")  
     st.write(f"**Mise optimale :** {mise_A * 100:.2f}% du capital")  
     st.markdown('</div>', unsafe_allow_html=True)  
 
 with col2:  
-    st.markdown('<div class="result-card">', unsafe_allow_html=True)  
+    st.markdown('<div class="result-card team-b">', unsafe_allow_html=True)  
     st.write(f"<span class='icon'>⚽</span> **Équipe B**")  
     st.write(f"**Mise optimale :** {mise_B * 100:.2f}% du capital")  
     st.markdown('</div>', unsafe_allow_html=True)  
@@ -188,7 +199,7 @@ if len(probabilites) > 0:
 
     # Affichage des résultats pour la combinaison  
     st.subheader("Résultats de la combinaison")  
-    st.markdown('<div class="result-card">', unsafe_allow_html=True)  
+    st.markdown('<div class="result-card combination">', unsafe_allow_html=True)  
     st.write(f"**Probabilité combinée :** {prob_combinee * 100:.2f}%")  
     st.write(f"**Cotes combinées :** {cotes_combinees:.2f}")  
     st.write(f"**Mise optimale :** {mise_combinee * 100:.2f}% du capital")  
