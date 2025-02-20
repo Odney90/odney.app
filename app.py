@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd  
 import matplotlib.pyplot as plt  
 from sklearn.ensemble import RandomForestClassifier  
+from sklearn.model_selection import train_test_split  
+from sklearn.metrics import accuracy_score  
 
 # Fonction pour calculer la mise optimale selon Kelly  
 def calculer_mise_kelly(probabilite, cotes, facteur_kelly=1):  
@@ -137,8 +139,13 @@ df = pd.DataFrame(data)
 # Modèle RandomForest  
 X = df[features]  
 y = df["resultat"]  
-model = RandomForestClassifier()  
-model.fit(X, y)  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+model = RandomForestClassifier(random_state=42)  
+model.fit(X_train, y_train)  
+
+# Calcul de la précision  
+precision = accuracy_score(y_test, model.predict(X_test))  
+st.write(f"Précision du modèle RandomForest : {precision * 100:.2f}%")  
 
 # Données de l'utilisateur  
 input_data = pd.DataFrame({  
@@ -163,6 +170,11 @@ probabilite_B = probabilites[0]
 # Affichage des résultats  
 st.write(f"Probabilité de victoire pour l'équipe A : {probabilite_A * 100:.2f}%")  
 st.write(f"Probabilité de victoire pour l'équipe B : {probabilite_B * 100:.2f}%")  
+
+# Partie combinée  
+st.header("Analyse combinée")  
+probabilite_combinee = probabilite_A * probabilite_B  
+st.write(f"Probabilité combinée des deux équipes : {probabilite_combinee * 100:.2f}%")  
 
 # Visualisation des probabilités  
 st.header("Visualisation des probabilités")  
