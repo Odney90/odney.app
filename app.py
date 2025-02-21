@@ -92,3 +92,75 @@ cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, max_value=5, v
 tactique_B = st.text_input("Tactique de l'équipe B", "4-4-2", key="tactique_B")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", "Joueur 3, Joueur 4", key="joueurs_cles_B")  
 score_joueurs_cles_B = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=6, key="score_joueurs_cles_B")
+# Partie 2 : Modèles de Prédiction  
+st.markdown("<h2 style='color: #FF5722;'>2. Prédiction des résultats</h2>", unsafe_allow_html=True)  
+
+# Exemple de données fictives pour entraîner les modèles  
+data = {  
+    "attaque": [70, 65, 80, 60, 75],  
+    "defense": [60, 70, 50, 80, 65],  
+    "forme_recente": [7, 6, 8, 5, 7],  # Forme récente fictive  
+    "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
+}  
+df = pd.DataFrame(data)  
+
+# Entraînement des modèles  
+features = ["attaque", "defense", "forme_recente"]  
+X = df[features]  
+y = df["resultat"]  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+
+# Modèle 1 : RandomForest  
+model_rf = RandomForestClassifier(random_state=42)  
+model_rf.fit(X_train, y_train)  
+precision_rf = accuracy_score(y_test, model_rf.predict(X_test))  
+
+# Modèle 2 : Logistic Regression  
+model_lr = LogisticRegression(random_state=42)  
+model_lr.fit(X_train, y_train)  
+precision_lr = accuracy_score(y_test, model_lr.predict(X_test))  
+
+# Affichage des précisions  
+st.write(f"Précision du modèle RandomForest : **{precision_rf * 100:.2f}%**")  
+st.write(f"Précision du modèle Logistic Regression : **{precision_lr * 100:.2f}%**")  
+
+# Prédictions pour les nouvelles données  
+nouvelle_donnee = pd.DataFrame({  
+    "attaque": [buts_par_match_A, buts_par_match_B],  
+    "defense": [nombre_buts_encaisse_A, nombre_buts_encaisse_B],  
+    "forme_recente": [forme_recente_A, forme_recente_B],  
+    "nombre_buts_produits": [nombre_buts_produits_A, nombre_buts_produits_B],  
+    "buts_encaisse_par_match": [buts_encaisse_par_match_A, buts_encaisse_par_match_B],  
+    "poss_moyenne": [poss_moyenne_A, poss_moyenne_B],  
+    "matchs_sans_encaisser": [matchs_sans_encaisser_A, matchs_sans_encaisser_B],  
+    "xG": [xG_A, xG_B],  
+    "tirs_cadres": [tirs_cadres_A, tirs_cadres_B],  
+    "pourcentage_tirs_convertis": [pourcentage_tirs_convertis_A, pourcentage_tirs_convertis_B],  
+    "grosses_occasions": [grosses_occasions_A, grosses_occasions_B],  
+    "grosses_occasions_ratees": [grosses_occasions_ratees_A, grosses_occasions_ratees_B],  
+    "passes_reussies": [passes_reussies_A, passes_reussies_B],  
+    "passes_longues_precises": [passes_longues_precises_A, passes_longues_precises_B],  
+    "centres_reussis": [centres_reussis_A, centres_reussis_B],  
+    "penalties_obtenus": [penalties_obtenus_A, penalties_obtenus_B],  
+    "touches_surface_adverse": [touches_surface_adverse_A, touches_surface_adverse_B],  
+    "corners": [corners_A, corners_B],  
+    "corners_par_match": [corners_par_match_A, corners_par_match_B],  
+    "corners_concedes": [corners_concedes_A, corners_concedes_B],  
+    "xG_concedes": [xG_concedes_A, xG_concedes_B],  
+    "interceptions": [interceptions_A, interceptions_B],  
+    "tacles_reussis": [tacles_reussis_A, tacles_reussis_B],  
+    "degagements": [degagements_A, degagements_B],  
+    "possessions_recuperees": [possessions_recuperees_A, possessions_recuperees_B],  
+    "penalties_concedes": [penalties_concedes_A, penalties_concedes_B],  
+    "arrets": [arrets_A, arrets_B],  
+    "fautes": [fautes_A, fautes_B],  
+    "cartons_jaunes": [cartons_jaunes_A, cartons_jaunes_B],  
+    "cartons_rouges": [cartons_rouges_A, cartons_rouges_B],  
+})  
+
+# Vérification de la longueur des données  
+if len(nouvelle_donnee) == 2:  
+    prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+    prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+
+    # Affichage des résultats de préd
