@@ -20,8 +20,7 @@ def load_data():
         with open('data.pkl', 'rb') as f:  
             return pickle.load(f)  
     return None
-    
-    # Chargement des données précédentes  
+     # Chargement des données précédentes  
 previous_data = load_data()  
 
 # Interface utilisateur Streamlit  
@@ -36,7 +35,7 @@ st.header("Équipe A 🏆")
 col1, col2 = st.columns(2)  
 
 with col1:  
-    historique_A = st.text_area("Historique des performances (ex: W, D, L)", height=100)  
+    historique_A = st.selectbox("Historique des performances", ["Victoire", "Match nul", "Défaite"])  
 
 with col2:  
     equipe_recevante = st.selectbox("Équipe qui reçoit", ["Équipe A", "Équipe B"])  
@@ -82,7 +81,7 @@ st.header("Équipe B 🥈")
 col3, col4 = st.columns(2)  
 
 with col3:  
-    historique_B = st.text_area("Historique des performances (ex: W, D, L)", height=100, key="B_historique")  
+    historique_B = st.selectbox("Historique des performances", ["Victoire", "Match nul", "Défaite"], key="B_historique")  
 
 with col4:  
     # Statistiques de l'équipe B  
@@ -183,7 +182,6 @@ data_to_save = {
     }  
 }  
 save_data(data_to_save)
-
 # Prédiction avec Random Forest  
 if st.button("🔮 Prédire le résultat avec Random Forest"):  
     # Préparation des données d'entrée  
@@ -242,14 +240,19 @@ if st.button("🔮 Prédire le résultat avec Régression Logistique"):
     # Affichage des probabilités  
     st.write(f"Probabilité que l'équipe A gagne : **{prediction_proba[0][1] * 100:.2f}%**")  
     st.write(f"Probabilité que l'équipe B gagne : **{prediction_proba[0][0] * 100:.2f}%**")
+    
 # Prédiction des buts avec la méthode de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
-    buts_A = [poisson.pmf(i, xG_A) for i in range(6)]  
-    buts_B = [poisson.pmf(i, xG_B) for i in range(6)]  
-    buts_attendus_A = sum(i * prob for i, prob in enumerate(buts_A))  
-    buts_attendus_B = sum(i * prob for i, prob in enumerate(buts_B))  
+    buts_A = [poisson.pmf(i, xG_A) for i in range(6)]  # Probabilités de marquer 0 à 5 buts pour l'équipe A  
+    buts_B = [poisson.pmf(i, xG_B) for i in range(6)]  # Probabilités de marquer 0 à 5 buts pour l'équipe B  
+    buts_attendus_A = sum(i * prob for i, prob in enumerate(buts_A))  # Buts attendus pour l'équipe A  
+    buts_attendus_B = sum(i * prob for i, prob in enumerate(buts_B))  # Buts attendus pour l'équipe B  
     return buts_attendus_A, buts_attendus_B  
 
 # Affichage des résultats de la prédiction des buts  
 if st.button("⚽ Prédire les buts avec la méthode de Poisson"):  
-    buts_moyens_A
+    buts_moyens_A, buts_moyens_B = prediction_buts_poisson(expected_buts_A, expected_buts_B)  
+    st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
+    st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
+    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
+    
