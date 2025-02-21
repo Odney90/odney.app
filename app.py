@@ -13,9 +13,34 @@ st.set_page_config(page_title="Prédiction de Match", layout="wide")
 # Titre de la page d'analyse  
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Analyse des Équipes</h1>", unsafe_allow_html=True)  
 
+# Notice d'utilisation  
+st.sidebar.markdown("<h2 style='color: #4CAF50;'>Notice d'Utilisation</h2>", unsafe_allow_html=True)  
+st.sidebar.markdown("""  
+1. **Saisir les Résultats de la Saison** :  
+   - Entrez le nombre de victoires, de nuls et de défaites pour chaque équipe (Équipe A et Équipe B).  
+
+2. **Historique des Derniers Matchs** :  
+   - Pour chaque équipe, sélectionnez le résultat des 5 derniers matchs (Victoire, Match Nul, Défaite).  
+
+3. **Critères de Performance** :  
+   - Remplissez les critères de performance pour chaque équipe, y compris les buts produits, les tirs cadrés, et d'autres statistiques pertinentes.  
+
+4. **Conditions du Match** :  
+   - Sélectionnez les conditions météorologiques et indiquez quelle équipe joue à domicile.  
+
+5. **Prédictions** :  
+   - L'application affichera les prédictions de buts pour chaque équipe, ainsi que les pourcentages de victoire basés sur les données saisies.  
+
+6. **Conseils de Paris** :  
+   - Des conseils de paris seront fournis en fonction des résultats des prédictions.  
+
+7. **Précision du Modèle** :  
+   - La précision du modèle multi-variable sera affichée en pourcentage, vous permettant d'évaluer la fiabilité des prédictions.  
+""", unsafe_allow_html=True)  
+
 # Historique des équipes  
 st.subheader("Historique des équipes")  
-st.markdown("Veuillez entrer le nombre de victoires, de défaites et de nuls pour chaque équipe sur la saison.")  
+st.markdown("Veuillez entrer le nombre de victoires, de défaites et de nuls pour chaque équipe.")  
 
 # Saisir les résultats de la saison  
 victoires_A = st.number_input("Victoires de l'équipe A", min_value=0, value=10, key="victoires_A")  
@@ -35,7 +60,7 @@ historique_B = []
 for i in range(5):  
     resultat_A = st.selectbox(f"Match {i + 1} de l'équipe A", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_A_{i}")  
     historique_A.append(1 if resultat_A == "Victoire (1)" else (0 if resultat_A == "Match Nul (0)" else -1))  
-    
+
     resultat_B = st.selectbox(f"Match {i + 1} de l'équipe B", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_B_{i}")  
     historique_B.append(1 if resultat_B == "Victoire (1)" else (0 if resultat_B == "Match Nul (0)" else -1))  
 
@@ -143,8 +168,6 @@ def prediction_buts_poisson(xG_A, xG_B):
     buts_B = [poisson.pmf(i, xG_B) for i in range(6)]  
     
     # Calcul des buts attendus  
-    buts_attendus_A = sum
-        # Calcul des buts attendus  
     buts_attendus_A = sum(i * prob for i, prob in enumerate(buts_A))  
     buts_attendus_B = sum(i * prob for i, prob in enumerate(buts_B))  
     
@@ -168,7 +191,7 @@ st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_victoire_B:
 
 # Visualisation des prédictions  
 fig, ax = plt.subplots()  
-ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue', 'red'])  
+ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue, 'red'])  
 ax.set_ylabel('Buts Prédits')  
 ax.set_title('Prédictions de Buts pour le Match (Méthode de Poisson)')  
 st.pyplot(fig)  
@@ -240,7 +263,7 @@ else:
 
 # Évaluer le modèle sur l'ensemble de test  
 accuracy = accuracy_score(y_test, model.predict(X_test))  
-st.write(f"Précision du modèle multi-variable : **{accuracy * 100:.2f}%**")  # Affichage en pourcentage
+st.write(f"Précision du modèle multi-variable : **{accuracy * 100:.2f}%**")  # Affichage en pourcentage  
 
 # Visualisation des résultats de la méthode multi-variable  
 fig, ax = plt.subplots()  
