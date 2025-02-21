@@ -164,6 +164,15 @@ cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")  
 
+# Motivation des équipes  
+st.subheader("Motivation des Équipes")  
+motivation_A = st.slider("Niveau de motivation de l'équipe A (1 à 10)", min_value=1, max_value=10, value=5, key="motivation_A")  
+motivation_B = st.slider("Niveau de motivation de l'équipe B (1 à 10)", min_value=1, max_value=10, value=5, key="motivation_B")  
+
+# Affichage des niveaux de motivation  
+st.write(f"Niveau de motivation de l'équipe A : **{motivation_A}**")  
+st.write(f"Niveau de motivation de l'équipe B : **{motivation_B}**")  
+
 # Prédiction des buts avec la méthode de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
     # Calcul des probabilités de marquer 0 à 5 buts  
@@ -187,8 +196,8 @@ st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
 # Prédiction multivariable avec régression logistique (exemple simplifié)  
 st.subheader("Prédiction Multivariable avec Régression Logistique")  
 # Préparation des données pour le modèle (exemple simplifié)  
-X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A],  
-              [buts_produits_B, buts_encaisse_B, poss_moyenne_B]])  
+X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A],  
+              [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B]])  
 y = np.array([1, 0])  # 1 pour l'équipe A, 0 pour l'équipe B  
 
 # Entraînement du modèle  
@@ -202,6 +211,6 @@ prediction = model.predict_proba(X)
 st.write(f"Probabilité de victoire pour l'équipe A : **{prediction[0][1]:.2%}**")  
 st.write(f"Probabilité de victoire pour l'équipe B : **{prediction[1][1]:.2%}**")  
 
-# Conclusion  
-st.subheader("Conclusion")  
-st.write("Merci d'avoir utilisé l'outil d'analyse de match !")
+# Calcul des paris alternatifs  
+double_chance_A = prediction[0][1] + (1 - prediction[1][1])  # Équipe A gagne ou match nul  
+double_chance_B
