@@ -1,11 +1,9 @@
 import streamlit as st  
-import numpy as np  
 import pandas as pd  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
-import matplotlib.pyplot as plt  
 
 # Fonction pour prédire le nombre de buts  
 def predire_buts(probabilite_victoire, attaque, defense):  
@@ -18,20 +16,16 @@ def predire_buts(probabilite_victoire, attaque, defense):
     buts = max(0, base_buts + ajustement)  # Les buts ne peuvent pas être négatifs  
     return round(buts, 1)  # Retourne un nombre avec une décimale  
 
-# Fonction pour convertir les cotes en probabilités implicites  
-def cotes_en_probabilites(cote):  
-    return 1 / cote  
-
 # Titre de l'application  
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
-st.write("Analysez les données des matchs, simulez les résultats, et suivez vos paris pour optimiser votre bankroll.")  
+st.write("Analysez les données des matchs et simulez les résultats pour optimiser votre bankroll.")  
 
 # Partie 1 : Analyse des équipes  
 st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_allow_html=True)  
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
-buts_par_match_A = st.number_input("Buts par match", min_value=0, max_value=10, value=2, key="buts_par_match_A", help="Entrez le nombre moyen de buts marqués par l'équipe A par match.")  
+buts_par_match_A = st.number_input("Buts par match", min_value=0, max_value=10, value=2, key="buts_par_match_A")  
 nombre_buts_produits_A = st.number_input("Nombre de buts produits", min_value=0, max_value=100, value=80, key="nombre_buts_produits_A")  
 nombre_buts_encaisse_A = st.number_input("Nombre de buts encaissés", min_value=0, max_value=100, value=30, key="nombre_buts_encaisse_A")  
 buts_encaisse_par_match_A = st.number_input("Buts encaissés par match", min_value=0, max_value=10, value=1, key="buts_encaisse_par_match_A")  
@@ -62,7 +56,8 @@ cartons_jaunes_A = st.number_input("Cartons jaunes", min_value=0, max_value=10, 
 cartons_rouges_A = st.number_input("Cartons rouges", min_value=0, max_value=5, value=1, key="cartons_rouges_A")  
 tactique_A = st.text_input("Tactique de l'équipe A", "4-3-3", key="tactique_A")  
 joueurs_cles_A = st.text_input("Joueurs clés de l'équipe A", "Joueur 1, Joueur 2", key="joueurs_cles_A")  
-score_joueurs_cles_A = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=7, key="score_joueurs_cles_A")
+score_joueurs_cles_A = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=7, key="score_joueurs_cles_A")  
+
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
 buts_par_match_B = st.number_input("Buts par match", min_value=0, max_value=10, value=1, key="buts_par_match_B")  
@@ -96,50 +91,21 @@ cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, max_value=10, 
 cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, max_value=5, value=1, key="cartons_rouges_B")  
 tactique_B = st.text_input("Tactique de l'équipe B", "4-4-2", key="tactique_B")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", "Joueur 3, Joueur 4", key="joueurs_cles_B")  
-score_joueurs_cles_B = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=6, key="score_joueurs_cles_B")  
-
-# Partie 2 : Historique et contexte du match  
-st.markdown("<h2 style='color: #FF5722;'>2. Historique et contexte du match</h2>", unsafe_allow_html=True)  
-
-# Saisie des résultats des confrontations  
-victoires_A = st.number_input("Victoires de l'équipe A dans les 5 dernières confrontations", min_value=0, max_value=5, value=3, key="victoires_A")  
-defaites_A = st.number_input("Défaites de l'équipe A dans les 5 dernières confrontations", min_value=0, max_value=5, value=2, key="defaites_A")  
-victoires_B = st.number_input("Victoires de l'équipe B dans les 5 dernières confrontations", min_value=0, max_value=5, value=2, key="victoires_B")  
-defaites_B = st.number_input("Défaites de l'équipe B dans les 5 dernières confrontations", min_value=0, max_value=5, value=3, key="defaites_B")  
-
-# Forme récente  
-forme_recente_A = st.number_input("Forme récente de l'équipe A (sur 10)", min_value=0, max_value=10, value=7, key="forme_recente_A")  
-forme_recente_B = st.number_input("Forme récente de l'équipe B (sur 10)", min_value=0, max_value=10, value=6, key="forme_recente_B")  
-
-# Quelle équipe joue à domicile ?  
-domicile = st.radio(  
-    "Quelle équipe joue à domicile ?",  
-    ["Équipe A", "Équipe B", "Terrain neutre"],  
-    key="domicile"  
-)  
-
-# Conditions météo pendant le match  
-meteo = st.radio(  
-    "Conditions météo pendant le match",  
-    ["Ensoleillé", "Pluie", "Vent"],  
-    key="meteo"  
-)  
-
-# Partie 3 : Simulateur de match (Prédiction des résultats)  
-st.markdown("<h2 style='color: #9C27B0;'>3. Simulateur de match</h2>", unsafe_allow_html=True)  
+score_joueurs_cles_B = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=6, key="score_joueurs_cles_B")
+# Partie 2 : Modèles de Prédiction  
+st.markdown("<h2 style='color: #FF5722;'>2. Prédiction des résultats</h2>", unsafe_allow_html=True)  
 
 # Exemple de données fictives pour entraîner les modèles  
 data = {  
     "attaque": [70, 65, 80, 60, 75],  
     "defense": [60, 70, 50, 80, 65],  
-    "forme_recente": [forme_recente_A, forme_recente_B],  
-    "motivation": [4.0, 3.5],  # Valeurs fictives pour la motivation  
+    "forme_recente": [7, 6, 8, 5, 7],  # Forme récente fictive  
     "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
 }  
 df = pd.DataFrame(data)  
 
 # Entraînement des modèles  
-features = ["attaque", "defense", "forme_recente", "motivation"]  
+features = ["attaque", "defense", "forme_recente"]  
 X = df[features]  
 y = df["resultat"]  
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
@@ -162,15 +128,16 @@ st.write(f"Précision du modèle Logistic Regression : **{precision_lr * 100:.2f
 nouvelle_donnee = pd.DataFrame({  
     "attaque": [buts_par_match_A, buts_par_match_B],  
     "defense": [nombre_buts_encaisse_A, nombre_buts_encaisse_B],  
-    "forme_recente": [forme_recente_A, forme_recente_B],  
-    "motivation": [4.0, 3.5]  # Valeurs fictives pour la motivation  
+    "forme_recente": [forme_recente_A, forme_recente_B]  
 })  
 
-prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
-prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+# Vérification de la longueur des données  
+if len(nouvelle_donnee) == 2:  
+    prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+    prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
 
-# Prédiction du nombre de buts  
-buts_rf_A = predire_buts(prediction_rf, buts_par_match_A, nombre_buts_encaisse_B)  
-buts_rf_B = predire_buts(1 - prediction_rf, buts_par_match_B, nombre_buts_encaisse_A)  
-buts_lr_A = predire_buts(prediction_lr, buts_par_match_A, nombre_buts_encaisse_B)  
-buts
+    # Affichage des résultats de prédiction  
+    st.write(f"Probabilité de victoire de l'équipe A selon RandomForest : **{prediction_rf * 100:.2f}%**")  
+    st.write(f"Probabilité de victoire de l'équipe A selon Logistic Regression : **{prediction_lr * 100:.2f}%**")  
+else:  
+    st.error("Les données d'entrée doivent être complètes pour faire des prédictions.")
