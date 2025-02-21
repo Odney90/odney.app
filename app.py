@@ -198,10 +198,7 @@ data = {
 df_multi = pd.DataFrame(data)  
 
 # Vérifiez les colonnes de df_multi  
-print(df_multi.columns)  # Affiche les colonnes pour vérification  
-
-# Convertir en DataFrame  
-df_multi = pd.DataFrame(data)  
+print(df_multi.columns)  # Affiche les colonnes pour vérification
 
 # Exemple de données historiques pour l'entraînement (à remplacer par des données réelles)  
 historical_data = {  
