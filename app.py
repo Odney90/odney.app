@@ -14,17 +14,15 @@ st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Analyse des Équipe
 st.subheader("Historique des équipes")  
 st.markdown("Veuillez entrer les résultats des 5 derniers matchs pour chaque équipe (1 pour victoire, 0 pour match nul, -1 pour défaite).")  
 
-# Historique de l'équipe A  
+# Historique des résultats  
 historique_A = []  
-for i in range(5):  
-    resultat = st.selectbox(f"Match {i + 1} de l'équipe A", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_A_{i}")  
-    historique_A.append(1 if resultat == "Victoire (1)" else (0 if resultat == "Match Nul (0)" else -1))  
-
-# Historique de l'équipe B  
 historique_B = []  
 for i in range(5):  
-    resultat = st.selectbox(f"Match {i + 1} de l'équipe B", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_B_{i}")  
-    historique_B.append(1 if resultat == "Victoire (1)" else (0 if resultat == "Match Nul (0)" else -1))  
+    resultat_A = st.selectbox(f"Match {i + 1} de l'équipe A", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_A_{i}")  
+    historique_A.append(1 if resultat_A == "Victoire (1)" else (0 if resultat_A == "Match Nul (0)" else -1))  
+    
+    resultat_B = st.selectbox(f"Match {i + 1} de l'équipe B", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_B_{i}")  
+    historique_B.append(1 if resultat_B == "Victoire (1)" else (0 if resultat_B == "Match Nul (0)" else -1))  
 
 # Historique de face-à-face  
 st.subheader("Historique de Face-à-Face")  
@@ -123,22 +121,28 @@ cartons_rouges_B = st.slider("Cartons rouges", min_value=0, max_value=10, value=
 
 # Fonction pour analyser les systèmes tactiques  
 def analyser_tactiques(buts_produits, buts_encaisse, possession, xG, tirs_cadres, corners, interceptions):  
-    score_tactique = (buts_produits * 0.4) + (possessions_recuperees_A * 0.2) + (tirs_cadres * 0.2) - (buts_encaisse * 0.4) - (corners * 0.2) - (interceptions * 0.1)  
+    score_tactique = (buts_produits * 0.4) + (poss_moyenne_A * 0.2) + (tirs_cadres * 0.2) - (buts_encaisse * 0.4) - (corners * 0.2) - (interceptions * 0.1)  
     return score_tactique  
 
 # Calcul des scores tactiques  
 score_tactique_A = analyser_tactiques(buts_produits_A, buts_encaisse_A, poss_moyenne_A, xG_A, tirs_cadres_A, corners_A, interceptions_A)  
 score_tactique_B = analyser_tactiques(buts_produits_B, buts_encaisse_B, poss_moyenne_B, xG_B, tirs_cadres_B, corners_B, interceptions_B)  
 
-# Sélection du meilleur système tactique  
-meilleur_tactique_A = "4-3-3" if score_tactique_A > score_tactique_B else "4-4-2"  
-meilleur_tactique_B = "4-3-3" if score_tactique_B > score_tactique_A else "4-4-2"  
+# Prédiction des buts  
+def prediction_buts(score_A, score_B):  
+    total_score = score_A + score_B  
+    if total_score == 0:  
+        return 0, 0  # Éviter la division par zéro  
+    return (score_A / total_score) * 100, (score_B / total_score) * 100  
+
+# Calcul des pourcentages de victoire  
+pourcentage_victoire_A, pourcentage_victoire_B = prediction_buts(score_tactique_A, score_tactique_B)  
 
 # Affichage des meilleurs systèmes tactiques  
-st.write(f"<h3 style='color: #FF5722;'>Meilleur système tactique pour l'équipe A : {meilleur_tactique_A}</h3>", unsafe_allow_html=True)  
-st.write(f"<h3 style='color: #FF5722;'>Meilleur système tactique pour l'équipe B : {meilleur_tactique_B}</h3>", unsafe_allow_html=True)  
+st.write(f"<h3 style='color: #FF5722;'>Meilleur système tactique pour l'équipe A : {'4-3-3' if score_tactique_A > score_tactique_B else '4-4-2'}</h3>", unsafe_allow_html=True)  
+st.write(f"<h3 style='color: #FF5722;'>Meilleur système tactique pour l'équipe B : {'4-3-3' if score_tactique_B > score_tactique_A else '4-4-2'}</h3>", unsafe_allow_html=True)  
 
-# Modèle de prédiction des buts  
+# Affichage des résultats de la prédiction  
 if st.button("Analyser le Match"):  
     # Données d'entraînement fictives  
     data = {  
@@ -162,11 +166,11 @@ if st.button("Analyser le Match"):
         "xG_concedes_A": [1.5, 2.0, 1.0, 2.5, 1.8],  
         "interceptions_A": [5, 6, 4, 7, 5],  
         "tacles_reussis_A": [5, 4, 6, 3, 5],  
-        "degagements_A": [5, 6, 4, 7, 5],  
+                "degagements_A": [5, 6, 4, 7, 5],  
         "possessions_recuperees_A": [5, 4, 6, 3, 5],  
         "penalties_concedes_A": [1, 0, 2, 1, 1],  
         "arrets_A": [3, 2, 4, 1, 3],  
-                "fautes_A": [10, 12, 8, 9, 11],  
+        "fautes_A": [10, 12, 8, 9, 11],  
         "cartons_jaunes_A": [2, 1, 3, 0, 1],  
         "cartons_rouges_A": [0, 0, 1, 0, 0],  
         "buts_produits_B": [60, 70, 50, 20, 40],  
@@ -222,14 +226,25 @@ if st.button("Analyser le Match"):
     prediction_A = model_A.predict(X_test_A)  
     prediction_B = model_B.predict(X_test_B)  
 
-    # Affichage des résultats  
+    # Calcul des buts moyens  
+    buts_moyens_A = prediction_A.mean()  
+    buts_moyens_B = prediction_B.mean()  
+
+    # Affichage des résultats de la prédiction  
     st.subheader("Résultats de la Prédiction")  
-    st.write(f"Prédiction des buts pour l'équipe A : **{prediction_A.mean():.2f}**")  
-    st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B.mean():.2f}**")  
+    st.write(f"Prédiction des buts pour l'équipe A : **{buts_moyens_A:.2f}**")  
+    st.write(f"Prédiction des buts pour l'équipe B : **{buts_moyens_B:.2f}**")  
+
+    # Calcul des pourcentages de victoire  
+    pourcentage_victoire_A, pourcentage_victoire_B = prediction_buts(buts_moyens_A, buts_moyens_B)  
+
+    # Affichage des pourcentages de victoire  
+    st.write(f"Pourcentage de victoire pour l'équipe A : **{pourcentage_victoire_A:.2f}%**")  
+    st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_victoire_B:.2f}%**")  
 
     # Visualisation des prédictions  
     fig, ax = plt.subplots()  
-    ax.bar(["Équipe A", "Équipe B"], [prediction_A.mean(), prediction_B.mean()], color=['blue', 'red'])  
+    ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue', 'red'])  
     ax.set_ylabel('Buts Prédits')  
     ax.set_title('Prédictions de Buts pour le Match')  
     st.pyplot(fig)  
