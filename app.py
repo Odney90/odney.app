@@ -226,4 +226,4 @@ if st.button("Prédire le nombre de buts et les probabilités de victoire"):
     st.write(f"Prédiction des buts pour l'équipe A : **{prediction_A:.2f}**")  
     st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B:.2f}**")  
     st.write(f"Probabilité de victoire pour l'équipe A : **{prob_victoire_A:.2%}**")  
-    st.write(f
+    st.write(f"Probabilité de victoire pour l'équipe B : **{prob_victoire_B:.2%}**")
