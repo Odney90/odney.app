@@ -186,7 +186,7 @@ st.subheader("Analyse Multi-Variable")
 data = {  
     'xG_A': [xG_A],  
     'xG_B': [xG_B],  
-        'tirs_cadres_A': [tirs_cadres_A],  
+    'tirs_cadres_A': [tirs_cadres_A],  
     'tirs_cadres_B': [tirs_cadres_B],  
     'poss_moyenne_A': [poss_moyenne_A],  
     'poss_moyenne_B': [poss_moyenne_B],  
