@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.linear_model import LogisticRegression  
-from sklearn.model_selection import train_test_split  
 from sklearn.preprocessing import StandardScaler  
 import pickle  
 import os  
+from scipy.stats import poisson  
 
 # Fonction pour sauvegarder les données  
 def save_data(data):  
@@ -29,6 +29,13 @@ st.write("Entrez les statistiques des deux équipes pour prédire le résultat d
 
 # Saisie des données pour l'équipe A  
 st.header("Équipe A 🏆")  
+# Historique des performances  
+historique_A = st.text_area("Historique des performances (ex: W, D, L)", height=100)  
+
+# Conditions de match  
+st.subheader("Conditions de Match")  
+equipe_recevante = st.selectbox("Équipe qui reçoit", ["Équipe A", "Équipe B"])  
+
 # Statistiques de l'équipe  
 st.subheader("Statistiques de l'Équipe")  
 buts_totaux_A = st.number_input("Buts totaux", min_value=0, value=0)  
@@ -69,6 +76,9 @@ cartons_rouges_A = st.number_input("Cartons rouges", min_value=0, value=0)
 
 # Saisie des données pour l'équipe B  
 st.header("Équipe B 🥈")  
+# Historique des performances  
+historique_B = st.text_area("Historique des performances (ex: W, D, L)", height=100, key="B_historique")  
+
 # Statistiques de l'équipe  
 st.subheader("Statistiques de l'Équipe")  
 buts_totaux_B = st.number_input("Buts totaux", min_value=0, value=0, key="B")  
@@ -107,68 +117,68 @@ fautes_B = st.number_input("Fautes par match", min_value=0, value=0, key="B24")
 cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=0, key="B25")  
 cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="B26")  
 
-# Sauvegarde des données  
-if st.button("💾 Sauvegarder les données"):  
-    data_to_save = {  
-        'Équipe A': {  
-            'Buts totaux': buts_totaux_A,  
-            'Buts par match': buts_par_match_A,  
-            'Buts concédés par match': buts_concedes_par_match_A,  
-            'Buts concédés au total': buts_concedes_totaux_A,  
-            'Possession moyenne': possession_moyenne_A,  
-            'Aucun but encaissé': aucun_but_encaisse_A,  
-            'Expected Goals': expected_buts_A,  
-            'Tirs cadrés': tirs_cadres_A,  
-            'Grandes chances': grosses_chances_A,  
-            'Grandes chances manquées': grosses_chances_ratees_A,  
-            'Passes réussies': passes_reussies_A,  
-            'Passes longues précises': passes_longues_precises_A,  
-            'Centres réussis': centres_reussis_A,  
-            'Pénalités obtenues': penalites_obtenues_A,  
-            'Touches surface adverse': touches_surface_adverse_A,  
-            'Corners': corners_A,  
-            'Expected Goals concédés': expected_concedes_A,  
-            'Interceptions': interceptions_A,  
-            'Tacles réussis': tacles_reussis_A,  
-            'Dégagements': degegements_A,  
-            'Pénalités concédées': penalites_concedes_A,  
-            'Possessions remportées': possessions_remporte_A,  
-            'Arrêts': arrets_A,  
-            'Fautes': fautes_A,  
-            'Cartons jaunes': cartons_jaunes_A,  
-            'Cartons rouges': cartons_rouges_A  
-        },  
-        'Équipe B': {  
-            'Buts totaux': buts_totaux_B,  
-            'Buts par match': buts_par_match_B,  
-            'Buts concédés par match': buts_concedes_par_match_B,  
-            'Buts concédés au total': buts_concedes_totaux_B,  
-            'Possession moyenne': possession_moyenne_B,  
-            'Aucun but encaissé': aucun_but_encaisse_B,  
-            'Expected Goals': expected_buts_B,  
-            'Tirs cadrés': tirs_cadres_B,  
-            'Grandes chances': grosses_chances_B,  
-            'Grandes chances manquées': grosses_chances_ratees_B,  
-            'Passes réussies': passes_reussies_B,  
-            'Passes longues précises': passes_longues_precises_B,  
-            'Centres réussis': centres_reussis_B,  
-            'Pénalités obtenues': penalites_obtenues_B,  
-            'Touches surface adverse': touches_surface_adverse_B,  
-            'Corners': corners_B,  
-            'Expected Goals concédés': expected_concedes_B,  
-            'Interceptions': interceptions_B,  
-            'Tacles réussis': tacles_reussis_B,  
-            'Dégagements': degegements_B,  
-            'Pénalités concédées': penalites_concedes_B,  
-            'Possessions remportées': possessions_remporte_B,  
-            'Arrêts': arrets_B,  
-            'Fautes': fautes_B,  
-            'Cartons jaunes': cartons_jaunes_B,  
-            'Cartons rouges': cartons_rouges_B  
-        }  
+# Sauvegarde automatique des données  
+data_to_save = {  
+    'Équipe A': {  
+        'Historique': historique_A,  
+        'Buts totaux': buts_totaux_A,  
+        'Buts par match': buts_par_match_A,  
+        'Buts concédés par match': buts_concedes_par_match_A,  
+        'Buts concédés au total': buts_concedes_totaux_A,  
+        'Possession moyenne': possession_moyenne_A,  
+        'Aucun but encaissé': aucun_but_encaisse_A,  
+        'Expected Goals': expected_buts_A,  
+        'Tirs cadrés': tirs_cadres_A,  
+        'Grandes chances': grosses_chances_A,  
+        'Grandes chances manquées': grosses_chances_ratees_A,  
+        'Passes réussies': passes_reussies_A,  
+        'Passes longues précises': passes_longues_precises_A,  
+        'Centres réussis': centres_reussis_A,  
+        'Pénalités obtenues': penalites_obtenues_A,  
+        'Touches surface adverse': touches_surface_adverse_A,  
+        'Corners': corners_A,  
+        'Expected Goals concédés': expected_concedes_A,  
+        'Interceptions': interceptions_A,  
+        'Tacles réussis': tacles_reussis_A,  
+        'Dégagements': degegements_A,  
+        'Pénalités concédées': penalites_concedes_A,  
+        'Possessions remportées': possessions_remporte_A,  
+        'Arrêts': arrets_A,  
+        'Fautes': fautes_A,  
+        'Cartons jaunes': cartons_jaunes_A,  
+        'Cartons rouges': cartons_rouges_A  
+    },  
+    'Équipe B': {  
+        'Historique': historique_B,  
+        'Buts totaux': buts_totaux_B,  
+        'Buts par match': buts_par_match_B,  
+        'Buts concédés par match': buts_concedes_par_match_B,  
+        'Buts concédés au total': buts_concedes_totaux_B,  
+        'Possession moyenne': possession_moyenne_B,  
+        'Aucun but encaissé': aucun_but_encaisse_B,  
+        'Expected Goals': expected_buts_B,  
+        'Tirs cadrés': tirs_cadres_B,  
+        'Grandes chances': grosses_chances_B,  
+        'Grandes chances manquées': grosses_chances_ratees_B,  
+        'Passes réussies': passes_reussies_B,  
+        'Passes longues précises': passes_longues_precises_B,  
+        'Centres réussis': centres_reussis_B,  
+        'Pénalités obtenues': penalites_obtenues_B,  
+        'Touches surface adverse': touches_surface_adverse_B,  
+        'Corners': corners_B,  
+        'Expected Goals concédés': expected_concedes_B,  
+        'Interceptions': interceptions_B,  
+        'Tacles réussis': tacles_reussis_B,  
+        'Dégagements': degegements_B,  
+        'Pénalités concédées': penalites_concedes_B,  
+        'Possessions remportées': possessions_remporte_B,  
+        'Arrêts': arrets_B,  
+        'Fautes': fautes_B,  
+        'Cartons jaunes': cartons_jaunes_B,  
+        'Cartons rouges': cartons_rouges_B  
     }  
-    save_data(data_to_save)  
-    st.success("✅ Les données ont été sauvegardées avec succès !")  
+}  
+save_data(data_to_save)  
 
 # Prédiction avec Random Forest  
 if st.button("🔮 Prédire le résultat avec Random Forest"):  
@@ -208,6 +218,7 @@ if st.button("🔮 Prédire le résultat avec Régression Logistique"):
     log_model = LogisticRegression(max_iter=1000)  
     log_model.fit(input_data_scaled_log, [1])  # Dummy fit for demonstration  
     prediction_log = log_model.predict(input_data_scaled_log)  
+    prediction_proba = log_model.predict_proba(input_data_scaled_log)  
 
     # Affichage du résultat  
     if prediction_log[0] == 1:  
@@ -215,9 +226,12 @@ if st.button("🔮 Prédire le résultat avec Régression Logistique"):
     else:  
         st.success("🥈 L'équipe B est prédite pour gagner !")  
 
+    # Affichage des probabilités  
+    st.write(f"Probabilité que l'équipe A gagne : **{prediction_proba[0][1] * 100:.2f}%**")  
+    st.write(f"Probabilité que l'équipe B gagne : **{prediction_proba[0][0] * 100:.2f}%**")  
+
 # Prédiction des buts avec la méthode de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
-    from scipy.stats import poisson  
     buts_A = [poisson.pmf(i, xG_A) for i in range(6)]  
     buts_B = [poisson.pmf(i, xG_B) for i in range(6)]  
     buts_attendus_A = sum(i * prob for i, prob in enumerate(buts_A))  
