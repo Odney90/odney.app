@@ -239,8 +239,34 @@ with col6:
     ratings_B = []  
     for i in range(5):  
         rating = st.number_input(f"Rating joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_B_{i}")  
-        ratings_B.append(rating)
-        # Motivation des équipes  
+        ratings_B.append(rating)  
+
+# Ajout de la variable "face à face"  
+st.header("⚔️ Face à Face")  
+st.markdown("Entrez l'historique des confrontations directes entre les équipes.")  
+
+col9, col10 = st.columns(2)  
+
+with col9:  
+    st.subheader("Équipe A")  
+    victoires_face_a_face_A = st.number_input("Victoires contre l'équipe B", min_value=0, value=0, key="victoires_face_a_face_A")  
+
+with col10:  
+    st.subheader("Équipe B")  
+    victoires_face_a_face_B = st.number_input("Victoires contre l'équipe A", min_value=0, value=0, key="victoires_face_a_face_B")  
+
+# Calcul du ratio de victoires en face à face  
+total_face_a_face = victoires_face_a_face_A + victoires_face_a_face_B  
+if total_face_a_face > 0:  
+    ratio_face_a_face_A = victoires_face_a_face_A / total_face_a_face  
+    ratio_face_a_face_B = victoires_face_a_face_B / total_face_a_face  
+else:  
+    ratio_face_a_face_A = 0.5  # Valeur par défaut si aucune confrontation  
+    ratio_face_a_face_B = 0.5  
+
+st.write(f"Ratio de victoires en face à face pour l'équipe A : **{ratio_face_a_face_A:.2f}**")  
+st.write(f"Ratio de victoires en face à face pour l'équipe B : **{ratio_face_a_face_B:.2f}**")
+# Motivation des équipes  
 st.header("🔥 Motivation des Équipes")  
 st.markdown("Évaluez le niveau de motivation de chaque équipe.")  
 
@@ -276,13 +302,13 @@ X = np.array([
      tirs_cadres_A, pourcentage_tirs_convertis_A, grosses_occasions_A, passes_reussies_A, passes_longues_precises_A,  
      centres_reussis_A, penalties_obtenus_A, touches_surface_adverse_A, corners_A, corners_par_match_A, corners_concedes_A,  
      xG_concedes_A, interceptions_A, tacles_reussis_A, degagements_A, possessions_recuperees_A, penalties_concedes_A,  
-     arrets_A, fautes_A, cartons_jaunes_A, cartons_rouges_A],  
+     arrets_A, fautes_A, cartons_jaunes_A, cartons_rouges_A, ratio_face_a_face_A],  # Ajout de ratio_face_a_face_A  
 
     [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B, absents_B, np.mean(ratings_B), forme_recente_B,  
      tirs_cadres_B, pourcentage_tirs_convertis_B, grosses_occasions_B, passes_reussies_B, passes_longues_precises_B,  
      centres_reussis_B, penalties_obtenus_B, touches_surface_adverse_B, corners_B, corners_par_match_B, corners_concedes_B,  
-     xG_concedes_B, interceptions_B, tacles_reussis_B, degagements_B, possessions_recuperees_B, penalties_concedes_B,  
-     arrets_B, fautes_B, cartons_jaunes_B, cartons_rouges_B]  
+     xG_concedes_B, interceptions_A, tacles_reussis_B, degagements_B, possessions_recuperees_B, penalties_concedes_B,  
+     arrets_B, fautes_B, cartons_jaunes_B, cartons_rouges_B, ratio_face_a_face_B]   # Ajout de ratio_face_a_face_B  
 ])  
 y = np.array([1, 0])  # 1 pour l'équipe A, 0 pour l'équipe B  
 
@@ -308,7 +334,7 @@ feature_names = ['Buts produits', 'Buts encaissés', 'Possession moyenne', 'Moti
                  'Tirs cadrés', 'Pourcentage tirs convertis', 'Grosses occasions', 'Passes réussies', 'Passes longues précises',  
                  'Centres réussis', 'Pénalties obtenus', 'Touches surface adverse', 'Corners', 'Corners par match', 'Corners concédés',  
                  'xG concédés', 'Interceptions', 'Tacles réussis', 'Dégagements', 'Possessions récupérées', 'Pénalties concédés',  
-                 'Arrêts', 'Fautes', 'Cartons jaunes', 'Cartons rouges']  
+                 'Arrêts', 'Fautes', 'Cartons jaunes', 'Cartons rouges', 'Ratio Face à Face']  # Ajout de 'Ratio Face à Face'  
 coefficients = model.coef_[0]  
 
 # Créer un DataFrame pour afficher les coefficients de manière plus lisible  
@@ -321,18 +347,18 @@ st.header("💡 Informations Utiles pour les Paris")
 # Analyse des forces et faiblesses  
 st.subheader("Forces et Faiblesses")  
 if prediction[0][1] > prediction[1][1]:  
-    st.write("L'équipe A a une plus grande probabilité de gagner en raison de ses forces en attaque et de sa solidité défensive.")  
+    st.write("L'équipe A a une plus grande probabilité de gagner en raison de ses forces en attaque, de sa solidité défensive et de son avantage en face à face.")  
 else:  
-    st.write("L'équipe B a une plus grande probabilité de gagner en raison de ses forces en attaque et de sa solidité défensive.")  
+    st.write("L'équipe B a une plus grande probabilité de gagner en raison de ses forces en attaque, de sa solidité défensive et de son avantage en face à face.")  
 
 # Facteurs clés à considérer  
 st.subheader("Facteurs Clés à Considérer")  
-st.write("Les facteurs clés incluent la forme récente, la motivation, les joueurs absents et les statistiques détaillées des équipes.")  
+st.write("Les facteurs clés incluent la forme récente, la motivation, les joueurs absents, les statistiques détaillées des équipes et l'historique des confrontations directes.")  
 
 # Conseils de paris (Disclaimer : Les paris comportent des risques)  
 st.subheader("Conseils de Paris (Disclaimer : Les paris comportent des risques)")  
 st.write("Considérez les paris suivants :")  
-st.write("- Parier sur la victoire de l'équipe avec la plus grande probabilité.")  
+st.write("- Parier sur la victoire de l'équipe avec la plus grande probabilité, en tenant compte de son avantage en face à face.")  
 st.write("- Parier sur le nombre total de buts (plus ou moins) en fonction des buts attendus (xG).")  
 st.write("- Parier sur les corners ou les cartons en fonction des statistiques des équipes.")
 # Calcul des paris alternatifs  
