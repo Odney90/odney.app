@@ -6,8 +6,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
 import matplotlib.pyplot as plt  
-import csv  
-from io import StringIO  
 
 
 # Fonction pour prédire le nombre de buts  
@@ -16,28 +14,15 @@ def predire_buts(probabilite_victoire, attaque, defense):
     Prédit le nombre de buts en fonction de la probabilité de victoire,  
     de la force offensive (attaque) et de la force défensive (defense).  
     """  
-    base_buts = probabilité_victoire * 3  # Base : max 3 buts en fonction de la probabilité  
+    base_buts = probabilite_victoire * 3  # Base : max 3 buts en fonction de la probabilité  
     ajustement = (attaque - defense) * 0.5  # Ajustement basé sur la différence attaque/défense  
     buts = max(0, base_buts + ajustement)  # Les buts ne peuvent pas être négatifs  
     return round(buts, 1)  # Retourne un nombre avec une décimale  
 
 
-# Fonction pour calculer la mise optimale selon Kelly  
-def calculer_mise_kelly(probabilite, cotes, facteur_kelly=1):  
-    b = cotes - 1  # Gain net pour 1 unité misée  
-    q = 1 - probabilite  # Probabilité d'échec  
-    fraction_kelly = (b * probabilite - q) / b  
-    fraction_kelly = max(0, fraction_kelly)  # La mise ne peut pas être négative  
-    return fraction_kelly * facteur_kelly  
-
-
-# Fonction pour convertir la mise Kelly en unités (1 à 5)  
-def convertir_mise_en_unites(mise, bankroll, max_unites=5):  
-    # Mise maximale en fonction de la bankroll  
-    mise_max = bankroll * 0.05  # Par exemple, 5% de la bankroll  
-    # Mise en unités (arrondie à l'entier le plus proche)  
-    unites = round((mise / mise_max) * max_unites)  
-    return min(max(unites, 1), max_unites)  # Limiter entre 1 et max_unites  
+# Fonction pour convertir les cotes en probabilités implicites  
+def cotes_en_probabilites(cote):  
+    return 1 / cote  
 
 
 # Titre de l'application  
@@ -49,7 +34,6 @@ st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_a
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
-# Données fictives modifiables pour 40 matchs  
 buts_par_match_A = st.slider("Buts par match", 0, 10, 2, key="buts_par_match_A")  
 nombre_buts_produits_A = st.slider("Nombre de buts produits", 0, 100, 80, key="nombre_buts_produits_A")  
 nombre_buts_encaisse_A = st.slider("Nombre de buts encaissés", 0, 100, 30, key="nombre_buts_encaisse_A")  
@@ -173,8 +157,8 @@ st.write(f"Précision du modèle Logistic Regression : **{precision_lr * 100:.2f
 nouvelle_donnee = pd.DataFrame({  
     "attaque": [buts_par_match_A, buts_par_match_B],  
     "defense": [nombre_buts_encaisse_A, nombre_buts_encaisse_B],  
-    "forme_recente": [forme_recente_A, forme_recente_B],  
-    "motivation": [motivation_A, motivation_B]  
+    "forme_recente": [3.5, 3.0],  # Valeurs fictives pour la forme récente  
+    "motivation": [4.0, 3.5]  # Valeurs fictives pour la motivation  
 })  
 
 prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
@@ -221,4 +205,18 @@ st.pyplot(fig)
 # Partie combinée : Calcul des probabilités et mise optimale  
 st.markdown("<h2 style='color: #4CAF50;'>5. Simulateur de paris combinés</h2>", unsafe_allow_html=True)  
 
-# Sélection des équipes pour le combiné
+# Sélection des cotes pour les équipes  
+cote_A = st.number_input("Cote pour l'équipe A", min_value=1.0, value=2.0, step=0.1)  
+cote_B = st.number_input("Cote pour l'équipe B", min_value=1.0, value=3.0, step=0.1)  
+
+# Conversion des cotes en probabilités implicites  
+probabilite_A = cotes_en_probabilites(cote_A)  
+probabilite_B = cotes_en_probabilites(cote_B)  
+
+# Affichage des probabilités implicites  
+st.write(f"Probabilité implicite pour l'équipe A : **{probabilite_A * 100:.2f}%**")  
+st.write(f"Probabilité implicite pour l'équipe B : **{probabilite_B * 100:.2f}%**")  
+
+# Comparaison des probabilités  
+st.write("### Comparaison des probabilités")  
+st.write(f"Probabilité de victoire selon RandomForest pour l'équipe A : **{
