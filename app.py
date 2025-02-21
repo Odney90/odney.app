@@ -217,7 +217,15 @@ if st.button("🔮 Prédire le résultat avec Régression Logistique"):
 
     # Prédiction avec le modèle de régression logistique  
     log_model = LogisticRegression(max_iter=1000)  
-    log_model.fit(input_data_scaled_log, [1])  # Dummy fit for demonstration  
+    
+    # Dummy fit pour démonstration, remplacez par des données réelles  
+    # Vous devez avoir un ensemble de données d'entraînement pour le modèle  
+    # Exemple : log_model.fit(X_train, y_train)  
+    # Ici, nous allons simuler un entraînement avec des données fictives  
+    X_train = np.random.rand(100, 10)  # Remplacez par vos données réelles  
+    y_train = np.random.randint(0, 2, size=100)  # Remplacez par vos étiquettes réelles  
+    log_model.fit(X_train, y_train)  
+
     prediction_log = log_model.predict(input_data_scaled_log)  
     prediction_proba = log_model.predict_proba(input_data_scaled_log)  
 
