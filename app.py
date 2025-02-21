@@ -261,4 +261,4 @@ if st.button("⚽ Prédire les buts avec la méthode de Poisson"):
     buts_moyens_A, buts_moyens_B = prediction_buts_poisson(expected_buts_A, expected_buts_B)  
     st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
     st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
-    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2
+  st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
