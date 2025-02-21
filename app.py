@@ -175,6 +175,7 @@ y_combined = pd.concat([y_A, y_B], ignore_index=True)
 
 model_rf.fit(X_combined, y_combined)  
 
+
 # Prédictions pour les nouvelles données  
 nouvelle_donnee_A = pd.DataFrame({  
     "nombre_buts_produits_A": [nombre_buts_produits_A],  
@@ -214,14 +215,18 @@ nouvelle_donnee_B = pd.DataFrame({
 
 # Vérification de la longueur des données  
 if st.button("Prédire le nombre de buts et les probabilités de victoire"):  
-    prediction_A = model_lr_A.predict(nouvelle_donnee_A)[0]  # Prédiction pour l'équipe A  
-    prediction_B = model_lr_B.predict(nouvelle_donnee_B)[0]  # Prédiction pour l'équipe B  
+    # Prédictions pour l'équipe A  
+    prediction_A = model_lr_A.predict(nouvelle_donnee_A)[0]  
+    # Prédictions pour l'équipe B  
+    prediction_B = model_lr_B.predict(nouvelle_donnee_B)[0]  
 
     # Calcul des probabilités de victoire  
-    prob_victoire_A = model_rf.predict(nouvelle_donnee_A) / (model_rf.predict(nouvelle_donnee_A) + model_rf.predict(nouvelle_donnee_B))  
-    prob_victoire_B = model_rf.predict(nouvelle_donnee_B) / (model_rf.predict(nouvelle_donnee_A) + model_rf.predict(nouvelle_donnee_B))  
+    prob_victoire_A = model_rf.predict(nouvelle_donnee_A)[0] / (model_rf.predict(nouvelle_donnee_A)[0] + model_rf.predict(nouvelle_donnee_B)[0])  
+    prob_victoire_B = model_rf.predict(nouvelle_donnee_B)[0] / (model_rf.predict(nouvelle_donnee_A)[0] + model_rf.predict(nouvelle_donnee_B)[0])  
 
     st.write(f"Prédiction des buts pour l'équipe A : **{prediction_A:.2f}**")  
     st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B:.2f}**")  
-    st.write(f"Probabilité de victoire pour l'équipe A : **{prob_victoire_A[0]:.2%}**")  
-    st.write(f"Probabilité de victoire pour l'équipe B : **{prob_victoire_B[0]:.2%}**")
+    st.write(f"Probabilité de victoire pour l'équipe A : **{prob_victoire_A:.2%}**")  
+    st.write(f"Probabilité de victoire pour l'équipe B : **{prob_victoire_B:.2%}**")
+
+
