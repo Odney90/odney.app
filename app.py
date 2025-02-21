@@ -147,9 +147,23 @@ if st.button("Prédire le nombre de buts"):
     prediction_A = model_A.predict(nouvelle_donnee)[0]  
     prediction_B = model_B.predict(nouvelle_donnee)[0]  
 
+    # Calcul des pourcentages de victoire  
+    total_buts = prediction_A + prediction_B  
+    if total_buts > 0:  
+        pourcentage_A = (prediction_A / total_buts) * 100  
+        pourcentage_B = (prediction_B / total_buts) * 100  
+    else:  
+        pourcentage_A = 0  
+        pourcentage_B = 0  
+
     # Affichage des résultats  
+    st.markdown("<h2 style='color: #FF5722;'>Prédictions des Buts</h2>", unsafe_allow_html=True)  
     st.write(f"Prédiction des buts pour l'équipe A : **{prediction_A:.2f}**")  
     st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B:.2f}**")  
+
+    st.markdown("<h2 style='color: #FF5722;'>Pourcentages de Victoire</h2>", unsafe_allow_html=True)  
+    st.write(f"Pourcentage de victoire pour l'équipe A : **{pourcentage_A:.2f}%**")  
+    st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_B:.2f}%**")  
 
     # Détermination du résultat  
     if prediction_A > prediction_B:  
@@ -165,4 +179,11 @@ if st.button("Prédire le nombre de buts"):
     ax.bar(['Équipe A', 'Équipe B'], [prediction_A, prediction_B], color=['blue', 'red'])  
     ax.set_ylabel('Nombre de buts prédit')  
     ax.set_title('Prédiction des buts par équipe')  
-    st.pyplot(fig)
+    st.pyplot(fig)  
+
+    # Visualisation des pourcentages de victoire  
+    fig2, ax2 = plt.subplots()  
+    ax2.bar(['Équipe A', 'Équipe B'], [pourcentage_A, pourcentage_B], color=['blue', 'red'])  
+    ax2.set_ylabel('Pourcentage de victoire (%)')  
+    ax2.set_title('Pourcentage de victoire par équipe')  
+    st.pyplot(fig2)
