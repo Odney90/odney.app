@@ -3,5 +3,6 @@ matplotlib
 pandas  
 numpy  
 scikit-learn  
-pillow  
+pillow 
+pip install -r requirements.txt
 qrcode
