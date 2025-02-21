@@ -179,4 +179,4 @@ buts_rf_B = predire_buts(1 - prediction_rf, buts_par_match_B, nombre_buts_encais
 buts_lr_A = predire_buts(prediction_lr, buts_par_match_A, nombre_buts_encaisse_B)  
 buts_lr_B = predire_buts(1 - prediction_lr, buts_par_match_B, nombre_buts_encaisse_A)  
 
-st.write(f"Probabilité de victoire de l'équipe A selon RandomForest :
+st.écrire(f"Probabilité de victoire de l'équipe A selon RandomForest :
