@@ -1,8 +1,8 @@
 import streamlit as st  
 import pandas as pd  
 from sklearn.model_selection import train_test_split  
-from sklearn.linear_model import LinearRegression  
-from sklearn.ensemble import RandomForestRegressor  
+from sklearn.linear_model import LinearRegression, LogisticRegression  
+from sklearn.preprocessing import StandardScaler  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match et Gestion de Bankroll", layout="wide")  
@@ -166,14 +166,18 @@ model_lr_A.fit(X_train_A, y_train_A)
 model_lr_B = LinearRegression()  
 model_lr_B.fit(X_train_B, y_train_B)  
 
-# Modèle de prédiction des probabilités de victoire  
-model_rf = RandomForestRegressor(random_state=42)  
-
-# Utilisation de pd.concat() pour combiner les DataFrames  
+# Modèle de prédiction des probabilités de victoire avec régression logistique  
+# On combine les données pour entraîner le modèle de régression logistique  
 X_combined = pd.concat([X_A, X_B], ignore_index=True)  
 y_combined = pd.concat([y_A, y_B], ignore_index=True)  
 
-model_rf.fit(X_combined, y_combined)  
+# Normalisation des données  
+scaler = StandardScaler()  
+X_combined_scaled = scaler.fit_transform(X_combined)  
+
+# Entraînement du modèle de régression logistique  
+model_logistic = LogisticRegression()  
+model_logistic.fit(X_combined_scaled, y_combined)  
 
 # Prédictions pour les nouvelles données  
 nouvelle_donnee_A = pd.DataFrame({  
@@ -212,6 +216,10 @@ nouvelle_donnee_B = pd.DataFrame({
     "humidité": [humidité],  
 })  
 
+# Normalisation des nouvelles données  
+nouvelle_donnee_A_scaled = scaler.transform(nouvelle_donnee_A)  
+nouvelle_donnee_B_scaled = scaler.transform(nouvelle_donnee_B)  
+
 # Vérification de la longueur des données  
 if st.button("Prédire le nombre de buts et les probabilités de victoire"):  
     # Prédictions pour l'équipe A  
@@ -220,10 +228,9 @@ if st.button("Prédire le nombre de buts et les probabilités de victoire"):
     prediction_B = model_lr_B.predict(nouvelle_donnee_B)[0]  
 
     # Calcul des probabilités de victoire  
-    prob_victoire_A = model_rf.predict(nouvelle_donnee_A)[0] / (model_rf.predict(nouvelle_donnee_A)[0] + model_rf.predict(nouvelle_donnee_B)[0])  
-    prob_victoire_B = model_rf.predict(nouvelle_donnee_B)[0] / (model_rf.predict(nouvelle_donnee_A)[0] + model_rf.predict(nouvelle_donnee_B)[0])  
+    prob_victoire_A = model_logistic.predict_proba(nouvelle_donnee_A_scaled)[0][1]  
+    prob_victoire_B = model_logistic.predict_proba(nouvelle_donnee_B_scaled)[0][1]  
 
-    st.write(f"Prédiction des buts pour l'équipe A : **{prediction_A:.2f}**")  
-    st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B:.2f}**")  
+     st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B:.2f}**")  
     st.write(f"Probabilité de victoire pour l'équipe A : **{prob_victoire_A:.2%}**")  
     st.write(f"Probabilité de victoire pour l'équipe B : **{prob_victoire_B:.2%}**")
