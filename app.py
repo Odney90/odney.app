@@ -131,7 +131,14 @@ fautes_A = st.slider("Fautes par match", min_value=0, max_value=50, value=10, ke
 cartons_jaunes_A = st.number_input("Cartons jaunes", min_value=0, value=2, key="cartons_jaunes_A")  
 cartons_rouges_A = st.number_input("Cartons rouges", min_value=0, value=0, key="cartons_rouges_A")  
 tactique_A = st.text_input("Tactique de l'équipe A", value="4-3-3", key="tactique_A")  
-joueurs_cles_A = st.text_input("Joueurs clés de l'équipe A", value="Joueur 1, Joueur 2", key="joueurs_cles_A")  
+
+# Section pour les joueurs clés de l'équipe A  
+st.subheader("Joueurs Clés de l'équipe A")  
+absents_A = st.number_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_A")  
+ratings_A = []  
+for i in range(5):  
+    rating = st.number_input(f"Rating du joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_A_{i}")  
+    ratings_A.append(rating)  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -162,7 +169,15 @@ fautes_B = st.slider("Fautes par match", min_value=0, max_value=50, value=12, ke
 cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=1, key="cartons_jaunes_B")  
 cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="cartons_rouges_B")  
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
-joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")
+
+# Section pour les joueurs clés de l'équipe B  
+st.subheader("Joueurs Clés de l'équipe B")  
+absents_B = st.number_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_B")  
+ratings_B = []  
+for i in range(5):  
+    rating = st.number_input(f"Rating du joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_B_{i}")  
+    ratings_B.append(rating)  
+
 # Motivation des équipes  
 st.subheader("Motivation des Équipes")  
 motivation_A = st.slider("Niveau de motivation de l'équipe A (1 à 10)", min_value=1, max_value=10, value=5, key="motivation_A")  
@@ -195,8 +210,10 @@ st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
 # Prédiction multivariable avec régression logistique (exemple simplifié)  
 st.subheader("Prédiction Multivariable avec Régression Logistique")  
 # Préparation des données pour le modèle (exemple simplifié)  
-X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A],  
-              [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B]])  
+X = np.array([[buts_produits_A, buts_encaisse_A,
+               # Préparation des données pour le modèle (exemple simplifié)  
+X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A, absents_A] + ratings_A,  
+              [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B, absents_B] + ratings_B])  
 y = np.array([1, 0])  # 1 pour l'équipe A, 0 pour l'équipe B  
 
 # Entraînement du modèle  
