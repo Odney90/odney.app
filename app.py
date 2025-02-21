@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd  
 from sklearn.model_selection import train_test_split  
 from sklearn.linear_model import LinearRegression  
+import matplotlib.pyplot as plt  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
@@ -156,4 +157,12 @@ if st.button("Prédire le nombre de buts"):
     elif prediction_A < prediction_B:  
         st.write("Résultat : Victoire de l'équipe B")  
     else:  
-        st.write("Résultat : Match nul")
+        st.write("Résultat : Match nul")  
+
+    # Visualisation des résultats  
+    st.subheader("Visualisation des Prédictions")  
+    fig, ax = plt.subplots()  
+    ax.bar(['Équipe A', 'Équipe B'], [prediction_A, prediction_B], color=['blue', 'red'])  
+    ax.set_ylabel('Nombre de buts prédit')  
+    ax.set_title('Prédiction des buts par équipe')  
+    st.pyplot(fig)
