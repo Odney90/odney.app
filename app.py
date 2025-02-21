@@ -197,7 +197,7 @@ st.write(f"Conditions Météorologiques : **{meteo}**")
 st.write(f"Équipe à domicile : **{avantage_terrain}**")  
 st.write(f"Niveau de motivation : **{motivation}**")  
 
-# Fonction pour prédire les buts avec distribution de Poisson  
+# Prédiction des buts avec la méthode de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
     # Calcul des probabilités de marquer 0 à 5 buts  
     buts_A = [poisson.pmf(i, xG_A) for i in range(6)]  
@@ -294,6 +294,61 @@ if resultat_pari == "Gagné":
 else:  
     bankroll -= mise_base  # Soustrait la mise de la bankroll  
     st.write(f"Votre nouvelle bankroll est : **{bankroll:.2f} €**")  
+
+# Modèle de régression logistique pour prédiction multivariable  
+st.subheader("Prédiction Multivariable avec Régression Logistique")  
+
+# Préparation des données pour le modèle  
+data = {  
+    'buts_produits_A': [buts_produits_A],  
+    'buts_encaisse_A': [buts_encaisse_A],  
+    'poss_moyenne_A': [poss_moyenne_A],  
+    'xG_A': [xG_A],  
+    'tirs_cadres_A': [tirs_cadres_A],  
+    'pourcentage_tirs_convertis_A': [pourcentage_tirs_convertis_A],  
+    'buts_produits_B': [buts_produits_B],  
+    'buts_encaisse_B': [buts_encaisse_B],  
+    'poss_moyenne_B': [poss_moyenne_B],  
+    'xG_B': [xG_B],  
+    'tirs_cadres_B': [tirs_cadres_B],  
+    'pourcentage_tirs_convertis_B': [pourcentage_tirs_convertis_B],  
+}  
+
+# Convertir en DataFrame  
+df = pd.DataFrame(data)  
+
+# Exemple de données d'entraînement (à remplacer par vos données réelles)  
+X = pd.DataFrame({  
+    'buts_produits_A': [2, 3, 1, 4, 2],  
+    'buts_encaisse_A': [1, 2, 1, 0, 2],  
+    'poss_moyenne_A': [55, 60, 50, 65, 58],  
+    'xG_A': [1.5, 2.0, 1.0, 2.5, 1.8],  
+    'tirs_cadres_A': [10, 8, 5, 12, 9],  
+    'pourcentage_tirs_convertis_A': [20, 25, 15, 30, 22],  
+    'buts_produits_B': [1, 2, 3, 1, 2],  
+    'buts_encaisse_B': [2, 1, 1, 3, 2],  
+    'poss_moyenne_B': [45, 40, 50, 35, 42],  
+    'xG_B': [1.0, 1.5, 2.0, 1.0, 1.2],  
+    'tirs_cadres_B': [5, 6, 7, 4, 5],  
+    'pourcentage_tirs_convertis_B': [15, 20, 25, 10, 18],  
+})  
+
+# Cibles (0 pour A gagne, 1 pour B gagne)  
+y = np.array([0, 1, 0, 1, 0])  # Remplacez par vos données réelles  
+
+# Entraînement du modèle  
+model = LogisticRegression()  
+model.fit(X, y)  
+
+# Prédiction  
+prediction = model.predict(df)  
+probabilite_A = model.predict_proba(df)[0][0] * 100  
+probabilite_B = model.predict_proba(df)[0][1] * 100  
+
+# Affichage des résultats de la prédiction multivariable  
+st.write(f"Prédiction du modèle : **{'Équipe A gagne' if prediction[0] == 0 else 'Équipe B gagne'}**")  
+st.write(f"Probabilité que l'équipe A gagne : **{probabilite_A:.2f}%**")  
+st.write(f"Probabilité que l'équipe B gagne : **{probabilite_B:.2f}%**")  
 
 # Fin de l'application  
 st.markdown("<h2 style='text-align: center; color: #4CAF50;'>Merci d'avoir utilisé l'outil d'analyse de match !</h2>", unsafe_allow_html=True)
