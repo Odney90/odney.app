@@ -5,6 +5,9 @@ from scipy.stats import poisson
 from sklearn.linear_model import LogisticRegression  
 from sklearn.preprocessing import StandardScaler  
 import pandas as pd  
+import streamlit as st  
+import tools  # Importe le module tools.py  
+# ... (autres imports)
 
 # Configuration de la page Streamlit  
 st.set_page_config(  
