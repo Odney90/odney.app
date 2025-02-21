@@ -4,9 +4,27 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor  
 from sklearn.ensemble import RandomForestRegressor  
 
+# Configuration de l'application  
+st.set_page_config(page_title="Prédiction de Match et Gestion de Bankroll", layout="wide")  
+
 # Titre de l'application  
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de Match et Gestion de Bankroll</h1>", unsafe_allow_html=True)  
 st.write("Analysez les données des matchs et simulez les résultats pour optimiser votre bankroll.")  
+
+# Style de fond clair  
+st.markdown(  
+    """  
+    <style>  
+    .reportview-container {  
+        background: #f9f9f9;  
+    }  
+    .sidebar .sidebar-content {  
+        background: #f9f9f9;  
+    }  
+    </style>  
+    """,  
+    unsafe_allow_html=True  
+)  
 
 # Partie 1 : Analyse des équipes  
 st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_allow_html=True)  
@@ -30,6 +48,9 @@ forme_recente_B = calculer_forme(historique_B)
 
 st.write(f"Forme récente de l'équipe A (moyenne sur 10 matchs) : **{forme_recente_A:.2f}**")  
 st.write(f"Forme récente de l'équipe B (moyenne sur 10 matchs) : **{forme_recente_B:.2f}**")  
+
+# Séparateur  
+st.markdown("---")  
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
@@ -56,6 +77,9 @@ fautes_A = st.slider("Fautes par match", min_value=0, max_value=20, value=10, ke
 tactique_A = st.text_input("Tactique de l'équipe A", value="Offensive")  
 joueurs_absents_A = st.text_input("Joueurs clés absents de l'équipe A", value="Aucun")  
 
+# Séparateur  
+st.markdown("---")  
+
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
 buts_par_match_B = st.slider("Buts par match", min_value=0, max_value=10, value=1, key="buts_par_match_B")  
@@ -80,6 +104,9 @@ arrets_B = st.slider("Arrêts par match", min_value=0, max_value=20, value=4, ke
 fautes_B = st.slider("Fautes par match", min_value=0, max_value=20, value=8, key="fautes_B")  
 tactique_B = st.text_input("Tactique de l'équipe B", value="Défensive")  
 joueurs_absents_B = st.text_input("Joueurs clés absents de l'équipe B", value="Aucun")  
+
+# Séparateur  
+st.markdown("---")  
 
 # Critères météorologiques  
 st.subheader("Conditions Météorologiques")  
@@ -205,13 +232,4 @@ if st.button("Prédire le nombre de buts et les probabilités de victoire"):
 
     # Calcul des probabilités de victoire  
     prob_victoire_A = model_rf.predict(nouvelle_donnee_A) / (model_rf.predict(nouvelle_donnee_A) + model_rf.predict(nouvelle_donnee_B))  
-    prob_victoire_B = model_rf.predict(nouvelle_donnee_B) / (model_rf.predict(nouvelle_donnee_A) + model_rf.predict(nouvelle_donnee_B))  
-
-    # Calcul de la force en attaque et en défense  
-    force_attaque_A = (prediction_A / (prediction_A + prediction_B)) * 100  
-    force_defense_A = (1 - (nombre_buts_encaisse_A / (nombre_buts_encaisse_A + nombre_buts_produits_B)))*100  
-    force_attaque_B = (prediction_B / (prediction_A + prediction_B)) * 100  
-    force_defense_B = (1 - (nombre_buts_encaisse_B / (nombre_buts_encaisse_B + nombre_buts_produits_A)))*100  
-
-    # Affichage des résultats de prédiction  
-    st.write(f"Prédiction
+    prob_victoire_B =
