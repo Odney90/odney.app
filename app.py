@@ -10,8 +10,44 @@ from sklearn.metrics import accuracy_score
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
 
+# Ajout d'une image de fond  
+st.markdown(  
+    """  
+    <style>  
+    .reportview-container {  
+        background: url('https://example.com/your-background-image.jpg');  /* Remplacez par l'URL de votre image */  
+        background-size: cover;  
+        background-position: center;  
+        color: white;  /* Changez la couleur du texte si nécessaire */  
+    }  
+    h1 {  
+        text-align: center;  
+        color: #4CAF50;  
+        font-size: 2.5em;  
+    }  
+    h2 {  
+        color: #4CAF50;  
+    }  
+    .sidebar .sidebar-content {  
+        background-color: rgba(255, 255, 255, 0.8);  /* Fond semi-transparent pour la barre latérale */  
+        border-radius: 10px;  
+        padding: 10px;  
+    }  
+    .stButton>button {  
+        background-color: #4CAF50;  /* Couleur des boutons */  
+        color: white;  
+        border-radius: 5px;  
+    }  
+    .stButton>button:hover {  
+        background-color: #45a049;  /* Couleur au survol */  
+    }  
+    </style>  
+    """,  
+    unsafe_allow_html=True  
+)  
+
 # Titre de la page d'analyse  
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Analyse des Équipes</h1>", unsafe_allow_html=True)  
+st.markdown("<h1>Analyse des Équipes</h1>", unsafe_allow_html=True)  
 
 # Notice d'utilisation  
 st.sidebar.markdown("<h2 style='color: #4CAF50;'>Notice d'Utilisation</h2>", unsafe_allow_html=True)  
@@ -191,7 +227,7 @@ st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_victoire_B:
 
 # Visualisation des prédictions  
 fig, ax = plt.subplots()  
-ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue','red'])  
+ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue', 'red'])  
 ax.set_ylabel('Buts Prédits')  
 ax.set_title('Prédictions de Buts pour le Match (Méthode de Poisson)')  
 st.pyplot(fig)  
@@ -203,81 +239,61 @@ if pourcentage_victoire_A > pourcentage_victoire_B:
 else:  
     st.write("Conseil : Pariez sur la victoire de l'équipe B.")  
 
-# Méthode d'analyse multi-variable  
-st.subheader("Analyse Multi-Variable")  
+# Ajout de la section pour les paris supplémentaires  
+st.subheader("Options de Paris Supplémentaires")  
 
-# Préparation des données pour la régression logistique  
-data = {  
-    'xG_A': [xG_A],  
-    'xG_B': [xG_B],  
-    'tirs_cadres_A': [tirs_cadres_A],  
-    'tirs_cadres_B': [tirs_cadres_B],  
-    'poss_moyenne_A': [poss_moyenne_A],  
-    'poss_moyenne_B': [poss_moyenne_B],  
-    'motivation': [motivation],  
-    'avantage_terrain': [1 if avantage_terrain == "Équipe A" else 0]  # Convertir en binaire  
-}  
+# Convertisseur de cotes en probabilité implicite  
+st.subheader("Convertisseur de Cotes en Probabilité Implicite")  
+cote_A = st.number_input("Cote Décimale pour l'équipe A", min_value=1.0, value=2.0, key="cote_A")  
+cote_B = st.number_input("Cote Décimale pour l'équipe B", min_value=1.0, value=2.5, key="cote_B")  
 
-# Convertir en DataFrame  
-df_multi = pd.DataFrame(data)  
+# Calcul de la probabilité implicite  
+probabilite_implicite_A = 1 / cote_A  
+probabilite_implicite_B = 1 / cote_B  
 
-# Exemple de données historiques pour l'entraînement (à remplacer par des données réelles)  
-historical_data = {  
-    'xG_A': [1.5, 2.0, 1.0, 2.5],  
-    'xG_B': [1.0, 1.5, 2.0, 1.0],  
-    'tirs_cadres_A': [5, 7, 3, 8],  
-    'tirs_cadres_B': [4, 6, 5, 2],  
-    'poss_moyenne_A': [55, 60, 50, 65],  
-    'poss_moyenne_B': [45, 40, 50, 35],  
-    'motivation': [8, 7, 6, 9],  
-    'avantage_terrain': [1, 0, 1, 0],  # Ajoutez cette ligne  
-    'result': [1, 1, 0, 1]  
-}  
+st.write(f"Probabilité Implicite pour l'équipe A : **{probabilite_implicite_A * 100:.2f}%**")  
+st.write(f"Probabilité Implicite pour l'équipe B : **{probabilite_implicite_B * 100:.2f}%**")  
 
-# Créer le DataFrame à partir des données historiques  
-df_historical = pd.DataFrame(historical_data)  
+# Calculateur de Value Bet  
+st.subheader("Calculateur de Value Bet")  
+probabilite_A = pourcentage_victoire_A / 100  
+probabilite_B = pourcentage_victoire_B / 100  
 
-# Vérifiez les colonnes de df_historical  
-print(df_historical.columns)  # Affiche les colonnes pour vérification  
+value_bet_A = probabilite_A > probabilite_implicite_A  
+value_bet_B = probabilite_B > probabilite_implicite_B  
 
-# Séparer les caractéristiques et la cible  
-X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation', 'avantage_terrain']]  
-y = df_historical['result']  
-
-# Diviser les données en ensembles d'entraînement et de test  
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-
-# Créer et entraîner le modèle  
-model = LogisticRegression()  
-model.fit(X_train, y_train)  
-
-# Prédire les résultats avec les nouvelles données  
-prediction_multi = model.predict(df_multi)  
-
-# Affichage des résultats de la prédiction multi-variable  
-st.subheader("Résultats de la Prédiction (Méthode Multi-Variable)")  
-if prediction_multi[0] == 1:  
-    st.write("L'équipe A est prédite pour gagner.")  
+if value_bet_A:  
+    st.write("L'équipe A est un value bet.")  
 else:  
-    st.write("L'équipe B est prédite pour gagner.")  
+    st.write("L'équipe A n'est pas un value bet.")  
 
-# Évaluer le modèle sur l'ensemble de test  
-accuracy = accuracy_score(y_test, model.predict(X_test))  
-st.write(f"Précision du modèle multi-variable : **{accuracy * 100:.2f}%**")  # Affichage en pourcentage  
-
-# Visualisation des résultats de la méthode multi-variable  
-fig, ax = plt.subplots()  
-ax.bar(["Équipe A", "Équipe B"], [prediction_multi[0], 1 - prediction_multi[0]], color=['blue', 'red'])  
-ax.set_ylabel('Probabilité de Victoire')  
-ax.set_title('Prédictions de Victoire pour le Match (Méthode Multi-Variable)')  
-st.pyplot(fig)  
-
-# Section de conseils de paris pour la méthode multi-variable  
-st.subheader("Conseils de Paris (Méthode Multi-Variable)")  
-if prediction_multi[0] == 1:  
-    st.write("Conseil : Pariez sur la victoire de l'équipe A.")  
+if value_bet_B:  
+    st.write("L'équipe B est un value bet.")  
 else:  
-    st.write("Conseil : Pariez sur la victoire de l'équipe B.")  
+    st.write("L'équipe B n'est pas un value bet.")  
+
+# Calculateur de mise basé sur le système de Kelly  
+st.subheader("Calculateur de Mise (Système de Kelly)")  
+bankroll = st.number_input("Votre Bankroll (€)", min_value=0.0, value=100.0, key="bankroll")  
+mise_base = st.number_input("Mise de Base (€)", min_value=0.0, value=10.0, key="mise_base")  
+
+# Calcul de la mise selon le système de Kelly  
+mise_kelly_A = bankroll * ((cote_A - 1) * probabilite_A - (1 - probabilite_A)) / (cote_A - 1)  
+mise_kelly_B = bankroll * ((cote_B - 1) * probabilite_B - (1 - probabilite_B)) / (cote_B - 1)  
+
+st.write(f"Mise recommandée pour l'équipe A (Système de Kelly) : **{mise_kelly_A:.2f} €**")  
+st.write(f"Mise recommandée pour l'équipe B (Système de Kelly) : **{mise_kelly_B:.2f} €**")  
+
+# Système de bankroll dynamique  
+st.subheader("Système de Bankroll Dynamique")  
+resultat_pari = st.selectbox("Résultat du Pari", options=["Gagné", "Perdu"], index=0, key="resultat_pari")  
+
+if resultat_pari == "Gagné":  
+    bankroll += mise_base  # Ajoute la mise à la bankroll  
+    st.write(f"Votre nouvelle bankroll est : **{bankroll:.2f} €**")  
+else:  
+    bankroll -= mise_base  # Soustrait la mise de la bankroll  
+    st.write(f"Votre nouvelle bankroll est : **{bankroll:.2f} €**")  
 
 # Fin de l'application  
 st.markdown("<h2 style='text-align: center; color: #4CAF50;'>Merci d'avoir utilisé l'outil d'analyse de match !</h2>", unsafe_allow_html=True)
