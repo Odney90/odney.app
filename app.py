@@ -134,7 +134,58 @@ ax.set_ylabel('Résultat')
 ax.set_title('Historique des Performances des Équipes (5 Derniers Matchs)')  
 ax.legend()  
 st.pyplot(fig)
-# Critères pour l'équipe B  
+# Critères pour l'équipe A  
+st.header("🎯 Critères pour l'équipe A")  
+
+col1, col2 = st.columns(2)  
+
+with col1:  
+    total_buts_produits_A = st.number_input("⚽ Buts total produits", min_value=0.0, value=50.0, key="total_buts_produits_A", step=0.1)  
+    moyenne_buts_produits_A = st.number_input("🥅 Moyenne de buts produits/match", min_value=0.0, value=1.5, step=0.1, key="moyenne_buts_produits_A")  
+    total_buts_encaisses_A = st.number_input("🤕 Buts total encaissés", min_value=0.0, value=30.0, key="total_buts_encaisses_A", step=0.1)  
+    moyenne_buts_encaisses_A = st.number_input("🚫 Moyenne de buts encaissés/match", min_value=0.0, value=1.0, step=0.1, key="moyenne_buts_encaisses_A")  
+    poss_moyenne_A = st.number_input("Ballon  possession moyenne (%)", min_value=0.0, max_value=100.0, value=55.0, key="poss_moyenne_A", step=0.1)  
+    xG_A = st.number_input("⭐ Buts attendus (xG)", min_value=0.0, value=1.5, step=0.1, key="xG_A")  
+    tirs_cadres_A = st.number_input("🎯 Tirs cadrés par match", min_value=0.0, value=10.0, key="tirs_cadres_A", step=0.1)  
+    pourcentage_tirs_convertis_A = st.number_input("Convert Pourcentage de tirs convertis (%)", min_value=0.0, max_value=100.0, value=20.0, key="pourcentage_tirs_convertis_A", step=0.1)  
+
+with col2:  
+    grosses_occasions_A = st.number_input("✨ Grosses occasions", min_value=0.0, value=5.0, key="grosses_occasions_A", step=0.1)  
+    grosses_occasions_ratees_A = st.number_input("💨 Grosses occasions ratées", min_value=0.0, value=2.0, key="grosses_occasions_ratees_A", step=0.1)  
+    passes_reussies_A = st.number_input("✅ Passes réussies/match (sur 1000)", min_value=0.0, value=300.0, key="passes_reussies_A", step=0.1)  
+    passes_longues_precises_A = st.number_input("➡️ Passes longues précises/match", min_value=0.0, value=15.0, key="passes_longues_precises_A", step=0.1)  
+    centres_reussis_A = st.number_input("↗️ Centres réussis/match", min_value=0.0, value=5.0, key="centres_reussis_A", step=0.1)  
+    penalties_obtenus_A = st.number_input("🎁 Pénalties obtenus", min_value=0.0, value=1.0, key="penalties_obtenus_A", step=0.1)  
+    touches_surface_adverse_A = st.number_input("Entree Touches dans la surface adverse", min_value=0.0, value=10.0, key="touches_surface_adverse_A", step=0.1)  
+    corners_A = st.number_input("Corner Nombre de corners", min_value=0.0, value=4.0, key="corners_A", step=0.1)  
+
+col3, col4 = st.columns(2)  
+
+with col3:  
+    corners_par_match_A = st.number_input("Corner/Match Corners par match", min_value=0.0, value=2.0, key="corners_par_match_A", step=0.1)  
+    corners_concedes_A = st.number_input("Corner Concédés Corners concédés/match", min_value=0.0, value=3.0, key="corners_concedes_A", step=0.1)  
+    xG_concedes_A = st.number_input("⭐ xG concédés", min_value=0.0, value=1.0, step=0.1, key="xG_concedes_A")  
+    interceptions_A = st.number_input("✋ Interceptions par match", min_value=0.0, value=10.0, key="interceptions_A", step=0.1)  
+    tacles_reussis_A = st.number_input("Tacles Réussis Tacles réussis par match", min_value=0.0, value=5.0, key="tacles_reussis_A", step=0.1)  
+    degagements_A = st.number_input("Dégagement Dégagements par match", min_value=0.0, value=8.0, key="degagements_A", step=0.1)  
+    possessions_recuperees_A = st.number_input("Milieu Possessions récupérées au milieu/match", min_value=0.0, value=5.0, key="possessions_recuperees_A", step=0.1)  
+
+with col4:  
+    penalties_concedes_A = st.number_input("🎁 Pénalties concédés", min_value=0.0, value=0.0, key="penalties_concedes_A", step=0.1)  
+    arrets_A = st.number_input("🧤 Arrêts par match", min_value=0.0, value=3.0, key="arrets_A", step=0.1)  
+    fautes_A = st.number_input("Fautes Faute par match", min_value=0.0, value=10.0, key="fautes_A", step=0.1)  
+    cartons_jaunes_A = st.number_input("🟨 Cartons jaunes", min_value=0.0, value=2.0, key="cartons_jaunes_A", step=0.1)  
+    cartons_rouges_A = st.number_input("🟥 Cartons rouges", min_value=0.0, value=0.0, key="cartons_rouges_A", step=0.1)  
+    tactique_A = st.text_input("Tactique de l'équipe A", value="4-3-3", key="tactique_A")  
+
+# Section pour les joueurs clés de l'équipe A  
+st.header("⭐ Joueurs Clés de l'équipe A")  
+absents_A = st.number_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_A")  
+ratings_A = []  
+for i in range(5):  
+    rating = st.number_input(f"Rating du joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_A_{i}", step=0.1)  
+    ratings_A.append(rating)
+    # Critères pour l'équipe B  
 st.header("🎯 Critères pour l'équipe B")  
 
 col1, col2 = st.columns(2)  
@@ -145,46 +196,7 @@ with col1:
     total_buts_encaisses_B = st.number_input("🤕 Buts total encaissés", min_value=0.0, value=35.0, key="total_buts_encaisses_B", step=0.1)  
     moyenne_buts_encaisses_B = st.number_input("🚫 Moyenne de buts encaissés/match", min_value=0.0, value=1.5, step=0.1, key="moyenne_buts_encaisses_B")  
     poss_moyenne_B = st.number_input("Ballon possession moyenne (%)", min_value=0.0, max_value=100.0, value=45.0, key="poss_moyenne_B", step=0.1)  
-    xG_B = st.number_input("⭐ Buts attendus (xG)", min_value=0.0, value=1.0, step=0.1, key="xG_B")  
-    tirs_cadres_B = st.number_input("🎯 Tirs cadrés par match", min_value=0.0, value=8.0, key="tirs_cadres_B", step=0.1)  
-    pourcentage_tirs_convertis_B = st.number_input("Convert Pourcentage de tirs convertis (%)", min_value=0.0, max_value=100.0, value=15.0, key="pourcentage_tirs_convertis_B", step=0.1)  
-
-with col2:  
-    grosses_occasions_B = st.number_input("✨ Grosses occasions", min_value=0.0, value=3.0, key="grosses_occasions_B", step=0.1)  
-    grosses_occasions_ratees_B = st.number_input("💨 Grosses occasions ratées", min_value=0.0, value=1.0, key="grosses_occasions_ratees_B", step=0.1)  
-    passes_reussies_B = st.number_input("✅ Passes réussies/match (sur 1000)", min_value=0.0, value=250.0, key="passes_reussies_B", step=0.1)  
-    passes_longues_precises_B = st.number_input("➡️ Passes longues précises/match", min_value=0.0, value=10.0, key="passes_longues_precises_B", step=0.1)  
-    centres_reussis_B = st.number_input("↗️ Centres réussis/match", min_value=0.0, value=3.0, key="centres_reussis_B", step=0.1)  
-    penalties_obtenus_B = st.number_input("🎁 Pénalties obtenus", min_value=0.0, value=0.0, key="penalties_obtenus_B", step=0.1)  
-    touches_surface_adverse_B = st.number_input("Entree Touches dans la surface adverse", min_value=0.0, value=8.0, key="touches_surface_adverse_B", step=0.1)  
-    corners_B = st.number_input("Corner Nombre de corners", min_value=0.0, value=3.0, key="corners_B", step=0.1)  
-
-col3, col4 = st.columns(2)  
-
-with col3:  
-    corners_par_match_B = st.number_input("Corner/Match Corners par match", min_value=0.0, value=1.0, key="corners_par_match_B", step=0.1)  
-    corners_concedes_B = st.number_input("Corner Concédés Corners concédés/match", min_value=0.0, value=2.0, key="corners_concedes_B", step=0.1)  
-    xG_concedes_B = st.number_input("⭐ xG concédés", min_value=0.0, value=1.5, step=0.1, key="xG_concedes_B")  
-    interceptions_B = st.number_input("✋ Interceptions par match", min_value=0.0, value=8.0, key="interceptions_B", step=0.1)  
-    tacles_reussis_B = st.number_input("Tacles Réussis Tacles réussis par match", min_value=0.0, value=4.0, key="tacles_reussis_B", step=0.1)  
-    degagements_B = st.number_input("Dégagement Dégagements par match", min_value=0.0, value=6.0, key="degagements_B", step=0.1)  
-    possessions_recuperees_B = st.number_input("Milieu Possessions récupérées au milieu/match", min_value=0.0, value=4.0, key="possessions_recuperees_B", step=0.1)  
-
-with col4:  
-    penalties_concedes_B = st.number_input("🎁 Pénalties concédés", min_value=0.0, value=1.0, key="penalties_concedes_B", step=0.1)  
-    arrets_B = st.number_input("🧤 Arrêts par match", min_value=0.0, value=2.0, key="arrets_B", step=0.1)  
-    fautes_B = st.number_input("Fautes Faute par match", min_value=0.0, value=12.0, key="fautes_B", step=0.1)  
-    cartons_jaunes_B = st.number_input("🟨 Cartons jaunes", min_value=0.0, value=1.0, key="cartons_jaunes_B", step=0.1)  
-    cartons_rouges_B = st.number_input("🟥 Cartons rouges", min_value=0.0, value=0.0, key="cartons_rouges_B", step=0.1)  
-    tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
-
-# Section pour les joueurs clés de l'équipe B  
-st.header("⭐ Joueurs Clés de l'équipe B")  
-absents_B = st.number_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_B")  
-ratings_B = []  
-for i in range(5):  
-    rating = st.number_input(f"Rating du joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_B_{i}", step=0.1)  
-    ratings_B.append(rating)
+    xG_B =
     # Motivation des équipes  
 st.header("🔥 Motivation des Équipes")  
 col1, col2 = st.columns(2)  
@@ -209,13 +221,17 @@ def prediction_buts_poisson(xG_A, xG_B):
     return buts_attendus_A, buts_attendus_B  
 
 # Prédiction des buts avec la méthode de Poisson  
-buts_moyens_A, buts_moyens_B = prediction_buts_poisson(xG_A, xG_B)  
+# Assurez-vous que xG_A et xG_B sont définies avant d'appeler la fonction  
+if 'xG_A' in locals() and 'xG_B' in locals():  
+    buts_moyens_A, buts_moyens_B = prediction_buts_poisson(xG_A, xG_B)  
 
-# Affichage des résultats de la prédiction  
-st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
-st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
-st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
-# Prédiction multivariable avec régression logistique (version améliorée)  
+    # Affichage des résultats de la prédiction  
+    st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
+    st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
+    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")  
+else:  
+    st.warning("Veuillez remplir les critères des équipes A et B pour activer la prédiction de Poisson.")
+    # Prédiction multivariable avec régression logistique (version améliorée)  
 st.header("🔮 Prédiction Multivariable (Régression Logistique)")  
 
 # Poids pour chaque critère (ajuster selon l'importance)  
