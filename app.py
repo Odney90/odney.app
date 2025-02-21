@@ -214,3 +214,16 @@ st.write(f"Probabilité de victoire pour l'équipe B : **{prediction[1][1]:.2%}*
 # Calcul des paris alternatifs  
 double_chance_A = prediction[0][1] + (1 - prediction[1][1])  # Équipe A gagne ou match nul  
 double_chance_B
+# Calcul des paris alternatifs  
+double_chance_A = prediction[0][1] + (1 - prediction[1][1])  # Équipe A gagne ou match nul  
+double_chance_B = prediction[1][1] + (1 - prediction[0][1])  # Équipe B gagne ou match nul  
+
+# Affichage des paris alternatifs  
+st.subheader("Paris Alternatifs")  
+st.write(f"Probabilité de double chance pour l'équipe A (gagner ou match nul) : **{double_chance_A:.2%}**")  
+st.write(f"Probabilité de double chance pour l'équipe B (gagner ou match nul) : **{double_chance_B:.2%}**")  
+
+# Conclusion  
+st.subheader("Conclusion")  
+st.write("Merci d'avoir utilisé l'outil d'analyse de match !")  
+st.write("Cette application vous permet d'évaluer les performances des équipes et de prendre des décisions éclairées sur les paris.")
