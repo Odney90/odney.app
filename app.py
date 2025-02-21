@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor  
 from sklearn.linear_model import LinearRegression  
 from sklearn.model_selection import train_test_split  
-from sklearn.metrics import mean_squared_error  
 
 # Titre de l'application  
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
@@ -11,6 +10,11 @@ st.write("Analysez les données des matchs et simulez les résultats pour optimi
 
 # Partie 1 : Analyse des équipes  
 st.markdown("<h2 style='color: #2196F3;'>1. Analyse des équipes</h2>", unsafe_allow_html=True)  
+
+# Historique des équipes  
+st.subheader("Historique des équipes")  
+historique_A = st.text_area("Historique des performances de l'équipe A", height=100)  
+historique_B = st.text_area("Historique des performances de l'équipe B", height=100)  
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
@@ -23,6 +27,8 @@ matchs_sans_encaisser_A = st.number_input("Nombre de matchs sans encaisser de bu
 xG_A = st.number_input("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=2.5, key="xG_A")  
 tirs_cadres_A = st.number_input("Tirs cadrés par match", min_value=0, max_value=20, value=5, key="tirs_cadres_A")  
 pourcentage_tirs_convertis_A = st.number_input("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=25, key="pourcentage_tirs_convertis_A")  
+grosses_occasions_A = st.number_input("Grosses occasions créées", min_value=0, max_value=100, value=10, key="grosses_occasions_A")  
+grosses_occasions_ratees_A = st.number_input("Grosses occasions ratées", min_value=0, max_value=100, value=5, key="grosses_occasions_ratees_A")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -35,6 +41,8 @@ matchs_sans_encaisser_B = st.number_input("Nombre de matchs sans encaisser de bu
 xG_B = st.number_input("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.5, key="xG_B")  
 tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0, max_value=20, value=3, key="tirs_cadres_B")  
 pourcentage_tirs_convertis_B = st.number_input("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=15, key="pourcentage_tirs_convertis_B")  
+grosses_occasions_B = st.number_input("Grosses occasions créées", min_value=0, max_value=100, value=8, key="grosses_occasions_B")  
+grosses_occasions_ratees_B = st.number_input("Grosses occasions ratées", min_value=0, max_value=100, value=4, key="grosses_occasions_ratees_B")  
 
 # Partie 2 : Modèles de Prédiction  
 st.markdown("<h2 style='color: #FF5722;'>2. Prédiction des résultats</h2>", unsafe_allow_html=True)  
@@ -47,13 +55,14 @@ data = {
     "buts_encaisse_par_match": [1, 2, 0, 3, 1],  
     "poss_moyenne": [55, 45, 60, 40, 50],  
     "xG": [2.5, 1.5, 3.0, 0.5, 2.0],  
+    "grosses_occasions": [10, 8, 12, 5, 9],  
     "resultat_A": [1, 0, 1, 0, 1],  # 1 = victoire équipe A, 0 = victoire équipe B  
     "resultat_B": [0, 1, 0, 1, 0]   # 1 = victoire équipe B, 0 = victoire équipe A  
 }  
 df = pd.DataFrame(data)  
 
 # Entraînement des modèles  
-features = ["buts_par_match", "nombre_buts_produits", "nombre_buts_encaisse", "buts_encaisse_par_match", "poss_moyenne", "xG"]  
+features = ["buts_par_match", "nombre_buts_produits", "nombre_buts_encaisse", "buts_encaisse_par_match", "poss_moyenne", "xG", "grosses_occasions"]  
 X = df[features]  
 y_A = df["resultat_A"]  
 y_B = df["resultat_B"]  
@@ -77,6 +86,7 @@ nouvelle_donnee = pd.DataFrame({
     "buts_encaisse_par_match": [buts_encaisse_par_match_A],  
     "poss_moyenne": [poss_moyenne_A],  
     "xG": [xG_A],  
+    "grosses_occasions": [grosses_occasions_A],  
 })  
 
 nouvelle_donnee_B = pd.DataFrame({  
@@ -86,6 +96,7 @@ nouvelle_donnee_B = pd.DataFrame({
     "buts_encaisse_par_match": [buts_encaisse_par_match_B],  
     "poss_moyenne": [poss_moyenne_B],  
     "xG": [xG_B],  
+    "grosses_occasions": [grosses_occasions_B],  
 })  
 
 # Vérification de la longueur des données  
