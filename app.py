@@ -175,7 +175,6 @@ y_combined = pd.concat([y_A, y_B], ignore_index=True)
 
 model_rf.fit(X_combined, y_combined)  
 
-
 # Prédictions pour les nouvelles données  
 nouvelle_donnee_A = pd.DataFrame({  
     "nombre_buts_produits_A": [nombre_buts_produits_A],  
@@ -228,5 +227,3 @@ if st.button("Prédire le nombre de buts et les probabilités de victoire"):
     st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B:.2f}**")  
     st.write(f"Probabilité de victoire pour l'équipe A : **{prob_victoire_A:.2%}**")  
     st.write(f"Probabilité de victoire pour l'équipe B : **{prob_victoire_B:.2%}**")
-
-
