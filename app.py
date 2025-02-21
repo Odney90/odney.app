@@ -1,7 +1,6 @@
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
-from sklearn.linear_model import LinearRegression  
 import matplotlib.pyplot as plt  
 from scipy.stats import poisson  
 
@@ -67,6 +66,8 @@ buts_produits_A = st.slider("Nombre de buts produits (moyenne sur la saison)", m
 buts_encaisse_A = st.slider("Nombre de buts encaissés (moyenne sur la saison)", min_value=0, max_value=10, value=1, key="buts_encaisse_A")  
 poss_moyenne_A = st.slider("Possession moyenne (%)", min_value=0, max_value=100, value=55, key="poss_moyenne_A")  
 xG_A = st.slider("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.5, key="xG_A")  
+tirs_cadres_A = st.slider("Tirs cadrés par match", min_value=0, max_value=50, value=10, key="tirs_cadres_A")  
+passes_reussies_A = st.slider("Passes réussies par match", min_value=0, max_value=100, value=30, key="passes_reussies_A")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -74,6 +75,8 @@ buts_produits_B = st.slider("Nombre de buts produits (moyenne sur la saison)", m
 buts_encaisse_B = st.slider("Nombre de buts encaissés (moyenne sur la saison)", min_value=0, max_value=10, value=2, key="buts_encaisse_B")  
 poss_moyenne_B = st.slider("Possession moyenne (%)", min_value=0, max_value=100, value=45, key="poss_moyenne_B")  
 xG_B = st.slider("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.0, key="xG_B")  
+tirs_cadres_B = st.slider("Tirs cadrés par match", min_value=0, max_value=50, value=8, key="tirs_cadres_B")  
+passes_reussies_B = st.slider("Passes réussies par match", min_value=0, max_value=100, value=25, key="passes_reussies_B")  
 
 # Fonction pour prédire les buts avec distribution de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
