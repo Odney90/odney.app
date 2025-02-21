@@ -210,10 +210,8 @@ st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
 # Prédiction multivariable avec régression logistique (exemple simplifié)  
 st.subheader("Prédiction Multivariable avec Régression Logistique")  
 # Préparation des données pour le modèle (exemple simplifié)  
-X = np.array([[buts_produits_A, buts_encaisse_A,
-               # Préparation des données pour le modèle (exemple simplifié)  
-X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A, absents_A] + ratings_A,  
-              [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B, absents_B] + ratings_B])  
+X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A, absents_A, np.mean(ratings_A)],  
+                            [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B, absents_B, np.mean(ratings_B)]])  
 y = np.array([1, 0])  # 1 pour l'équipe A, 0 pour l'équipe B  
 
 # Entraînement du modèle  
