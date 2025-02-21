@@ -1,121 +1,81 @@
-import numpy as np
+import streamlit as st
 import pandas as pd
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
-def convertir_cote_en_probabilite(cote):
-    return 1 / cote if cote > 0 else 0
+def generer_donnees_fictives():
+    """Génère des données fictives pour 40 matchs par équipe."""
+    np.random.seed(42)
+    data = {
+        "Score rating": np.random.uniform(5, 10, 40),
+        "Buts par match": np.random.uniform(0.5, 3, 40),
+        "Buts encaissés par match": np.random.uniform(0.5, 2.5, 40),
+        "Possession moyenne": np.random.uniform(40, 70, 40),
+        "xG": np.random.uniform(0.5, 2.5, 40),
+        "Tirs cadrés par match": np.random.uniform(2, 8, 40),
+        "Pourcentage de tirs convertis": np.random.uniform(5, 25, 40),
+        "Grosses occasions": np.random.randint(0, 5, 40),
+        "Grosses occasions ratées": np.random.randint(0, 5, 40),
+        "Passes réussies par match": np.random.uniform(200, 600, 40),
+        "Corners par match": np.random.uniform(2, 10, 40),
+        "Fautes par match": np.random.uniform(8, 20, 40),
+        "Cartons jaunes": np.random.randint(0, 5, 40),
+        "Cartons rouges": np.random.randint(0, 2, 40)
+    }
+    return pd.DataFrame(data)
 
-# Données fictives modifiables
-stats_equipe_A = {
-    "score_rating": 85,
-    "buts_par_match": 2.1,
-    "buts_produits": 42,
-    "buts_concédés": 20,
-    "buts_concédés_par_match": 1.0,
-    "possession": 58.5,
-    "matchs_sans_encaisser": 8,
-    "xG": 1.9,
-    "tirs_cadrés": 5.2,
-    "conversion_tirs": 15.4,
-    "grosses_occasions": 45,
-    "grosses_occasions_ratées": 22,
-    "passes_réussies": 520,
-    "passes_longues": 30,
-    "centres_réussis": 4.3,
-    "pénalties_obtenus": 3,
-    "touches_surface": 22,
-    "corners": 6.1,
-    "corners_concédés": 4.2,
-    "xG_concédés": 1.1,
-    "interceptions": 9.5,
-    "tacles_réussis": 12.3,
-    "dégagements": 18,
-    "possession_récupérée": 11,
-    "pénalties_concédés": 2,
-    "arrêts_par_match": 3.5,
-    "fautes": 12,
-    "cartons_jaunes": 3,
-    "cartons_rouges": 0,
-    "tactique": "4-3-3",
-    "joueurs_clés": {"attaquant": 90, "milieu": 85, "défenseur": 88}
-}
+# Charger les données
+stats_equipe_A = generer_donnees_fictives()
+stats_equipe_B = generer_donnees_fictives()
 
-stats_equipe_B = {
-    "score_rating": 78,
-    "buts_par_match": 1.8,
-    "buts_produits": 36,
-    "buts_concédés": 28,
-    "buts_concédés_par_match": 1.4,
-    "possession": 52.3,
-    "matchs_sans_encaisser": 6,
-    "xG": 1.6,
-    "tirs_cadrés": 4.8,
-    "conversion_tirs": 12.7,
-    "grosses_occasions": 38,
-    "grosses_occasions_ratées": 19,
-    "passes_réussies": 480,
-    "passes_longues": 28,
-    "centres_réussis": 3.8,
-    "pénalties_obtenus": 2,
-    "touches_surface": 18,
-    "corners": 5.5,
-    "corners_concédés": 5.0,
-    "xG_concédés": 1.4,
-    "interceptions": 8.9,
-    "tacles_réussis": 11.8,
-    "dégagements": 20,
-    "possession_récupérée": 10,
-    "pénalties_concédés": 3,
-    "arrêts_par_match": 2.8,
-    "fautes": 14,
-    "cartons_jaunes": 4,
-    "cartons_rouges": 1,
-    "tactique": "4-4-2",
-    "joueurs_clés": {"attaquant": 85, "milieu": 80, "défenseur": 82}
-}
-
-# Prédiction du match avec Logistic Regression et Random Forest
+# Modèles de prédiction
 def predire_resultat(stats_A, stats_B):
-    features = [stats_A["buts_par_match"], stats_A["xG"], stats_B["buts_concédés_par_match"], stats_B["xG_concédés"]]
-    X = np.array([features])
-    
-    # Modèles fictifs entraînés ailleurs
+    """Prédit le résultat du match en fonction des statistiques des équipes."""
+    X_train = [[2.1, 1.9, 1.0, 1.1]]  # Exemples fictifs
+    y_train = [1]  # Résultat fictif
+
     log_reg = LogisticRegression()
-    log_reg.fit([[2.1, 1.9, 1.0, 1.1]], [1])
-    rf_model = RandomForestClassifier()
-    rf_model.fit([[2.1, 1.9, 1.0, 1.1]], [1])
+    log_reg.fit(X_train, y_train)
+    pred_log = log_reg.predict([[stats_A.mean()["Buts par match"], stats_B.mean()["Buts par match"],
+                                 stats_A.mean()["xG"], stats_B.mean()["xG"]]])
     
-    prob_log_reg = log_reg.predict_proba(X)[0][1]
-    prob_rf = rf_model.predict_proba(X)[0][1]
+    rf = RandomForestClassifier()
+    rf.fit(X_train, y_train)
+    pred_rf = rf.predict([[stats_A.mean()["Buts par match"], stats_B.mean()["Buts par match"],
+                           stats_A.mean()["xG"], stats_B.mean()["xG"]]])
     
-    return prob_log_reg, prob_rf
+    return pred_log[0], pred_rf[0]
 
-# Cotes fictives
-cote_A, cote_B, cote_nul = 2.10, 3.50, 3.20
-prob_A = convertir_cote_en_probabilite(cote_A)
-prob_B = convertir_cote_en_probabilite(cote_B)
-prob_nul = convertir_cote_en_probabilite(cote_nul)
+# Calcul de la mise avec Kelly
+def mise_kelly(prob_gagner, cote, bankroll):
+    """Calcule la mise optimale selon le critère de Kelly."""
+    edge = (prob_gagner * cote - 1) / (cote - 1)
+    return max(0, bankroll * edge)
 
-# Mise de Kelly
-def mise_kelly(prob, cote, bankroll):
-    edge = (prob * cote - 1) / (cote - 1)
-    return max(0, edge * bankroll)
+# Interface utilisateur Streamlit
+st.title("Analyse des paris sportifs")
 
-bankroll = 1000
+st.subheader("Statistiques des équipes")
+st.write("### Équipe A")
+st.dataframe(stats_equipe_A.describe())
+
+st.write("### Équipe B")
+st.dataframe(stats_equipe_B.describe())
+
+st.subheader("Prédictions du match")
+pred_log, pred_rf = predire_resultat(stats_equipe_A, stats_equipe_B)
+st.write(f"Prédiction régression logistique: {pred_log}")
+st.write(f"Prédiction Random Forest: {pred_rf}")
+
+# Calcul des mises
+cote_A, cote_B = 2.0, 3.5  # Exemples fictifs
+prob_A, prob_B = 1 / cote_A, 1 / cote_B  # Conversion des cotes
+bankroll = 1000  # Exemple de bankroll
+
 mise_A = mise_kelly(prob_A, cote_A, bankroll)
 mise_B = mise_kelly(prob_B, cote_B, bankroll)
-solde_restant = bankroll - (mise_A + mise_B)
 
-# Affichage des stats et des prédictions
-def afficher_stats():
-    print("Statistiques de l'équipe A:", stats_equipe_A)
-    print("Statistiques de l'équipe B:", stats_equipe_B)
-    pred_log, pred_rf = predire_resultat(stats_equipe_A, stats_equipe_B)
-    print(f"Prédiction (Logistic Regression): {pred_log:.2%}")
-    print(f"Prédiction (Random Forest): {pred_rf:.2%}")
-    print(f"Mise de Kelly sur A: {mise_A:.2f}€")
-    print(f"Mise de Kelly sur B: {mise_B:.2f}€")
-    print(f"Solde restant: {solde_restant:.2f}€")
-
-afficher_stats()
+st.subheader("Stratégie de mise avec Kelly")
+st.write(f"Mise recommandée sur l'équipe A: {mise_A:.2f} €")
+st.write(f"Mise recommandée sur l'équipe B: {mise_B:.2f} €")
