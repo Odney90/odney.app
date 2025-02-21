@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd  
 from sklearn.model_selection import train_test_split  
 from sklearn.tree import DecisionTreeRegressor  
+from sklearn.ensemble import RandomForestRegressor  
 
 # Titre de l'application  
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
@@ -32,36 +33,58 @@ st.write(f"Forme récente de l'équipe B (moyenne sur 10 matchs) : **{forme_rece
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
-buts_par_match_A = st.number_input("Buts par match", min_value=0, max_value=10, value=2, key="buts_par_match_A")  
-nombre_buts_produits_A = st.number_input("Nombre de buts produits", min_value=0, max_value=100, value=80, key="nombre_buts_produits_A")  
-nombre_buts_encaisse_A = st.number_input("Nombre de buts encaissés", min_value=0, max_value=100, value=30, key="nombre_buts_encaisse_A")  
-buts_encaisse_par_match_A = st.number_input("Buts encaissés par match", min_value=0, max_value=10, value=1, key="buts_encaisse_par_match_A")  
-poss_moyenne_A = st.number_input("Possession moyenne (%)", min_value=0, max_value=100, value=55, key="poss_moyenne_A")  
-matchs_sans_encaisser_A = st.number_input("Nombre de matchs sans encaisser de but", min_value=0, max_value=40, value=10, key="matchs_sans_encaisser_A")  
-xG_A = st.number_input("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=2.5, key="xG_A")  
-tirs_cadres_A = st.number_input("Tirs cadrés par match", min_value=0, max_value=20, value=5, key="tirs_cadres_A")  
-pourcentage_tirs_convertis_A = st.number_input("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=25, key="pourcentage_tirs_convertis_A")  
-grosses_occasions_A = st.number_input("Grosses occasions créées", min_value=0, max_value=100, value=10, key="grosses_occasions_A")  
-grosses_occasions_ratees_A = st.number_input("Grosses occasions ratées", min_value=0, max_value=100, value=5, key="grosses_occasions_ratees_A")  
+buts_par_match_A = st.slider("Buts par match", min_value=0, max_value=10, value=2, key="buts_par_match_A")  
+nombre_buts_produits_A = st.slider("Nombre de buts produits", min_value=0, max_value=100, value=80, key="nombre_buts_produits_A")  
+nombre_buts_encaisse_A = st.slider("Nombre de buts encaissés", min_value=0, max_value=100, value=30, key="nombre_buts_encaisse_A")  
+buts_encaisse_par_match_A = st.slider("Buts encaissés par match", min_value=0, max_value=10, value=1, key="buts_encaisse_par_match_A")  
+poss_moyenne_A = st.slider("Possession moyenne (%)", min_value=0, max_value=100, value=55, key="poss_moyenne_A")  
+matchs_sans_encaisser_A = st.slider("Nombre de matchs sans encaisser de but", min_value=0, max_value=40, value=10, key="matchs_sans_encaisser_A")  
+xG_A = st.slider("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=2.5, key="xG_A")  
+tirs_cadres_A = st.slider("Tirs cadrés par match", min_value=0, max_value=20, value=5, key="tirs_cadres_A")  
+pourcentage_tirs_convertis_A = st.slider("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=25, key="pourcentage_tirs_convertis_A")  
+grosses_occasions_A = st.slider("Grosses occasions créées", min_value=0, max_value=100, value=10, key="grosses_occasions_A")  
+grosses_occasions_ratees_A = st.slider("Grosses occasions ratées", min_value=0, max_value=100, value=5, key="grosses_occasions_ratees_A")  
+
+# Nouveaux critères pour l'équipe A  
+passes_longues_A = st.slider("Passes longues précises par match", min_value=0, max_value=50, value=10, key="passes_longues_A")  
+touches_surface_A = st.slider("Touches dans la surface adverse", min_value=0, max_value=50, value=15, key="touches_surface_A")  
+corners_A = st.slider("Nombre de corners", min_value=0, max_value=20, value=5, key="corners_A")  
+corners_concedes_A = st.slider("Nombre de corners concédés", min_value=0, max_value=20, value=3, key="corners_concedes_A")  
+interceptions_A = st.slider("Interceptions par match", min_value=0, max_value=20, value=5, key="interceptions_A")  
+arrets_A = st.slider("Arrêts par match", min_value=0, max_value=20, value=3, key="arrets_A")  
+fautes_A = st.slider("Fautes par match", min_value=0, max_value=20, value=10, key="fautes_A")  
+tactique_A = st.text_input("Tactique de l'équipe A", value="Offensive")  
+joueurs_absents_A = st.text_input("Joueurs clés absents de l'équipe A", value="Aucun")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
-buts_par_match_B = st.number_input("Buts par match", min_value=0, max_value=10, value=1, key="buts_par_match_B")  
-nombre_buts_produits_B = st.number_input("Nombre de buts produits", min_value=0, max_value=100, value=60, key="nombre_buts_produits_B")  
-nombre_buts_encaisse_B = st.number_input("Nombre de buts encaissés", min_value=0, max_value=100, value=40, key="nombre_buts_encaisse_B")  
-buts_encaisse_par_match_B = st.number_input("Buts encaissés par match", min_value=0, max_value=10, value=2, key="buts_encaisse_par_match_B")  
-poss_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0, max_value=100, value=45, key="poss_moyenne_B")  
-matchs_sans_encaisser_B = st.number_input("Nombre de matchs sans encaisser de but", min_value=0, max_value=40, value=5, key="matchs_sans_encaisser_B")  
-xG_B = st.number_input("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.5, key="xG_B")  
-tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0, max_value=20, value=3, key="tirs_cadres_B")  
-pourcentage_tirs_convertis_B = st.number_input("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=15, key="pourcentage_tirs_convertis_B")  
-grosses_occasions_B = st.number_input("Grosses occasions créées", min_value=0, max_value=100, value=8, key="grosses_occasions_B")  
-grosses_occasions_ratees_B = st.number_input("Grosses occasions ratées", min_value=0, max_value=100, value=4, key="grosses_occasions_ratees_B")  
+buts_par_match_B = st.slider("Buts par match", min_value=0, max_value=10, value=1, key="buts_par_match_B")  
+nombre_buts_produits_B = st.slider("Nombre de buts produits", min_value=0, max_value=100, value=60, key="nombre_buts_produits_B")  
+nombre_buts_encaisse_B = st.slider("Nombre de buts encaissés", min_value=0, max_value=100, value=40, key="nombre_buts_encaisse_B")  
+buts_encaisse_par_match_B = st.slider("Buts encaissés par match", min_value=0, max_value=10, value=2, key="buts_encaisse_par_match_B")  
+poss_moyenne_B = st.slider("Possession moyenne (%)", min_value=0, max_value=100, value=45, key="poss_moyenne_B")  
+matchs_sans_encaisser_B = st.slider("Nombre de matchs sans encaisser de but", min_value=0, max_value=40, value=5, key="matchs_sans_encaisser_B")  
+xG_B = st.slider("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.5, key="xG_B")  
+tirs_cadres_B = st.slider("Tirs cadrés par match", min_value=0, max_value=20, value=3, key="tirs_cadres_B")  
+pourcentage_tirs_convertis_B = st.slider("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=15, key="pourcentage_tirs_convertis_B")  
+grosses_occasions_B = st.slider("Grosses occasions créées", min_value=0, max_value=100, value=8, key="grosses_occasions_B")  
+grosses_occasions_ratees_B = st.slider("Grosses occasions ratées", min_value=0, max_value=100, value=4, key="grosses_occasions_ratees_B")  
+
+# Nouveaux critères pour l'équipe B  
+passes_longues_B = st.slider("Passes longues précises par match", min_value=0, max_value=50, value=8, key="passes_longues_B")  
+touches_surface_B = st.slider("Touches dans la surface adverse", min_value=0, max_value=50, value=12, key="touches_surface_B")  
+corners_B = st.slider("Nombre de corners", min_value=0, max_value=20, value=4, key="corners_B")  
+corners_concedes_B = st.slider("Nombre de corners concédés", min_value=0, max_value=20, value=5, key="corners_concedes_B")  
+interceptions_B = st.slider("Interceptions par match", min_value=0, max_value=20, value=6, key="interceptions_B")  
+arrets_B = st.slider("Arrêts par match", min_value=0, max_value=20, value=4, key="arrets_B")  
+fautes_B = st.slider("Fautes par match", min_value=0, max_value=20, value=8, key="fautes_B")  
+tactique_B = st.text_input("Tactique de l'équipe B", value="Défensive")  
+joueurs_absents_B = st.text_input("Joueurs clés absents de l'équipe B", value="Aucun")  
 
 # Critères météorologiques  
 st.subheader("Conditions Météorologiques")  
-temperature = st.number_input("Température (°C)", min_value=-30, max_value=50, value=20)  
-humidité = st.number_input("Humidité (%)", min_value=0, max_value=100, value=50)  
+temperature = st.slider("Température (°C)", min_value=-30, max_value=50, value=20)  
+humidité = st.slider("Humidité (%)", min_value=0, max_value=100, value=50)  
 conditions_meteo = st.selectbox("Conditions Météorologiques", ["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"])  
 
 # Partie 2 : Modèles de Prédiction  
@@ -76,6 +99,13 @@ data = {
     "poss_moyenne_A": [55, 45, 60, 40, 50],  
     "xG_A": [2.5, 1.5, 3.0, 0.5, 2.0],  
     "grosses_occasions_A": [10, 8, 12, 5, 9],  
+    "passes_longues_A": [10, 12, 15, 8, 11],  
+    "touches_surface_A": [15, 20, 18, 10, 14],  
+    "corners_A": [5, 3, 6, 2, 4],  
+    "corners_concedes_A": [3, 4, 2, 5, 3],  
+    "interceptions_A": [5, 6, 4, 7, 5],  
+    "arrets_A": [3, 2, 4, 1, 3],  
+    "fautes_A": [10, 12, 8, 9, 11],  
     "buts_par_match_B": [1, 2, 1, 0, 1],  
     "nombre_buts_produits_B": [60, 70, 50, 20, 40],  
     "nombre_buts_encaisse_B": [40, 30, 20, 50, 35],  
@@ -83,6 +113,13 @@ data = {
     "poss_moyenne_B": [45, 55, 40, 50, 45],  
     "xG_B": [1.5, 2.0, 1.0, 0.5, 1.2],  
     "grosses_occasions_B": [8, 10, 6, 4, 7],  
+    "passes_longues_B": [8, 10, 12, 6, 9],  
+    "touches_surface_B": [12, 15, 10, 8, 11],  
+    "corners_B": [4, 5, 3, 2, 4],  
+    "corners_concedes_B": [5, 6, 4, 3, 5],  
+    "interceptions_B": [6, 5, 7, 4, 5],  
+    "arrets_B": [4, 3, 5, 2, 4],  
+    "fautes_B": [8, 9, 7, 10, 8],  
     "temperature": [20, 15, 25, 10, 30],  
     "humidité": [50, 60, 40, 70, 30],  
 }  
@@ -90,8 +127,18 @@ data = {
 df = pd.DataFrame(data)  
 
 # Entraînement des modèles  
-features_A = ["nombre_buts_produits_A", "nombre_buts_encaisse_A", "buts_encaisse_par_match_A", "poss_moyenne_A", "xG_A", "grosses_occasions_A", "temperature", "humidité"]  
-features_B = ["nombre_buts_produits_B", "nombre_buts_encaisse_B", "buts_encaisse_par_match_B", "poss_moyenne_B", "xG_B", "grosses_occasions_B", "temperature", "humidité"]  
+features_A = [  
+    "nombre_buts_produits_A", "nombre_buts_encaisse_A", "buts_encaisse_par_match_A",  
+    "poss_moyenne_A", "xG_A", "grosses_occasions_A", "passes_longues_A",  
+    "touches_surface_A", "corners_A", "corners_concedes_A", "interceptions_A",  
+    "arrets_A", "fautes_A", "temperature", "humidité"  
+]  
+features_B = [  
+    "nombre_buts_produits_B", "nombre_buts_encaisse_B", "buts_encaisse_par_match_B",  
+    "poss_moyenne_B", "xG_B", "grosses_occasions_B", "passes_longues_B",  
+    "touches_surface_B", "corners_B", "corners_concedes_B", "interceptions_B",  
+    "arrets_B", "fautes_B", "temperature", "humidité"  
+]  
 
 X_A = df[features_A]  
 y_A = df["buts_par_match_A"]  
@@ -110,6 +157,10 @@ model_dt_A.fit(X_train_A, y_train_A)
 model_dt_B = DecisionTreeRegressor(random_state=42)  
 model_dt_B.fit(X_train_B, y_train_B)  
 
+# Modèle de prédiction des probabilités de victoire  
+model_rf = RandomForestRegressor(random_state=42)  
+model_rf.fit(X_A.append(X_B), y_A.append(y_B))  
+
 # Prédictions pour les nouvelles données  
 nouvelle_donnee_A = pd.DataFrame({  
     "nombre_buts_produits_A": [nombre_buts_produits_A],  
@@ -118,6 +169,13 @@ nouvelle_donnee_A = pd.DataFrame({
     "poss_moyenne_A": [poss_moyenne_A],  
     "xG_A": [xG_A],  
     "grosses_occasions_A": [grosses_occasions_A],  
+    "passes_longues_A": [passes_longues_A],  
+    "touches_surface_A": [touches_surface_A],  
+    "corners_A": [corners_A],  
+    "corners_concedes_A": [corners_concedes_A],  
+    "interceptions_A": [interceptions_A],  
+    "arrets_A": [arrets_A],  
+    "fautes_A": [fautes_A],  
     "temperature": [temperature],  
     "humidité": [humidité],  
 })  
@@ -129,42 +187,31 @@ nouvelle_donnee_B = pd.DataFrame({
     "poss_moyenne_B": [poss_moyenne_B],  
     "xG_B": [xG_B],  
     "grosses_occasions_B": [grosses_occasions_B],  
+    "passes_longues_B": [passes_longues_B],  
+    "touches_surface_B": [touches_surface_B],  
+    "corners_B": [corners_B],  
+    "corners_concedes_B": [corners_concedes_B],  
+    "interceptions_B": [interceptions_B],  
+    "arrets_B": [arrets_B],  
+    "fautes_B": [fautes_B],  
     "temperature": [temperature],  
     "humidité": [humidité],  
 })  
 
 # Vérification de la longueur des données  
-if st.button("Prédire le nombre de buts"):  
+if st.button("Prédire le nombre de buts et les probabilités de victoire"):  
     prediction_A = model_dt_A.predict(nouvelle_donnee_A)[0]  # Prédiction pour l'équipe A  
     prediction_B = model_dt_B.predict(nouvelle_donnee_B)[0]  # Prédiction pour l'équipe B  
 
+    # Calcul des probabilités de victoire  
+    prob_victoire_A = model_rf.predict(nouvelle_donnee_A) / (model_rf.predict(nouvelle_donnee_A) + model_rf.predict(nouvelle_donnee_B))  
+    prob_victoire_B = model_rf.predict(nouvelle_donnee_B) / (model_rf.predict(nouvelle_donnee_A) + model_rf.predict(nouvelle_donnee_B))  
+
+    # Calcul de la force en attaque et en défense  
+    force_attaque_A = (prediction_A / (prediction_A + prediction_B)) * 100  
+    force_defense_A = (1 - (nombre_buts_encaisse_A / (nombre_buts_encaisse_A + nombre_buts_produits_B)))*100  
+    force_attaque_B = (prediction_B / (prediction_A + prediction_B)) * 100  
+    force_defense_B = (1 - (nombre_buts_encaisse_B / (nombre_buts_encaisse_B + nombre_buts_produits_A)))*100  
+
     # Affichage des résultats de prédiction  
-    st.write(f"Prédiction du nombre de buts pour l'équipe A : **{prediction_A:.2f}**")  
-    st.write(f"Prédiction du nombre de buts pour l'équipe B : **{prediction_B:.2f}**")  
-
-# Partie 3 : Gestion de la bankroll  
-st.markdown("<h2 style='color: #FF5722;'>3. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
-
-# Entrée de la bankroll initiale  
-bankroll_initiale = st.number_input("Montant de la bankroll initiale (€)", min_value=0.0, value=1000.0, step=10.0)  
-
-# Mise par pari  
-mise = st.number_input("Mise par pari (€)", min_value=0.0, value=10.0, step=1.0)  
-
-# Cote de victoire  
-cote_A = st.number_input("Cote de victoire pour l'équipe A", min_value=1.0, value=2.0, step=0.1)  
-cote_B = st.number_input("Cote de victoire pour l'équipe B", min_value=1.0, value=1.5, step=0.1)  
-
-# Résultat du pari  
-resultat_pari = st.selectbox("Résultat du pari", ["A gagner", "B gagner", "Match nul"])  
-
-# Calcul de la bankroll après le pari  
-if st.button("Calculer la bankroll après le pari"):  
-    if resultat_pari == "A gagner":  
-        bankroll_finale = bankroll_initiale + (mise * (cote_A - 1))  
-    elif resultat_pari == "B gagner":  
-        bankroll_finale = bankroll_initiale + (mise * (cote_B - 1))  
-    else:  
-        bankroll_finale = bankroll_initiale - mise  # En cas de match nul, on perd la mise  
-
-    st.write(f"Votre bankroll après le pari est de : **{bankroll_finale:.2f} €**")
+    st.write(f"Prédiction
