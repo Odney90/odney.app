@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np  
 import matplotlib.pyplot as plt  
 from scipy.stats import poisson  
+from sklearn.model_selection import train_test_split  
+from sklearn.linear_model import LogisticRegression  
+from sklearn.metrics import accuracy_score  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
@@ -122,6 +125,12 @@ cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0)
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4")  
 
+# Conditions du match  
+st.subheader("Conditions du Match")  
+meteo = st.selectbox("Conditions Météorologiques", options=["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"], index=0)  
+avantage_terrain = st.selectbox("Équipe à domicile", options=["Équipe A", "Équipe B"], index=0)  
+motivation = st.slider("Niveau de motivation (1 à 10)", min_value=1, max_value=10, value=5)  
+
 # Fonction pour prédire les buts avec distribution de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
     # Calcul des probabilités de marquer 0 à 5 buts  
@@ -134,11 +143,11 @@ def prediction_buts_poisson(xG_A, xG_B):
     
     return buts_attendus_A, buts_attendus_B  
 
-# Prédiction des buts  
+# Prédiction des buts avec la méthode de Poisson  
 buts_moyens_A, buts_moyens_B = prediction_buts_poisson(xG_A, xG_B)  
 
 # Affichage des résultats de la prédiction  
-st.subheader("Résultats de la Prédiction")  
+st.subheader("Résultats de la Prédiction (Méthode de Poisson)")  
 st.write(f"Prédiction des buts pour l'équipe A : **{buts_moyens_A:.2f}**")  
 st.write(f"Prédiction des buts pour l'équipe B : **{buts_moyens_B:.2f}**")  
 
@@ -154,12 +163,83 @@ st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_victoire_B:
 fig, ax = plt.subplots()  
 ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue', 'red'])  
 ax.set_ylabel('Buts Prédits')  
-ax.set_title('Prédictions de Buts pour le Match')  
+ax.set_title('Prédictions de Buts pour le Match (Méthode de Poisson)')  
 st.pyplot(fig)  
 
 # Section de conseils de paris  
-st.subheader("Conseils de Paris")  
+st.subheader("Conseils de Paris (Méthode de Poisson)")  
 if pourcentage_victoire_A > pourcentage_victoire_B:  
+    st.write("Conseil : Pariez sur la victoire de l'équipe A.")  
+else:  
+    st.write("Conseil : Pariez sur la victoire de l'équipe B.")  
+
+# Méthode d'analyse multi-variable  
+st.subheader("Analyse Multi-Variable")  
+# Préparation des données pour la régression logistique  
+data = {  
+    'xG_A': [xG_A],  
+    'xG_B': [xG_B],  
+    'tirs_cadres_A': [tirs_cadres_A],  
+    'tirs_cadres_B': [tirs_cadres_B],  
+    'poss_moyenne_A': [poss_moyenne_A],  
+    'poss_moyenne_B': [poss_moyenne_B],  
+    'motivation': [motivation],  
+    'conditions_meteo': [meteo],  
+    'avantage_terrain': [1 if avantage_terrain == "Équipe A" else 0]  
+}  
+
+# Convertir en DataFrame  
+df_multi = pd.DataFrame(data)  
+
+# Exemple de données historiques pour l'entraînement (à remplacer par des données réelles)  
+historical_data = {  
+    'xG_A': [1.5, 2.0, 1.0, 2.5],  
+    'xG_B': [1.0, 1.5, 2.0, 1.0],  
+    'tirs_cadres_A': [5, 7, 3, 8],  
+    'tirs_cadres_B': [4, 6, 5, 2],  
+    'poss_moyenne_A': [55, 60, 50, 65],  
+    'poss_moyenne_B': [45, 40, 50, 35],  
+    'motivation': [8, 7, 6, 9],  
+    'result': [1, 1, 0, 1]  # 1 = victoire A, 0 = victoire B  
+}  
+
+df_historical = pd.DataFrame(historical_data)  
+
+# Séparer les caractéristiques et la cible  
+X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation']]  
+y = df_historical['result']  
+
+# Diviser les données en ensembles d'entraînement et de test  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+
+# Créer et entraîner le modèle  
+model = LogisticRegression()  
+model.fit(X_train, y_train)  
+
+# Prédire les résultats avec les nouvelles données  
+prediction_multi = model.predict(df_multi)  
+
+# Affichage des résultats de la prédiction multi-variable  
+st.subheader("Résultats de la Prédiction (Méthode Multi-Variable)")  
+if prediction_multi[0] == 1:  
+    st.write("L'équipe A est prédite pour gagner.")  
+else:  
+    st.write("L'équipe B est prédite pour gagner.")  
+
+# Évaluer le modèle sur l'ensemble de test  
+accuracy = accuracy_score(y_test, model.predict(X_test))  
+st.write(f"Précision du modèle multi-variable : **{accuracy:.2f}**")  
+
+# Visualisation des résultats de la méthode multi-variable  
+fig, ax = plt.subplots()  
+ax.bar(["Équipe A", "Équipe B"], [prediction_multi[0], 1 - prediction_multi[0]], color=['blue', 'red'])  
+ax.set_ylabel('Probabilité de Victoire')  
+ax.set_title('Prédictions de Victoire pour le Match (Méthode Multi-Variable)')  
+st.pyplot(fig)  
+
+# Section de conseils de paris pour la méthode multi-variable  
+st.subheader("Conseils de Paris (Méthode Multi-Variable)")  
+if prediction_multi[0] == 1:  
     st.write("Conseil : Pariez sur la victoire de l'équipe A.")  
 else:  
     st.write("Conseil : Pariez sur la victoire de l'équipe B.")  
