@@ -126,11 +126,16 @@ cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")  
 
-# Conditions du match  
+# Conditions du match (affichage uniquement)  
 st.subheader("Conditions du Match")  
 meteo = st.selectbox("Conditions Météorologiques", options=["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"], index=0, key="meteo")  
 avantage_terrain = st.selectbox("Équipe à domicile", options=["Équipe A", "Équipe B"], index=0, key="avantage_terrain")  
 motivation = st.slider("Niveau de motivation (1 à 10)", min_value=1, max_value=10, value=5, key="motivation")  
+
+# Affichage des conditions météorologiques  
+st.write(f"Conditions Météorologiques : **{meteo}**")  
+st.write(f"Équipe à domicile : **{avantage_terrain}**")  
+st.write(f"Niveau de motivation : **{motivation}**")  
 
 # Fonction pour prédire les buts avec distribution de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
@@ -181,12 +186,11 @@ st.subheader("Analyse Multi-Variable")
 data = {  
     'xG_A': [xG_A],  
     'xG_B': [xG_B],  
-    'tirs_cadres_A': [tirs_cadres_A],  
+        'tirs_cadres_A': [tirs_cadres_A],  
     'tirs_cadres_B': [tirs_cadres_B],  
     'poss_moyenne_A': [poss_moyenne_A],  
     'poss_moyenne_B': [poss_moyenne_B],  
-        'motivation': [motivation],  
-    'conditions_meteo': [meteo],  
+    'motivation': [motivation],  
     'avantage_terrain': [1 if avantage_terrain == "Équipe A" else 0]  
 }  
 
@@ -202,22 +206,13 @@ historical_data = {
     'poss_moyenne_A': [55, 60, 50, 65],  
     'poss_moyenne_B': [45, 40, 50, 35],  
     'motivation': [8, 7, 6, 9],  
-    'conditions_meteo': ["Ensoleillé", "Pluvieux", "Nuageux", "Ensoleillé"],  # Exemple d'encodage  
     'result': [1, 1, 0, 1]  # 1 = victoire A, 0 = victoire B  
 }  
 
 df_historical = pd.DataFrame(historical_data)  
 
-# Encodage des conditions météorologiques  
-encoder = OneHotEncoder(sparse=False)  
-conditions_encoded = encoder.fit_transform(df_historical[['conditions_meteo']])  
-conditions_df = pd.DataFrame(conditions_encoded, columns=encoder.get_feature_names_out(['conditions_meteo']))  
-
-# Ajouter les colonnes encodées au DataFrame historique  
-df_historical = pd.concat([df_historical.drop(columns=['conditions_meteo']), conditions_df], axis=1)  
-
 # Séparer les caractéristiques et la cible  
-X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation'] + list(conditions_df.columns)]  
+X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation']]  
 y = df_historical['result']  
 
 # Diviser les données en ensembles d'entraînement et de test  
@@ -228,11 +223,7 @@ model = LogisticRegression()
 model.fit(X_train, y_train)  
 
 # Prédire les résultats avec les nouvelles données  
-# Encoder les conditions du match pour la prédiction  
-conditions_multi_encoded = encoder.transform(df_multi[['conditions_meteo']])  
-df_multi_encoded = pd.concat([df_multi.drop(columns=['conditions_meteo']), pd.DataFrame(conditions_multi_encoded, columns=encoder.get_feature_names_out(['conditions_meteo']))], axis=1)  
-
-prediction_multi = model.predict(df_multi_encoded)  
+prediction_multi = model.predict(df_multi)  
 
 # Affichage des résultats de la prédiction multi-variable  
 st.subheader("Résultats de la Prédiction (Méthode Multi-Variable)")  
