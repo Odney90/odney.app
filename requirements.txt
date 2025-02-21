@@ -1,8 +1,6 @@
- 
-matplotlib  
+streamlit  
+pandas  
 numpy  
-pillow 
-qrcode
-streamlit
-pandas
-scikit-learn
+scikit-learn  
+qrcode  
+pillow
