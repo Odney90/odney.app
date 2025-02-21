@@ -28,17 +28,22 @@ previous_data = load_data()
 st.title("⚽ Prédiction de Matchs de Football")  
 st.write("Entrez les statistiques des deux équipes pour prédire le résultat du match.")  
 
+# Couleurs pour les équipes  
+color_A = "#1E90FF"  # Bleu pour l'équipe A  
+color_B = "#FF4500"  # Rouge pour l'équipe B  
+
 # Saisie des données pour l'équipe A  
 st.header("Équipe A 🏆")  
-# Historique des performances  
-historique_A = st.text_area("Historique des performances (ex: W, D, L)", height=100)  
+col1, col2 = st.columns(2)  
 
-# Conditions de match  
-st.subheader("Conditions de Match")  
-equipe_recevante = st.selectbox("Équipe qui reçoit", ["Équipe A", "Équipe B"])  
+with col1:  
+    historique_A = st.text_area("Historique des performances (ex: W, D, L)", height=100)  
 
-# Statistiques de l'équipe  
-st.subheader("Statistiques de l'Équipe")  
+with col2:  
+    equipe_recevante = st.selectbox("Équipe qui reçoit", ["Équipe A", "Équipe B"])  
+
+# Statistiques de l'équipe A  
+st.subheader("Statistiques de l'Équipe A")  
 buts_totaux_A = st.number_input("Buts totaux", min_value=0.0, value=0.0)  
 buts_par_match_A = st.number_input("Buts par match", min_value=0.0, value=0.0)  
 buts_concedes_par_match_A = st.number_input("Buts concédés par match", min_value=0.0, value=0.0)  
@@ -77,17 +82,20 @@ cartons_rouges_A = st.number_input("Cartons rouges", min_value=0.0, value=0.0)
 
 # Saisie des données pour l'équipe B  
 st.header("Équipe B 🥈")  
-# Historique des performances  
-historique_B = st.text_area("Historique des performances (ex: W, D, L)", height=100, key="B_historique")  
+col3, col4 = st.columns(2)  
 
-# Statistiques de l'équipe  
-st.subheader("Statistiques de l'Équipe")  
-buts_totaux_B = st.number_input("Buts totaux", min_value=0.0, value=0.0, key="B")  
-buts_par_match_B = st.number_input("Buts par match", min_value=0.0, value=0.0, key="B2")  
-buts_concedes_par_match_B = st.number_input("Buts concédés par match", min_value=0.0, value=0.0, key="B3")  
-buts_concedes_totaux_B = st.number_input("Buts concédés au total", min_value=0.0, value=0.0, key="B4")  
-possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="B5")  
-aucun_but_encaisse_B = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0, key="B6")  
+with col3:  
+    historique_B = st.text_area("Historique des performances (ex: W, D, L)", height=100, key="B_historique")  
+
+with col4:  
+    # Statistiques de l'équipe B  
+    st.subheader("Statistiques de l'Équipe B")  
+    buts_totaux_B = st.number_input("Buts totaux", min_value=0.0, value=0.0, key="B")  
+    buts_par_match_B = st.number_input("Buts par match", min_value=0.0, value=0.0, key="B2")  
+    buts_concedes_par_match_B = st.number_input("Buts concédés par match", min_value=0.0, value=0.0, key="B3")  
+    buts_concedes_totaux_B = st.number_input("Buts concédés au total", min_value=0.0, value=0.0, key="B4")  
+    possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="B5")  
+    aucun_but_encaisse_B = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0, key="B6")  
 
 # Critères d'Attaque pour l'équipe B  
 st.subheader("Critères d'Attaque 🔥")  
@@ -253,15 +261,4 @@ if st.button("⚽ Prédire les buts avec la méthode de Poisson"):
     buts_moyens_A, buts_moyens_B = prediction_buts_poisson(expected_buts_A, expected_buts_B)  
     st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
     st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
-    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")  
-
-# Graphiques des données  
-st.header("📊 Visualisation des Données")  
-fig, ax = plt.subplots()  
-ax.bar(['Équipe A', 'Équipe B'], [buts_totaux_A, buts_totaux_B], color=['blue', 'red'])  
-ax.set_ylabel('Buts Totaux')  
-ax.set_title('Comparaison des Buts Totaux des Équipes')  
-st.pyplot(fig)  
-
-# Graphique des probabilités de victoire  
-if 'prediction_proba' in locals():
+    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2
