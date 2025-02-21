@@ -93,9 +93,18 @@ if st.button("Prédire les résultats"):
     prediction_A = model_rf_A.predict(nouvelle_donnee)[0]  # Prédiction pour l'équipe A  
     prediction_B = model_lr_B.predict(nouvelle_donnee_B)[0]  # Prédiction pour l'équipe B  
 
+    # Conversion des prédictions en résultats  
+    if prediction_A > prediction_B:  
+        resultat = "Victoire de l'équipe A"  
+    elif prediction_A < prediction_B:  
+        resultat = "Victoire de l'équipe B"  
+    else:  
+        resultat = "Match nul"  
+
     # Affichage des résultats de prédiction  
     st.write(f"Prédiction de victoire pour l'équipe A : **{prediction_A:.2f}**")  
     st.write(f"Prédiction de victoire pour l'équipe B : **{prediction_B:.2f}**")  
+    st.write(f"Résultat prédit : **{resultat}**")  
 
 # Partie 3 : Gestion de la bankroll  
 st.markdown("<h2 style='color: #FF5722;'>3. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
