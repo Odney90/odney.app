@@ -3,9 +3,7 @@ import pandas as pd
 import numpy as np  
 import matplotlib.pyplot as plt  
 from scipy.stats import poisson  
-from sklearn.model_selection import train_test_split  
 from sklearn.linear_model import LogisticRegression  
-from sklearn.metrics import accuracy_score  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
@@ -26,7 +24,13 @@ st.markdown(
         font-size: 2.5em;  
     }  
     h2 {  
-        color: #4CAF50;  
+        color: #FF5733;  /* Couleur pour les sous-titres */  
+    }  
+    h3 {  
+        color: #FFC300;  /* Couleur pour les titres de sections */  
+    }  
+    h4 {  
+        color: #DAF7A6;  /* Couleur pour les titres de sous-sections */  
     }  
     .sidebar .sidebar-content {  
         background-color: rgba(255, 255, 255, 0.8);  /* Fond semi-transparent pour la barre latérale */  
@@ -178,7 +182,7 @@ interceptions_B = st.slider("Interceptions par match", min_value=0, max_value=50
 tacles_reussis_B = st.slider("Tacles réussis par match", min_value=0, max_value=50, value=4, key="tacles_reussis_B")  
 degagements_B = st.slider("Dégagements par match", min_value=0, max_value=50, value=6, key="degagements_B")  
 possessions_recuperees_B = st.slider("Possessions récupérées au milieu de terrain par match", min_value=0, max_value=50, value=4, key="possessions_recuperees_B")  
-penalties_concedes_B = st.number_input("Pénalties concédés", min_value=0, value=1, key="penalties_concedes_B")  
+penalties_concedesB = st.number_input("Pénalties concédés", min_value=0, value=1, key="penalties_concedes_B")  
 arrets_B = st.slider("Arrêts par match", min_value=0, max_value=20, value=2, key="arrets_B")  
 fautes_B = st.slider("Fautes par match", min_value=0, max_value=50, value=12, key="fautes_B")  
 cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=1, key="cartons_jaunes_B")  
@@ -186,7 +190,7 @@ cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")  
 
-# Conditions du match (affichage uniquement)  
+# Conditions du Match  
 st.subheader("Conditions du Match")  
 meteo = st.selectbox("Conditions Météorologiques", options=["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"], index=0, key="meteo")  
 avantage_terrain = st.selectbox("Équipe à domicile", options=["Équipe A", "Équipe B"], index=0, key="avantage_terrain")  
@@ -213,142 +217,53 @@ def prediction_buts_poisson(xG_A, xG_B):
 buts_moyens_A, buts_moyens_B = prediction_buts_poisson(xG_A, xG_B)  
 
 # Affichage des résultats de la prédiction  
-st.subheader("Résultats de la Prédiction (Méthode de Poisson)")  
-st.write(f"Prédiction des buts pour l'équipe A : **{buts_moyens_A:.2f}**")  
-st.write(f"Prédiction des buts pour l'équipe B : **{buts_moyens_B:.2f}**")  
-
-# Calcul des pourcentages de victoire  
-pourcentage_victoire_A = (buts_moyens_A / (buts_moyens_A + buts_moyens_B)) * 100 if (buts_moyens_A + buts_moyens_B) > 0 else 0  
-pourcentage_victoire_B = (buts_moyens_B / (buts_moyens_A + buts_moyens_B)) * 100 if (buts_moyens_A + buts_moyens_B) > 0 else 0  
-
-# Affichage des pourcentages de victoire  
-st.write(f"Pourcentage de victoire pour l'équipe A : **{pourcentage_victoire_A:.2f}%**")  
-st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_victoire_B:.2f}%**")  
-
-# Visualisation des prédictions  
-fig, ax = plt.subplots()  
-ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue', 'red'])  
-ax.set_ylabel('Buts Prédits')  
-ax.set_title('Prédictions de Buts pour le Match (Méthode de Poisson)')  
-st.pyplot(fig)  
-
-# Section de conseils de paris  
-st.subheader("Conseils de Paris (Méthode de Poisson)")  
-if pourcentage_victoire_A > pourcentage_victoire_B:  
-    st.write("Conseil : Pariez sur la victoire de l'équipe A.")  
-else:  
-    st.write("Conseil : Pariez sur la victoire de l'équipe B.")  
-
-# Ajout de la section pour les paris supplémentaires  
-st.subheader("Options de Paris Supplémentaires")  
-
-# Convertisseur de cotes en probabilité implicite  
-st.subheader("Convertisseur de Cotes en Probabilité Implicite")  
-cote_A = st.number_input("Cote Décimale pour l'équipe A", min_value=1.0, value=2.0, key="cote_A")  
-cote_B = st.number_input("Cote Décimale pour l'équipe B", min_value=1.0, value=2.5, key="cote_B")  
-
-# Calcul de la probabilité implicite  
-probabilite_implicite_A = 1 / cote_A  
-probabilite_implicite_B = 1 / cote_B  
-
-st.write(f"Probabilité Implicite pour l'équipe A : **{probabilite_implicite_A * 100:.2f}%**")  
-st.write(f"Probabilité Implicite pour l'équipe B : **{probabilite_implicite_B * 100:.2f}%**")  
+st.subheader("Prédiction des Buts")  
+st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
+st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")  
 
 # Calculateur de Value Bet  
 st.subheader("Calculateur de Value Bet")  
-probabilite_A = pourcentage_victoire_A / 100  
-probabilite_B = pourcentage_victoire_B / 100  
+cote_A = st.number_input("Cote pour l'équipe A", min_value=1.0, value=2.0, key="cote_A")  
+cote_B = st.number_input("Cote pour l'équipe B", min_value=1.0, value=2.0, key="cote_B")  
 
-value_bet_A = probabilite_A > probabilite_implicite_A  
-value_bet_B = probabilite_B > probabilite_implicite_B  
+# Calcul des probabilités implicites  
+probabilite_implicite_A = 1 / cote_A  
+probabilite_implicite_B = 1 / cote_B  
 
-if value_bet_A:  
-    st.write("L'équipe A est un value bet.")  
-else:  
-    st.write("L'équipe A n'est pas un value bet.")  
+# Calcul des probabilités de victoire basées sur les xG  
+probabilite_victoire_A = buts_moyens_A / (buts_moyens_A + buts_moyens_B)  
+probabilite_victoire_B = buts_moyens_B / (buts_moyens_A + buts_moyens_B)  
 
-if value_bet_B:  
-    st.write("L'équipe B est un value bet.")  
-else:  
-    st.write("L'équipe B n'est pas un value bet.")  
+# Détermination si c'est un value bet  
+value_bet_A = probabilite_victoire_A > probabilite_implicite_A  
+value_bet_B = probabilite_victoire_B > probabilite_implicite_B  
 
-# Calculateur de mise basé sur le système de Kelly  
-st.subheader("Calculateur de Mise (Système de Kelly)")  
-bankroll = st.number_input("Votre Bankroll (€)", min_value=0.0, value=100.0, key="bankroll")  
-mise_base = st.number_input("Mise de Base (€)", min_value=0.0, value=10.0, key="mise_base")  
+st.write(f"Probabilité implicite pour l'équipe A : **{probabilite_implicite_A:.2%}**")  
+st.write(f"Probabilité de victoire pour l'équipe A : **{probabilite_victoire_A:.2%}**")  
+st.write(f"Value Bet pour l'équipe A : **{'Oui' if value_bet_A else 'Non'}**")  
 
-# Calcul de la mise selon le système de Kelly  
-mise_kelly_A = bankroll * ((cote_A - 1) * probabilite_A - (1 - probabilite_A)) / (cote_A - 1)  
-mise_kelly_B = bankroll * ((cote_B - 1) * probabilite_B - (1 - probabilite_B)) / (cote_B - 1)  
+st.write(f"Probabilité implicite pour l'équipe B : **{probabilite_implicite_B:.2%}**")  
+st.write(f"Probabilité de victoire pour l'équipe B : **{probabilite_victoire_B:.2%}**")  
+st.write(f"Value Bet pour l'équipe B : **{'Oui' if value_bet_B else 'Non'}**")  
 
-st.write(f"Mise recommandée pour l'équipe A (Système de Kelly) : **{mise_kelly_A:.2f} €**")  
-st.write(f"Mise recommandée pour l'équipe B (Système de Kelly) : **{mise_kelly_B:.2f} €**")  
-
-# Système de bankroll dynamique  
-st.subheader("Système de Bankroll Dynamique")  
-resultat_pari = st.selectbox("Résultat du Pari", options=["Gagné", "Perdu"], index=0, key="resultat_pari")  
-
-if resultat_pari == "Gagné":  
-    bankroll += mise_base  # Ajoute la mise à la bankroll  
-    st.write(f"Votre nouvelle bankroll est : **{bankroll:.2f} €**")  
-else:  
-    bankroll -= mise_base  # Soustrait la mise de la bankroll  
-    st.write(f"Votre nouvelle bankroll est : **{bankroll:.2f} €**")  
-
-# Modèle de régression logistique pour prédiction multivariable  
+# Prédiction multivariable avec régression logistique (exemple simplifié)  
 st.subheader("Prédiction Multivariable avec Régression Logistique")  
-
-# Préparation des données pour le modèle  
-data = {  
-    'buts_produits_A': [buts_produits_A],  
-    'buts_encaisse_A': [buts_encaisse_A],  
-    'poss_moyenne_A': [poss_moyenne_A],  
-    'xG_A': [xG_A],  
-    'tirs_cadres_A': [tirs_cadres_A],  
-    'pourcentage_tirs_convertis_A': [pourcentage_tirs_convertis_A],  
-    'buts_produits_B': [buts_produits_B],  
-    'buts_encaisse_B': [buts_encaisse_B],  
-    'poss_moyenne_B': [poss_moyenne_B],  
-    'xG_B': [xG_B],  
-    'tirs_cadres_B': [tirs_cadres_B],  
-    'pourcentage_tirs_convertis_B': [pourcentage_tirs_convertis_B],  
-}  
-
-# Convertir en DataFrame  
-df = pd.DataFrame(data)  
-
-# Exemple de données d'entraînement (à remplacer par vos données réelles)  
-X = pd.DataFrame({  
-    'buts_produits_A': [2, 3, 1, 4, 2],  
-    'buts_encaisse_A': [1, 2, 1, 0, 2],  
-    'poss_moyenne_A': [55, 60, 50, 65, 58],  
-    'xG_A': [1.5, 2.0, 1.0, 2.5, 1.8],  
-    'tirs_cadres_A': [10, 8, 5, 12, 9],  
-    'pourcentage_tirs_convertis_A': [20, 25, 15, 30, 22],  
-    'buts_produits_B': [1, 2, 3, 1, 2],  
-    'buts_encaisse_B': [2, 1, 1, 3, 2],  
-    'poss_moyenne_B': [45, 40, 50, 35, 42],  
-    'xG_B': [1.0, 1.5, 2.0, 1.0, 1.2],  
-    'tirs_cadres_B': [5, 6, 7, 4, 5],  
-    'pourcentage_tirs_convertis_B': [15, 20, 25, 10, 18],  
-})  
-
-# Cibles (0 pour A gagne, 1 pour B gagne)  
-y = np.array([0, 1, 0, 1, 0])  # Remplacez par vos données réelles  
+# Préparation des données pour le modèle (exemple simplifié)  
+X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A],  
+              [buts_produits_B, buts_encaisse_B, poss_moyenne_B]])  
+y = np.array([1, 0])  # 1 pour l'équipe A, 0 pour l'équipe B  
 
 # Entraînement du modèle  
 model = LogisticRegression()  
 model.fit(X, y)  
 
-# Prédiction  
-prediction = model.predict(df)  
-probabilite_A = model.predict_proba(df)[0][0] * 100  
-probabilite_B = model.predict_proba(df)[0][1] * 100  
+# Prédiction des résultats  
+prediction = model.predict_proba(X)  
 
-# Affichage des résultats de la prédiction multivariable  
-st.write(f"Prédiction du modèle : **{'Équipe A gagne' if prediction[0] == 0 else 'Équipe B gagne'}**")  
-st.write(f"Probabilité que l'équipe A gagne : **{probabilite_A:.2f}%**")  
-st.write(f"Probabilité que l'équipe B gagne : **{probabilite_B:.2f}%**")  
+# Affichage des probabilités de victoire  
+st.write(f"Probabilité de victoire pour l'équipe A : **{prediction[0][1]:.2%}**")  
+st.write(f"Probabilité de victoire pour l'équipe B : **{prediction[1][1]:.2%}**")  
 
-# Fin de l'application  
-st.markdown("<h2 style='text-align: center; color: #4CAF50;'>Merci d'avoir utilisé l'outil d'analyse de match !</h2>", unsafe_allow_html=True)
+# Conclusion  
+st.subheader("Conclusion")  
+st.write("Merci d'avoir utilisé l'outil d'analyse de match !")
