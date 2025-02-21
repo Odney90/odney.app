@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt  
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
+from sklearn.preprocessing import StandardScaler  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
@@ -172,7 +173,8 @@ tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tact
 
 # Section pour les joueurs clés de l'équipe B  
 st.subheader("Joueurs Clés de l'équipe B")  
-absents_B = st.number_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_B")  
+absents_B = st.number
+_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_B")  
 ratings_B = []  
 for i in range(5):  
     rating = st.number_input(f"Rating du joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_B_{i}")  
@@ -207,23 +209,38 @@ st.subheader("Prédiction des Buts")
 st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
 st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")  
 
-# Prédiction multivariable avec régression logistique (exemple simplifié)  
-st.subheader("Prédiction Multivariable avec Régression Logistique")  
-# Préparation des données pour le modèle (exemple simplifié)  
-X = np.array([[buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A, absents_A, np.mean(ratings_A)],  
-                            [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B, absents_B, np.mean(ratings_B)]])  
+# Prédiction multivariable avec régression logistique (version améliorée)  
+st.subheader("Prédiction Multivariable avec Régression Logistique (Améliorée)")  
+
+# Préparation des données pour le modèle  
+X = np.array([  
+    [buts_produits_A, buts_encaisse_A, poss_moyenne_A, motivation_A, absents_A, np.mean(ratings_A), forme_recente_A],  
+    [buts_produits_B, buts_encaisse_B, poss_moyenne_B, motivation_B, absents_B, np.mean(ratings_B), forme_recente_B]  
+])  
 y = np.array([1, 0])  # 1 pour l'équipe A, 0 pour l'équipe B  
 
-# Entraînement du modèle  
-model = LogisticRegression()  
-model.fit(X, y)  
+# Normalisation des données (important pour la régression logistique)  
+scaler = StandardScaler()  
+X_scaled = scaler.fit_transform(X)  
+
+# Entraînement du modèle avec régularisation pour éviter le surapprentissage  
+model = LogisticRegression(penalty='l2', C=0.1, solver='liblinear')  # L2 régularisation  
+model.fit(X_scaled, y)  
 
 # Prédiction des résultats  
-prediction = model.predict_proba(X)  
+prediction = model.predict_proba(X_scaled)  
 
 # Affichage des probabilités de victoire  
 st.write(f"Probabilité de victoire pour l'équipe A : **{prediction[0][1]:.2%}**")  
 st.write(f"Probabilité de victoire pour l'équipe B : **{prediction[1][1]:.2%}**")  
+
+# Interprétation des coefficients du modèle  
+st.subheader("Interprétation du Modèle")  
+feature_names = ['Buts produits', 'Buts encaissés', 'Possession moyenne', 'Motivation', 'Absents', 'Rating joueurs', 'Forme récente']  
+coefficients = model.coef_[0]  
+
+for feature, coef in zip(feature_names, coefficients):  
+    st.write(f"{feature}: Coefficient = {coef:.2f}")  
 
 # Calcul des paris alternatifs  
 double_chance_A = prediction[0][1] + (1 - prediction[1][1])  # Équipe A gagne ou match nul  
@@ -234,7 +251,19 @@ st.subheader("Paris Alternatifs")
 st.write(f"Probabilité de double chance pour l'équipe A (gagner ou match nul) : **{double_chance_A:.2%}**")  
 st.write(f"Probabilité de double chance pour l'équipe B (gagner ou match nul) : **{double_chance_B:.2%}**")  
 
+# Seuil de probabilité pour le résultat nul  
+seuil_nul = st.slider("Seuil de probabilité pour le résultat nul", min_value=0.0, max_value=1.0, value=0.3, step=0.05)  
+
+# Analyse du résultat nul  
+proba_nul = 1 - (prediction[0][1] + prediction[1][1])  
+st.write(f"Probabilité estimée d'un match nul : **{proba_nul:.2%}**")  
+
+if proba_nul >= seuil_nul:  
+    st.warning("Attention : La probabilité d'un match nul est élevée selon le seuil défini.")  
+else:  
+    st.success("La probabilité d'un match nul est considérée comme faible.")  
+
 # Conclusion  
 st.subheader("Conclusion")  
-st.write("Merci d'avoir utilisé l'outil d'analyse de match !")  
-st.write("Cette application vous permet d'évaluer les performances des équipes et de prendre des décisions éclairées sur les paris.")
+st.write("Merci d'avoir utilisé l'outil d'analyse de match ! Cette application vous permet d'évaluer les performances des équipes et de prendre des décisions éclairées sur les paris.")  
+st.write("N'oubliez pas que les prédictions sont basées sur les données que vous avez fournies et que le football reste imprévisible.")
