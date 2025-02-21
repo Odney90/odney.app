@@ -19,9 +19,9 @@ def load_data():
     if os.path.exists('data.pkl'):  
         with open('data.pkl', 'rb') as f:  
             return pickle.load(f)  
-    return None  
-
-# Chargement des données précédentes  
+    return None
+    
+    # Chargement des données précédentes  
 previous_data = load_data()  
 
 # Interface utilisateur Streamlit  
@@ -30,8 +30,7 @@ st.write("Entrez les statistiques des deux équipes pour prédire le résultat d
 
 # Couleurs pour les équipes  
 color_A = "#1E90FF"  # Bleu pour l'équipe A  
-color_B = "#FF4500"  # Rouge pour l'équipe B  
-
+color_B = "#FF4500"  # Rouge pour l'équipe B
 # Saisie des données pour l'équipe A  
 st.header("Équipe A 🏆")  
 col1, col2 = st.columns(2)  
@@ -49,8 +48,7 @@ buts_par_match_A = st.number_input("Buts par match", min_value=0.0, value=0.0)
 buts_concedes_par_match_A = st.number_input("Buts concédés par match", min_value=0.0, value=0.0)  
 buts_concedes_totaux_A = st.number_input("Buts concédés au total", min_value=0.0, value=0.0)  
 possession_moyenne_A = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0)  
-aucun_but_encaisse_A = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0)  
-
+aucun_but_encaisse_A = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0)
 # Critères d'Attaque  
 st.subheader("Critères d'Attaque 🔥")  
 expected_buts_A = st.number_input("Expected Goals (xG)", min_value=0.0, value=0.0)  
@@ -72,8 +70,7 @@ tacles_reussis_A = st.number_input("Tacles réussis par match", min_value=0.0, v
 degegements_A = st.number_input("Dégagements par match", min_value=0.0, value=0.0)  
 penalites_concedes_A = st.number_input("Pénalités concédées", min_value=0.0, value=0.0)  
 possessions_remporte_A = st.number_input("Possessions remportées", min_value=0.0, value=0.0)  
-arrets_A = st.number_input("Arrêts par match", min_value=0.0, value=0.0)  
-
+arrets_A = st.number_input("Arrêts par match", min_value=0.0, value=0.0)
 # Critères de Discipline  
 st.subheader("Critères de Discipline ⚖️")  
 fautes_A = st.number_input("Fautes par match", min_value=0.0, value=0.0)  
@@ -95,9 +92,8 @@ with col4:
     buts_concedes_par_match_B = st.number_input("Buts concédés par match", min_value=0.0, value=0.0, key="B3")  
     buts_concedes_totaux_B = st.number_input("Buts concédés au total", min_value=0.0, value=0.0, key="B4")  
     possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="B5")  
-    aucun_but_encaisse_B = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0, key="B6")  
-
-# Critères d'Attaque pour l'équipe B  
+    aucun_but_encaisse_B = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0, key="B6")
+    # Critères d'Attaque pour l'équipe B  
 st.subheader("Critères d'Attaque 🔥")  
 expected_buts_B = st.number_input("Expected Goals (xG)", min_value=0.0, value=0.0, key="B7")  
 tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0.0, value=0.0, key="B8")  
@@ -118,8 +114,7 @@ tacles_reussis_B = st.number_input("Tacles réussis par match", min_value=0.0, v
 degegements_B = st.number_input("Dégagements par match", min_value=0.0, value=0.0, key="B20")  
 penalites_concedes_B = st.number_input("Pénalités concédées", min_value=0.0, value=0.0, key="B21")  
 possessions_remporte_B = st.number_input("Possessions remportées", min_value=0.0, value=0.0, key="B22")  
-arrets_B = st.number_input("Arrêts par match", min_value=0.0, value=0.0, key="B23")  
-
+arrets_B = st.number_input("Arrêts par match", min_value=0.0, value=0.0, key="B23")
 # Critères de Discipline pour l'équipe B  
 st.subheader("Critères de Discipline ⚖️")  
 fautes_B = st.number_input("Fautes par match", min_value=0.0, value=0.0, key="B24")  
@@ -187,7 +182,7 @@ data_to_save = {
         'Cartons rouges': cartons_rouges_B  
     }  
 }  
-save_data(data_to_save)  
+save_data(data_to_save)
 
 # Prédiction avec Random Forest  
 if st.button("🔮 Prédire le résultat avec Random Forest"):  
@@ -246,8 +241,7 @@ if st.button("🔮 Prédire le résultat avec Régression Logistique"):
 
     # Affichage des probabilités  
     st.write(f"Probabilité que l'équipe A gagne : **{prediction_proba[0][1] * 100:.2f}%**")  
-    st.write(f"Probabilité que l'équipe B gagne : **{prediction_proba[0][0] * 100:.2f}%**")  
-
+    st.write(f"Probabilité que l'équipe B gagne : **{prediction_proba[0][0] * 100:.2f}%**")
 # Prédiction des buts avec la méthode de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
     buts_A = [poisson.pmf(i, xG_A) for i in range(6)]  
@@ -258,7 +252,4 @@ def prediction_buts_poisson(xG_A, xG_B):
 
 # Affichage des résultats de la prédiction des buts  
 if st.button("⚽ Prédire les buts avec la méthode de Poisson"):  
-    buts_moyens_A, buts_moyens_B = prediction_buts_poisson(expected_buts_A, expected_buts_B)  
-    st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
-    st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
-    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}
+    buts_moyens_A
