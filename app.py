@@ -12,37 +12,48 @@ st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Analyse des Équipe
 
 # Historique des équipes  
 st.subheader("Historique des équipes")  
-st.markdown("Veuillez entrer les résultats des 10 derniers matchs pour chaque équipe (1 pour victoire, 0 pour match nul, -1 pour défaite).")  
+st.markdown("Veuillez entrer les résultats des 5 derniers matchs pour chaque équipe (1 pour victoire, 0 pour match nul, -1 pour défaite).")  
 
 # Historique de l'équipe A  
 historique_A = []  
-for i in range(10):  
+for i in range(5):  
     resultat = st.selectbox(f"Match {i + 1} de l'équipe A", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_A_{i}")  
     historique_A.append(1 if resultat == "Victoire (1)" else (0 if resultat == "Match Nul (0)" else -1))  
 
 # Historique de l'équipe B  
 historique_B = []  
-for i in range(10):  
+for i in range(5):  
     resultat = st.selectbox(f"Match {i + 1} de l'équipe B", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_B_{i}")  
     historique_B.append(1 if resultat == "Victoire (1)" else (0 if resultat == "Match Nul (0)" else -1))  
 
-# Calcul de la forme récente sur 10 matchs  
+# Historique de face-à-face  
+st.subheader("Historique de Face-à-Face")  
+st.markdown("Veuillez entrer les résultats des 5 derniers matchs entre les deux équipes.")  
+historique_face_a_face = []  
+for i in range(5):  
+    resultat = st.selectbox(f"Match {i + 1} entre A et B", options=["Victoire A (1)", "Match Nul (0)", "Victoire B (-1)"], key=f"match_face_a_face_{i}")  
+    historique_face_a_face.append(1 if resultat == "Victoire A (1)" else (0 if resultat == "Match Nul (0)" else -1))  
+
+# Calcul de la forme récente sur 5 matchs  
 def calculer_forme(historique):  
     return sum(historique) / len(historique)  # Moyenne des résultats  
 
 forme_recente_A = calculer_forme(historique_A)  
 forme_recente_B = calculer_forme(historique_B)  
+forme_face_a_face = calculer_forme(historique_face_a_face)  
 
-st.write(f"Forme récente de l'équipe A (moyenne sur 10 matchs) : **{forme_recente_A:.2f}**")  
-st.write(f"Forme récente de l'équipe B (moyenne sur 10 matchs) : **{forme_recente_B:.2f}**")  
+st.write(f"Forme récente de l'équipe A (moyenne sur 5 matchs) : **{forme_recente_A:.2f}**")  
+st.write(f"Forme récente de l'équipe B (moyenne sur 5 matchs) : **{forme_recente_B:.2f}**")  
+st.write(f"Forme récente en face-à-face (moyenne sur 5 matchs) : **{forme_face_a_face:.2f}**")  
 
 # Visualisation de la forme des équipes  
 st.subheader("Visualisation de la Forme des Équipes")  
 fig, ax = plt.subplots()  
-ax.plot(range(1, 11), historique_A, marker='o', label='Équipe A', color='blue')  
-ax.plot(range(1, 11), historique_B, marker='o', label='Équipe B', color='red')  
-ax.set_xticks(range(1, 11))  
-ax.set_xticklabels([f"Match {i}" for i in range(1, 11)])  
+ax.plot(range(1, 6), historique_A, marker='o', label='Équipe A', color='blue')  
+ax.plot(range(1, 6), historique_B, marker='o', label='Équipe B', color='red')  
+ax.plot(range(1, 6), historique_face_a_face, marker='o', label='Face-à-Face', color='green')  
+ax.set_xticks(range(1, 6))  
+ax.set_xticklabels([f"Match {i}" for i in range(1, 6)])  
 ax.set_ylim(-1.5, 1.5)  
 ax.axhline(0, color='black', linewidth=0.5, linestyle='--')  
 ax.set_ylabel('Résultat')  
@@ -110,17 +121,9 @@ fautes_B = st.slider("Fautes par match", min_value=0, max_value=20, value=8, key
 cartons_jaunes_B = st.slider("Cartons jaunes", min_value=0, max_value=10, value=1, key="cartons_jaunes_B")  
 cartons_rouges_B = st.slider("Cartons rouges", min_value=0, max_value=10, value=0, key="cartons_rouges_B")  
 
-# Joueurs clés  
-st.subheader("Joueurs Clés")  
-joueurs_cles_A = st.text_input("Joueurs clés de l'équipe A (séparés par des virgules)", value="Joueur1, Joueur2")  
-scores_joueurs_cles_A = st.text_input("Scores des joueurs clés de l'équipe A (séparés par des virgules)", value="8, 7")  
-
-joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B (séparés par des virgules)", value="Joueur3, Joueur4")  
-scores_joueurs_cles_B = st.text_input("Scores des joueurs clés de l'équipe B (séparés par des virgules)", value="6, 9")  
-
 # Fonction pour analyser les systèmes tactiques  
 def analyser_tactiques(buts_produits, buts_encaisse, possession, xG, tirs_cadres, corners, interceptions):  
-    score_tactique = (buts_produits * 0.4) + (possessions_recuperees * 0.2) + (tirs_cadres * 0.2) - (buts_encaisse * 0.4) - (corners * 0.2) - (interceptions * 0.1)  
+    score_tactique = (buts_produits * 0.4) + (possessions_recuperees_A * 0.2) + (tirs_cadres * 0.2) - (buts_encaisse * 0.4) - (corners * 0.2) - (interceptions * 0.1)  
     return score_tactique  
 
 # Calcul des scores tactiques  
@@ -132,8 +135,8 @@ meilleur_tactique_A = "4-3-3" if score_tactique_A > score_tactique_B else "4-4-2
 meilleur_tactique_B = "4-3-3" if score_tactique_B > score_tactique_A else "4-4-2"  
 
 # Affichage des meilleurs systèmes tactiques  
-st.write(f"Meilleur système tactique pour l'équipe A : **{meilleur_tactique_A}**")  
-st.write(f"Meilleur système tactique pour l'équipe B : **{meilleur_tactique_B}**")  
+st.write(f"<h3 style='color: #FF5722;'>Meilleur système tactique pour l'équipe A : {meilleur_tactique_A}</h3>", unsafe_allow_html=True)  
+st.write(f"<h3 style='color: #FF5722;'>Meilleur système tactique pour l'équipe B : {meilleur_tactique_B}</h3>", unsafe_allow_html=True)  
 
 # Modèle de prédiction des buts  
 if st.button("Analyser le Match"):  
@@ -163,5 +166,73 @@ if st.button("Analyser le Match"):
         "possessions_recuperees_A": [5, 4, 6, 3, 5],  
         "penalties_concedes_A": [1, 0, 2, 1, 1],  
         "arrets_A": [3, 2, 4, 1, 3],  
-        "fautes_A": [10, 12, 8, 9, 11],  
-        "cartons_jaunes_A": [2, 1, 3
+                "fautes_A": [10, 12, 8, 9, 11],  
+        "cartons_jaunes_A": [2, 1, 3, 0, 1],  
+        "cartons_rouges_A": [0, 0, 1, 0, 0],  
+        "buts_produits_B": [60, 70, 50, 20, 40],  
+        "buts_encaisse_B": [40, 30, 20, 50, 35],  
+        "buts_par_match_B": [1, 2, 1, 0, 1],  
+        "poss_moyenne_B": [45, 55, 40, 50, 45],  
+        "xG_B": [1.5, 2.0, 1.0, 0.5, 1.2],  
+        "tirs_cadres_B": [8, 7, 9, 5, 6],  
+        "pourcentage_tirs_convertis_B": [15, 20, 10, 25, 5],  
+        "grosses_occasions_B": [8, 10, 6, 4, 7],  
+        "grosses_occasions_ratees_B": [4, 3, 2, 1, 2],  
+        "passes_reussies_B": [25, 30, 20, 15, 28],  
+        "passes_longues_B": [8, 10, 12, 6, 9],  
+        "centres_reussis_B": [4, 5, 3, 2, 4],  
+        "penalties_obtenus_B": [1, 2, 0, 1, 1],  
+        "touches_surface_B": [12, 15, 10, 8, 11],  
+        "corners_B": [4, 5, 3, 2, 4],  
+        "corners_par_match_B": [3, 2, 4, 1, 3],  
+        "corners_concedes_B": [5, 4, 6, 3, 5],  
+        "xG_concedes_B": [1.8, 2.2, 1.5, 2.0, 1.9],  
+        "interceptions_B": [6, 5, 7, 4, 6],  
+        "tacles_reussis_B": [6, 5, 7, 4, 6],  
+        "degagements_B": [6, 5, 7, 4, 6],  
+        "possessions_recuperees_B": [6, 5, 7, 4, 6],  
+        "penalties_concedes_B": [1, 2, 1, 0, 1],  
+        "arrets_B": [4, 3, 5, 2, 4],  
+        "fautes_B": [8, 9, 7, 6, 8],  
+        "cartons_jaunes_B": [1, 2, 1, 0, 1],  
+        "cartons_rouges_B": [0, 0, 0, 0, 0],  
+    }  
+
+    # Conversion des données en DataFrame  
+    df = pd.DataFrame(data)  
+
+    # Séparation des caractéristiques et de la cible  
+    X = df.drop(columns=["buts_produits_A", "buts_produits_B"])  
+    y_A = df["buts_produits_A"]  
+    y_B = df["buts_produits_B"]  
+
+    # Division des données en ensembles d'entraînement et de test  
+    X_train_A, X_test_A, y_train_A, y_test_A = train_test_split(X, y_A, test_size=0.2, random_state=42)  
+    X_train_B, X_test_B, y_train_B, y_test_B = train_test_split(X, y_B, test_size=0.2, random_state=42)  
+
+    # Modèle de régression linéaire  
+    model_A = LinearRegression()  
+    model_B = LinearRegression()  
+
+    # Entraînement des modèles  
+    model_A.fit(X_train_A, y_train_A)  
+    model_B.fit(X_train_B, y_train_B)  
+
+    # Prédictions  
+    prediction_A = model_A.predict(X_test_A)  
+    prediction_B = model_B.predict(X_test_B)  
+
+    # Affichage des résultats  
+    st.subheader("Résultats de la Prédiction")  
+    st.write(f"Prédiction des buts pour l'équipe A : **{prediction_A.mean():.2f}**")  
+    st.write(f"Prédiction des buts pour l'équipe B : **{prediction_B.mean():.2f}**")  
+
+    # Visualisation des prédictions  
+    fig, ax = plt.subplots()  
+    ax.bar(["Équipe A", "Équipe B"], [prediction_A.mean(), prediction_B.mean()], color=['blue', 'red'])  
+    ax.set_ylabel('Buts Prédits')  
+    ax.set_title('Prédictions de Buts pour le Match')  
+    st.pyplot(fig)  
+
+# Fin de l'application  
+st.markdown("<h2 style='text-align: center; color: #4CAF50;'>Merci d'avoir utilisé l'outil d'analyse de match !</h2>", unsafe_allow_html=True)
