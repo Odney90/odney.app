@@ -6,3 +6,4 @@ scikit-learn
 requests  
 python-dotenv
 scipy
+seaborn
