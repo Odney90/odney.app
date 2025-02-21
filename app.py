@@ -12,23 +12,49 @@ st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Analyse des Équipe
 
 # Historique des équipes  
 st.subheader("Historique des équipes")  
-historique_A = st.text_area("Historique des performances de l'équipe A (10 derniers matchs)", height=100)  
-historique_B = st.text_area("Historique des performances de l'équipe B (10 derniers matchs)", height=100)  
+st.markdown("Veuillez entrer les résultats des 10 derniers matchs pour chaque équipe (1 pour victoire, 0 pour match nul, -1 pour défaite).")  
+
+# Historique de l'équipe A  
+historique_A = []  
+for i in range(10):  
+    resultat = st.selectbox(f"Match {i + 1} de l'équipe A", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_A_{i}")  
+    historique_A.append(1 if resultat == "Victoire (1)" else (0 if resultat == "Match Nul (0)" else -1))  
+
+# Historique de l'équipe B  
+historique_B = []  
+for i in range(10):  
+    resultat = st.selectbox(f"Match {i + 1} de l'équipe B", options=["Victoire (1)", "Match Nul (0)", "Défaite (-1)"], key=f"match_B_{i}")  
+    historique_B.append(1 if resultat == "Victoire (1)" else (0 if resultat == "Match Nul (0)" else -1))  
 
 # Calcul de la forme récente sur 10 matchs  
 def calculer_forme(historique):  
-    if historique:  
-        matchs = historique.split(',')  
-        if len(matchs) > 10:  
-            matchs = matchs[-10:]  # Prendre les 10 derniers matchs  
-        return sum(int(resultat) for resultat in matchs) / len(matchs)  # Moyenne des résultats  
-    return 0.0  
+    return sum(historique) / len(historique)  # Moyenne des résultats  
 
 forme_recente_A = calculer_forme(historique_A)  
 forme_recente_B = calculer_forme(historique_B)  
 
 st.write(f"Forme récente de l'équipe A (moyenne sur 10 matchs) : **{forme_recente_A:.2f}**")  
 st.write(f"Forme récente de l'équipe B (moyenne sur 10 matchs) : **{forme_recente_B:.2f}**")  
+
+# Visualisation de la forme des équipes  
+st.subheader("Visualisation de la Forme des Équipes")  
+fig, ax = plt.subplots()  
+ax.plot(range(1, 11), historique_A, marker='o', label='Équipe A', color='blue')  
+ax.plot(range(1, 11), historique_B, marker='o', label='Équipe B', color='red')  
+ax.set_xticks(range(1, 11))  
+ax.set_xticklabels([f"Match {i}" for i in range(1, 11)])  
+ax.set_ylim(-1.5, 1.5)  
+ax.axhline(0, color='black', linewidth=0.5, linestyle='--')  
+ax.set_ylabel('Résultat')  
+ax.set_title('Historique des Performances des Équipes')  
+ax.legend()  
+st.pyplot(fig)  
+
+# Sélection des systèmes tactiques  
+st.subheader("Systèmes Tactiques")  
+tactiques = ["4-4-2", "4-3-3", "3-5-2", "4-2-3-1", "5-3-2", "4-1-4-1"]  
+tactique_A = st.selectbox("Choisissez le système tactique de l'équipe A", tactiques)  
+tactique_B = st.selectbox("Choisissez le système tactique de l'équipe B", tactiques)  
 
 # Critères pour l'équipe A  
 st.subheader("Critères pour l'équipe A")  
@@ -44,7 +70,6 @@ corners_A = st.slider("Nombre de corners", min_value=0, max_value=20, value=5, k
 interceptions_A = st.slider("Interceptions par match", min_value=0, max_value=20, value=5, key="interceptions_A")  
 arrets_A = st.slider("Arrêts par match", min_value=0, max_value=20, value=3, key="arrets_A")  
 fautes_A = st.slider("Fautes par match", min_value=0, max_value=20, value=10, key="fautes_A")  
-tactique_A = st.text_input("Tactique de l'équipe A", value="Offensive")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -60,10 +85,9 @@ corners_B = st.slider("Nombre de corners", min_value=0, max_value=20, value=4, k
 interceptions_B = st.slider("Interceptions par match", min_value=0, max_value=20, value=6, key="interceptions_B")  
 arrets_B = st.slider("Arrêts par match", min_value=0, max_value=20, value=4, key="arrets_B")  
 fautes_B = st.slider("Fautes par match", min_value=0, max_value=20, value=8, key="fautes_B")  
-tactique_B = st.text_input("Tactique de l'équipe B", value="Défensive")  
 
 # Modèle de prédiction des buts  
-if st.button("Prédire le nombre de buts"):  
+if st.button("Analyser le Match"):  
     # Données d'entraînement fictives  
     data = {  
         "buts_produits_A": [80, 60, 70, 90, 50],  
@@ -186,4 +210,22 @@ if st.button("Prédire le nombre de buts"):
     ax2.bar(['Équipe A', 'Équipe B'], [pourcentage_A, pourcentage_B], color=['blue', 'red'])  
     ax2.set_ylabel('Pourcentage de victoire (%)')  
     ax2.set_title('Pourcentage de victoire par équipe')  
-    st.pyplot(fig2)
+    st.pyplot(fig2)  
+
+    # Affichage des systèmes tactiques  
+    st.markdown("<h2 style='color: #FF5722;'>Systèmes Tactiques Choisis</h2>", unsafe_allow_html=True)  
+    st.write(f"Système tactique de l'équipe A : **{tactique_A}**")  
+    st.write(f"Système tactique de l'équipe B : **{tactique_B}**")  
+
+    # Analyse des systèmes tactiques  
+    st.markdown("<h2 style='color: #FF5722;'>Analyse des Systèmes Tactiques</h2>", unsafe_allow_html=True)  
+    if tactique_A == "4-4-2" and tactique_B == "4-3-3":  
+        st.write("L'équipe A joue en 4-4-2, ce qui lui donne une bonne stabilité défensive, mais peut être vulnérable au milieu de terrain contre un 4-3-3.")  
+    elif tactique_A == "4-3-3" and tactique_B == "4-4-2":  
+        st.write("L'équipe A en 4-3-3 peut dominer le milieu de terrain, mais doit faire attention aux contre-attaques de l'équipe B.")  
+    elif tactique_A == "3-5-2" and tactique_B == "4-2-3-1":  
+        st.write("L'équipe A en 3-5-2 peut avoir un avantage au milieu, mais doit gérer les espaces laissés derrière les arrières.")  
+    elif tactique_A == "4-2-3-1" and tactique_B == "3-5-2":  
+        st.write("L'équipe A en 4-2-3-1 peut exploiter les ailes, mais doit être vigilante aux attaques rapides de l'équipe B.")  
+    else:  
+        st.write("Les systèmes tactiques choisis peuvent avoir des impacts variés sur le match. Une analyse plus approfondie est nécessaire pour évaluer les forces et faiblesses.")
