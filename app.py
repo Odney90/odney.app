@@ -240,7 +240,7 @@ else:
 
 # Évaluer le modèle sur l'ensemble de test  
 accuracy = accuracy_score(y_test, model.predict(X_test))  
-st.write(f"Précision du modèle multi-variable : **{accuracy:.2f}**")  
+st.write(f"Précision du modèle multi-variable : **{accuracy * 100:.2f}%**")  # Affichage en pourcentage
 
 # Visualisation des résultats de la méthode multi-variable  
 fig, ax = plt.subplots()  
