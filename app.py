@@ -6,7 +6,6 @@ from scipy.stats import poisson
 from sklearn.model_selection import train_test_split  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.metrics import accuracy_score  
-from sklearn.preprocessing import OneHotEncoder  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
@@ -184,7 +183,7 @@ st.subheader("Analyse Multi-Variable")
 
 # Préparation des données pour la régression logistique  
 data = {  
-    'xG_A': [xG_A],  
+    'xG_A': [xG_A],
     'xG_B': [xG_B],  
     'tirs_cadres_A': [tirs_cadres_A],  
     'tirs_cadres_B': [tirs_cadres_B],  
@@ -196,9 +195,6 @@ data = {
 
 # Convertir en DataFrame  
 df_multi = pd.DataFrame(data)  
-
-# Vérifiez les colonnes de df_multi  
-print(df_multi.columns)  # Affiche les colonnes pour vérification
 
 # Exemple de données historiques pour l'entraînement (à remplacer par des données réelles)  
 historical_data = {  
@@ -215,13 +211,8 @@ historical_data = {
 # Créer le DataFrame à partir des données historiques  
 df_historical = pd.DataFrame(historical_data)  
 
-# Vérification de la structure du DataFrame  
-print(df_historical)  # Affiche le DataFrame pour vérifier son contenu
-
-df_historical = pd.DataFrame(historical_data)  
-
 # Séparer les caractéristiques et la cible  
-X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation']]  
+X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation', 'avantage_terrain']]  
 y = df_historical['result']  
 
 # Diviser les données en ensembles d'entraînement et de test  
