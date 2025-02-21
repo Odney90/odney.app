@@ -162,8 +162,7 @@ fautes_B = st.slider("Fautes par match", min_value=0, max_value=50, value=12, ke
 cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=1, key="cartons_jaunes_B")  
 cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="cartons_rouges_B")  
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
-joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")  
-
+joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")
 # Motivation des équipes  
 st.subheader("Motivation des Équipes")  
 motivation_A = st.slider("Niveau de motivation de l'équipe A (1 à 10)", min_value=1, max_value=10, value=5, key="motivation_A")  
@@ -211,9 +210,6 @@ prediction = model.predict_proba(X)
 st.write(f"Probabilité de victoire pour l'équipe A : **{prediction[0][1]:.2%}**")  
 st.write(f"Probabilité de victoire pour l'équipe B : **{prediction[1][1]:.2%}**")  
 
-# Calcul des paris alternatifs  
-double_chance_A = prediction[0][1] + (1 - prediction[1][1])  # Équipe A gagne ou match nul  
-double_chance_B
 # Calcul des paris alternatifs  
 double_chance_A = prediction[0][1] + (1 - prediction[1][1])  # Équipe A gagne ou match nul  
 double_chance_B = prediction[1][1] + (1 - prediction[0][1])  # Équipe B gagne ou match nul  
