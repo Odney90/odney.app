@@ -199,15 +199,21 @@ df_multi = pd.DataFrame(data)
 
 # Exemple de données historiques pour l'entraînement (à remplacer par des données réelles)  
 historical_data = {  
-    'xG_A': [1.5, 2.0, 1.0, 2.5],  
-    'xG_B': [1.0, 1.5, 2.0, 1.0],  
-    'tirs_cadres_A': [5, 7, 3, 8],  
-    'tirs_cadres_B': [4, 6, 5, 2],  
-    'poss_moyenne_A': [55, 60, 50, 65],  
-    'poss_moyenne_B': [45, 40, 50, 35],  
-    'motivation': [8, 7, 6, 9],  
+    'xG_A': [1.5, 2.0, 1.0, 2.5],  # Buts attendus pour l'équipe A  
+    'xG_B': [1.0, 1.5, 2.0, 1.0],  # Buts attendus pour l'équipe B  
+    'tirs_cadres_A': [5, 7, 3, 8],  # Tirs cadrés par l'équipe A  
+    'tirs_cadres_B': [4, 6, 5, 2],  # Tirs cadrés par l'équipe B  
+    'poss_moyenne_A': [55, 60, 50, 65],  # Possession moyenne de l'équipe A  
+    'poss_moyenne_B': [45, 40, 50, 35],  # Possession moyenne de l'équipe B  
+    'motivation': [8, 7, 6, 9],  # Niveau de motivation  
     'result': [1, 1, 0, 1]  # 1 = victoire A, 0 = victoire B  
 }  
+
+# Créer le DataFrame à partir des données historiques  
+df_historical = pd.DataFrame(historical_data)  
+
+# Vérification de la structure du DataFrame  
+print(df_historical)  # Affiche le DataFrame pour vérifier son contenu
 
 df_historical = pd.DataFrame(historical_data)  
 
