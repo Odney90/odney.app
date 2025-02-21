@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import pickle  
 import os  
 from scipy.stats import poisson  
+import matplotlib.pyplot as plt  
 
 # Fonction pour sauvegarder les données  
 def save_data(data):  
@@ -252,4 +253,15 @@ if st.button("⚽ Prédire les buts avec la méthode de Poisson"):
     buts_moyens_A, buts_moyens_B = prediction_buts_poisson(expected_buts_A, expected_buts_B)  
     st.header("⚽ Prédiction des Buts (Méthode de Poisson)")  
     st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
-    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")
+    st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")  
+
+# Graphiques des données  
+st.header("📊 Visualisation des Données")  
+fig, ax = plt.subplots()  
+ax.bar(['Équipe A', 'Équipe B'], [buts_totaux_A, buts_totaux_B], color=['blue', 'red'])  
+ax.set_ylabel('Buts Totaux')  
+ax.set_title('Comparaison des Buts Totaux des Équipes')  
+st.pyplot(fig)  
+
+# Graphique des probabilités de victoire  
+if 'prediction_proba' in locals():
