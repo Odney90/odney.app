@@ -6,6 +6,7 @@ from scipy.stats import poisson
 from sklearn.model_selection import train_test_split  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.metrics import accuracy_score  
+from sklearn.preprocessing import OneHotEncoder  
 
 # Configuration de l'application  
 st.set_page_config(page_title="Prédiction de Match", layout="wide")  
@@ -18,13 +19,13 @@ st.subheader("Historique des équipes")
 st.markdown("Veuillez entrer le nombre de victoires, de défaites et de nuls pour chaque équipe sur la saison.")  
 
 # Saisir les résultats de la saison  
-victoires_A = st.number_input("Victoires de l'équipe A", min_value=0, value=10)  
-nuls_A = st.number_input("Nuls de l'équipe A", min_value=0, value=5)  
-defaites_A = st.number_input("Défaites de l'équipe A", min_value=0, value=5)  
+victoires_A = st.number_input("Victoires de l'équipe A", min_value=0, value=10, key="victoires_A")  
+nuls_A = st.number_input("Nuls de l'équipe A", min_value=0, value=5, key="nuls_A")  
+defaites_A = st.number_input("Défaites de l'équipe A", min_value=0, value=5, key="defaites_A")  
 
-victoires_B = st.number_input("Victoires de l'équipe B", min_value=0, value=8)  
-nuls_B = st.number_input("Nuls de l'équipe B", min_value=0, value=7)  
-defaites_B = st.number_input("Défaites de l'équipe B", min_value=0, value=5)  
+victoires_B = st.number_input("Victoires de l'équipe B", min_value=0, value=8, key="victoires_B")  
+nuls_B = st.number_input("Nuls de l'équipe B", min_value=0, value=7, key="nuls_B")  
+defaites_B = st.number_input("Défaites de l'équipe B", min_value=0, value=5, key="defaites_B")  
 
 # Historique des 5 derniers matchs  
 st.subheader("Historique des 5 Derniers Matchs")  
@@ -123,43 +124,13 @@ fautes_B = st.slider("Fautes par match", min_value=0, max_value=50, value=12, ke
 cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=1, key="cartons_jaunes_B")  
 cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="cartons_rouges_B")  
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
-joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")
-# Critères pour l'équipe B  
-st.subheader("Critères pour l'équipe B")  
-buts_produits_B = st.slider("Nombre de buts produits (moyenne sur la saison)", min_value=0, max_value=10, value=1, key="buts_produits_B")  
-buts_encaisse_B = st.slider("Nombre de buts encaissés (moyenne sur la saison)", min_value=0, max_value=10, value=2, key="buts_encaisse_B")  
-poss_moyenne_B = st.slider("Possession moyenne (%)", min_value=0, max_value=100, value=45, key="poss_moyenne_B")  
-xG_B = st.slider("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.0, key="xG_B")  
-tirs_cadres_B = st.slider("Tirs cadrés par match", min_value=0, max_value=50, value=8, key="tirs_cadres_B")  
-pourcentage_tirs_convertis_B = st.slider("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=15, key="pourcentage_tirs_convertis_B")  
-grosses_occasions_B = st.number_input("Grosses occasions", min_value=0, value=3)  
-grosses_occasions_ratees_B = st.number_input("Grosses occasions ratées", min_value=0, value=1)  
-passes_reussies_B = st.slider("Passes réussies par match (sur 1000)", min_value=0, max_value=1000, value=250, key="passes_reussies_B")  
-passes_longues_precises_B = st.slider("Passes longues précises par match", min_value=0, max_value=100, value=10, key="passes_longues_precises_B")  
-centres_reussis_B = st.slider("Centres réussis par match", min_value=0, max_value=50, value=3, key="centres_reussis_B")  
-penalties_obtenus_B = st.number_input("Pénalties obtenus", min_value=0, value=0)  
-touches_surface_adverse_B = st.number_input("Touches dans la surface adverse", min_value=0, value=8)  
-corners_B = st.number_input("Nombre de corners", min_value=0, value=3)  
-corners_par_match_B = st.number_input("Nombre de corners par match", min_value=0, value=1)  
-corners_concedes_B = st.number_input("Nombre de corners concédés par match", min_value=0, value=2)  
-xG_concedes_B = st.slider("xG concédés", min_value=0.0, max_value=5.0, value=1.5, key="xG_concedes_B")  
-interceptions_B = st.slider("Interceptions par match", min_value=0, max_value=50, value=8, key="interceptions_B")  
-tacles_reussis_B = st.slider("Tacles réussis par match", min_value=0, max_value=50, value=4, key="tacles_reussis_B")  
-degagements_B = st.slider("Dégagements par match", min_value=0, max_value=50, value=6, key="degagements_B")  
-possessions_recuperees_B = st.slider("Possessions récupérées au milieu de terrain par match", min_value=0, max_value=50, value=4, key="possessions_recuperees_B")  
-penalties_concedes_B = st.number_input("Pénalties concédés", min_value=0, value=1)  
-arrets_B = st.slider("Arrêts par match", min_value=0, max_value=20, value=2, key="arrets_B")  
-fautes_B = st.slider("Fautes par match", min_value=0, max_value=50, value=12, key="fautes_B")  
-cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=1)  
-cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0)  
-tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1")  
-joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4")  
+joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")  
 
 # Conditions du match  
 st.subheader("Conditions du Match")  
-meteo = st.selectbox("Conditions Météorologiques", options=["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"], index=0)  
-avantage_terrain = st.selectbox("Équipe à domicile", options=["Équipe A", "Équipe B"], index=0)  
-motivation = st.slider("Niveau de motivation (1 à 10)", min_value=1, max_value=10, value=5)  
+meteo = st.selectbox("Conditions Météorologiques", options=["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"], index=0, key="meteo")  
+avantage_terrain = st.selectbox("Équipe à domicile", options=["Équipe A", "Équipe B"], index=0, key="avantage_terrain")  
+motivation = st.slider("Niveau de motivation (1 à 10)", min_value=1, max_value=10, value=5, key="motivation")  
 
 # Fonction pour prédire les buts avec distribution de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
@@ -230,13 +201,22 @@ historical_data = {
     'poss_moyenne_A': [55, 60, 50, 65],  
     'poss_moyenne_B': [45, 40, 50, 35],  
     'motivation': [8, 7, 6, 9],  
+    'conditions_meteo': ["Ensoleillé", "Pluvieux", "Nuageux", "Ensoleillé"],  # Exemple d'encodage  
     'result': [1, 1, 0, 1]  # 1 = victoire A, 0 = victoire B  
 }  
 
 df_historical = pd.DataFrame(historical_data)  
 
+# Encodage des conditions météorologiques  
+encoder = OneHotEncoder(sparse=False)  
+conditions_encoded = encoder.fit_transform(df_historical[['conditions_meteo']])  
+conditions_df = pd.DataFrame(conditions_encoded, columns=encoder.get_feature_names_out(['conditions_meteo']))  
+
+# Ajouter les colonnes encodées au DataFrame historique  
+df_historical = pd.concat([df_historical.drop(columns=['conditions_meteo']), conditions_df], axis=1)  
+
 # Séparer les caractéristiques et la cible  
-X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation']]  
+X = df_historical[['xG_A', 'xG_B', 'tirs_cadres_A', 'tirs_cadres_B', 'poss_moyenne_A', 'poss_moyenne_B', 'motivation'] + list(conditions_df.columns)]  
 y = df_historical['result']  
 
 # Diviser les données en ensembles d'entraînement et de test  
@@ -247,7 +227,11 @@ model = LogisticRegression()
 model.fit(X_train, y_train)  
 
 # Prédire les résultats avec les nouvelles données  
-prediction_multi = model.predict(df_multi)  
+# Encoder les conditions du match pour la prédiction  
+conditions_multi_encoded = encoder.transform(df_multi[['conditions_meteo']])  
+df_multi_encoded = pd.concat([df_multi.drop(columns=['conditions_meteo']), pd.DataFrame(conditions_multi_encoded, columns=encoder.get_feature_names_out(['conditions_meteo']))], axis=1)  
+
+prediction_multi = model.predict(df_multi_encoded)  
 
 # Affichage des résultats de la prédiction multi-variable  
 st.subheader("Résultats de la Prédiction (Méthode Multi-Variable)")  
