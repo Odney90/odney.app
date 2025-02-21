@@ -173,8 +173,7 @@ tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tact
 
 # Section pour les joueurs clés de l'équipe B  
 st.subheader("Joueurs Clés de l'équipe B")  
-absents_B = st.number
-_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_B")  
+absents_B = st.number_input("Nombre de joueurs clés absents (sur 5)", min_value=0, max_value=5, value=0, key="absents_B")  
 ratings_B = []  
 for i in range(5):  
     rating = st.number_input(f"Rating du joueur clé {i + 1} (0-10)", min_value=0.0, max_value=10.0, value=5.0, key=f"rating_B_{i}")  
