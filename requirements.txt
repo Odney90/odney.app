@@ -7,4 +7,5 @@ requests
 python-dotenv
 scipy
 seaborn
+pickle
 
