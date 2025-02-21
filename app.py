@@ -1,5 +1,4 @@
 import streamlit as st  
-import pandas as pd  
 import numpy as np  
 import matplotlib.pyplot as plt  
 from scipy.stats import poisson  
@@ -52,31 +51,6 @@ st.markdown(
 
 # Titre de la page d'analyse  
 st.markdown("<h1>Analyse des Équipes</h1>", unsafe_allow_html=True)  
-
-# Notice d'utilisation  
-st.sidebar.markdown("<h2 style='color: #4CAF50;'>Notice d'Utilisation</h2>", unsafe_allow_html=True)  
-st.sidebar.markdown("""  
-1. **Saisir les Résultats de la Saison** :  
-   - Entrez le nombre de victoires, de nuls et de défaites pour chaque équipe (Équipe A et Équipe B).  
-
-2. **Historique des Derniers Matchs** :  
-   - Pour chaque équipe, sélectionnez le résultat des 5 derniers matchs (Victoire, Match Nul, Défaite).  
-
-3. **Critères de Performance** :  
-   - Remplissez les critères de performance pour chaque équipe, y compris les buts produits, les tirs cadrés, et d'autres statistiques pertinentes.  
-
-4. **Conditions du Match** :  
-   - Sélectionnez les conditions météorologiques et indiquez quelle équipe joue à domicile.  
-
-5. **Prédictions** :  
-   - L'application affichera les prédictions de buts pour chaque équipe, ainsi que les pourcentages de victoire basés sur les données saisies.  
-
-6. **Conseils de Paris** :  
-   - Des conseils de paris seront fournis en fonction des résultats des prédictions.  
-
-7. **Précision du Modèle** :  
-   - La précision du modèle multi-variable sera affichée en pourcentage, vous permettant d'évaluer la fiabilité des prédictions.  
-""", unsafe_allow_html=True)  
 
 # Historique des équipes  
 st.subheader("Historique des équipes")  
@@ -182,24 +156,13 @@ interceptions_B = st.slider("Interceptions par match", min_value=0, max_value=50
 tacles_reussis_B = st.slider("Tacles réussis par match", min_value=0, max_value=50, value=4, key="tacles_reussis_B")  
 degagements_B = st.slider("Dégagements par match", min_value=0, max_value=50, value=6, key="degagements_B")  
 possessions_recuperees_B = st.slider("Possessions récupérées au milieu de terrain par match", min_value=0, max_value=50, value=4, key="possessions_recuperees_B")  
-penalties_concedesB = st.number_input("Pénalties concédés", min_value=0, value=1, key="penalties_concedes_B")  
+penalties_concedes_B = st.number_input("Pénalties concédés", min_value=0, value=1, key="penalties_concedes_B")  
 arrets_B = st.slider("Arrêts par match", min_value=0, max_value=20, value=2, key="arrets_B")  
 fautes_B = st.slider("Fautes par match", min_value=0, max_value=50, value=12, key="fautes_B")  
 cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=1, key="cartons_jaunes_B")  
 cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="cartons_rouges_B")  
 tactique_B = st.text_input("Tactique de l'équipe B", value="4-2-3-1", key="tactique_B")  
 joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", value="Joueur 3, Joueur 4", key="joueurs_cles_B")  
-
-# Conditions du Match  
-st.subheader("Conditions du Match")  
-meteo = st.selectbox("Conditions Météorologiques", options=["Ensoleillé", "Pluvieux", "Neigeux", "Nuageux"], index=0, key="meteo")  
-avantage_terrain = st.selectbox("Équipe à domicile", options=["Équipe A", "Équipe B"], index=0, key="avantage_terrain")  
-motivation = st.slider("Niveau de motivation (1 à 10)", min_value=1, max_value=10, value=5, key="motivation")  
-
-# Affichage des conditions météorologiques  
-st.write(f"Conditions Météorologiques : **{meteo}**")  
-st.write(f"Équipe à domicile : **{avantage_terrain}**")  
-st.write(f"Niveau de motivation : **{motivation}**")  
 
 # Prédiction des buts avec la méthode de Poisson  
 def prediction_buts_poisson(xG_A, xG_B):  
@@ -220,31 +183,6 @@ buts_moyens_A, buts_moyens_B = prediction_buts_poisson(xG_A, xG_B)
 st.subheader("Prédiction des Buts")  
 st.write(f"Buts attendus pour l'équipe A : **{buts_moyens_A:.2f}**")  
 st.write(f"Buts attendus pour l'équipe B : **{buts_moyens_B:.2f}**")  
-
-# Calculateur de Value Bet  
-st.subheader("Calculateur de Value Bet")  
-cote_A = st.number_input("Cote pour l'équipe A", min_value=1.0, value=2.0, key="cote_A")  
-cote_B = st.number_input("Cote pour l'équipe B", min_value=1.0, value=2.0, key="cote_B")  
-
-# Calcul des probabilités implicites  
-probabilite_implicite_A = 1 / cote_A  
-probabilite_implicite_B = 1 / cote_B  
-
-# Calcul des probabilités de victoire basées sur les xG  
-probabilite_victoire_A = buts_moyens_A / (buts_moyens_A + buts_moyens_B)  
-probabilite_victoire_B = buts_moyens_B / (buts_moyens_A + buts_moyens_B)  
-
-# Détermination si c'est un value bet  
-value_bet_A = probabilite_victoire_A > probabilite_implicite_A  
-value_bet_B = probabilite_victoire_B > probabilite_implicite_B  
-
-st.write(f"Probabilité implicite pour l'équipe A : **{probabilite_implicite_A:.2%}**")  
-st.write(f"Probabilité de victoire pour l'équipe A : **{probabilite_victoire_A:.2%}**")  
-st.write(f"Value Bet pour l'équipe A : **{'Oui' if value_bet_A else 'Non'}**")  
-
-st.write(f"Probabilité implicite pour l'équipe B : **{probabilite_implicite_B:.2%}**")  
-st.write(f"Probabilité de victoire pour l'équipe B : **{probabilite_victoire_B:.2%}**")  
-st.write(f"Value Bet pour l'équipe B : **{'Oui' if value_bet_B else 'Non'}**")  
 
 # Prédiction multivariable avec régression logistique (exemple simplifié)  
 st.subheader("Prédiction Multivariable avec Régression Logistique")  
