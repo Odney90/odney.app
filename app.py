@@ -207,7 +207,7 @@ historical_data = {
     'poss_moyenne_A': [55, 60, 50, 65],  
     'poss_moyenne_B': [45, 40, 50, 35],  
     'motivation': [8, 7, 6, 9],  
-    'avantage_terrain': [1, 0, 1, 0], # Ajoutez cette ligne  
+    'avantage_terrain': [1, 0, 1, 0],  # Ajoutez cette ligne  
     'result': [1, 1, 0, 1]  
 }  
 
