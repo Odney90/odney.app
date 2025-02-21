@@ -1,6 +1,5 @@
 streamlit  
 pandas  
 numpy  
-scikit-learn 1.0.2
-qrcode  
-pillow
+matplotlib  
+scikit-learn==1.0.2  # ou une version plus récente
