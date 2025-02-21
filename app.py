@@ -191,7 +191,7 @@ st.write(f"Pourcentage de victoire pour l'équipe B : **{pourcentage_victoire_B:
 
 # Visualisation des prédictions  
 fig, ax = plt.subplots()  
-ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue, 'red'])  
+ax.bar(["Équipe A", "Équipe B"], [buts_moyens_A, buts_moyens_B], color=['blue','red'])  
 ax.set_ylabel('Buts Prédits')  
 ax.set_title('Prédictions de Buts pour le Match (Méthode de Poisson)')  
 st.pyplot(fig)  
