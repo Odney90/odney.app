@@ -191,8 +191,14 @@ data = {
     'poss_moyenne_A': [poss_moyenne_A],  
     'poss_moyenne_B': [poss_moyenne_B],  
     'motivation': [motivation],  
-    'avantage_terrain': [1 if avantage_terrain == "Équipe A" else 0]  
+    'avantage_terrain': [1 if avantage_terrain == "Équipe A" else 0]  # Convertir en binaire  
 }  
+
+# Convertir en DataFrame  
+df_multi = pd.DataFrame(data)  
+
+# Vérifiez les colonnes de df_multi  
+print(df_multi.columns)  # Affiche les colonnes pour vérification  
 
 # Convertir en DataFrame  
 df_multi = pd.DataFrame(data)  
