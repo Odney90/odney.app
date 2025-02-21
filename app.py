@@ -16,7 +16,7 @@ def predire_buts(probabilite_victoire, attaque, defense):
     Prédit le nombre de buts en fonction de la probabilité de victoire,  
     de la force offensive (attaque) et de la force défensive (defense).  
     """  
-    base_buts = probabilite_victoire * 3  # Base : max 3 buts en fonction de la probabilité  
+    base_buts = probabilité_victoire * 3  # Base : max 3 buts en fonction de la probabilité  
     ajustement = (attaque - defense) * 0.5  # Ajustement basé sur la différence attaque/défense  
     buts = max(0, base_buts + ajustement)  # Les buts ne peuvent pas être négatifs  
     return round(buts, 1)  # Retourne un nombre avec une décimale  
@@ -221,5 +221,4 @@ st.pyplot(fig)
 # Partie combinée : Calcul des probabilités et mise optimale  
 st.markdown("<h2 style='color: #4CAF50;'>5. Simulateur de paris combinés</h2>", unsafe_allow_html=True)  
 
-# Sélection des équipes pour le combiné  
-equipe_1 = st.selectbox("Choisissez la
+# Sélection des équipes pour le combiné
