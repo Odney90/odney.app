@@ -1,20 +1,9 @@
 import streamlit as st  
 import pandas as pd  
-from sklearn.ensemble import RandomForestClassifier  
-from sklearn.linear_model import LogisticRegression  
+from sklearn.ensemble import RandomForestRegressor  
+from sklearn.linear_model import LinearRegression  
 from sklearn.model_selection import train_test_split  
-from sklearn.metrics import accuracy_score  
-
-# Fonction pour prédire le nombre de buts  
-def predire_buts(probabilite_victoire, attaque, defense):  
-    """  
-    Prédit le nombre de buts en fonction de la probabilité de victoire,  
-    de la force offensive (attaque) et de la force défensive (defense).  
-    """  
-    base_buts = probabilite_victoire * 3  # Base : max 3 buts en fonction de la probabilité  
-    ajustement = (attaque - defense) * 0.5  # Ajustement basé sur la différence attaque/défense  
-    buts = max(0, base_buts + ajustement)  # Les buts ne peuvent pas être négatifs  
-    return round(buts, 1)  # Retourne un nombre avec une décimale  
+from sklearn.metrics import mean_squared_error  
 
 # Titre de l'application  
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Prédiction de match et gestion de bankroll</h1>", unsafe_allow_html=True)  
@@ -34,29 +23,6 @@ matchs_sans_encaisser_A = st.number_input("Nombre de matchs sans encaisser de bu
 xG_A = st.number_input("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=2.5, key="xG_A")  
 tirs_cadres_A = st.number_input("Tirs cadrés par match", min_value=0, max_value=20, value=5, key="tirs_cadres_A")  
 pourcentage_tirs_convertis_A = st.number_input("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=25, key="pourcentage_tirs_convertis_A")  
-grosses_occasions_A = st.number_input("Grosses occasions", min_value=0, max_value=50, value=20, key="grosses_occasions_A")  
-grosses_occasions_ratees_A = st.number_input("Grosses occasions ratées", min_value=0, max_value=50, value=10, key="grosses_occasions_ratees_A")  
-passes_reussies_A = st.number_input("Passes réussies par match", min_value=0, max_value=100, value=70, key="passes_reussies_A")  
-passes_longues_precises_A = st.number_input("Passes longues précises par match", min_value=0, max_value=50, value=20, key="passes_longues_precises_A")  
-centres_reussis_A = st.number_input("Centres réussis par match", min_value=0, max_value=50, value=15, key="centres_reussis_A")  
-penalties_obtenus_A = st.number_input("Pénalties obtenus", min_value=0, max_value=10, value=3, key="penalties_obtenus_A")  
-touches_surface_adverse_A = st.number_input("Touches dans la surface adverse", min_value=0, max_value=50, value=25, key="touches_surface_adverse_A")  
-corners_A = st.number_input("Nombre de corners", min_value=0, max_value=50, value=20, key="corners_A")  
-corners_par_match_A = st.number_input("Nombre de corners par match", min_value=0, max_value=10, value=5, key="corners_par_match_A")  
-corners_concedes_A = st.number_input("Nombre de corners concédés", min_value=0, max_value=50, value=15, key="corners_concedes_A")  
-xG_concedes_A = st.number_input("xG concédés", min_value=0.0, max_value=5.0, value=1.5, key="xG_concedes_A")  
-interceptions_A = st.number_input("Interceptions par match", min_value=0, max_value=20, value=5, key="interceptions_A")  
-tacles_reussis_A = st.number_input("Tacles réussis par match", min_value=0, max_value=20, value=7, key="tacles_reussis_A")  
-degagements_A = st.number_input("Dégagements par match", min_value=0, max_value=20, value=5, key="degagements_A")  
-possessions_recuperees_A = st.number_input("Possessions récupérées au milieu de terrain par match", min_value=0, max_value=20, value=5, key="possessions_recuperees_A")  
-penalties_concedes_A = st.number_input("Pénalties concédés", min_value=0, max_value=10, value=2, key="penalties_concedes_A")  
-arrets_A = st.number_input("Arrêts par match", min_value=0, max_value=20, value=5, key="arrets_A")  
-fautes_A = st.number_input("Fautes par match", min_value=0, max_value=20, value=10, key="fautes_A")  
-cartons_jaunes_A = st.number_input("Cartons jaunes", min_value=0, max_value=10, value=3, key="cartons_jaunes_A")  
-cartons_rouges_A = st.number_input("Cartons rouges", min_value=0, max_value=5, value=1, key="cartons_rouges_A")  
-tactique_A = st.text_input("Tactique de l'équipe A", "4-3-3", key="tactique_A")  
-joueurs_cles_A = st.text_input("Joueurs clés de l'équipe A", "Joueur 1, Joueur 2", key="joueurs_cles_A")  
-score_joueurs_cles_A = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=7, key="score_joueurs_cles_A")  
 
 # Critères pour l'équipe B  
 st.subheader("Critères pour l'équipe B")  
@@ -69,98 +35,91 @@ matchs_sans_encaisser_B = st.number_input("Nombre de matchs sans encaisser de bu
 xG_B = st.number_input("Buts attendus (xG)", min_value=0.0, max_value=5.0, value=1.5, key="xG_B")  
 tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0, max_value=20, value=3, key="tirs_cadres_B")  
 pourcentage_tirs_convertis_B = st.number_input("Pourcentage de tirs convertis (%)", min_value=0, max_value=100, value=15, key="pourcentage_tirs_convertis_B")  
-grosses_occasions_B = st.number_input("Grosses occasions", min_value=0, max_value=50, value=15, key="grosses_occasions_B")  
-grosses_occasions_ratees_B = st.number_input("Grosses occasions ratées", min_value=0, max_value=50, value=5, key="grosses_occasions_ratees_B")  
-passes_reussies_B = st.number_input("Passes réussies par match", min_value=0, max_value=100, value=60, key="passes_reussies_B")  
-passes_longues_precises_B = st.number_input("Passes longues précises par match", min_value=0, max_value=50, value=15, key="passes_longues_precises_B")  
-centres_reussis_B = st.number_input("Centres réussis par match", min_value=0, max_value=50, value=10, key="centres_reussis_B")  
-penalties_obtenus_B = st.number_input("Pénalties obtenus", min_value=0, max_value=10, value=2, key="penalties_obtenus_B")  
-touches_surface_adverse_B = st.number_input("Touches dans la surface adverse", min_value=0, max_value=50, value=20, key="touches_surface_adverse_B")  
-corners_B = st.number_input("Nombre de corners", min_value=0, max_value=50, value=15, key="corners_B")  
-corners_par_match_B = st.number_input("Nombre de corners par match", min_value=0, max_value=10, value=4, key="corners_par_match_B")  
-corners_concedes_B = st.number_input("Nombre de corners concédés", min_value=0, max_value=50, value=10, key="corners_concedes_B")  
-xG_concedes_B = st.number_input("xG concédés", min_value=0.0, max_value=5.0, value=2.0, key="xG_concedes_B")  
-interceptions_B = st.number_input("Interceptions par match", min_value=0, max_value=20, value=4, key="interceptions_B")  
-tacles_reussis_B = st.number_input("Tacles réussis par match", min_value=0, max_value=20, value=5, key="tacles_reussis_B")  
-degagements_B = st.number_input("Dégagements par match", min_value=0, max_value=20, value=4, key="degagements_B")  
-possessions_recuperees_B = st.number_input("Possessions récupérées au milieu de terrain par match", min_value=0, max_value=20, value=4, key="possessions_recuperees_B")  
-penalties_concedes_B = st.number_input("Pénalties concédés", min_value=0, max_value=10, value=3, key="penalties_concedes_B")  
-arrets_B = st.number_input("Arrêts par match", min_value=0, max_value=20, value=4, key="arrets_B")  
-fautes_B = st.number_input("Fautes par match", min_value=0, max_value=20, value=8, key="fautes_B")  
-cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, max_value=10, value=4, key="cartons_jaunes_B")  
-cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, max_value=5, value=1, key="cartons_rouges_B")  
-tactique_B = st.text_input("Tactique de l'équipe B", "4-4-2", key="tactique_B")  
-joueurs_cles_B = st.text_input("Joueurs clés de l'équipe B", "Joueur 3, Joueur 4", key="joueurs_cles_B")  
-score_joueurs_cles_B = st.number_input("Score des joueurs clés (sur 10)", min_value=0, max_value=10, value=6, key="score_joueurs_cles_B")
+
 # Partie 2 : Modèles de Prédiction  
 st.markdown("<h2 style='color: #FF5722;'>2. Prédiction des résultats</h2>", unsafe_allow_html=True)  
 
 # Exemple de données fictives pour entraîner les modèles  
 data = {  
-    "attaque": [70, 65, 80, 60, 75],  
-    "defense": [60, 70, 50, 80, 65],  
-    "forme_recente": [7, 6, 8, 5, 7],  # Forme récente fictive  
-    "resultat": [1, 0, 1, 0, 1]  # 1 = victoire équipe A, 0 = victoire équipe B  
+    "buts_par_match": [2, 1, 3, 0, 2],  
+    "nombre_buts_produits": [80, 60, 90, 30, 70],  
+    "nombre_buts_encaisse": [30, 40, 20, 50, 25],  
+    "buts_encaisse_par_match": [1, 2, 0, 3, 1],  
+    "poss_moyenne": [55, 45, 60, 40, 50],  
+    "xG": [2.5, 1.5, 3.0, 0.5, 2.0],  
+    "resultat_A": [1, 0, 1, 0, 1],  # 1 = victoire équipe A, 0 = victoire équipe B  
+    "resultat_B": [0, 1, 0, 1, 0]   # 1 = victoire équipe B, 0 = victoire équipe A  
 }  
 df = pd.DataFrame(data)  
 
 # Entraînement des modèles  
-features = ["attaque", "defense", "forme_recente"]  
+features = ["buts_par_match", "nombre_buts_produits", "nombre_buts_encaisse", "buts_encaisse_par_match", "poss_moyenne", "xG"]  
 X = df[features]  
-y = df["resultat"]  
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+y_A = df["resultat_A"]  
+y_B = df["resultat_B"]  
 
-# Modèle 1 : RandomForest  
-model_rf = RandomForestClassifier(random_state=42)  
-model_rf.fit(X_train, y_train)  
-precision_rf = accuracy_score(y_test, model_rf.predict(X_test))  
+X_train_A, X_test_A, y_train_A, y_test_A = train_test_split(X, y_A, test_size=0.2, random_state=42)  
+X_train_B, X_test_B, y_train_B, y_test_B = train_test_split(X, y_B, test_size=0.2, random_state=42)  
 
-# Modèle 2 : Logistic Regression  
-model_lr = LogisticRegression(random_state=42)  
-model_lr.fit(X_train, y_train)  
-precision_lr = accuracy_score(y_test, model_lr.predict(X_test))  
+# Modèle 1 : RandomForest pour l'équipe A  
+model_rf_A = RandomForestRegressor(random_state=42)  
+model_rf_A.fit(X_train_A, y_train_A)  
 
-# Affichage des précisions  
-st.write(f"Précision du modèle RandomForest : **{precision_rf * 100:.2f}%**")  
-st.write(f"Précision du modèle Logistic Regression : **{precision_lr * 100:.2f}%**")  
+# Modèle 2 : Linear Regression pour l'équipe B  
+model_lr_B = LinearRegression()  
+model_lr_B.fit(X_train_B, y_train_B)  
 
 # Prédictions pour les nouvelles données  
 nouvelle_donnee = pd.DataFrame({  
-    "attaque": [buts_par_match_A, buts_par_match_B],  
-    "defense": [nombre_buts_encaisse_A, nombre_buts_encaisse_B],  
-    "forme_recente": [forme_recente_A, forme_recente_B],  
-    "nombre_buts_produits": [nombre_buts_produits_A, nombre_buts_produits_B],  
-    "buts_encaisse_par_match": [buts_encaisse_par_match_A, buts_encaisse_par_match_B],  
-    "poss_moyenne": [poss_moyenne_A, poss_moyenne_B],  
-    "matchs_sans_encaisser": [matchs_sans_encaisser_A, matchs_sans_encaisser_B],  
-    "xG": [xG_A, xG_B],  
-    "tirs_cadres": [tirs_cadres_A, tirs_cadres_B],  
-    "pourcentage_tirs_convertis": [pourcentage_tirs_convertis_A, pourcentage_tirs_convertis_B],  
-    "grosses_occasions": [grosses_occasions_A, grosses_occasions_B],  
-    "grosses_occasions_ratees": [grosses_occasions_ratees_A, grosses_occasions_ratees_B],  
-    "passes_reussies": [passes_reussies_A, passes_reussies_B],  
-    "passes_longues_precises": [passes_longues_precises_A, passes_longues_precises_B],  
-    "centres_reussis": [centres_reussis_A, centres_reussis_B],  
-    "penalties_obtenus": [penalties_obtenus_A, penalties_obtenus_B],  
-    "touches_surface_adverse": [touches_surface_adverse_A, touches_surface_adverse_B],  
-    "corners": [corners_A, corners_B],  
-    "corners_par_match": [corners_par_match_A, corners_par_match_B],  
-    "corners_concedes": [corners_concedes_A, corners_concedes_B],  
-    "xG_concedes": [xG_concedes_A, xG_concedes_B],  
-    "interceptions": [interceptions_A, interceptions_B],  
-    "tacles_reussis": [tacles_reussis_A, tacles_reussis_B],  
-    "degagements": [degagements_A, degagements_B],  
-    "possessions_recuperees": [possessions_recuperees_A, possessions_recuperees_B],  
-    "penalties_concedes": [penalties_concedes_A, penalties_concedes_B],  
-    "arrets": [arrets_A, arrets_B],  
-    "fautes": [fautes_A, fautes_B],  
-    "cartons_jaunes": [cartons_jaunes_A, cartons_jaunes_B],  
-    "cartons_rouges": [cartons_rouges_A, cartons_rouges_B],  
+    "buts_par_match": [buts_par_match_A],  
+    "nombre_buts_produits": [nombre_buts_produits_A],  
+    "nombre_buts_encaisse": [nombre_buts_encaisse_A],  
+    "buts_encaisse_par_match": [buts_encaisse_par_match_A],  
+    "poss_moyenne": [poss_moyenne_A],  
+    "xG": [xG_A],  
+})  
+
+nouvelle_donnee_B = pd.DataFrame({  
+    "buts_par_match": [buts_par_match_B],  
+    "nombre_buts_produits": [nombre_buts_produits_B],  
+    "nombre_buts_encaisse": [nombre_buts_encaisse_B],  
+    "buts_encaisse_par_match": [buts_encaisse_par_match_B],  
+    "poss_moyenne": [poss_moyenne_B],  
+    "xG": [xG_B],  
 })  
 
 # Vérification de la longueur des données  
-if len(nouvelle_donnee) == 2:  
-    prediction_rf = model_rf.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
-    prediction_lr = model_lr.predict_proba(nouvelle_donnee)[0][1]  # Probabilité de victoire pour l'équipe A  
+if st.button("Prédire les résultats"):  
+    prediction_A = model_rf_A.predict(nouvelle_donnee)[0]  # Prédiction pour l'équipe A  
+    prediction_B = model_lr_B.predict(nouvelle_donnee_B)[0]  # Prédiction pour l'équipe B  
 
-    # Affichage des résultats de préd
+    # Affichage des résultats de prédiction  
+    st.write(f"Prédiction de victoire pour l'équipe A : **{prediction_A:.2f}**")  
+    st.write(f"Prédiction de victoire pour l'équipe B : **{prediction_B:.2f}**")  
+
+# Partie 3 : Gestion de la bankroll  
+st.markdown("<h2 style='color: #FF5722;'>3. Gestion de la bankroll</h2>", unsafe_allow_html=True)  
+
+# Entrée de la bankroll initiale  
+bankroll_initiale = st.number_input("Montant de la bankroll initiale (€)", min_value=0.0, value=1000.0, step=10.0)  
+
+# Mise par pari  
+mise = st.number_input("Mise par pari (€)", min_value=0.0, value=10.0, step=1.0)  
+
+# Cote de victoire  
+cote_A = st.number_input("Cote de victoire pour l'équipe A", min_value=1.0, value=2.0, step=0.1)  
+cote_B = st.number_input("Cote de victoire pour l'équipe B", min_value=1.0, value=1.5, step=0.1)  
+
+# Résultat du pari  
+resultat_pari = st.selectbox("Résultat du pari", ["A gagner", "B gagner", "Match nul"])  
+
+# Calcul de la bankroll après le pari  
+if st.button("Calculer la bankroll après le pari"):  
+    if resultat_pari == "A gagner":  
+        bankroll_finale = bankroll_initiale + (mise * (cote_A - 1))  
+    elif resultat_pari == "B gagner":  
+        bankroll_finale = bankroll_initiale + (mise * (cote_B - 1))  
+    else:  
+        bankroll_finale = bankroll_initiale - mise  # En cas de match nul, on perd la mise  
+
+    st.write(f"Votre bankroll après le pari est de : **{bankroll_finale:.2f} €**")
