@@ -38,41 +38,41 @@ equipe_recevante = st.selectbox("Équipe qui reçoit", ["Équipe A", "Équipe B"
 
 # Statistiques de l'équipe  
 st.subheader("Statistiques de l'Équipe")  
-buts_totaux_A = st.number_input("Buts totaux", min_value=0, value=0)  
+buts_totaux_A = st.number_input("Buts totaux", min_value=0.0, value=0.0)  
 buts_par_match_A = st.number_input("Buts par match", min_value=0.0, value=0.0)  
 buts_concedes_par_match_A = st.number_input("Buts concédés par match", min_value=0.0, value=0.0)  
-buts_concedes_totaux_A = st.number_input("Buts concédés au total", min_value=0, value=0)  
-possession_moyenne_A = st.number_input("Possession moyenne (%)", min_value=0, max_value=100, value=50)  
+buts_concedes_totaux_A = st.number_input("Buts concédés au total", min_value=0.0, value=0.0)  
+possession_moyenne_A = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0)  
 aucun_but_encaisse_A = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0)  
 
 # Critères d'Attaque  
 st.subheader("Critères d'Attaque 🔥")  
 expected_buts_A = st.number_input("Expected Goals (xG)", min_value=0.0, value=0.0)  
-tirs_cadres_A = st.number_input("Tirs cadrés par match", min_value=0, value=0)  
-grosses_chances_A = st.number_input("Grandes chances", min_value=0, value=0)  
-grosses_chances_ratees_A = st.number_input("Grandes chances manquées", min_value=0, value=0)  
-passes_reussies_A = st.number_input("Passes réussies par match", min_value=0, value=0)  
-passes_longues_precises_A = st.number_input("Passes longues précises par match", min_value=0, value=0)  
-centres_reussis_A = st.number_input("Centres réussis par match", min_value=0, value=0)  
-penalites_obtenues_A = st.number_input("Pénalités obtenues", min_value=0, value=0)  
-touches_surface_adverse_A = st.number_input("Balles touchées dans la surface adverse", min_value=0, value=0)  
-corners_A = st.number_input("Nombres de corners", min_value=0, value=0)  
+tirs_cadres_A = st.number_input("Tirs cadrés par match", min_value=0.0, value=0.0)  
+grosses_chances_A = st.number_input("Grandes chances", min_value=0.0, value=0.0)  
+grosses_chances_ratees_A = st.number_input("Grandes chances manquées", min_value=0.0, value=0.0)  
+passes_reussies_A = st.number_input("Passes réussies par match", min_value=0.0, value=0.0)  
+passes_longues_precises_A = st.number_input("Passes longues précises par match", min_value=0.0, value=0.0)  
+centres_reussis_A = st.number_input("Centres réussis par match", min_value=0.0, value=0.0)  
+penalites_obtenues_A = st.number_input("Pénalités obtenues", min_value=0.0, value=0.0)  
+touches_surface_adverse_A = st.number_input("Balles touchées dans la surface adverse", min_value=0.0, value=0.0)  
+corners_A = st.number_input("Nombres de corners", min_value=0.0, value=0.0)  
 
 # Critères de Défense  
 st.subheader("Critères de Défense 🛡️")  
 expected_concedes_A = st.number_input("Expected Goals concédés (xG)", min_value=0.0, value=0.0)  
-interceptions_A = st.number_input("Interceptions par match", min_value=0, value=0)  
-tacles_reussis_A = st.number_input("Tacles réussis par match", min_value=0, value=0)  
-degegements_A = st.number_input("Dégagements par match", min_value=0, value=0)  
-penalites_concedes_A = st.number_input("Pénalités concédées", min_value=0, value=0)  
-possessions_remporte_A = st.number_input("Possessions remportées", min_value=0, value=0)  
-arrets_A = st.number_input("Arrêts par match", min_value=0, value=0)  
+interceptions_A = st.number_input("Interceptions par match", min_value=0.0, value=0.0)  
+tacles_reussis_A = st.number_input("Tacles réussis par match", min_value=0.0, value=0.0)  
+degegements_A = st.number_input("Dégagements par match", min_value=0.0, value=0.0)  
+penalites_concedes_A = st.number_input("Pénalités concédées", min_value=0.0, value=0.0)  
+possessions_remporte_A = st.number_input("Possessions remportées", min_value=0.0, value=0.0)  
+arrets_A = st.number_input("Arrêts par match", min_value=0.0, value=0.0)  
 
 # Critères de Discipline  
 st.subheader("Critères de Discipline ⚖️")  
-fautes_A = st.number_input("Fautes par match", min_value=0, value=0)  
-cartons_jaunes_A = st.number_input("Cartons jaunes", min_value=0, value=0)  
-cartons_rouges_A = st.number_input("Cartons rouges", min_value=0, value=0)  
+fautes_A = st.number_input("Fautes par match", min_value=0.0, value=0.0)  
+cartons_jaunes_A = st.number_input("Cartons jaunes", min_value=0.0, value=0.0)  
+cartons_rouges_A = st.number_input("Cartons rouges", min_value=0.0, value=0.0)  
 
 # Saisie des données pour l'équipe B  
 st.header("Équipe B 🥈")  
@@ -81,41 +81,41 @@ historique_B = st.text_area("Historique des performances (ex: W, D, L)", height=
 
 # Statistiques de l'équipe  
 st.subheader("Statistiques de l'Équipe")  
-buts_totaux_B = st.number_input("Buts totaux", min_value=0, value=0, key="B")  
+buts_totaux_B = st.number_input("Buts totaux", min_value=0.0, value=0.0, key="B")  
 buts_par_match_B = st.number_input("Buts par match", min_value=0.0, value=0.0, key="B2")  
 buts_concedes_par_match_B = st.number_input("Buts concédés par match", min_value=0.0, value=0.0, key="B3")  
-buts_concedes_totaux_B = st.number_input("Buts concédés au total", min_value=0, value=0, key="B4")  
-possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0, max_value=100, value=50, key="B5")  
+buts_concedes_totaux_B = st.number_input("Buts concédés au total", min_value=0.0, value=0.0, key="B4")  
+possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="B5")  
 aucun_but_encaisse_B = st.number_input("Aucun but encaissé (oui=1, non=0)", min_value=0, max_value=1, value=0, key="B6")  
 
 # Critères d'Attaque pour l'équipe B  
 st.subheader("Critères d'Attaque 🔥")  
 expected_buts_B = st.number_input("Expected Goals (xG)", min_value=0.0, value=0.0, key="B7")  
-tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0, value=0, key="B8")  
-grosses_chances_B = st.number_input("Grandes chances", min_value=0, value=0, key="B9")  
-grosses_chances_ratees_B = st.number_input("Grandes chances manquées", min_value=0, value=0, key="B10")  
-passes_reussies_B = st.number_input("Passes réussies par match", min_value=0, value=0, key="B11")  
-passes_longues_precises_B = st.number_input("Passes longues précises par match", min_value=0, value=0, key="B12")  
-centres_reussis_B = st.number_input("Centres réussis par match", min_value=0, value=0, key="B13")  
-penalites_obtenues_B = st.number_input("Pénalités obtenues", min_value=0, value=0, key="B14")  
-touches_surface_adverse_B = st.number_input("Balles touchées dans la surface adverse", min_value=0, value=0, key="B15")  
-corners_B = st.number_input("Nombres de corners", min_value=0, value=0, key="B16")  
+tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0.0, value=0.0, key="B8")  
+grosses_chances_B = st.number_input("Grandes chances", min_value=0.0, value=0.0, key="B9")  
+grosses_chances_ratees_B = st.number_input("Grandes chances manquées", min_value=0.0, value=0.0, key="B10")  
+passes_reussies_B = st.number_input("Passes réussies par match", min_value=0.0, value=0.0, key="B11")  
+passes_longues_precises_B = st.number_input("Passes longues précises par match", min_value=0.0, value=0.0, key="B12")  
+centres_reussis_B = st.number_input("Centres réussis par match", min_value=0.0, value=0.0, key="B13")  
+penalites_obtenues_B = st.number_input("Pénalités obtenues", min_value=0.0, value=0.0, key="B14")  
+touches_surface_adverse_B = st.number_input("Balles touchées dans la surface adverse", min_value=0.0, value=0.0, key="B15")  
+corners_B = st.number_input("Nombres de corners", min_value=0.0, value=0.0, key="B16")  
 
 # Critères de Défense pour l'équipe B  
 st.subheader("Critères de Défense 🛡️")  
 expected_concedes_B = st.number_input("Expected Goals concédés (xG)", min_value=0.0, value=0.0, key="B17")  
-interceptions_B = st.number_input("Interceptions par match", min_value=0, value=0, key="B18")  
-tacles_reussis_B = st.number_input("Tacles réussis par match", min_value=0, value=0, key="B19")  
-degegements_B = st.number_input("Dégagements par match", min_value=0, value=0, key="B20")  
-penalites_concedes_B = st.number_input("Pénalités concédées", min_value=0, value=0, key="B21")  
-possessions_remporte_B = st.number_input("Possessions remportées", min_value=0, value=0, key="B22")  
-arrets_B = st.number_input("Arrêts par match", min_value=0, value=0, key="B23")  
+interceptions_B = st.number_input("Interceptions par match", min_value=0.0, value=0.0, key="B18")  
+tacles_reussis_B = st.number_input("Tacles réussis par match", min_value=0.0, value=0.0, key="B19")  
+degegements_B = st.number_input("Dégagements par match", min_value=0.0, value=0.0, key="B20")  
+penalites_concedes_B = st.number_input("Pénalités concédées", min_value=0.0, value=0.0, key="B21")  
+possessions_remporte_B = st.number_input("Possessions remportées", min_value=0.0, value=0.0, key="B22")  
+arrets_B = st.number_input("Arrêts par match", min_value=0.0, value=0.0, key="B23")  
 
 # Critères de Discipline pour l'équipe B  
 st.subheader("Critères de Discipline ⚖️")  
-fautes_B = st.number_input("Fautes par match", min_value=0, value=0, key="B24")  
-cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0, value=0, key="B25")  
-cartons_rouges_B = st.number_input("Cartons rouges", min_value=0, value=0, key="B26")  
+fautes_B = st.number_input("Fautes par match", min_value=0.0, value=0.0, key="B24")  
+cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0.0, value=0.0, key="B25")  
+cartons_rouges_B = st.number_input("Cartons rouges", min_value=0.0, value=0.0, key="B26")  
 
 # Sauvegarde automatique des données  
 data_to_save = {  
@@ -212,6 +212,7 @@ if st.button("🔮 Prédire le résultat avec Régression Logistique"):
                                  expected_buts_B, tirs_cadres_B]])  
     
     # Normalisation des données d'entrée  
+    scaler = StandardScaler()  
     input_data_scaled_log = scaler.fit_transform(input_data_log)  
 
     # Prédiction avec le modèle de régression logistique  
