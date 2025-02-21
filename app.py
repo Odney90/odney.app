@@ -176,6 +176,7 @@ else:
 
 # Méthode d'analyse multi-variable  
 st.subheader("Analyse Multi-Variable")  
+
 # Préparation des données pour la régression logistique  
 data = {  
     'xG_A': [xG_A],  
@@ -184,7 +185,7 @@ data = {
     'tirs_cadres_B': [tirs_cadres_B],  
     'poss_moyenne_A': [poss_moyenne_A],  
     'poss_moyenne_B': [poss_moyenne_B],  
-    'motivation': [motivation],  
+        'motivation': [motivation],  
     'conditions_meteo': [meteo],  
     'avantage_terrain': [1 if avantage_terrain == "Équipe A" else 0]  
 }  
