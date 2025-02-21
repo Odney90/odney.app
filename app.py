@@ -168,7 +168,12 @@ model_lr_B.fit(X_train_B, y_train_B)
 
 # Modèle de prédiction des probabilités de victoire  
 model_rf = RandomForestRegressor(random_state=42)  
-model_rf.fit(X_A.append(X_B), y_A.append(y_B))  
+
+# Utilisation de pd.concat() pour combiner les DataFrames  
+X_combined = pd.concat([X_A, X_B], ignore_index=True)  
+y_combined = pd.concat([y_A, y_B], ignore_index=True)  
+
+model_rf.fit(X_combined, y_combined)  
 
 # Prédictions pour les nouvelles données  
 nouvelle_donnee_A = pd.DataFrame({  
