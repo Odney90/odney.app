@@ -211,7 +211,7 @@ with col2:
     st.session_state["buts_concedes_par_match_A"] = st.number_input("🚫 Buts Concédés par Match", min_value=0.0, value=st.session_state["buts_concedes_par_match_A"], key="buts_concedes_par_match_A")  
     st.session_state["buts_concedes_totaux_A"] = st.number_input("🤕 Buts Concédés Totaux", min_value=0.0, value=st.session_state["buts_concedes_totaux_A"], key="buts_concedes_totaux_A")  
     st.session_state["possession_moyenne_A"] = st.number_input("Ballon Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=st.session_state["possession_moyenne_A"], key="possession_moyenne_A")  
-st.session_state["aucun_but_encaisse_A"] = st.number_input("🔒 Aucun But Encaissé", min_value=0, value=st.session_state["aucun_but_encaisse_A"], key="aucun_but_encaisse_A")  
+    st.session_state["aucun_but_encaisse_A"] = st.number_input("🔒 Aucun But Encaissé", min_value=0, value=st.session_state["aucun_but_encaisse_A"], key="aucun_but_encaisse_A")  
 
 # Attaque  
 st.subheader("⚔️ Attaque")  
@@ -230,7 +230,7 @@ with col3:
     st.session_state["penalties_obtenues_A"] = st.number_input("🎁 Pénalties Obtenues", min_value=0.0, value=st.session_state["penalties_obtenues_A"], key="penalties_obtenues_A")  
 with col4:  
     st.session_state["balles_surface_A"] = st.number_input("⚽ Balles Touchées dans la Surface Adverse", min_value=0.0, value=st.session_state["balles_surface_A"], key="balles_surface_A")
-        st.session_state["corners_A"] = st.number_input("Corner Nombre de corners", min_value=0.0, value=st.session_state["corners_A"], key="corners_A")  
+    st.session_state["corners_A"] = st.number_input("Corner Nombre de corners", min_value=0.0, value=st.session_state["corners_A"], key="corners_A")  
 
 # Défense  
 st.subheader("🛡️ Défense")  
