@@ -4,6 +4,7 @@ import pandas as pd
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
+import matplotlib.pyplot as plt  
 
 # Initialisation des données dans session_state  
 if "data" not in st.session_state:  
@@ -183,8 +184,15 @@ if st.button("Prédire le résultat"):
     prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
     prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
 
+    # Génération de données d'entraînement factices pour la régression logistique  
+    np.random.seed(42)  
+    X_lr = np.random.rand(100, 6) * 100  # 100 échantillons, 6 caractéristiques  
+    y_lr = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
+
     # Régression Logistique  
-    X_lr = np.array([  
+    model_lr = LogisticRegression()  
+    model_lr.fit(X_lr, y_lr)  
+    X_lr_pred = np.array([  
         [  
             st.session_state.data["score_rating_A"],  
             st.session_state.data["score_rating_B"],  
@@ -194,12 +202,16 @@ if st.button("Prédire le résultat"):
             st.session_state.data["motivation_B"],  
         ]  
     ])  
-    model_lr = LogisticRegression()  
-    model_lr.fit(X_lr, np.array([1]))  # Exemple d'entraînement  
-    prediction_lr = model_lr.predict(X_lr)  
+    prediction_lr = model_lr.predict(X_lr_pred)  
 
-    # Random Forest (tous les critères)  
-    X_rf = np.array([  
+    # Génération de données d'entraînement factices pour Random Forest  
+    X_rf = np.random.rand(100, 50) * 100  # 100 échantillons, 50 caractéristiques  
+    y_rf = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
+
+    # Random Forest  
+    model_rf = RandomForestClassifier()  
+    model_rf.fit(X_rf, y_rf)  
+    X_rf_pred = np.array([  
         [  
             st.session_state.data["score_rating_A"],  
             st.session_state.data["score_rating_B"],  
@@ -255,9 +267,7 @@ if st.button("Prédire le résultat"):
             st.session_state.data["matchs_30_jours_B"],  
         ]  
     ])  
-    model_rf = RandomForestClassifier()  
-    model_rf.fit(X_rf, np.array([1]))  # Exemple d'entraînement  
-    prediction_rf = model_rf.predict(X_rf)  
+    prediction_rf = model_rf.predict(X_rf_pred)  
 
     # Affichage des résultats  
     st.subheader("Résultats des Prédictions")  
@@ -301,4 +311,22 @@ with col_b:
     )  
     mise_kelly = (prob_victoire / 100 * (cote - 1) - (1 - prob_victoire / 100)) / (cote - 1)  
     mise_kelly = max(0, mise_kelly)  # Éviter les valeurs négatives  
-    st.write(f"💶 **Mise de Kelly recommandée** : {mise_kelly * bankroll:.2f} €")
+    st.write(f"💶 **Mise de Kelly recommandée** : {mise_kelly * bankroll:.2f} €")  
+
+# Section 5 : Visuels  
+st.header("📈 Visuels")  
+col_a, col_b = st.columns(2)  
+
+# Graphique des buts  
+with col_a:  
+    fig, ax = plt.subplots()  
+    ax.bar(["Équipe A", "Équipe B"], [st.session_state.data["buts_par_match_A"], st.session_state.data["buts_par_match_B"]], color=["yellow", "red"])  
+    ax.set_title("⚽ Buts par match")  
+    st.pyplot(fig)  
+
+# Graphique de possession  
+with col_b:  
+    fig, ax = plt.subplots()  
+    ax.bar(["Équipe A", "Équipe B"], [st.session_state.data["possession_moyenne_A"], st.session_state.data["possession_moyenne_B"]], color=["yellow", "red"])  
+    ax.set_title("🔄 Possession moyenne")  
+    st.pyplot(fig)
