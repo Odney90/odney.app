@@ -68,7 +68,7 @@ if 'data' not in st.session_state:
 
         "recent_form_A": [1, 2, 1, 0, 3],  
         "recent_form_B": [0, 1, 2, 1, 1],  
-        "head_to_head": [],  
+        "head_to_head": {"victoires_A": 0, "nuls": 0, "victoires_B": 0},  
         "conditions_match": "",  
     }  
 
@@ -76,18 +76,18 @@ if 'data' not in st.session_state:
 st.set_page_config(page_title="Prédiction de Matchs de Football", page_icon="⚽", layout="wide")  
 
 # En-tête  
-st.header("Analyse de Prédiction de Matchs de Football")  
+st.header("⚽ Analyse de Prédiction de Matchs de Football")  
 
 # Onglets pour les différentes sections  
-tab1, tab2, tab3 = st.tabs(["Statistiques des Équipes", "Conditions du Match", "Prédictions"])  
+tab1, tab2, tab3 = st.tabs(["📊 Statistiques des Équipes", "🌦️ Conditions du Match", "🔮 Prédictions"])  
 
 with tab1:  
-    st.subheader("Statistiques des Équipes")  
+    st.subheader("📊 Statistiques des Équipes")  
 
     col_a, col_b = st.columns(2)  
 
     with col_a:  
-        st.subheader("Équipe A")  
+        st.subheader("Équipe A 🟡")  
         st.session_state.data["score_rating_A"] = st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_A"]), key="score_rating_A")  
         st.session_state.data["buts_totaux_A"] = st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_A"]), key="buts_totaux_A")  
         st.session_state.data["buts_par_match_A"] = st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_A"]), key="buts_par_match_A")  
@@ -97,7 +97,7 @@ with tab1:
         st.session_state.data["aucun_but_encaisse_A"] = st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_A"]), key="aucun_but_encaisse_A")  
 
     with col_b:  
-        st.subheader("Équipe B")  
+        st.subheader("Équipe B 🔴")  
         st.session_state.data["score_rating_B"] = st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_B"]), key="score_rating_B")  
         st.session_state.data["buts_totaux_B"] = st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_B"]), key="buts_totaux_B")  
         st.session_state.data["buts_par_match_B"] = st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_B"]), key="buts_par_match_B")  
@@ -107,30 +107,34 @@ with tab1:
         st.session_state.data["aucun_but_encaisse_B"] = st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_B"]), key="aucun_but_encaisse_B")  
 
 with tab2:  
-    st.subheader("Conditions du Match")  
+    st.subheader("🌦️ Conditions du Match")  
     st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"], key="conditions_match")  
 
     col_h2h, col_recent_form = st.columns(2)  
 
     with col_h2h:  
-        st.subheader("Historique des Confrontations")  
-        col_a, col_b = st.columns(2)  
+        st.subheader("📅 Historique des Confrontations")  
+        col_a, col_b, col_c = st.columns(3)  
         with col_a:  
-            equipe_A_buts = st.number_input("Buts de l'Équipe A", min_value=0)  
+            victoires_A = st.number_input("Victoires de l'Équipe A", min_value=0, value=st.session_state.data["head_to_head"]["victoires_A"])  
         with col_b:  
-            equipe_B_buts = st.number_input("Buts de l'Équipe B", min_value=0)  
+            nuls = st.number_input("Nuls", min_value=0, value=st.session_state.data["head_to_head"]["nuls"])  
+        with col_c:  
+            victoires_B = st.number_input("Victoires de l'Équipe B", min_value=0, value=st.session_state.data["head_to_head"]["victoires_B"])  
 
-        if st.button("Ajouter un Résultat"):  
-            st.session_state.data["head_to_head"].append((equipe_A_buts, equipe_B_buts))  
-            st.success("Résultat ajouté avec succès !")  
+        if st.button("Mettre à jour l'historique"):  
+            st.session_state.data["head_to_head"]["victoires_A"] = victoires_A  
+            st.session_state.data["head_to_head"]["nuls"] = nuls  
+            st.session_state.data["head_to_head"]["victoires_B"] = victoires_B  
+            st.success("Historique mis à jour avec succès !")  
 
-        if st.session_state.data["head_to_head"]:  
-            st.subheader("Résultats des Confrontations")  
-            for index, (buts_A, buts_B) in enumerate(st.session_state.data["head_to_head"]):  
-                st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")  
+        st.subheader("Résultats des Confrontations")  
+        st.write(f"Victoires de l'Équipe A : {st.session_state.data['head_to_head']['victoires_A']}")  
+        st.write(f"Nuls : {st.session_state.data['head_to_head']['nuls']}")  
+        st.write(f"Victoires de l'Équipe B : {st.session_state.data['head_to_head']['victoires_B']}")  
 
     with col_recent_form:  
-        st.subheader("Forme Récente")  
+        st.subheader("📈 Forme Récente")  
         col_a, col_b = st.columns(2)  
         with col_a:  
             st.write("Forme Récente de l'Équipe A")  
@@ -152,7 +156,7 @@ with tab2:
                 )  
 
 with tab3:  
-    st.subheader("Prédiction du Résultat du Match")  
+    st.subheader("🔮 Prédiction du Résultat du Match")  
 
     if st.button("Prédire le Résultat du Match"):  
         try:  
@@ -168,7 +172,7 @@ with tab3:
                 for j in range(6):  
                     results.iloc[i, j] = goals_A[i] * goals_B[j]  
 
-            st.subheader("Résultats de la Méthode de Poisson")  
+            st.subheader("📊 Résultats de la Méthode de Poisson")  
             st.write(results)  
 
             plt.figure(figsize=(10, 6))  
@@ -200,8 +204,8 @@ with tab3:
             cm = confusion_matrix(y_test, prediction)  
             report = classification_report(y_test, prediction)  
 
-            st.subheader("Résultats de la Régression Logistique")  
-            st.write(f"Précision : {accuracy:.2%}")  
+            st.subheader("📈 Résultats de la Régression Logistique")  
+            st.write(f"Précision du modèle : {accuracy:.2%}")  
             st.write("Matrice de Confusion :")  
             st.write(cm)  
             st.write("Rapport de Classification :")  
@@ -214,10 +218,12 @@ with tab3:
                                                st.session_state.data["possession_moyenne_B"], st.session_state.data["expected_but_B"]]])  
 
             current_prediction = model.predict(current_match_features)  
+            prediction_proba = model.predict_proba(current_match_features)  
+
             if current_prediction[0] == 1:  
-                st.success("Prédiction : L'Équipe A gagne !")  
+                st.success(f"Prédiction : L'Équipe A gagne avec une probabilité de {prediction_proba[0][1]:.2%} 🎉")  
             else:  
-                st.success("Prédiction : L'Équipe B gagne !")  
+                st.success(f"Prédiction : L'Équipe B gagne avec une probabilité de {prediction_proba[0][0]:.2%} 🎉")  
 
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
@@ -226,7 +232,7 @@ with tab3:
 st.markdown(  
     """  
     <div style="text-align: center; padding: 10px; background-color: #f0f0f0; margin-top: 20px;">  
-        Application de Prédiction de Matchs de Football - Version 1.0  
+        ⚽ Application de Prédiction de Matchs de Football - Version 1.0  
     </div>  
     """,  
     unsafe_allow_html=True  
