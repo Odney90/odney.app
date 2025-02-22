@@ -265,6 +265,7 @@ with st.expander("Entraînement des modèles"):
             st.error("Erreur lors de l'entraînement du modèle Logistic Regression")  
 
 # Section pour la prédiction  
+
 with st.expander("Prédiction"):  
     col1, col2 = st.columns(2)  
     
@@ -304,4 +305,32 @@ with st.expander("Prédiction"):
     with col2:  
         if st.button("Prédire avec Régression Logistique", key="predict_lr"):  
             try:  
-                # Préparation
+                # Préparation des données  
+                data = np.array([  
+                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                    arrets_A, arrets_B, corners_A, corners_B,  
+                    touches_surface_adverse_A, touches_surface_adverse_B,  
+                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                    buts_concedes_totaux_B, aucun_but_encaisse_B  
+                ]).reshape(1, -1)  
+                
+                # Prédiction  
+                prediction, probability = predict("logistic_regression", data)  
+                
+                if prediction is not None:  
+                    st.write("Prédiction de la Régression Logistique :")  
+                    st.write(f"Résultat prédit : {prediction[0]}")  
+                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
+                else:  
+                    st.error("Erreur lors de la prédiction")  
+                
+            except Exception as e:  
+                st.error(f"Erreur lors de la prédiction avec Régression Logistique : {str(e)}")
