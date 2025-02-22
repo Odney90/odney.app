@@ -194,7 +194,6 @@ with tab2:
     score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
     st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
     st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
-
 # Onglet 3 : Prédictions  
 with tab3:  
     st.header("🔮 Prédictions")  
@@ -291,48 +290,9 @@ with tab3:
             )  
             st.write(f"📊 **Résultat** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
 
-            # Prédiction des Paris Double Chance  
-            st.subheader("🎰 Prédiction des Paris Double Chance")  
-            st.write(  
-                "Les paris Double Chance permettent de couvrir deux des trois résultats possibles : "  
-                "1X (Équipe A gagne ou match nul), 12 (Équipe A gagne ou Équipe B gagne), X2 (Match nul ou Équipe B gagne)."  
-            )  
-
-            # Calcul des probabilités Double Chance  
-            prob_victoire_A = prediction_lr[0]  # Probabilité de victoire de l'Équipe A  
-            prob_victoire_B = 1 - prediction_lr[0]  # Probabilité de victoire de l'Équipe B  
-            prob_nul = prob_1_1  # Probabilité de match nul (basée sur Poisson)  
-
-            # Probabilités Double Chance  
-            prob_1X = prob_victoire_A + prob_nul  
-            prob_12 = prob_victoire_A + prob_victoire_B  
-            prob_X2 = prob_nul + prob_victoire_B  
-
-            st.write(f"📊 **Probabilité 1X (Équipe A gagne ou match nul)** : {prob_1X:.2%}")  
-            st.write(f"📊 **Probabilité 12 (Équipe A gagne ou Équipe B gagne)** : {prob_12:.2%}")  
-            st.write(f"📊 **Probabilité X2 (Match nul ou Équipe B gagne)** : {prob_X2:.2%}")  
-
-            # Graphique des probabilités  
-            st.subheader("📉 Graphique des Probabilités")  
-            fig, ax = plt.subplots()  
-            ax.bar(["1X", "12", "X2"], [prob_1X, prob_12, prob_X2])  
-            ax.set_ylabel("Probabilité")  
-            ax.set_title("Probabilités des Paris Double Chance")  
-            st.pyplot(fig)  
-
             # Téléchargement des données organisées par équipe  
-            st.subheader("📥 Téléchargement des Données et Prédictions")  
+            st.subheader("📥 Téléchargement des Données des Équipes")  
             data = {  
-                "Prédictions": {  
-                    "Probabilité 0-0": [prob_0_0],  
-                    "Probabilité 1-1": [prob_1_1],  
-                    "Probabilité 2-2": [prob_2_2],  
-                    "Régression Logistique": [prediction_lr[0]],  
-                    "Random Forest": [prediction_rf[0]],  
-                    "Probabilité 1X": [prob_1X],  
-                    "Probabilité 12": [prob_12],  
-                    "Probabilité X2": [prob_X2],  
-                },  
                 "Données Équipe A": {  
                     key.replace("_A", ""): [st.session_state.data[key]]  
                     for key in st.session_state.data  
@@ -345,45 +305,21 @@ with tab3:
                     if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float, str))  
                     and not key.startswith("cote_") and not key.startswith("bankroll")  
                 },  
-                "Conditions du Match": {  
-                    "Conditions": [st.session_state.data["conditions_match"]],  
-                    "Historique Face-à-Face": [st.session_state.data["face_a_face"]],  
-                },  
-                "Forme Récente": {  
-                    "Forme Récente Équipe A": [st.session_state.data["forme_recente_A"]],  
-                    "Forme Récente Équipe B": [st.session_state.data["forme_recente_B"]],  
-                },  
             }  
-# Téléchargement des données organisées par équipe  
-st.subheader("📥 Téléchargement des Données des Équipes")  
-data = {  
-    "Données Équipe A": {  
-        key.replace("_A", ""): [st.session_state.data[key]]  
-        for key in st.session_state.data  
-        if key.endswith("_A") and isinstance(st.session_state.data[key], (int, float, str))  
-        and not key.startswith("cote_") and not key.startswith("bankroll")  
-    },  
-    "Données Équipe B": {  
-        key.replace("_B", ""): [st.session_state.data[key]]  
-        for key in st.session_state.data  
-        if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float, str))  
-        and not key.startswith("cote_") and not key.startswith("bankroll")  
-    },  
-}  
 
-# Conversion en DataFrame et téléchargement  
-with pd.ExcelWriter("donnees_equipes.xlsx") as writer:  
-    for sheet_name, sheet_data in data.items():  
-        df = pd.DataFrame(sheet_data)  
-        df.to_excel(writer, sheet_name=sheet_name, index=False)  
+            # Conversion en DataFrame et téléchargement  
+            with pd.ExcelWriter("donnees_equipes.xlsx") as writer:  
+                for sheet_name, sheet_data in data.items():  
+                    df = pd.DataFrame(sheet_data)  
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)  
 
-with open("donnees_equipes.xlsx", "rb") as f:  
-    st.download_button(  
-        label="📥 Télécharger les données des équipes",  
-        data=f,  
-        file_name="donnees_equipes.xlsx",  
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
-    )
+            with open("donnees_equipes.xlsx", "rb") as f:  
+                st.download_button(  
+                    label="📥 Télécharger les données des équipes",  
+                    data=f,  
+                    file_name="donnees_equipes.xlsx",  
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
+                )  
 
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
