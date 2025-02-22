@@ -212,7 +212,7 @@ with col1:
 
 with col2:  
     st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0, value=int(st.session_state.data["penalties_concedes_B"]), key="penalties_concedes_B")  
-        st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0, value=int(st.session_state.data["possessions_remporte_B"]), key="possessions_remporte_B")  
+      st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0, value=int(st.session_state.data["possessions_remporte_B"]), key="possessions_remporte_B")  
     st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0, value=int(st.session_state.data["arrets_B"]), key="arrets_B")  
 
 # --- Prédictions ---  
