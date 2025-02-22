@@ -200,9 +200,9 @@ with tab3:
             ])  
 
             # Génération de données d'entraînement  
-            np.random.seed(0)  
-            X_train_lr = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
-            y_train_lr = np.random.randint(0, 2, 100)  # Cible binaire  
+            np.random.seed(0.0)  
+            X_train_lr = np.random.rand(100.0, 10.0)  # 100 échantillons, 10 caractéristiques  
+            y_train_lr = np.random.randint(0.0, 2.0, 100.0)  # Cible binaire  
 
             # Entraînement du modèle  
             model_lr = LogisticRegression()  
