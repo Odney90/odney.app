@@ -3,6 +3,7 @@ import numpy as np
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
+import matplotlib.pyplot as plt  
 
 # Fonction pour vérifier et convertir en float  
 def safe_float(value):  
@@ -77,8 +78,8 @@ if "data" not in st.session_state:
         # Historique Face-à-Face  
         "face_a_face": "",  
         # Forme Récente  
-        "forme_recente_A": "",  
-        "forme_recente_B": "",  
+        "forme_recente_A": ["V", "N", "D", "V", "V"],  
+        "forme_recente_B": ["D", "N", "V", "D", "V"],  
         # Cotes  
         "cote_victoire_A": 2.0,  
         "cote_nul": 3.0,  
@@ -132,14 +133,21 @@ with tab2:
         "📅 Historique des Face-à-Face (ex : 3 victoires A, 2 nuls, 1 victoire B)",  
         value=st.session_state.data["face_a_face"],  
     )  
-    st.session_state.data["forme_recente_A"] = st.text_area(  
-        "📈 Forme Récente de l'Équipe A (ex : 3 victoires, 1 nul, 1 défaite)",  
-        value=st.session_state.data["forme_recente_A"],  
-    )  
-    st.session_state.data["forme_recente_B"] = st.text_area(  
-        "📉 Forme Récente de l'Équipe B (ex : 2 victoires, 2 nuls, 1 défaite)",  
-        value=st.session_state.data["forme_recente_B"],  
-    )  
+
+    st.subheader("Forme Récente (5 derniers matchs)")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.write("Équipe A")  
+        for i in range(5):  
+            st.session_state.data["forme_recente_A"][i] = st.selectbox(  
+                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(st.session_state.data["forme_recente_A"][i])  
+            )  
+    with col_b:  
+        st.write("Équipe B")  
+        for i in range(5):  
+            st.session_state.data["forme_recente_B"][i] = st.selectbox(  
+                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(st.session_state.data["forme_recente_B"][i])  
+            )  
 
 # Onglet 3 : Prédictions  
 with tab3:  
@@ -203,6 +211,13 @@ with tab3:
             st.write(f"📊 **Régression Logistique** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
             st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
 
+            # Graphique des probabilités  
+            fig, ax = plt.subplots()  
+            ax.bar(["0-0", "1-1", "2-2"], [prob_0_0, prob_1_1, prob_2_2])  
+            ax.set_ylabel("Probabilité")  
+            ax.set_title("Probabilités des Scores")  
+            st.pyplot(fig)  
+
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {e}")  
 
@@ -245,4 +260,10 @@ with tab5:
     mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
     mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
     mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
-    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")
+    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
+
+    # Mise à jour de la bankroll  
+    if st.button("Miser"):  
+        bankroll -= mise_kelly  
+        st.session_state.data["bankroll"] = bankroll  
+        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")
