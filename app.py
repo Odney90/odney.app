@@ -88,27 +88,27 @@ with tab1:
 
     with col_a:  
         st.subheader("Équipe A")  
-        st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_A"]), key="score_rating_A")  
-        st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_A"]), key="buts_totaux_A")  
-        st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_A"]), key="buts_par_match_A")  
-        st.number_input("Buts Concédés par Match", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_A"]), key="buts_concedes_par_match_A")  
-        st.number_input("Buts Concédés Totaux", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_A"]), key="buts_concedes_totaux_A")  
-        st.number_input("Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_A"]), key="possession_moyenne_A")  
-        st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_A"]), key="aucun_but_encaisse_A")  
+        st.session_state.data["score_rating_A"] = st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_A"]), key="score_rating_A")  
+        st.session_state.data["buts_totaux_A"] = st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_A"]), key="buts_totaux_A")  
+        st.session_state.data["buts_par_match_A"] = st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_A"]), key="buts_par_match_A")  
+        st.session_state.data["buts_concedes_par_match_A"] = st.number_input("Buts Concédés par Match", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_A"]), key="buts_concedes_par_match_A")  
+        st.session_state.data["buts_concedes_totaux_A"] = st.number_input("Buts Concédés Totaux", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_A"]), key="buts_concedes_totaux_A")  
+        st.session_state.data["possession_moyenne_A"] = st.number_input("Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_A"]), key="possession_moyenne_A")  
+        st.session_state.data["aucun_but_encaisse_A"] = st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_A"]), key="aucun_but_encaisse_A")  
 
     with col_b:  
         st.subheader("Équipe B")  
-        st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_B"]), key="score_rating_B")  
-        st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_B"]), key="buts_totaux_B")  
-        st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_B"]), key="buts_par_match_B")  
-        st.number_input("Buts Concédés par Match", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_B"]), key="buts_concedes_par_match_B")  
-        st.number_input("Buts Concédés Totaux", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_B"]), key="buts_concedes_totaux_B")  
-        st.number_input("Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_B"]), key="possession_moyenne_B")  
-        st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_B"]), key="aucun_but_encaisse_B")  
+        st.session_state.data["score_rating_B"] = st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_B"]), key="score_rating_B")  
+        st.session_state.data["buts_totaux_B"] = st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_B"]), key="buts_totaux_B")  
+        st.session_state.data["buts_par_match_B"] = st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_B"]), key="buts_par_match_B")  
+        st.session_state.data["buts_concedes_par_match_B"] = st.number_input("Buts Concédés par Match", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_B"]), key="buts_concedes_par_match_B")  
+        st.session_state.data["buts_concedes_totaux_B"] = st.number_input("Buts Concédés Totaux", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_B"]), key="buts_concedes_totaux_B")  
+        st.session_state.data["possession_moyenne_B"] = st.number_input("Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_B"]), key="possession_moyenne_B")  
+        st.session_state.data["aucun_but_encaisse_B"] = st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_B"]), key="aucun_but_encaisse_B")  
 
 with tab2:  
     st.subheader("Conditions du Match")  
-    st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"], key="conditions_match")  
+    st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"], key="conditions_match")  
 
     col_h2h, col_recent_form = st.columns(2)  
 
@@ -201,7 +201,7 @@ with tab3:
             report = classification_report(y_test, prediction)  
 
             st.subheader("Résultats de la Régression Logistique")  
-            st.write(f"Précision : {accuracy:.2f}")  
+            st.write(f"Précision : {accuracy:.2%}")  
             st.write("Matrice de Confusion :")  
             st.write(cm)  
             st.write("Rapport de Classification :")  
@@ -222,5 +222,12 @@ with tab3:
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
 
-# Pied de page  
-st.footer("Application de Prédiction de Matchs de Football - Version 1.0")
+# Pied de page simulé avec HTML  
+st.markdown(  
+    """  
+    <div style="text-align: center; padding: 10px; background-color: #f0f0f0; margin-top: 20px;">  
+        Application de Prédiction de Matchs de Football - Version 1.0  
+    </div>  
+    """,  
+    unsafe_allow_html=True  
+)
