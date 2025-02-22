@@ -37,7 +37,8 @@ if 'data' not in st.session_state:
         "arrets_A": 45,  
         "fautes_A": 15,  
         "cartons_jaunes_A": 5,  
-        "cartons_rouges_A": 1,  
+        "cartons_rouges_A": 1, 
+        "possessions_remporte_A": 6,
 
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -66,6 +67,7 @@ if 'data' not in st.session_state:
         "fautes_B": 20,  
         "cartons_jaunes_B": 6,  
         "cartons_rouges_B": 2,  
+        "possessions_remporte_B": 7,
 
         "recent_form_A": [1, 2, 1, 0, 3],  # Buts marqués lors des 5 derniers matchs  
         "recent_form_B": [0, 1, 2, 1, 1],  # Buts marqués lors des 5 derniers matchs  
