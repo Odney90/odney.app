@@ -269,7 +269,7 @@ with tab3:
                 else:  
                     st.warning("Prédiction : Match Nul ou Résultat Incertain 🤔")  
 except Exception as e:  
-            st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")
+    st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}") 
 with tab4:  
     st.title("🛠️ Outils de Paris")  
 
