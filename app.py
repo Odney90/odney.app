@@ -202,7 +202,7 @@ with tab3:
             # Génération de données d'entraînement  
             np.random.seed(0)  
             X_train_lr = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
-            y_train_lr = np.random.randint(0, 2.0, 100)  # Cible binaire  
+            y_train_lr = np.random.randint(0, 2, 100)  # Cible binaire  
 
             # Entraînement du modèle  
             model_lr = LogisticRegression()  
@@ -216,57 +216,33 @@ with tab3:
             st.subheader("📈 Résultats de la Régression Logistique")  
             st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
             st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
-            
-# Random Forest  
- try  
-    # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques entiers et flottantes)  
-    X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))]])  
 
-    # Vérification que toutes les valeurs sont numériques  
-    if X_rf.shape[1] != 52:  # Assurez-vous que vous avez le bon nombre de caractéristiques  
-        raise ValueError("Le nombre de caractéristiques doit être de 52.")  
+            # Random Forest  
+            # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
+            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))]])  
 
-    # Génération de données d'entraînement  
-    np.random.seed(0)  
-    X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
-    y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
+            # Vérification que toutes les valeurs sont numériques  
+            if X_rf.shape[1] != 52:  # Assurez-vous que vous avez le bon nombre de caractéristiques  
+                raise ValueError("Le nombre de caractéristiques doit être de 52.")  
 
-    # Entraînement du modèle  
-    model_rf = RandomForestClassifier()  
-    model_rf.fit(X_train_rf, y_train_rf)  
+            # Génération de données d'entraînement  
+            np.random.seed(0)  
+            X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
+            y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
 
-    # Prédiction  
-    prediction_rf = model_rf.predict(X_rf)  
-    prediction_proba_rf = model_rf.predict_proba(X_rf)  
+            # Entraînement du modèle  
+            model_rf = RandomForestClassifier()  
+            model_rf.fit(X_train_rf, y_train_rf)  
 
-    # Affichage des résultats  
-    st.subheader("📈 Résultats de la Random Forest")  
-    st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
-    st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
+            # Prédiction  
+            prediction_rf = model_rf.predict(X_rf)  
+            prediction_proba_rf = model_rf.predict_proba(X_rf)  
 
-except Exception as e:  
-    st.error(f"Une erreur s'est produite lors de la création de X_rf ou de la prédiction : {str(e)}")
-# Vérification que toutes les valeurs sont numériques  
-if X_rf.shape[1] != 52:  # Assurez-vous que vous avez le bon nombre de caractéristiques  
-    raise ValueError("Le nombre de caractéristiques doit être de 52.")  
+            # Affichage des résultats  
+            st.subheader("📈 Résultats de la Random Forest")  
+            st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
+            st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
 
-# Génération de données d'entraînement  
-np.random.seed(0)  
-X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
-y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
-
-# Entraînement du modèle  
-model_rf = RandomForestClassifier()  
-model_rf.fit(X_train_rf, y_train_rf)  
-
-# Prédiction  
-prediction_rf = model_rf.predict(X_rf)  
-prediction_proba_rf = model_rf.predict_proba(X_rf)  
-
-# Affichage des résultats  
-st.subheader("📈 Résultats de la Random Forest")  
-st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
-st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")
             # Comparaison des modèles  
             st.subheader("📊 Comparaison des Modèles")  
             comparison_df = pd.DataFrame({  
@@ -294,7 +270,8 @@ st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")
                     st.warning("Prédiction : Match Nul ou Résultat Incertain 🤔")  
 
         except Exception as e:  
-            st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")
+            st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
+
 with tab4:  
     st.title("🛠️ Outils de Paris")  
 
@@ -311,7 +288,8 @@ with tab4:
     probabilite_implicite_value_bet = cotes_vers_probabilite(cote_value_bet)  
     if probabilite_estimee > probabilite_implicite_value_bet:  
         st.success("Value bet détecté !")  
-    else: st.warning("Pas de value bet.")  
+    else:  
+        st.warning("Pas de value bet.")  
 
     # Simulateur de paris combinés  
     st.header("➕ Simulateur de Paris Combinés")  
@@ -339,20 +317,13 @@ with tab4:
     for i in range(nombre_cotes):  
         cote = st.number_input(f"Cote {i + 1}", min_value=1.01, value=2.0, key=f"cote_{i}")  
         cotes.append(cote)  
+
+    # Calcul des probabilités implicites  
     probabilites_implicites = [cotes_vers_probabilite(cote) for cote in cotes]  
     marge_bookmaker = sum(probabilites_implicites) - 1  
-    st.write(f"Marge du bookmaker : **{marge_bookmaker:.2%}**")
-    probabilites_corrigees = enlever_marge(probabilites_implicites, marge_bookmaker)  
-    st.write("Probabilités corrigées (sans marge) :")  
-    for i, p in enumerate(probabilites_corrigees):  
-        st.write(f"Événement {i + 1} : **{p:.2%}**")  
+    st.write(f"Marge du bookmaker : **{marge_bookmaker:.2%}**")  
 
-# Pied de page simulé avec HTML  
-st.markdown(  
-    """  
-    <div style="text-align: center; padding: 10px; background-color: #f0f0f0; margin-top: 20px;">  
-        ⚽ Application de Prédiction de Matchs de Football - Version 1.0  
-    </div>  
-    """,  
-    unsafe_allow_html=True  
-)
+    # Enlève la marge pour obtenir les probabilités corrigées  
+    probabilites_corrigees = enlever_marge(probabilites_implicites, marge_bookmaker)  
+    for i, proba in enumerate(probabilites_corrigees):  
+        st.write(f"Probabilité corrigée pour la cote {cotes[i]} : **{proba:.2%}**")
