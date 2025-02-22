@@ -3,14 +3,14 @@ import numpy as np
 import pandas as pd  
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
+from sklearn.model_selection import train_test_split  
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report  
 import matplotlib.pyplot as plt  
 
-# --- Configuration de la page ---  
-st.set_page_config(page_title="⚽ Statistiques des Équipes de Football", page_icon="⚽")  
-
-# --- Initialisation des valeurs dans session_state avec des données fictives ---  
+# Initialisation des données par défaut  
 if 'data' not in st.session_state:  
     st.session_state.data = {  
+        # Statistiques de l'Équipe A  
         "score_rating_A": 70.0,  
         "buts_totaux_A": 50.0,  
         "buts_par_match_A": 1.5,  
@@ -38,6 +38,7 @@ if 'data' not in st.session_state:
         "cartons_jaunes_A": 5,  
         "cartons_rouges_A": 1,  
 
+        # Statistiques de l'Équipe B  
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
         "buts_par_match_B": 1.0,  
@@ -65,265 +66,161 @@ if 'data' not in st.session_state:
         "cartons_jaunes_B": 6,  
         "cartons_rouges_B": 2,  
 
-        "recent_form_A": [1, 2, 1, 0, 3],  # Buts marqués lors des 5 derniers matchs  
-        "recent_form_B": [0, 1, 2, 1, 1],  # Buts marqués lors des 5 derniers matchs  
+        "recent_form_A": [1, 2, 1, 0, 3],  
+        "recent_form_B": [0, 1, 2, 1, 1],  
         "head_to_head": [],  
         "conditions_match": "",  
     }  
 
-# --- Interface Utilisateur ---  
-st.header("⚽ Statistiques des Équipes de Football")  
+# Configuration de la page  
+st.set_page_config(page_title="Prédiction de Matchs de Football", page_icon="⚽", layout="wide")  
 
-# --- Forme récente sur 5 matchs ---  
-st.subheader("📈 Forme Récente sur 5 Matchs")  
-col1, col2 = st.columns(2)  
+# En-tête  
+st.header("Analyse de Prédiction de Matchs de Football")  
 
-with col1:  
-    st.write("Équipe A")  
-    for i in range(5):  
-        st.session_state.data["recent_form_A"][i] = st.number_input(  
-            f"Match {i + 1} (Buts marqués)",  
-            min_value=0,  
-            value=int(st.session_state.data["recent_form_A"][i]),  
-            key=f"recent_form_A_{i}"  
-        )  
+# Onglets pour les différentes sections  
+tab1, tab2, tab3 = st.tabs(["Statistiques des Équipes", "Conditions du Match", "Prédictions"])  
 
-with col2:  
-    st.write("Équipe B")  
-    for i in range(5):  
-        st.session_state.data["recent_form_B"][i] = st.number_input(  
-            f"Match {i + 1} (Buts marqués)",  
-            min_value=0,  
-            value=int(st.session_state.data["recent_form_B"][i]),  
-            key=f"recent_form_B_{i}"  
-        )  
+with tab1:  
+    st.subheader("Statistiques des Équipes")  
 
-# --- Conditions du Match ---  
-st.subheader("🌦️ Conditions du Match")  
-st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex: pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"])  
+    col_a, col_b = st.columns(2)  
 
-# --- Historique des confrontations ---  
-st.subheader("📊 Historique des Confrontations Directes")  
-col1, col2 = st.columns(2)  
+    with col_a:  
+        st.subheader("Équipe A")  
+        st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_A"]), key="score_rating_A")  
+        st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_A"]), key="buts_totaux_A")  
+        st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_A"]), key="buts_par_match_A")  
+        st.number_input("Buts Concédés par Match", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_A"]), key="buts_concedes_par_match_A")  
+        st.number_input("Buts Concédés Totaux", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_A"]), key="buts_concedes_totaux_A")  
+        st.number_input("Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_A"]), key="possession_moyenne_A")  
+        st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_A"]), key="aucun_but_encaisse_A")  
 
-with col1:  
-    equipe_A_buts = st.number_input("Buts Équipe A", min_value=0)  
-with col2:  
-    equipe_B_buts = st.number_input("Buts Équipe B", min_value=0)  
+    with col_b:  
+        st.subheader("Équipe B")  
+        st.number_input("Score Rating", min_value=0.0, value=float(st.session_state.data["score_rating_B"]), key="score_rating_B")  
+        st.number_input("Buts Totaux", min_value=0.0, value=float(st.session_state.data["buts_totaux_B"]), key="buts_totaux_B")  
+        st.number_input("Buts par Match", min_value=0.0, value=float(st.session_state.data["buts_par_match_B"]), key="buts_par_match_B")  
+        st.number_input("Buts Concédés par Match", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_B"]), key="buts_concedes_par_match_B")  
+        st.number_input("Buts Concédés Totaux", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_B"]), key="buts_concedes_totaux_B")  
+        st.number_input("Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_B"]), key="possession_moyenne_B")  
+        st.number_input("Clean Sheets", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_B"]), key="aucun_but_encaisse_B")  
 
-if st.button("Ajouter un résultat de confrontation"):  
-    st.session_state.data["head_to_head"].append((equipe_A_buts, equipe_B_buts))  
-    st.success("Résultat ajouté !")  
+with tab2:  
+    st.subheader("Conditions du Match")  
+    st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"], key="conditions_match")  
 
-# Afficher l'historique  
-if st.session_state.data["head_to_head"]:  
-    st.write("Historique des Confrontations :")  
-    for index, (buts_A, buts_B) in enumerate(st.session_state.data["head_to_head"]):  
-        st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")  
+    col_h2h, col_recent_form = st.columns(2)  
 
-# --- Top Statistiques ---  
-st.subheader("📊 Top Statistiques")  
-col1, col2 = st.columns(2)  
+    with col_h2h:  
+        st.subheader("Historique des Confrontations")  
+        col_a, col_b = st.columns(2)  
+        with col_a:  
+            equipe_A_buts = st.number_input("Buts de l'Équipe A", min_value=0)  
+        with col_b:  
+            equipe_B_buts = st.number_input("Buts de l'Équipe B", min_value=0)  
 
-with col1:  
-    st.session_state.data["score_rating_A"] = st.number_input("⭐ Score Rating Équipe A", min_value=0.0, value=float(st.session_state.data["score_rating_A"]), key="score_rating_A")  
-    st.session_state.data["buts_totaux_A"] = st.number_input("⚽ Buts Totaux Équipe A", min_value=0.0, value=float(st.session_state.data["buts_totaux_A"]), key="buts_totaux_A")  
-    st.session_state.data["buts_par_match_A"] = st.number_input("🥅 Buts par Match Équipe A", min_value=0.0, value=float(st.session_state.data["buts_par_match_A"]), key="buts_par_match_A")  
-    st.session_state.data["buts_concedes_par_match_A"] = st.number_input("🚫 Buts Concédés par Match Équipe A", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_A"]), key="buts_concedes_par_match_A")  
-    st.session_state.data["buts_concedes_totaux_A"] = st.number_input("🤕 Buts Concédés Totaux Équipe A", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_A"]), key="buts_concedes_totaux_A")  
+        if st.button("Ajouter un Résultat"):  
+            st.session_state.data["head_to_head"].append((equipe_A_buts, equipe_B_buts))  
+            st.success("Résultat ajouté avec succès !")  
 
-with col2:  
-    st.session_state.data["possession_moyenne_A"] = st.number_input("Ballon Possession Moyenne Équipe A (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_A"]), key="possession_moyenne_A")  
-    st.session_state.data["aucun_but_encaisse_A"] = st.number_input("🔒 Aucun But Encaissé Équipe A", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_A"]), key="aucun_but_encaisse_A")  
+        if st.session_state.data["head_to_head"]:  
+            st.subheader("Résultats des Confrontations")  
+            for index, (buts_A, buts_B) in enumerate(st.session_state.data["head_to_head"]):  
+                st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")  
 
-with col1:  
-    st.session_state.data["score_rating_B"] = st.number_input("⭐ Score Rating Équipe B", min_value=0.0, value=float(st.session_state.data["score_rating_B"]), key="score_rating_B")  
-    st.session_state.data["buts_totaux_B"] = st.number_input("⚽ Buts Totaux Équipe B", min_value=0.0, value=float(st.session_state.data["buts_totaux_B"]), key="buts_totaux_B")  
-    st.session_state.data["buts_par_match_B"] = st.number_input("🥅 Buts par Match Équipe B", min_value=0.0, value=float(st.session_state.data["buts_par_match_B"]), key="buts_par_match_B")  
-    st.session_state.data["buts_concedes_par_match_B"] = st.number_input("🚫 Buts Concédés par Match Équipe B", min_value=0.0, value=float(st.session_state.data["buts_concedes_par_match_B"]), key="buts_concedes_par_match_B")  
-    st.session_state.data["buts_concedes_totaux_B"] = st.number_input("🤕 Buts Concédés Totaux Équipe B", min_value=0.0, value=float(st.session_state.data["buts_concedes_totaux_B"]), key="buts_concedes_totaux_B")  
+    with col_recent_form:  
+        st.subheader("Forme Récente")  
+        col_a, col_b = st.columns(2)  
+        with col_a:  
+            st.write("Forme Récente de l'Équipe A")  
+            for i in range(5):  
+                st.session_state.data["recent_form_A"][i] = st.number_input(  
+                    f"Match {i + 1} (Buts Marqués)",  
+                    min_value=0,  
+                    value=int(st.session_state.data["recent_form_A"][i]),  
+                    key=f"recent_form_A_{i}"  
+                )  
+        with col_b:  
+            st.write("Forme Récente de l'Équipe B")  
+            for i in range(5):  
+                st.session_state.data["recent_form_B"][i] = st.number_input(  
+                    f"Match {i + 1} (Buts Marqués)",  
+                    min_value=0,  
+                    value=int(st.session_state.data["recent_form_B"][i]),  
+                    key=f"recent_form_B_{i}"  
+                )  
 
-with col2:  
-    st.session_state.data["possession_moyenne_B"] = st.number_input("Ballon Possession Moyenne Équipe B (%)", min_value=0.0, max_value=100.0, value=float(st.session_state.data["possession_moyenne_B"]), key="possession_moyenne_B")  
-    st.session_state.data["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé Équipe B", min_value=0, value=int(st.session_state.data["aucun_but_encaisse_B"]), key="aucun_but_encaisse_B")  
+with tab3:  
+    st.subheader("Prédiction du Résultat du Match")  
 
-# --- Critères d'Attaque ---  
-st.subheader("⚔️ Critères d'Attaque")  
-col1, col2 = st.columns(2)  
+    if st.button("Prédire le Résultat du Match"):  
+        try:  
+            # Méthode de Poisson  
+            avg_goals_A = st.session_state.data["expected_but_A"]  
+            avg_goals_B = st.session_state.data["expected_but_B"]  
 
-with col1:  
-    st.session_state.data["expected_but_A"] = st.number_input("Expected Buts Équipe A", min_value=0.0, value=float(st.session_state.data["expected_but_A"]), key="expected_but_A")  
-    st.session_state.data["tirs_cadres_A"] = st.number_input("🎯 Tirs Cadres Équipe A", min_value=0, value=int(st.session_state.data["tirs_cadres_A"]), key="tirs_cadres_A")  
-    st.session_state.data["grandes_chances_A"] = st.number_input("🌟 Grandes Chances Équipe A", min_value=0, value=int(st.session_state.data["grandes_chances_A"]), key="grandes_chances_A")  
-    st.session_state.data["grandes_chances_manquees_A"] = st.number_input("🌟 Grandes Chances Manquées Équipe A", min_value=0, value=int(st.session_state.data["grandes_chances_manquees_A"]), key="grandes_chances_manquees_A")  
-    st.session_state.data["passes_reussies_A"] = st.number_input("✅ Passes Réussies Équipe A", min_value=0, value=int(st.session_state.data["passes_reussies_A"]), key="passes_reussies_A")  
+            goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
+            goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
 
-with col2:  
-    st.session_state.data["passes_longues_A"] = st.number_input("Passes Longues Précises Équipe A", min_value=0, value=int(st.session_state.data["passes_longues_A"]), key="passes_longues_A")  
-    st.session_state.data["centres_reussis_A"] = st.number_input("Centres Réussis Équipe A", min_value=0, value=int(st.session_state.data["centres_reussis_A"]), key="centres_reussis_A")  
-    st.session_state.data["penalties_obtenues_A"] = st.number_input("Pénalités Obtenues Équipe A", min_value=0, value=int(st.session_state.data["penalties_obtenues_A"]), key="penalties_obtenues_A")  
-    st.session_state.data["balles_surface_A"] = st.number_input("Balles Touchées dans la Surface Équipe A", min_value=0, value=int(st.session_state.data["balles_surface_A"]), key="balles_surface_A")  
-    st.session_state.data["corners_A"] = st.number_input("⚽ Corners Équipe A", min_value=0, value=int(st.session_state.data["corners_A"]), key="corners_A")  
+            results = pd.DataFrame(np.zeros((6, 6)), columns=[f"Équipe B: {i}" for i in range(6)], index=[f"Équipe A: {i}" for i in range(6)])  
+            for i in range(6):  
+                for j in range(6):  
+                    results.iloc[i, j] = goals_A[i] * goals_B[j]  
 
-# --- Critères de Défense ---  
-st.subheader("🛡️ Critères de Défense")  
-col1, col2 = st.columns(2)  
+            st.subheader("Résultats de la Méthode de Poisson")  
+            st.write(results)  
 
-with col1:  
-    st.session_state.data["expected_concedes_A"] = st.number_input("Expected Buts Concédés Équipe A", min_value=0.0, value=float(st.session_state.data["expected_concedes_A"]), key="expected_concedes_A")  
-    st.session_state.data["interceptions_A"] = st.number_input("Interceptions Équipe A", min_value=0, value=int(st.session_state.data["interceptions_A"]), key="interceptions_A")  
-    st.session_state.data["tacles_reussis_A"] = st.number_input("Tacles Réussis Équipe A", min_value=0, value=int(st.session_state.data["tacles_reussis_A"]), key="tacles_reussis_A")  
-    st.session_state.data["degagements_A"] = st.number_input("Dégagements Équipe A", min_value=0, value=int(st.session_state.data["degagements_A"]), key="degagements_A")  
+            plt.figure(figsize=(10, 6))  
+            plt.imshow(results, cmap='Blues', interpolation='nearest')  
+            plt.colorbar(label='Probabilité')  
+            plt.xticks(ticks=np.arange(6), labels=[f"Équipe B: {i}" for i in range(6)])  
+            plt.yticks(ticks=np.arange(6), labels=[f"Équipe A: {i}" for i in range(6)])  
+            plt.title("Probabilités des Résultats (Méthode de Poisson)")  
+            st.pyplot(plt)  
 
-with col2:  
-    st.session_state.data["penalties_concedes_A"] = st.number_input("Pénalités Concédées Équipe A", min_value=0, value=int(st.session_state.data["penalties_concedes_A"]), key="penalties_concedes_A")  
-    st.session_state.data["arrets_A"] = st.number_input("Arrêts Équipe A", min_value=0, value=int(st.session_state.data["arrets_A"]), key="arrets_A")  
+            # Régression Logistique  
+            # Génération de données d'entraînement  
+            np.random.seed(0)  
+            X = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
+            y = np.random.randint(0, 2, 100)  # Cible binaire  
 
-# --- Critères d'Attaque Équipe B ---  
-st.subheader("⚔️ Critères d'Attaque Équipe B")  
-col1, col2 = st.columns(2)  
+            # Division en ensembles d'entraînement et de test  
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
 
-with col1:  
-    st.session_state.data["expected_but_B"] = st.number_input("Expected Buts Équipe B", min_value=0.0, value=float(st.session_state.data["expected_but_B"]), key="expected_but_B")  
-    st.session_state.data["tirs_cadres_B"] = st.number_input("🎯 Tirs Cadres Équipe B", min_value=0, value=int(st.session_state.data["tirs_cadres_B"]), key="tirs_cadres_B")  
-    st.session_state.data["grandes_chances_B"] = st.number_input("🌟 Grandes Chances Équipe B", min_value=0, value=int(st.session_state.data["grandes_chances_B"]), key="grandes_chances_B")  
-    st.session_state.data["grandes_chances_manquees_B"] = st.number_input("🌟 Grandes Chances Manquées Équipe B", min_value=0, value=int(st.session_state.data["grandes_chances_manquees_B"]), key="grandes_chances_manquees_B")  
-    st.session_state.data["passes_reussies_B"] = st.number_input("✅ Passes Réussies Équipe B", min_value=0, value=int(st.session_state.data["passes_reussies_B"]), key="passes_reussies_B")  
+            # Entraînement du modèle  
+            model = LogisticRegression()  
+            model.fit(X_train, y_train)  
 
-with col2:  
-    st.session_state.data["passes_longues_B"] = st.number_input("Passes Longues Précises Équipe B", min_value=0, value=int(st.session_state.data["passes_longues_B"]), key="passes_longues_B")  
-    st.session_state.data["centres_reussis_B"] = st.number_input("Centres Réussis Équipe B", min_value=0, value=int(st.session_state.data["centres_reussis_B"]), key="centres_reussis_B")  
-    st.session_state.data["penalties_obtenues_B"] = st.number_input("Pénalités Obtenues Équipe B", min_value=0, value=int(st.session_state.data["penalties_obtenues_B"]), key="penalties_obtenues_B")  
-    st.session_state.data["balles_surface_B"] = st.number_input("Balles Touchées dans la Surface Équipe B", min_value=0, value=int(st.session_state.data["balles_surface_B"]), key="balles_surface_B")  
-    st.session_state.data["corners_B"] = st.number_input("⚽ Corners Équipe B", min_value=0, value=int(st.session_state.data["corners_B"]), key="corners_B")  
+            # Prédiction  
+            prediction = model.predict(X_test)  
 
-# --- Critères de Défense Équipe B ---  
-st.subheader("🛡️ Critères de Défense Équipe B")  
-col1, col2 = st.columns(2)  
+            # Évaluation du modèle  
+            accuracy = accuracy_score(y_test, prediction)  
+            cm = confusion_matrix(y_test, prediction)  
+            report = classification_report(y_test, prediction)  
 
-with col1:  
-    st.session_state.data["expected_concedes_B"] = st.number_input("Expected Buts Concédés Équipe B", min_value=0.0, value=float(st.session_state.data["expected_concedes_B"]), key="expected_concedes_B")  
-    st.session_state.data["interceptions_B"] = st.number_input("Interceptions Équipe B", min_value=0, value=int(st.session_state.data["interceptions_B"]), key="interceptions_B")  
-    st.session_state.data["tacles_reussis_B"] = st.number_input("Tacles Réussis Équipe B", min_value=0, value=int(st.session_state.data["tacles_reussis_B"]), key="tacles_reussis_B")  
-    st.session_state.data["degagements_B"] = st.number_input("Dégagements Équipe B", min_value=0, value=int(st.session_state.data["degagements_B"]), key="degagements_B")  
+            st.subheader("Résultats de la Régression Logistique")  
+            st.write(f"Précision : {accuracy:.2f}")  
+            st.write("Matrice de Confusion :")  
+            st.write(cm)  
+            st.write("Rapport de Classification :")  
+            st.write(report)  
 
-with col2:  
-    st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0, value=int(st.session_state.data["penalties_concedes_B"]), key="penalties_concedes_B")  
-    st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0, value=int(st.session_state.data["arrets_B"]), key="arrets_B")  
+            # Prédiction du match actuel  
+            current_match_features = np.array([[st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
+                                               st.session_state.data["possession_moyenne_A"], st.session_state.data["expected_but_A"],  
+                                               st.session_state.data["score_rating_B"], st.session_state.data["buts_par_match_B"], st.session_state.data["buts_concedes_par_match_B"],  
+                                               st.session_state.data["possession_moyenne_B"], st.session_state.data["expected_but_B"]]])  
 
-# --- Prédictions ---  
-if st.button("Prédire le Résultat du Match"):  
-    # Méthode de Poisson  
-    avg_goals_A = st.session_state.data["expected_but_A"]  
-    avg_goals_B = st.session_state.data["expected_but_B"]
-        # Calcul des probabilités de marquer 0 à 5 buts  
-    goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
-    goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
+            current_prediction = model.predict(current_match_features)  
+            if current_prediction[0] == 1:  
+                st.success("Prédiction : L'Équipe A gagne !")  
+            else:  
+                st.success("Prédiction : L'Équipe B gagne !")  
 
-    # Calcul des résultats possibles  
-    results = pd.DataFrame(np.zeros((6, 6)), columns=[f"Buts Équipe B: {i}" for i in range(6)], index=[f"Buts Équipe A: {i}" for i in range(6)])  
-    for i in range(6):  
-        for j in range(6):  
-            results.iloc[i, j] = goals_A[i] * goals_B[j]  
+        except Exception as e:  
+            st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
 
-    # Affichage des résultats de la méthode de Poisson  
-    st.subheader("📊 Résultats de la Méthode de Poisson")  
-    st.write(results)  
-
-    # Graphique des résultats de la méthode de Poisson  
-    plt.figure(figsize=(10, 6))  
-    plt.imshow(results, cmap='Blues', interpolation='nearest')  
-    plt.colorbar(label='Probabilité')  
-    plt.xticks(ticks=np.arange(6), labels=[f"Buts Équipe B: {i}" for i in range(6)])  
-    plt.yticks(ticks=np.arange(6), labels=[f"Buts Équipe A: {i}" for i in range(6)])  
-    plt.title("Probabilités de Résultats (Méthode de Poisson)")  
-    st.pyplot(plt)  
-
-    # Méthode de Régression Logistique  
-    # Préparation des données pour la régression logistique  
-    X = np.array([[st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
-                   st.session_state.data["possession_moyenne_A"], st.session_state.data["expected_but_A"],  
-                   st.session_state.data["score_rating_B"], st.session_state.data["buts_par_match_B"], st.session_state.data["buts_concedes_par_match_B"],  
-                   st.session_state.data["possession_moyenne_B"], st.session_state.data["expected_but_B"]]])  
-
-    # Simuler des résultats pour l'entraînement (données fictives)  
-    y = np.array([1, 0, 1, 0, 1])  # 1 pour victoire Équipe A, 0 pour victoire Équipe B (données fictives)  
-
-    # Entraînement du modèle  
-    model = LogisticRegression()  
-    model.fit(X, y)  
-
-# --- Prédictions ---  
-if st.button("Prédire le Résultat du Match"):  
-    # Méthode de Poisson  
-    avg_goals_A = st.session_state.data["expected_but_A"]  
-    avg_goals_B = st.session_state.data["expected_but_B"]  
-
-    # Calcul des probabilités de marquer 0 à 5 buts  
-    goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
-    goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
-
-    # Calcul des résultats possibles  
-    results = pd.DataFrame(np.zeros((6, 6)), columns=[f"Buts Équipe B: {i}" for i in range(6)], index=[f"Buts Équipe A: {i}" for i in range(6)])  
-    for i in range(6):  
-        for j in range(6):  
-            results.iloc[i, j] = goals_A[i] * goals_B[j]  
-
-    # Affichage des résultats de la méthode de Poisson  
-    st.subheader("📊 Résultats de la Méthode de Poisson")  
-    st.write(results)  
-
-    # Graphique des résultats de la méthode de Poisson  
-    plt.figure(figsize=(10, 6))  
-    plt.imshow(results, cmap='Blues', interpolation='nearest')  
-    plt.colorbar(label='Probabilité')  
-    plt.xticks(ticks=np.arange(6), labels=[f"Buts Équipe B: {i}" for i in range(6)])  
-    plt.yticks(ticks=np.arange(6), labels=[f"Buts Équipe A: {i}" for i in range(6)])  
-    plt.title("Probabilités de Résultats (Méthode de Poisson)")  
-    st.pyplot(plt)  
-
-    # Méthode de Régression Logistique  
-    # Création d'un jeu de données cohérent  
-    # X : Matrice des caractéristiques (5 échantillons, 10 caractéristiques)  
-    X = np.array([  
-        [70.0, 1.5, 1.0, 55.0, 1.8,  # Équipe A  
-         65.0, 1.0, 1.5, 45.0, 1.2],  # Équipe B  
-        [75.0, 2.0, 0.8, 60.0, 2.1,  
-         60.0, 0.8, 1.2, 40.0, 0.9],  
-        [68.0, 1.2, 1.1, 58.0, 1.7,  
-         67.0, 1.1, 1.4, 42.0, 1.3],  
-        [72.0, 1.6, 0.9, 57.0, 1.9,  
-         63.0, 0.9, 1.3, 41.0, 1.1],  
-        [69.0, 1.4, 1.0, 56.0, 1.8,  
-         66.0, 1.0, 1.4, 43.0, 1.2]  
-    ])  
-
-    # y : Vecteur cible (résultat du match)  
-    y = np.array([1, 0, 1, 0, 1])  # 1 pour victoire Équipe A, 0 pour victoire Équipe B  
-
-    # Entraînement du modèle  
-    model = LogisticRegression()  
-    model.fit(X, y)  
-
-    # Prédiction  
-    prediction = model.predict(X)  
-    if prediction[0] == 1:  
-        st.success("Prédiction : Équipe A gagne !")  
-    else:  
-        st.success("Prédiction : Équipe B gagne !")  
-
-    # Affichage des coefficients du modèle  
-    st.subheader("📊 Coefficients de la Régression Logistique")  
-    coefficients = pd.DataFrame(model.coef_, columns=["Score Rating A", "Buts par Match A", "Buts Concédés A", "Possession A", "Expected Buts A",  
-                                                      "Score Rating B", "Buts par Match B", "Buts Concédés B", "Possession B", "Expected Buts B"])  
-    st.write(coefficients)  
-
-    # Graphique des coefficients  
-    plt.figure(figsize=(10, 6))  
-    plt.barh(coefficients.columns, coefficients.values.flatten())  
-    plt.xlabel("Coefficient")  
-    plt.title("Coefficients de la Régression Logistique")  
-    st.pyplot(plt)  
-
-# --- Fin de l'application ---  
-st.write("Merci d'utiliser l'application de prédiction de résultats de football !")
+# Pied de page  
+st.footer("Application de Prédiction de Matchs de Football - Version 1.0")
