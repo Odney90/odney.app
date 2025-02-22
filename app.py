@@ -314,4 +314,7 @@ with tab4:
 
     st.subheader("Calculateur de Paris Combiné")  
     cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
-    cote_equipe_2 = st.number_input("Cote Équipe
+    cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
+    cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
+    cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
+    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")
