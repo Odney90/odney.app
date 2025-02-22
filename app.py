@@ -216,9 +216,10 @@ with tab3:
             st.subheader("📈 Résultats de la Régression Logistique")  
             st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
             st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
+            
 # Random Forest  
 try:  
-    # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
+    # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques entiers et flottantes)  
     X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))]])  
 
     # Vérification que toutes les valeurs sont numériques  
