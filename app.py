@@ -1,34 +1,21 @@
 import streamlit as st  
-import numpy as np  
 import pandas as pd  
+import numpy as np  
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
+from docx import Document  
 import matplotlib.pyplot as plt  
-import io  
-import openpyxl  # Module nécessaire pour exporter en Excel  
 
 # Configuration de la page  
-st.set_page_config(page_title="Prédictions Football", page_icon="⚽")  
+st.set_page_config(page_title="Prédictions de Match", layout="wide")  
 
-# Fonction pour vérifier et convertir en float  
+# Fonction pour convertir les valeurs en float de manière sécurisée  
 def safe_float(value):  
     try:  
         return float(value)  
     except (ValueError, TypeError):  
         return 0.0  
-
-# Fonction pour quantifier la forme récente  
-def quantifier_forme_recente(forme_recente):  
-    score = 0  
-    for resultat in forme_recente:  
-        if resultat == "V":  
-            score += 3  # Victoire = 3 points  
-        elif resultat == "N":  
-            score += 1  # Nul = 1 point  
-        elif resultat == "D":  
-            score += 0  # Défaite = 0 point  
-    return score  
 
 # Initialisation des données dans st.session_state  
 if "data" not in st.session_state:  
@@ -106,293 +93,262 @@ if "data" not in st.session_state:
         "bankroll": 1000.0,  
     }  
 
-# Création des onglets  
-tab1, tab2, tab3, tab4, tab5 = st.tabs(  
-    ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"]  
-)  
+# Menu de Navigation  
+st.sidebar.title("Navigation")  
+option = st.sidebar.radio("Choisissez une option", ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"])  
 
-# Onglet 1 : Statistiques  
-with tab1:  
-    st.header("📊 Statistiques des Équipes")  
-    col_a, col_b = st.columns(2)  
+# 📊 Statistiques  
+if option == "📊 Statistiques":  
+    st.title("📊 Statistiques des Matchs")  
+    st.write("Analyse des statistiques des équipes et des matchs.")  
 
-    # Statistiques de l'Équipe A  
-    with col_a:  
-        st.subheader("Équipe A")  
-        for key in st.session_state.data:  
-            if key.endswith("_A"):  
-                st.session_state.data[key] = st.number_input(  
-                    key.replace("_", " ").title(),  
-                    value=safe_float(st.session_state.data[key]),  
-                    min_value=-1e6,  
-                    max_value=1e6,  
-                )  
+    # Exemple de graphique  
+    st.subheader("Graphique des Performances")  
+    fig, ax = plt.subplots(figsize=(6, 4))  
+    ax.bar(["Équipe A", "Équipe B"], [3, 5])  
+    ax.set_ylabel("Nombre de Victoires")  
+    ax.set_title("Performances des Équipes")  
+    st.pyplot(fig)  
 
-    # Statistiques de l'Équipe B  
-    with col_b:  
-        st.subheader("Équipe B")  
-        for key in st.session_state.data:  
-            if key.endswith("_B"):  
-                st.session_state.data[key] = st.number_input(  
-                    key.replace("_", " ").title(),  
-                    value=safe_float(st.session_state.data[key]),  
-                    min_value=-1e6,  
-                    max_value=1e6,  
-                )  
+# 🌦️ Conditions et Motivation  
+elif option == "🌦️ Conditions et Motivation":  
+    st.title("🌦️ Conditions et Motivation")  
+    st.write("Analyse des conditions météorologiques et de la motivation des équipes.")  
 
-# Onglet 2 : Conditions et Motivation  
-with tab2:  
-    st.header("🌦️ Conditions du Match et Motivation")  
-    st.session_state.data["conditions_match"] = st.text_input(  
-        "🌧️ Conditions du Match (ex : pluie, terrain sec)",  
-        value=st.session_state.data["conditions_match"],  
-    )  
-    st.session_state.data["face_a_face"] = st.text_area(  
-        "📅 Historique des Face-à-Face (ex : 3 victoires A, 2 nuls, 1 victoire B)",  
-        value=st.session_state.data["face_a_face"],  
-    )  
+    # Formulaire de saisie  
+    with st.form("conditions_form"):  
+        col1, col2 = st.columns(2)  
+        with col1:  
+            st.selectbox("Conditions Météo Équipe A", ["Ensoleillé", "Pluvieux", "Nuageux"], key="meteo_A")  
+            st.slider("Motivation Équipe A (1-10)", 1, 10, key="motivation_A")  
+        with col2:  
+            st.selectbox("Conditions Météo Équipe B", ["Ensoleillé", "Pluvieux", "Nuageux"], key="meteo_B")  
+            st.slider("Motivation Équipe B (1-10)", 1, 10, key="motivation_B")  
+        if st.form_submit_button("Analyser"):  
+            st.success("Analyse en cours...")  
 
-    st.subheader("Forme Récente (5 derniers matchs)")  
-    col_a, col_b = st.columns(2)  
+# 🔮 Prédictions  
+elif option == "🔮 Prédictions":  
+    st.title("🔮 Prédictions de Match")  
 
-    # Vérification et initialisation de la forme récente  
-    if "forme_recente_A" not in st.session_state.data or not isinstance(st.session_state.data["forme_recente_A"], list):  
-        st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
+    # Formulaire de saisie des données  
+    with st.form("formulaire_simple"):  
+        col1, col2 = st.columns(2)  
+        with col1:  
+            st.text_input("Nom de l'Équipe A", key="nom_A")  
+            st.number_input("Score de Rating Équipe A", key="score_rating_A")  
+            st.number_input("Buts par Match Équipe A", key="buts_par_match_A")  
+            st.number_input("Possession Moyenne Équipe A", key="possession_moyenne_A")  
+            st.number_input("Motivation Équipe A", key="motivation_A")  
+            st.number_input("Tirs Cadrés Équipe A", key="tirs_cadres_A")  
+            st.number_input("Interceptions Équipe A", key="interceptions_A")  
+        with col2:  
+            st.text_input("Nom de l'Équipe B", key="nom_B")  
+            st.number_input("Score de Rating Équipe B", key="score_rating_B")  
+            st.number_input("Buts par Match Équipe B", key="buts_par_match_B")  
+            st.number_input("Possession Moyenne Équipe B", key="possession_moyenne_B")  
+            st.number_input("Motivation Équipe B", key="motivation_B")  
+            st.number_input("Tirs Cadrés Équipe B", key="tirs_cadres_B")  
+            st.number_input("Interceptions Équipe B", key="interceptions_B")  
 
-    if "forme_recente_B" not in st.session_state.data or not isinstance(st.session_state.data["forme_recente_B"], list):  
-        st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
+        if st.form_submit_button("Prédire le Résultat"):  
+            st.success("Prédiction en cours...")  
 
-    # Vérification de la longueur des listes  
-    if len(st.session_state.data["forme_recente_A"]) != 5:  
-        st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
-
-    if len(st.session_state.data["forme_recente_B"]) != 5:  
-        st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
-
-    with col_a:  
-        st.write("Équipe A")  
-        for i in range(5):  
-            current_value = st.session_state.data["forme_recente_A"][i]  
-            if current_value not in ["V", "N", "D"]:  
-                current_value = "V"  # Valeur par défaut  
-            st.session_state.data["forme_recente_A"][i] = st.select_slider(  
-                f"Match {i+1}", options=["V", "N", "D"], value=current_value, key=f"match_A_{i}"  
-            )  
-    
-    with col_b:  
-        st.write("Équipe B")  
-        for i in range(5):  
-            current_value = st.session_state.data["forme_recente_B"][i]  
-            if current_value not in ["V", "N", "D"]:  
-                current_value = "V"  # Valeur par défaut  
-            st.session_state.data["forme_recente_B"][i] = st.select_slider(  
-                f"Match {i+1}", options=["V", "N", "D"], value=current_value, key=f"match_B_{i}"  
-            )  
-
-    # Quantification de la forme récente  
-    score_forme_A = quantifier_forme_recente(st.session_state.data["forme_recente_A"])  
-    score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
-    st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
-    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
-    
-# Onglet 3 : Prédictions  
-with tab3:  
-    st.header("🔮 Prédictions")  
-    if st.button("Prédire le résultat"):  
-        try:  
-            # Prédiction des Buts avec Poisson  
-            avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
-            avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"])  
-            if avg_goals_A <= 0 or avg_goals_B <= 0:  
-                raise ValueError("Les moyennes de buts doivent être positives.")  
+    # Prédiction des Buts avec Poisson  
+    with st.expander("📊 Prédiction des Scores avec la Loi de Poisson"):  
+        avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
+        avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"])  
+        if avg_goals_A <= 0 or avg_goals_B <= 0:  
+            st.error("Les moyennes de buts doivent être positives.")  
+        else:  
             prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
             prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
             prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
-
-            # Explication Poisson  
-            st.subheader("📊 Prédiction des Scores avec la Loi de Poisson")  
-            st.write(  
-                "La loi de Poisson est utilisée pour prédire la probabilité des scores en fonction des moyennes de buts des équipes. "  
-                "Elle est particulièrement utile pour estimer les scores les plus probables."  
-            )  
             st.write(f"📉 **Probabilité de 0-0** : {prob_0_0:.2%}")  
             st.write(f"📉 **Probabilité de 1-1** : {prob_1_1:.2%}")  
             st.write(f"📉 **Probabilité de 2-2** : {prob_2_2:.2%}")  
 
-            # Régression Logistique avec critères supplémentaires  
-            X_lr = np.array([  
-                [  
-                    safe_float(st.session_state.data["score_rating_A"]),  
-                    safe_float(st.session_state.data["score_rating_B"]),  
-                    safe_float(st.session_state.data["possession_moyenne_A"]),  
-                    safe_float(st.session_state.data["possession_moyenne_B"]),  
-                    safe_float(st.session_state.data["motivation_A"]),  
-                    safe_float(st.session_state.data["motivation_B"]),  
-                    safe_float(st.session_state.data["tirs_cadres_A"]),  
-                    safe_float(st.session_state.data["tirs_cadres_B"]),  
-                    safe_float(st.session_state.data["interceptions_A"]),  
-                    safe_float(st.session_state.data["interceptions_B"]),  
-                    score_forme_A,  # Intégration de la forme récente  
-                    score_forme_B,  # Intégration de la forme récente  
-                ],  
-                [  
-                    safe_float(st.session_state.data["score_rating_B"]),  
-                    safe_float(st.session_state.data["score_rating_A"]),  
-                    safe_float(st.session_state.data["possession_moyenne_B"]),  
-                    safe_float(st.session_state.data["possession_moyenne_A"]),  
-                    safe_float(st.session_state.data["motivation_B"]),  
-                    safe_float(st.session_state.data["motivation_A"]),  
-                    safe_float(st.session_state.data["tirs_cadres_B"]),  
-                    safe_float(st.session_state.data["tirs_cadres_A"]),  
-                    safe_float(st.session_state.data["interceptions_B"]),  
-                    safe_float(st.session_state.data["interceptions_A"]),  
-                    score_forme_B,  # Intégration de la forme récente  
-                    score_forme_A,  # Intégration de la forme récente  
-                ]  
-            ])  
-            y_lr = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
-            model_lr = LogisticRegression()  
-            model_lr.fit(X_lr, y_lr)  
-            prediction_lr = model_lr.predict(X_lr)  
+    # Régression Logistique  
+    with st.expander("📈 Prédiction avec Régression Logistique"):  
+        X_lr = np.array([  
+            [  
+                safe_float(st.session_state.data["score_rating_A"]),  
+                safe_float(st.session_state.data["score_rating_B"]),  
+                safe_float(st.session_state.data["possession_moyenne_A"]),  
+                safe_float(st.session_state.data["possession_moyenne_B"]),  
+                safe_float(st.session_state.data["motivation_A"]),  
+                safe_float(st.session_state.data["motivation_B"]),  
+                safe_float(st.session_state.data["tirs_cadres_A"]),  
+                safe_float(st.session_state.data["tirs_cadres_B"]),  
+                safe_float(st.session_state.data["interceptions_A"]),  
+                safe_float(st.session_state.data["interceptions_B"]),  
+            ],  
+            [  
+                safe_float(st.session_state.data["score_rating_B"]),  
+                safe_float(st.session_state.data["score_rating_A"]),  
+                safe_float(st.session_state.data["possession_moyenne_B"]),  
+                safe_float(st.session_state.data["possession_moyenne_A"]),  
+                safe_float(st.session_state.data["motivation_B"]),  
+                safe_float(st.session_state.data["motivation_A"]),  
+                safe_float(st.session_state.data["tirs_cadres_B"]),  
+                safe_float(st.session_state.data["tirs_cadres_A"]),  
+                safe_float(st.session_state.data["interceptions_B"]),  
+                safe_float(st.session_state.data["interceptions_A"]),  
+            ]  
+        ])  
+        y_lr = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
+        model_lr = LogisticRegression()  
+        model_lr.fit(X_lr, y_lr)  
+        prediction_lr = model_lr.predict(X_lr)  
+        st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
 
-            # Explication Régression Logistique  
-            st.subheader("📈 Prédiction avec Régression Logistique")  
-            st.write(  
-                "La régression logistique est un modèle de classification qui prédit la probabilité de victoire d'une équipe "  
-                "en fonction de plusieurs critères, tels que le score de rating, la possession, la motivation, et la forme récente."  
+    # Random Forest  
+    with st.expander("🌲 Prédiction avec Random Forest"):  
+        X_rf = np.array([  
+            [  
+                safe_float(st.session_state.data[key])  
+                for key in st.session_state.data  
+                if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+                and not key.startswith("cote_") and not key.startswith("bankroll")  
+            ],  
+            [  
+                safe_float(st.session_state.data[key])  
+                for key in st.session_state.data  
+                if (key.endswith("_B") or key.endswith("_A")) and isinstance(st.session_state.data[key], (int, float))  
+                and not key.startswith("cote_") and not key.startswith("bankroll")  
+            ]  
+        ])  
+        y_rf = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
+        model_rf = RandomForestClassifier()  
+        model_rf.fit(X_rf, y_rf)  
+        prediction_rf = model_rf.predict(X_rf)  
+        st.write(f"📊 **Résultat** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+
+    # Prédiction des Paris Double Chance  
+    with st.expander("🎰 Prédiction des Paris Double Chance"):  
+        prob_victoire_A = prediction_lr[0]  # Probabilité de victoire de l'Équipe A  
+        prob_victoire_B = 1 - prediction_lr[0]  # Probabilité de victoire de l'Équipe B  
+        prob_nul = prob_1_1  # Probabilité de match nul (basée sur Poisson)  
+
+        # Probabilités Double Chance  
+        prob_1X = prob_victoire_A + prob_nul  
+        prob_12 = prob_victoire_A + prob_victoire_B  
+        prob_X2 = prob_nul + prob_victoire_B  
+
+        st.write(f"📊 **Probabilité 1X (Équipe A gagne ou match nul)** : {prob_1X:.2%}")  
+        st.write(f"📊 **Probabilité 12 (Équipe A gagne ou Équipe B gagne)** : {prob_12:.2%}")  
+        st.write(f"📊 **Probabilité X2 (Match nul ou Équipe B gagne)** : {prob_X2:.2%}")  
+
+        # Graphique des probabilités  
+        fig, ax = plt.subplots(figsize=(6, 4))  
+        ax.bar(["1X", "12", "X2"], [prob_1X, prob_12, prob_X2])  
+        ax.set_ylabel("Probabilité")  
+        ax.set_title("Probabilités des Paris Double Chance")  
+        st.pyplot(fig)  
+
+    # Téléchargement des données  
+    st.subheader("📥 Téléchargement des Données")  
+    data = {  
+        "Données Équipe A": {  
+            key.replace("_A", ""): [st.session_state.data[key]]  
+            for key in st.session_state.data  
+            if key.endswith("_A") and isinstance(st.session_state.data[key], (int, float, str))  
+            and not key.startswith("cote_") and not key.startswith("bankroll")  
+        },  
+        "Données Équipe B": {  
+            key.replace("_B", ""): [st.session_state.data[key]]  
+            for key in st.session_state.data  
+            if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float, str))  
+            and not key.startswith("cote_") and not key.startswith("bankroll")  
+        },  
+    }  
+
+    # Conversion en DataFrame et téléchargement  
+    excel_data = pd.DataFrame(data["Données Équipe A"]).to_csv(index=False).encode("utf-8")  
+    doc = Document()  
+    doc.add_heading("Données des Équipes", level=1)  
+    doc.add_heading("Données Équipe A", level=2)  
+    for key, value in data["Données Équipe A"].items():  
+        doc.add_paragraph(f"{key}: {value[0]}")  
+    doc.add_heading("Données Équipe B", level=2)  
+    for key, value in data["Données Équipe B"].items():  
+        doc.add_paragraph(f"{key}: {value[0]}")  
+    doc_filename = "donnees_equipes.docx"  
+    doc.save(doc_filename)  
+
+    col1, col2 = st.columns(2)  
+    with col1:  
+        st.download_button(  
+            label="📥 Télécharger en Excel",  
+            data=excel_data,  
+            file_name="donnees_equipes.xlsx",  
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
+        )  
+    with col2:  
+        with open(doc_filename, "rb") as f:  
+            st.download_button(  
+                label="📥 Télécharger en DOC",  
+                data=f,  
+                file_name=doc_filename,  
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",  
             )  
-            st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
 
-            # Random Forest (exclut les données des onglets 4 et 5)  
-            X_rf = np.array([  
-                [  
-                    safe_float(st.session_state.data[key])  
-                    for key in st.session_state.data  
-                    if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                ],  
-                [  
-                    safe_float(st.session_state.data[key])  
-                    for key in st.session_state.data  
-                    if (key.endswith("_B") or key.endswith("_A")) and isinstance(st.session_state.data[key], (int, float))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                ]  
-            ])  
-            y_rf = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
-            model_rf = RandomForestClassifier()  
-            model_rf.fit(X_rf, y_rf)  
-            prediction_rf = model_rf.predict(X_rf)  
+# 🎰 Cotes et Value Bet  
+elif option == "🎰 Cotes et Value Bet":  
+    st.title("🎰 Cotes et Value Bet")  
+    st.write("Analyse des cotes et identification des value bets.")  
 
-            # Explication Random Forest  
-            st.subheader("🌲 Prédiction avec Random Forest")  
-            st.write(  
-                "Le Random Forest est un modèle d'apprentissage automatique qui utilise plusieurs arbres de décision pour prédire le résultat. "  
-                "Il est robuste et prend en compte de nombreuses variables pour améliorer la précision."  
-            )  
-            st.write(f"📊 **Résultat** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+    # Formulaire de saisie des cotes  
+    with st.form("cotes_form"):  
+        col1, col2 = st.columns(2)  
+        with col1:  
+            st.number_input("Cote Équipe A", key="cote_A")  
+        with col2:  
+            st.number_input("Cote Équipe B", key="cote_B")  
+        if st.form_submit_button("Analyser"):  
+            st.success("Analyse en cours...")  
 
-            # Prédiction des Paris Double Chance  
-            st.subheader("🎰 Prédiction des Paris Double Chance")  
-            st.write(  
-                "Les paris Double Chance permettent de couvrir deux des trois résultats possibles : "  
-                "1X (Équipe A gagne ou match nul), 12 (Équipe A gagne ou Équipe B gagne), X2 (Match nul ou Équipe B gagne)."  
-            )  
+# 💰 Système de Mise  
+elif option == "💰 Système de Mise":  
+    st.title("💰 Système de Mise")  
+    st.write("Gestion des mises et optimisation des gains.")  
 
-            # Calcul des probabilités Double Chance  
-            prob_victoire_A = prediction_lr[0]  # Probabilité de victoire de l'Équipe A  
-            prob_victoire_B = 1 - prediction_lr[0]  # Probabilité de victoire de l'Équipe B  
-            prob_nul = prob_1_1  # Probabilité de match nul (basée sur Poisson)  
+        # Formulaire de saisie des mises  
+    with st.form("mises_form"):  
+        col1, col2 = st.columns(2)  
+        with col1:  
+            st.number_input("Mise sur Équipe A", key="mise_A")  
+        with col2:  
+            st.number_input("Mise sur Équipe B", key="mise_B")  
+        if st.form_submit_button("Calculer"):  
+            st.success("Calcul en cours...")  
 
-            # Probabilités Double Chance  
-            prob_1X = prob_victoire_A + prob_nul  
-            prob_12 = prob_victoire_A + prob_victoire_B  
-            prob_X2 = prob_nul + prob_victoire_B  
+    # Calcul des gains potentiels  
+    with st.expander("📈 Gains Potentiels"):  
+        mise_A = safe_float(st.session_state.data["mise_A"])  
+        mise_B = safe_float(st.session_state.data["mise_B"])  
+        cote_A = safe_float(st.session_state.data["cote_victoire_A"])  
+        cote_B = safe_float(st.session_state.data["cote_victoire_B"])  
 
-            st.write(f"📊 **Probabilité 1X (Équipe A gagne ou match nul)** : {prob_1X:.2%}")  
-            st.write(f"📊 **Probabilité 12 (Équipe A gagne ou Équipe B gagne)** : {prob_12:.2%}")  
-            st.write(f"📊 **Probabilité X2 (Match nul ou Équipe B gagne)** : {prob_X2:.2%}")  
+        if mise_A > 0 or mise_B > 0:  
+            gain_A = mise_A * cote_A if mise_A > 0 else 0  
+            gain_B = mise_B * cote_B if mise_B > 0 else 0  
+            st.write(f"💰 **Gain potentiel sur Équipe A** : {gain_A:.2f} €")  
+            st.write(f"💰 **Gain potentiel sur Équipe B** : {gain_B:.2f} €")  
+        else:  
+            st.warning("Veuillez entrer une mise pour calculer les gains.")  
 
-            # Graphique des probabilités  
-            st.subheader("📉 Graphique des Probabilités")  
-            fig, ax = plt.subplots()  
-            ax.bar(["1X", "12", "X2"], [prob_1X, prob_12, prob_X2])  
-            ax.set_ylabel("Probabilité")  
-            ax.set_title("Probabilités des Paris Double Chance")  
-            st.pyplot(fig)  
+    # Gestion de la bankroll  
+    with st.expander("💼 Gestion de la Bankroll"):  
+        bankroll = safe_float(st.session_state.data["bankroll"])  
+        st.write(f"💼 **Bankroll actuelle** : {bankroll:.2f} €")  
 
-            # Téléchargement des données organisées par équipe  
-            st.subheader("📥 Téléchargement des Données des Équipes")  
-            data = {  
-                "Données Équipe A": {  
-                    key.replace("_A", ""): [st.session_state.data[key]]  
-                    for key in st.session_state.data  
-                    if key.endswith("_A") and isinstance(st.session_state.data[key], (int, float, str))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                },  
-                "Données Équipe B": {  
-                    key.replace("_B", ""): [st.session_state.data[key]]  
-                    for key in st.session_state.data  
-                    if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float, str))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                },  
-            }  
-
-            # Conversion en DataFrame et téléchargement  
-            with pd.ExcelWriter("donnees_equipes.xlsx") as writer:  
-                for sheet_name, sheet_data in data.items():  
-                    df = pd.DataFrame(sheet_data)  
-                    df.to_excel(writer, sheet_name=sheet_name, index=False)  
-
-            with open("donnees_equipes.xlsx", "rb") as f:  
-                st.download_button(  
-                    label="📥 Télécharger les données des équipes",  
-                    data=f,  
-                    file_name="donnees_equipes.xlsx",  
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
-                )  
-
-        except Exception as e:  
-            st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
-# Onglet 4 : Cotes et Value Bet  
-with tab4:  
-    st.header("🎰 Cotes et Value Bet")  
-    st.subheader("Convertisseur de Cotes Implicites")  
-    cote_victoire_A = st.number_input("Cote Victoire A", value=safe_float(st.session_state.data["cote_victoire_A"]))  
-    cote_nul = st.number_input("Cote Nul", value=safe_float(st.session_state.data["cote_nul"]))  
-    cote_victoire_B = st.number_input("Cote Victoire B", value=safe_float(st.session_state.data["cote_victoire_B"]))  
-
-    # Calcul de la marge bookmaker  
-    marge_bookmaker = (1 / cote_victoire_A) + (1 / cote_nul) + (1 / cote_victoire_B) - 1  
-    st.write(f"📉 **Marge Bookmaker** : {marge_bookmaker:.2%}")  
-
-    # Calcul des cotes réelles  
-    cote_reelle_victoire_A = cote_victoire_A / (1 + marge_bookmaker)  
-    cote_reelle_nul = cote_nul / (1 + marge_bookmaker)  
-    cote_reelle_victoire_B = cote_victoire_B / (1 + marge_bookmaker)  
-    st.write(f"📊 **Cote Réelle Victoire A** : {cote_reelle_victoire_A:.2f}")  
-    st.write(f"📊 **Cote Réelle Nul** : {cote_reelle_nul:.2f}")  
-    st.write(f"📊 **Cote Réelle Victoire B** : {cote_reelle_victoire_B:.2f}")  
-
-    st.subheader("Calculateur de Paris Combiné")  
-    cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
-    cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
-    cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
-    cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
-    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
-
-# Onglet 5 : Système de Mise  
-with tab5:  
-    st.header("💰 Système de Mise")  
-    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
-    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
-    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
-    cote = st.number_input("Cote", value=2.0)  
-
-    # Calcul de la mise selon Kelly  
-    mise_kelly = (probabilite_victoire * (cote - 1) - (1 - probabilite_victoire)) / (cote - 1)  
-    mise_kelly = max(0, mise_kelly)  # Éviter les valeurs négatives  
-    mise_kelly *= niveau_kelly / 5  # Ajuster selon le niveau de Kelly  
-    mise_finale = bankroll * mise_kelly  
-
-    st.write(f"📊 **Mise Kelly** : {mise_kelly:.2%}")  
-    st.write(f"💰 **Mise Finale** : {mise_finale:.2f} €")
+        # Mise à jour de la bankroll  
+        mise_totale = mise_A + mise_B  
+        if mise_totale > 0:  
+            bankroll_restante = bankroll - mise_totale  
+            st.write(f"💼 **Bankroll restante après mise** : {bankroll_restante:.2f} €")  
+            if bankroll_restante < 0:  
+                st.error("⚠️ Attention : Votre bankroll est insuffisante pour cette mise.")  
+            else:  
+                st.success("✅ Votre bankroll est suffisante pour cette mise.")
