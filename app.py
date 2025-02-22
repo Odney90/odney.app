@@ -45,8 +45,7 @@ st.markdown(
     </style>  
     """,  
     unsafe_allow_html=True  
-)  
-
+)
 # --- Initialisation de session_state ---  
 def init_session_state():  
     default_values_A = {  
@@ -79,8 +78,7 @@ def init_session_state():
         if key not in st.session_state:  
             st.session_state[key] = value  
 
-init_session_state()  
-
+init_session_state()
 # --- Fonctions Utilitaires ---  
 def calculer_forme(historique):  
     """Calcule la forme récente d'une équipe sur les 5 derniers matchs."""  
@@ -112,9 +110,8 @@ def visualiser_forme_equipes(historique_A, historique_B):
     ax.set_ylabel('Résultat')  
     ax.set_title('Historique des Performances des Équipes (5 Derniers Matchs)')  
     ax.legend()  
-    st.pyplot(fig)  
-
-# --- Sidebar pour les paramètres des équipes ---  
+    st.pyplot(fig)
+    # --- Sidebar pour les paramètres des équipes ---  
 with st.sidebar:  
     st.header("⚙️ Paramètres des Équipes")  
 
@@ -146,9 +143,8 @@ with st.sidebar:
     # Historique général des victoires  
     st.subheader("🏆 Historique Général")  
     victoires_A = st.number_input("Nombre total de victoires de A", min_value=0, value=0, step=1)  
-    victoires_B = st.number_input("Nombre total de victoires de B", min_value=0, value=0, step=1)  
-
-# --- Critères pour l'équipe A ---  
+    victoires_B = st.number_input("Nombre total de victoires de B", min_value=0, value=0, step=1)
+    # --- Critères pour l'équipe A ---  
 st.header("🎯 Critères pour l'équipe A")  
 
 # Top Statistiques  
@@ -163,54 +159,6 @@ with col2:
     st.session_state["buts_concedes_totaux_A"] = st.number_input("🤕 Buts Concédés Totaux", min_value=0.0, value=st.session_state.get("buts_concedes_totaux_A", 30.0), key="buts_concedes_totaux_A")  
     st.session_state["possession_moyenne_A"] = st.number_input("Ballon Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=st.session_state.get("possession_moyenne_A", 55.0), key="possession_moyenne_A")  
 st.session_state["aucun_but_encaisse_A"] = st.number_input("🔒 Aucun But Encaissé", min_value=0, value=st.session_state.get("aucun_but_encaisse_A", 10), key="aucun_but_encaisse_A")  
-
-# Attaque  
-st.subheader("⚔️ Attaque")  
-col1, col2 = st.columns(2)  
-with col1:  
-    st.session_state["expected_but_A"] = st.number_input("⭐ Expected But (xG)", min_value=0.0, value=st.session_state.get("expected_but_A", 1.5), key="expected_but_A")  
-    st.session_state["tirs_cadres_A"] = st.number_input("🎯 Tirs Cadrés par Match", min_value=0.0, value=st.session_state.get("tirs_cadres_A", 10.0), key="tirs_cadres_A")  
-    st.session_state["grandes_chances_A"] = st.number_input("✨ Grandes Chances", min_value=0.0, value=st.session_state.get("grandes_chances_A", 5.0), key="grandes_chances_A")  
-with col2:  
-    st.session_state["grandes_chances_manquees_A"] = st.number_input("💨 Grandes Chances Manquées", min_value=0.0, value=st.session_state.get("grandes_chances_manquees_A", 2.0), key="grandes_chances_manquees_A")  
-    st.session_state["passes_reussies_A"] = st.number_input("✅ Passes Réussies par Match", min_value=0.0, value=st.session_state.get("passes_reussies_A", 300.0), key="passes_reussies_A")  
-    st.session_state["passes_longues_A"] = st.number_input("➡️ Passes Longues Précises par Match", min_value=0.0, value=st.session_state.get("passes_longues_A", 15.0), key="passes_longues_A")  
-col3, col4 = st.columns(2)  
-with col3:  
-    st.session_state["centres_reussis_A"] = st.number_input("↗️ Centres Réussis par Match", min_value=0.0, value=st.session_state.get("centres_reussis_A", 5.0), key="centres_reussis_A")  
-    st.session_state["penalties_obtenues_A"] = st.number_input("🎁 Pénalties Obtenues", min_value=0.0, value=st.session_state.get("penalties_obtenues_A", 1.0), key="penalties_obtenues_A")  
-with col4:  
-    st.session_state["balles_surface_A"] = st.number_input("⚽ Balles Touchées dans la Surface Adverse", min_value=0.0, value=st.session_state.get("balles_surface_A", 10.0), key="balles_surface_A")  
-    st.session_state["corners_A"] = st.number_input("Corner Nombre de corners", min_value=0.0, value=st.session_state.get("corners_A", 4.0), key="corners_A")  
-
-# Défense  
-st.subheader("🛡️ Défense")  
-col1, col2 = st.columns(2)  
-with col1:  
-    st.session_state["expected_concedes_A"] = st.number_input("⭐ xG Concédés", min_value=0.0, value=st.session_state.get("expected_concedes_A", 1.0), key="expected_concedes_A")  
-    st.session_state["interceptions_A"] = st.number_input("✋ Interceptions par Match", min_value=0.0, value=st.session_state.get("interceptions_A", 10.0), key="interceptions_A")  
-    st.session_state["tacles_reussis_A"] = st.number_input("Tacles Réussis par Match", min_value=0.0, value=st.session_state.get("tacles_reussis_A", 5.0), key="tacles_reussis_A")  
-with col2:  
-    st.session_state["degagements_A"] = st.number_input("Dégagements par Match", min_value=0.0, value=st.session_state.get("degagements_A", 8.0), key="degagements_A")  
-    st.session_state["penalties_concedes_A"] = st.number_input("🎁 Pénalties Concédés", min_value=0.0, value=st.session_state.get("penalties_concedes_A", 0.0), key="penalties_concedes_A")  
-    st.session_state["arrets_A"] = st.number_input("🛑 Arrêts par Match", min_value=0.0, value=st.session_state.get("arrets_A", 3.0), key="arrets_A")  
-
-# --- Critères pour l'équipe B ---  
-st.header("🎯 Critères pour l'équipe B")  
-
-# Top Statistiques  
-st.subheader("📊 Top Statistiques")  
-col1, col2 = st.columns(2)  
-with col1:  
-    st.session_state["score_rating_B"] = st.number_input("⭐ Score Rating", min_value=0.0, value=st.session_state.get("score_rating_B", 65.0), key="score_rating_B")  
-    st.session_state["buts_totaux_B"] = st.number_input("⚽ Buts Totaux", min_value=0.0, value=st.session_state.get("buts_totaux_B", 40.0), key="buts_totaux_B")  
-    st.session_state["buts_par_match_B"] = st.number_input("🥅 Buts par Match", min_value=0.0, value=st.session_state.get("buts_par_match_B", 1.0), key="buts_par_match_B")  
-with col2:  
-    st.session_state["buts_concedes_par_match_B"] = st.number_input("🚫 Buts Concédés par Match", min_value=0.0, value=st.session_state.get("buts_concedes_par_match_B", 1.5), key="buts_concedes_par_match_B")  
-    st.session_state["buts_concedes_totaux_B"] = st.number_input("🤕 Buts Concédés Totaux", min_value=0.0, value=st.session_state.get("buts_concedes_totaux_B", 35.0), key="buts_concedes_totaux_B")  
-    st.session_state["possession_moyenne_B"] = st.number_input("Ballon Possession Moyenne (%)", min_value=0.0, max_value=100.0, value=st.session_state.get("possession_moyenne_B", 45.0), key="possession_moyenne_B")  
-st.session_state["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé", min_value=0, value=st.session_state.get("aucun_but_encaisse_B", 8), key="aucun_but_encaisse_B")  
-
 
 # Attaque  
 st.subheader("⚔️ Attaque")  
@@ -262,7 +210,7 @@ st.session_state["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encai
 st.subheader("⚔️ Attaque")  
 col1, col2 = st.columns(2)  
 with col1:  
-       st.session_state["expected_but_B"] = st.number_input("⭐ Expected But (xG)", min_value=0.0, value=st.session_state.get("expected_but_B", 1.0), key="expected_but_B")  
+    st.session_state["expected_but_B"] = st.number_input("⭐ Expected But (xG)", min_value=0.0, value=st.session_state.get("expected_but_B", 1.0), key="expected_but_B")  
     st.session_state["tirs_cadres_B"] = st.number_input("🎯 Tirs Cadrés par Match", min_value=0.0, value=st.session_state.get("tirs_cadres_B", 8.0), key="tirs_cadres_B")  
     st.session_state["grandes_chances_B"] = st.number_input("✨ Grandes Chances", min_value=0.0, value=st.session_state.get("grandes_chances_B", 3.0), key="grandes_chances_B")  
 with col2:  
@@ -288,8 +236,7 @@ with col2:
     st.session_state["degagements_B"] = st.number_input("Dégagements par Match", min_value=0.0, value=st.session_state.get("degagements_B", 6.0), key="degagements_B")  
     st.session_state["penalties_concedes_B"] = st.number_input("🎁 Pénalties Concédés", min_value=0.0, value=st.session_state.get("penalties_concedes_B", 1.0), key="penalties_concedes_B")  
     st.session_state["arrets_B"] = st.number_input("🛑 Arrêts par Match", min_value=0.0, value=st.session_state.get("arrets_B", 2.0), key="arrets_B")
-    # --- Calcul et affichage des résultats ---  
+    # --- Exécution de la prédiction ---  
 if st.button("Prédire les Buts"):  
     buts_moyens_A, buts_moyens_B = prediction_buts_poisson(st.session_state["expected_but_A"], st.session_state["expected_but_B"])  
     afficher_resultats_poisson(buts_moyens_A, buts_moyens_B)
-    
