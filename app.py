@@ -16,6 +16,7 @@ from datetime import datetime
 def save_data(data, filename='data.pkl'):  
     with open(filename, 'wb') as f:  
         pickle.dump(data, f)  
+    return True  # Return success status  
 
 # Fonction pour charger les données sauvegardées  
 def load_saved_data(filename='data.pkl'):  
@@ -299,16 +300,14 @@ def save_all_data():
         'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
     }  
     
-    save_data(data)  
-    st.success("Données sauvegardées avec succès !", key="save_success")  
+    success = save_data(data)  
+    if success:  
+        st.success("Données sauvegardées avec succès !")  
+    return success  
 
 # Appel à la fonction de sauvegarde  
-save_all_data()  
-
-# Gestion des exceptions et fermeture  
-try:  
-    save_all_data()  
-except Exception as e:  
-    st.error(f"Erreur lors de la sauvegarde : {e}", key="save_error")  
-finally:  
-    save_all_data()
+if __name__ == "__main__":  
+    try:  
+        save_all_data()  
+    except Exception as e:  
+        st.error(f"Erreur lors de la sauvegarde : {e}")
