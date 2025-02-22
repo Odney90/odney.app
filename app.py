@@ -42,11 +42,41 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <h4 class="text-lg font-medium">Équipe A</h4>
-                        <div id="teamA-stats" class="space-y-2"></div>
+                        <div id="teamA-general" class="space-y-2"></div>
                     </div>
                     <div>
                         <h4 class="text-lg font-medium">Équipe B</h4>
-                        <div id="teamB-stats" class="space-y-2"></div>
+                        <div id="teamB-general" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques d'attaque -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-2">Statistiques d'attaque</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-lg font-medium">Équipe A</h4>
+                        <div id="teamA-attack" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium">Équipe B</h4>
+                        <div id="teamB-attack" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques de défense -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-2">Statistiques de défense</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-lg font-medium">Équipe A</h4>
+                        <div id="teamA-defense" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium">Équipe B</h4>
+                        <div id="teamB-defense" class="space-y-2"></div>
                     </div>
                 </div>
             </div>
@@ -84,8 +114,12 @@
         // Variables globales
         let teamAForm = [];
         let teamBForm = [];
-        let teamAStats = {};
-        let teamBStats = {};
+        let teamAGeneral = {};
+        let teamBGeneral = {};
+        let teamAAttack = {};
+        let teamBAttack = {};
+        let teamADefense = {};
+        let teamBDefense = {};
 
         // Afficher les onglets
         function showTab(tabName) {
@@ -125,39 +159,112 @@
         }
 
         // Générer les champs pour les statistiques générales
-        function generateStatsFields() {
-            const teamAStatsDiv = document.getElementById('teamA-stats');
-            const teamBStatsDiv = document.getElementById('teamB-stats');
-            teamAStatsDiv.innerHTML = '';
-            teamBStatsDiv.innerHTML = '';
+        function generateGeneralFields() {
+            const teamAGeneralDiv = document.getElementById('teamA-general');
+            const teamBGeneralDiv = document.getElementById('teamB-general');
+            teamAGeneralDiv.innerHTML = '';
+            teamBGeneralDiv.innerHTML = '';
 
             const stats = [
-                { label: 'Buts totaux', key: 'goals' },
                 { label: 'Possession moyenne (%)', key: 'possession' },
-                { label: 'Expected Goals (xG)', key: 'xg' },
-                { label: 'Tirs cadrés par match', key: 'shots' }
+                { label: 'Passes réussies par match', key: 'passes' },
+                { label: 'Tacles réussis par match', key: 'tacles' },
+                { label: 'Fautes par match', key: 'fautes' },
+                { label: 'Cartons jaunes', key: 'yellow_cards' },
+                { label: 'Cartons rouges', key: 'red_cards' }
             ];
 
             stats.forEach(stat => {
-                teamAStatsDiv.innerHTML += `
+                teamAGeneralDiv.innerHTML += `
                     <div>
                         <label>${stat.label} :</label>
-                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('A', '${stat.key}', this.value)">
+                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('general', 'A', '${stat.key}', this.value)">
                     </div>
                 `;
-                teamBStatsDiv.innerHTML += `
+                teamBGeneralDiv.innerHTML += `
                     <div>
                         <label>${stat.label} :</label>
-                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('B', '${stat.key}', this.value)">
+                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('general', 'B', '${stat.key}', this.value)">
                     </div>
                 `;
             });
         }
 
-        // Mettre à jour les statistiques générales
-        function updateStats(team, key, value) {
-            if (team === 'A') teamAStats[key] = parseFloat(value);
-            else teamBStats[key] = parseFloat(value);
+        // Générer les champs pour les statistiques d'attaque
+        function generateAttackFields() {
+            const teamAAttackDiv = document.getElementById('teamA-attack');
+            const teamBAttackDiv = document.getElementById('teamB-attack');
+            teamAAttackDiv.innerHTML = '';
+            teamBAttackDiv.innerHTML = '';
+
+            const stats = [
+                { label: 'Buts totaux', key: 'goals' },
+                { label: 'Expected Goals (xG)', key: 'xg' },
+                { label: 'Tirs cadrés par match', key: 'shots' },
+                { label: 'Corners par match', key: 'corners' },
+                { label: 'Touches dans la surface adverse', key: 'touches' },
+                { label: 'Pénalités obtenues', key: 'penalties' }
+            ];
+
+            stats.forEach(stat => {
+                teamAAttackDiv.innerHTML += `
+                    <div>
+                        <label>${stat.label} :</label>
+                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('attack', 'A', '${stat.key}', this.value)">
+                    </div>
+                `;
+                teamBAttackDiv.innerHTML += `
+                    <div>
+                        <label>${stat.label} :</label>
+                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('attack', 'B', '${stat.key}', this.value)">
+                    </div>
+                `;
+            });
+        }
+
+        // Générer les champs pour les statistiques de défense
+        function generateDefenseFields() {
+            const teamADefenseDiv = document.getElementById('teamA-defense');
+            const teamBDefenseDiv = document.getElementById('teamB-defense');
+            teamADefenseDiv.innerHTML = '';
+            teamBDefenseDiv.innerHTML = '';
+
+            const stats = [
+                { label: 'Expected Goals concédés (xG)', key: 'xg_conceded' },
+                { label: 'Interceptions par match', key: 'interceptions' },
+                { label: 'Dégagements par match', key: 'clearances' },
+                { label: 'Arrêts par match', key: 'saves' },
+                { label: 'Buts concédés par match', key: 'goals_conceded' },
+                { label: 'Aucun but encaissé (oui=1, non=0)', key: 'clean_sheet' }
+            ];
+
+            stats.forEach(stat => {
+                teamADefenseDiv.innerHTML += `
+                    <div>
+                        <label>${stat.label} :</label>
+                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('defense', 'A', '${stat.key}', this.value)">
+                    </div>
+                `;
+                teamBDefenseDiv.innerHTML += `
+                    <div>
+                        <label>${stat.label} :</label>
+                        <input type="number" class="w-full p-2 border rounded" onchange="updateStats('defense', 'B', '${stat.key}', this.value)">
+                    </div>
+                `;
+            });
+        }
+
+        // Mettre à jour les statistiques
+        function updateStats(category, team, key, value) {
+            if (team === 'A') {
+                if (category === 'general') teamAGeneral[key] = parseFloat(value);
+                else if (category === 'attack') teamAAttack[key] = parseFloat(value);
+                else if (category === 'defense') teamADefense[key] = parseFloat(value);
+            } else {
+                if (category === 'general') teamBGeneral[key] = parseFloat(value);
+                else if (category === 'attack') teamBAttack[key] = parseFloat(value);
+                else if (category === 'defense') teamBDefense[key] = parseFloat(value);
+            }
         }
 
         // Entraîner le modèle
@@ -184,7 +291,9 @@
 
         // Initialisation
         generateFormSliders();
-        generateStatsFields();
+        generateGeneralFields();
+        generateAttackFields();
+        generateDefenseFields();
     </script>
 </body>
 </html>
