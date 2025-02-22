@@ -253,6 +253,58 @@ if st.button("Prédire le Résultat du Match"):
     model = LogisticRegression()  
     model.fit(X, y)  
 
+# --- Prédictions ---  
+if st.button("Prédire le Résultat du Match"):  
+    # Méthode de Poisson  
+    avg_goals_A = st.session_state.data["expected_but_A"]  
+    avg_goals_B = st.session_state.data["expected_but_B"]  
+
+    # Calcul des probabilités de marquer 0 à 5 buts  
+    goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
+    goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
+
+    # Calcul des résultats possibles  
+    results = pd.DataFrame(np.zeros((6, 6)), columns=[f"Buts Équipe B: {i}" for i in range(6)], index=[f"Buts Équipe A: {i}" for i in range(6)])  
+    for i in range(6):  
+        for j in range(6):  
+            results.iloc[i, j] = goals_A[i] * goals_B[j]  
+
+    # Affichage des résultats de la méthode de Poisson  
+    st.subheader("📊 Résultats de la Méthode de Poisson")  
+    st.write(results)  
+
+    # Graphique des résultats de la méthode de Poisson  
+    plt.figure(figsize=(10, 6))  
+    plt.imshow(results, cmap='Blues', interpolation='nearest')  
+    plt.colorbar(label='Probabilité')  
+    plt.xticks(ticks=np.arange(6), labels=[f"Buts Équipe B: {i}" for i in range(6)])  
+    plt.yticks(ticks=np.arange(6), labels=[f"Buts Équipe A: {i}" for i in range(6)])  
+    plt.title("Probabilités de Résultats (Méthode de Poisson)")  
+    st.pyplot(plt)  
+
+    # Méthode de Régression Logistique  
+    # Création d'un jeu de données cohérent  
+    # X : Matrice des caractéristiques (5 échantillons, 10 caractéristiques)  
+    X = np.array([  
+        [70.0, 1.5, 1.0, 55.0, 1.8,  # Équipe A  
+         65.0, 1.0, 1.5, 45.0, 1.2],  # Équipe B  
+        [75.0, 2.0, 0.8, 60.0, 2.1,  
+         60.0, 0.8, 1.2, 40.0, 0.9],  
+        [68.0, 1.2, 1.1, 58.0, 1.7,  
+         67.0, 1.1, 1.4, 42.0, 1.3],  
+        [72.0, 1.6, 0.9, 57.0, 1.9,  
+         63.0, 0.9, 1.3, 41.0, 1.1],  
+        [69.0, 1.4, 1.0, 56.0, 1.8,  
+         66.0, 1.0, 1.4, 43.0, 1.2]  
+    ])  
+
+    # y : Vecteur cible (résultat du match)  
+    y = np.array([1, 0, 1, 0, 1])  # 1 pour victoire Équipe A, 0 pour victoire Équipe B  
+
+    # Entraînement du modèle  
+    model = LogisticRegression()  
+    model.fit(X, y)  
+
     # Prédiction  
     prediction = model.predict(X)  
     if prediction[0] == 1:  
