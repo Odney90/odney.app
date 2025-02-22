@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd  
 
 # --- Initialisation des valeurs dans session_state ---  
-
 if 'data' not in st.session_state:  
     st.session_state.data = {  
         "score_rating_A": 70.0,  
@@ -14,6 +13,7 @@ if 'data' not in st.session_state:
         "possession_moyenne_A": 55.0,  
         "aucun_but_encaisse_A": 10,  
         "expected_but_A": 0.0,  # Initialisation ajoutée  
+        "expected_concedes_A": 0.0,  # Clé ajoutée  
         "tirs_cadres_A": 0.0,  
         "grandes_chances_A": 0.0,  
         "grandes_chances_manquees_A": 0.0,  
@@ -22,8 +22,7 @@ if 'data' not in st.session_state:
         "centres_reussis_A": 0.0,  
         "penalties_obtenues_A": 0.0,  
         "balles_surface_A": 0.0,  
-        "corners_A": 0.0,
-        "expected_concedes_A": 0.0,
+        "corners_A": 0.0,  
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -33,6 +32,7 @@ if 'data' not in st.session_state:
         "possession_moyenne_B": 45.0,  
         "aucun_but_encaisse_B": 8,  
         "expected_but_B": 0.0,  # Initialisation ajoutée  
+        "expected_concedes_B": 0.0,  # Clé ajoutée  
         "tirs_cadres_B": 0.0,  
         "grandes_chances_B": 0.0,  
         "grandes_chances_manquees_B": 0.0,  
@@ -42,7 +42,6 @@ if 'data' not in st.session_state:
         "penalties_obtenues_B": 0.0,  
         "balles_surface_B": 0.0,  
         "corners_B": 0.0,  
-        "expected_concedes_B": 0.0,
 
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
