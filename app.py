@@ -201,8 +201,8 @@ with tab3:
 
             # Génération de données d'entraînement  
             np.random.seed(0)  
-            X_train_lr = np.random.rand(100.00, 10.0)  # 100 échantillons, 10 caractéristiques  
-            y_train_lr = np.random.randint(0.0, 2.0, 100.0)  # Cible binaire  
+            X_train_lr = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
+            y_train_lr = np.random.randint(0, 2, 100)  # Cible binaire  
 
             # Entraînement du modèle  
             model_lr = LogisticRegression()  
@@ -268,8 +268,9 @@ with tab3:
                     st.success("Prédiction : L'Équipe B gagne 🎉")  
                 else:  
                     st.warning("Prédiction : Match Nul ou Résultat Incertain 🤔")  
-except Exception as e:  
-    st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}") 
+
+        except Exception as e:  
+            st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")
 with tab4:  
     st.title("🛠️ Outils de Paris")  
 
