@@ -221,10 +221,12 @@ with tab3:
             # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
             X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))]])  
 
-            # Vérification que toutes les valeurs sont numériques  
-            if X_rf.shape[1] != 52:  # Assurez-vous que vous avez le bon nombre de caractéristiques  
-                raise ValueError("Le nombre de caractéristiques doit être de 52.")  
-
+          # Vérification de la forme de X_rf_pred  
+if X_rf_pred.shape[1] != 52:  
+    st.error(f"Erreur : Le nombre de caractéristiques doit être de 52. Actuellement : {X_rf_pred.shape[1]}")  
+else:  
+    prediction_rf = model_rf.predict(X_rf_pred)  
+    st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
             # Génération de données d'entraînement  
             np.random.seed(0)  
             X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
