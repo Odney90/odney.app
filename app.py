@@ -33,12 +33,10 @@ if 'data' not in st.session_state:
         "degagements_A": 70,  
         "tacles_reussis_A": 40,  
         "penalties_concedes_A": 3,  
-        "possessions_remporte_A": 20,  
         "arrets_A": 45,  
         "fautes_A": 15,  
         "cartons_jaunes_A": 5,  
-        "cartons_rouges_A": 1, 
-        "possessions_remporte_A": 6,
+        "cartons_rouges_A": 1,  
 
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -62,12 +60,10 @@ if 'data' not in st.session_state:
         "degagements_B": 60,  
         "tacles_reussis_B": 35,  
         "penalties_concedes_B": 4,  
-        "possessions_remporte_B": 15,  
         "arrets_B": 30,  
         "fautes_B": 20,  
         "cartons_jaunes_B": 6,  
         "cartons_rouges_B": 2,  
-        "possessions_remporte_B": 7,
 
         "recent_form_A": [1, 2, 1, 0, 3],  # Buts marqués lors des 5 derniers matchs  
         "recent_form_B": [0, 1, 2, 1, 1],  # Buts marqués lors des 5 derniers matchs  
@@ -181,7 +177,6 @@ with col1:
 
 with col2:  
     st.session_state.data["penalties_concedes_A"] = st.number_input("Pénalités Concédées Équipe A", min_value=0, value=int(st.session_state.data["penalties_concedes_A"]), key="penalties_concedes_A")  
-    st.session_state.data["possessions_remporte_A"] = st.number_input("Possessions Remportées Équipe A", min_value=0, value=int(st.session_state.data["possessions_remporte_A"]), key="possessions_remporte_A")  
     st.session_state.data["arrets_A"] = st.number_input("Arrêts Équipe A", min_value=0, value=int(st.session_state.data["arrets_A"]), key="arrets_A")  
 
 # --- Critères d'Attaque Équipe B ---  
@@ -214,16 +209,14 @@ with col1:
 
 with col2:  
     st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0, value=int(st.session_state.data["penalties_concedes_B"]), key="penalties_concedes_B")  
-      st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0, value=int(st.session_state.data["possessions_remporte_B"]), key="possessions_remporte_B")  
     st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0, value=int(st.session_state.data["arrets_B"]), key="arrets_B")  
 
 # --- Prédictions ---  
 if st.button("Prédire le Résultat du Match"):  
     # Méthode de Poisson  
     avg_goals_A = st.session_state.data["expected_but_A"]  
-    avg_goals_B = st.session_state.data["expected_but_B"]  
-
-    # Calcul des probabilités de marquer 0 à 5 buts  
+    avg_goals_B = st.session_state.data["expected_but_B"]
+        # Calcul des probabilités de marquer 0 à 5 buts  
     goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
     goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
 
