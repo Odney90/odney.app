@@ -50,7 +50,7 @@ if 'data' not in st.session_state:
         "expected_concedes_B": 1.8,  
         "tirs_cadres_B": 100,  
         "grandes_chances_B": 20,  
-        "grandes_chances_manquees_B": 15,  
+        "grandes_chances_manqueuees_B": 15,  
         "passes_reussies_B": 350,  
         "passes_longues_B": 60,  
         "centres_reussis_B": 25,  
@@ -201,29 +201,37 @@ with tab3:
             model.fit(X_train, y_train)  
 
             # Prédiction  
-            prediction = model.predict(X_test)  
+            y_pred = model.predict(X_test)  
 
             # Évaluation du modèle  
-            accuracy = accuracy_score(y_test, prediction)  
-            cm = confusion_matrix(y_test, prediction)  
-            report = classification_report(y_test, output_dict=True)  
+            accuracy = accuracy_score(y_test, y_pred)  
+            cm = confusion_matrix(y_test, y_pred)  
+
+            # Vérification que y_pred est bien défini avant d'appeler classification_report  
+            if y_pred is not None:  
+                report = classification_report(y_test, y_pred, output_dict=True)  
+            else:  
+                st.error("La prédiction n'a pas pu être générée.")  
 
             # Affichage des résultats dans un tableau  
             st.subheader("📈 Résultats de la Régression Logistique")  
             st.write(f"Précision du modèle : {accuracy:.2%}")  
 
             # Tableau des résultats  
-            report_df = pd.DataFrame(report).transpose()  
-            st.table(report_df)  
+            if y_pred is not None:  
+                report_df = pd.DataFrame(report).transpose()  
+                st.table(report_df)  
 
-            # Explication des résultats  
-            st.markdown("""  
-            **Explication des résultats :**  
-            - **Précision (Precision)** : Proportion de prédictions positives correctes.  
-            - **Rappel (Recall)** : Proportion de cas positifs correctement identifiés.  
-            - **F1-Score** : Moyenne harmonique de la précision et du rappel.  
-            - **Support** : Nombre d'échantillons pour chaque classe.  
-            """)  
+                # Explication des résultats  
+                st.markdown("""  
+                **Explication des résultats :**  
+                - **Précision (Precision)** : Proportion de prédictions positives correctes.  
+                - **Rappel (Recall)** : Proportion de cas positifs correctement identifiés.  
+                - **F1-Score** : Moyenne harmonique de la précision et du rappel.  
+                - **Support** : Nombre d'échantillons pour chaque classe.  
+                """)  
+            else:  
+                st.error("Impossible de générer le rapport de classification.")  
 
             # Prédiction du match actuel  
             current_match_features = np.array([[st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
