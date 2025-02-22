@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 import matplotlib.pyplot as plt  
 import io  
+import openpyxl  # Module nécessaire pour exporter en Excel  
 
 # Configuration de la page  
 st.set_page_config(page_title="Prédictions Football", page_icon="⚽")  
@@ -192,7 +193,8 @@ with tab2:
     score_forme_A = quantifier_forme_recente(st.session_state.data["forme_recente_A"])  
     score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
     st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
-    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")
+    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
+
 # Onglet 3 : Prédictions  
 with tab3:  
     st.header("🔮 Prédictions")  
@@ -201,6 +203,8 @@ with tab3:
             # Prédiction des Buts avec Poisson  
             avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
             avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"])  
+            if avg_goals_A <= 0 or avg_goals_B <= 0:  
+                raise ValueError("Les moyennes de buts doivent être positives.")  
             prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
             prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
             prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
