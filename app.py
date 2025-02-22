@@ -43,9 +43,44 @@ if 'data' not in st.session_state:
         "cartons_jaunes_B": 6,  
         "cartons_rouges_B": 2,  
 
+        # Forme récente  
         "recent_form_A": [1, 2, 1, 0, 3],  
         "recent_form_B": [0, 1, 2, 1, 1],  
+
+        # Historique des confrontations  
         "head_to_head": {"victoires_A": 0, "nuls": 0, "victoires_B": 0},  
+
+        # Nouveaux critères  
+        "joueurs_cles_absents_A": 0,  # Nombre de joueurs clés absents  
+        "score_rating_joueurs_cles_A": 0.0,  # Score rating des joueurs clés  
+        "motivation_A": 3,  # Motivation sur une échelle de 5  
+        "clean_sheets_gardien_A": 2,  # Nombre de clean sheets du gardien  
+        "ratio_tirs_arretes_A": 0.75,  # Ratio de tirs arrêtés par le gardien  
+        "victoires_domicile_A": 60.0,  # Pourcentage de victoires à domicile  
+        "passes_longues_A": 50,  # Nombre de passes longues par match  
+        "dribbles_reussis_A": 10,  # Nombre de dribbles réussis par match  
+        "ratio_tirs_cadres_A": 0.4,  # Ratio de tirs cadrés  
+        "grandes_chances_manquees_A": 5,  # Nombre de grandes chances manquées  
+        "fautes_zones_dangereuses_A": 3,  # Fautes dans des zones dangereuses  
+        "buts_corners_A": 2,  # Nombre de buts marqués sur corners  
+        "jours_repos_A": 4,  # Nombre de jours de repos  
+        "matchs_30_jours_A": 8,  # Nombre de matchs sur les 30 derniers jours  
+
+        # Nouveaux critères pour l'Équipe B  
+        "joueurs_cles_absents_B": 0,  # Nombre de joueurs clés absents  
+        "score_rating_joueurs_cles_B": 0.0,  # Score rating des joueurs clés  
+        "motivation_B": 3,  # Motivation sur une échelle de 5  
+        "clean_sheets_gardien_B": 1,  # Nombre de clean sheets du gardien  
+        "ratio_tirs_arretes_B": 0.65,  # Ratio de tirs arrêtés par le gardien  
+        "victoires_exterieur_B": 40.0,  # Pourcentage de victoires à l'extérieur  
+        "passes_longues_B": 40,  # Nombre de passes longues par match  
+        "dribbles_reussis_B": 8,  # Nombre de dribbles réussis par match  
+        "ratio_tirs_cadres_B": 0.35,  # Ratio de tirs cadrés  
+        "grandes_chances_manquees_B": 6,  # Nombre de grandes chances manquées  
+        "fautes_zones_dangereuses_B": 4,  # Fautes dans des zones dangereuses  
+        "buts_corners_B": 1,  # Nombre de buts marqués sur corners  
+        "jours_repos_B": 3,  # Nombre de jours de repos  
+        "matchs_30_jours_B": 9,  # Nombre de matchs sur les 30 derniers jours  
     }  
 
 # Fonctions pour les outils de paris  
@@ -103,227 +138,353 @@ with tab1:
 
 with tab2:  
     st.subheader("🌦️ Conditions du Match")  
-    st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value="", key="conditions_match")  
 
-    col_h2h, col_recent_form = st.columns(2)  
+    # Conditions du match  
+    st.session_state.data["conditions_match"] = st.text_input("🌧️ Conditions du Match (ex : pluie, terrain sec, etc.)", value="", key="conditions_match")  
 
-    with col_h2h:  
-        st.subheader("📅 Historique des Confrontations")  
-        col_a, col_b, col_c = st.columns(3)  
-        with col_a:  
-            victoires_A = st.number_input("Victoires de l'Équipe A", min_value=0, value=st.session_state.data["head_to_head"]["victoires_A"])  
-        with col_b:  
-            nuls = st.number_input("Nuls", min_value=0, value=st.session_state.data["head_to_head"]["nuls"])  
-        with col_c:  
-            victoires_B = st.number_input("Victoires de l'Équipe B", min_value=0, value=st.session_state.data["head_to_head"]["victoires_B"])  
+    # Joueurs clés absents et score rating des joueurs clés  
+    st.subheader("👥 Joueurs Clés Absents")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["joueurs_cles_absents_A"] = st.number_input(  
+            "🚑 Nombre de joueurs clés absents (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["joueurs_cles_absents_A"]),  
+            key="joueurs_cles_absents_A"  
+        )  
+        st.session_state.data["score_rating_joueurs_cles_A"] = st.number_input(  
+            "⭐ Score rating des joueurs clés (Équipe A)",  
+            min_value=0.0,  
+            value=float(st.session_state.data["score_rating_joueurs_cles_A"]),  
+            key="score_rating_joueurs_cles_A"  
+        )  
+    with col_b:  
+        st.session_state.data["joueurs_cles_absents_B"] = st.number_input(  
+            "🚑 Nombre de joueurs clés absents (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["joueurs_cles_absents_B"]),  
+            key="joueurs_cles_absents_B"  
+        )  
+        st.session_state.data["score_rating_joueurs_cles_B"] = st.number_input(  
+            "⭐ Score rating des joueurs clés (Équipe B)",  
+            min_value=0.0,  
+            value=float(st.session_state.data["score_rating_joueurs_cles_B"]),  
+            key="score_rating_joueurs_cles_B"  
+        )  
 
-        if st.button("Mettre à jour l'historique"):  
-            st.session_state.data["head_to_head"]["victoires_A"] = victoires_A  
-            st.session_state.data["head_to_head"]["nuls"] = nuls  
-            st.session_state.data["head_to_head"]["victoires_B"] = victoires_B  
-            st.success("Historique mis à jour avec succès !")  
+    # Motivation des équipes  
+    st.subheader("🔥 Motivation des Équipes")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["motivation_A"] = st.slider(  
+            "💪 Motivation de l'Équipe A (1 à 5)",  
+            min_value=1,  
+            max_value=5,  
+            value=int(st.session_state.data["motivation_A"]),  
+            key="motivation_A"  
+        )  
+    with col_b:  
+        st.session_state.data["motivation_B"] = st.slider(  
+            "💪 Motivation de l'Équipe B (1 à 5)",  
+            min_value=1,  
+            max_value=5,  
+            value=int(st.session_state.data["motivation_B"]),  
+            key="motivation_B"  
+        )  
 
-        st.subheader("Résultats des Confrontations")  
-        st.write(f"Victoires de l'Équipe A : {st.session_state.data['head_to_head']['victoires_A']}")  
-        st.write(f"Nuls : {st.session_state.data['head_to_head']['nuls']}")  
-        st.write(f"Victoires de l'Équipe B : {st.session_state.data['head_to_head']['victoires_B']}")  
+    # Forme des gardiens  
+    st.subheader("🧤 Forme des Gardiens")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["clean_sheets_gardien_A"] = st.number_input(  
+            "🛡️ Clean sheets du gardien (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["clean_sheets_gardien_A"]),  
+            key="clean_sheets_gardien_A"  
+        )  
+        st.session_state.data["ratio_tirs_arretes_A"] = st.number_input(  
+            "🎯 Ratio de tirs arrêtés (Équipe A)",  
+            min_value=0.0,  
+            max_value=1.0,  
+            value=float(st.session_state.data["ratio_tirs_arretes_A"]),  
+            key="ratio_tirs_arretes_A"  
+        )  
+    with col_b:  
+        st.session_state.data["clean_sheets_gardien_B"] = st.number_input(  
+            "🛡️ Clean sheets du gardien (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["clean_sheets_gardien_B"]),  
+            key="clean_sheets_gardien_B"  
+        )  
+        st.session_state.data["ratio_tirs_arretes_B"] = st.number_input(  
+            "🎯 Ratio de tirs arrêtés (Équipe B)",  
+            min_value=0.0,  
+            max_value=1.0,  
+            value=float(st.session_state.data["ratio_tirs_arretes_B"]),  
+            key="ratio_tirs_arretes_B"  
+        )  
 
-    with col_recent_form:  
-        st.subheader("📈 Forme Récente")  
-        col_a, col_b = st.columns(2)  
-        with col_a:  
-            st.write("Forme Récente de l'Équipe A")  
-            for i in range(5):  
-                st.session_state.data["recent_form_A"][i] = st.number_input(  
-                    f"Match {i + 1} (Buts Marqués)",  
-                    min_value=0,  
-                    value=int(st.session_state.data["recent_form_A"][i]),  
-                    key=f"recent_form_A_{i}"  
-                )  
-        with col_b:  
-            st.write("Forme Récente de l'Équipe B")  
-            for i in range(5):  
-                st.session_state.data["recent_form_B"][i] = st.number_input(  
-                    f"Match {i + 1} (Buts Marqués)",  
-                    min_value=0,  
-                    value=int(st.session_state.data["recent_form_B"][i]),  
-                    key=f"recent_form_B_{i}"  
-                )  
+    # Performances à domicile et à l'extérieur  
+    st.subheader("🏠 Performances à Domicile et à l'Extérieur")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["victoires_domicile_A"] = st.number_input(  
+            "🏆 Pourcentage de victoires à domicile (Équipe A)",  
+            min_value=0.0,  
+            max_value=100.0,  
+            value=float(st.session_state.data["victoires_domicile_A"]),  
+            key="victoires_domicile_A"  
+        )  
+    with col_b:  
+        st.session_state.data["victoires_exterieur_B"] = st.number_input(  
+            "🏆 Pourcentage de victoires à l'extérieur (Équipe B)",  
+            min_value=0.0,  
+            max_value=100.0,  
+            value=float(st.session_state.data["victoires_exterieur_B"]),  
+            key="victoires_exterieur_B"  
+        )  
+
+    # Style de jeu  
+    st.subheader("🎯 Style de Jeu")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["passes_longues_A"] = st.number_input(  
+            "📏 Passes longues par match (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["passes_longues_A"]),  
+            key="passes_longues_A"  
+        )  
+        st.session_state.data["dribbles_reussis_A"] = st.number_input(  
+            "🏃 Dribbles réussis par match (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["dribbles_reussis_A"]),  
+            key="dribbles_reussis_A"  
+        )  
+    with col_b:  
+        st.session_state.data["passes_longues_B"] = st.number_input(  
+            "📏 Passes longues par match (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["passes_longues_B"]),  
+            key="passes_longues_B"  
+        )  
+        st.session_state.data["dribbles_reussis_B"] = st.number_input(  
+            "🏃 Dribbles réussis par match (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["dribbles_reussis_B"]),  
+            key="dribbles_reussis_B"  
+        )  
+
+    # Efficacité offensive  
+    st.subheader("⚽ Efficacité Offensive")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["ratio_tirs_cadres_A"] = st.number_input(  
+            "🎯 Ratio de tirs cadrés (Équipe A)",  
+            min_value=0.0,  
+            max_value=1.0,  
+            value=float(st.session_state.data["ratio_tirs_cadres_A"]),  
+            key="ratio_tirs_cadres_A"  
+        )  
+        st.session_state.data["grandes_chances_manquees_A"] = st.number_input(  
+            "❌ Grandes chances manquées (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["grandes_chances_manquees_A"]),  
+            key="grandes_chances_manquees_A"  
+        )  
+    with col_b:  
+        st.session_state.data["ratio_tirs_cadres_B"] = st.number_input(  
+            "🎯 Ratio de tirs cadrés (Équipe B)",  
+            min_value=0.0,  
+            max_value=1.0,  
+            value=float(st.session_state.data["ratio_tirs_cadres_B"]),  
+            key="ratio_tirs_cadres_B"  
+        )  
+        st.session_state.data["grandes_chances_manquees_B"] = st.number_input(  
+            "❌ Grandes chances manquées (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["grandes_chances_manquees_B"]),  
+            key="grandes_chances_manquees_B"  
+        )  
+
+    # Efficacité défensive  
+    st.subheader("🛡️ Efficacité Défensive")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["fautes_zones_dangereuses_A"] = st.number_input(  
+            "⚠️ Fautes dans des zones dangereuses (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["fautes_zones_dangereuses_A"]),  
+            key="fautes_zones_dangereuses_A"  
+        )  
+    with col_b:  
+        st.session_state.data["fautes_zones_dangereuses_B"] = st.number_input(  
+            "⚠️ Fautes dans des zones dangereuses (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["fautes_zones_dangereuses_B"]),  
+            key="fautes_zones_dangereuses_B"  
+        )  
+
+    # Impact des corners  
+    st.subheader("🎯 Impact des Corners")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["buts_corners_A"] = st.number_input(  
+            "⚽ Buts marqués sur corners (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["buts_corners_A"]),  
+            key="buts_corners_A"  
+        )  
+    with col_b:  
+        st.session_state.data["buts_corners_B"] = st.number_input(  
+            "⚽ Buts marqués sur corners (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["buts_corners_B"]),  
+            key="buts_corners_B"  
+        )  
+
+    # Fatigue de l'équipe  
+    st.subheader("⏱️ Fatigue de l'Équipe")  
+    col_a, col_b = st.columns(2)  
+    with col_a:  
+        st.session_state.data["jours_repos_A"] = st.number_input(  
+            "⏳ Jours de repos (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["jours_repos_A"]),  
+            key="jours_repos_A"  
+        )  
+        st.session_state.data["matchs_30_jours_A"] = st.number_input(  
+            "📅 Matchs sur les 30 derniers jours (Équipe A)",  
+            min_value=0,  
+            value=int(st.session_state.data["matchs_30_jours_A"]),  
+            key="matchs_30_jours_A"  
+        )  
+    with col_b:  
+        st.session_state.data["jours_repos_B"] = st.number_input(  
+            "⏳ Jours de repos (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["jours_repos_B"]),  
+            key="jours_repos_B"  
+        )  
+        st.session_state.data["matchs_30_jours_B"] = st.number_input(  
+            "📅 Matchs sur les 30 derniers jours (Équipe B)",  
+            min_value=0,  
+            value=int(st.session_state.data["matchs_30_jours_B"]),  
+            key="matchs_30_jours_B"  
+        )  
 
 with tab3:  
-    st.subheader("🔮 Prédiction du Résultat du Match")  
+    st.subheader("🔮 Prédictions")  
 
-    if st.button("Prédire le Résultat du Match"):  
-        try:  
-            # Méthode de Poisson  
-            avg_goals_A = st.session_state.data["expected_but_A"]  
-            avg_goals_B = st.session_state.data["expected_but_B"]  
+    # Ajustement des buts attendus pour la méthode de Poisson  
+    avg_goals_A = st.session_state.data["expected_but_A"]  
+    avg_goals_B = st.session_state.data["expected_but_B"]  
 
-            goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
-            goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
+    # Ajustement en fonction des blessures et des clean sheets  
+    avg_goals_A *= (1 - st.session_state.data["joueurs_cles_absents_A"] * 0.1) * (st.session_state.data["clean_sheets_gardien_A"] / 5)  
+    avg_goals_B *= (1 - st.session_state.data["joueurs_cles_absents_B"] * 0.1) * (st.session_state.data["clean_sheets_gardien_B"] / 5)  
 
-            results = pd.DataFrame(np.zeros((6, 6)), columns=[f"Équipe B: {i}" for i in range(6)], index=[f"Équipe A: {i}" for i in range(6)])  
-            for i in range(6):  
-                for j in range(6):  
-                    results.iloc[i, j] = goals_A[i] * goals_B[j]  
+    # Ajustement en fonction des jours de repos  
+    avg_goals_A *= (st.session_state.data["jours_repos_A"] / 7)  
+    avg_goals_B *= (st.session_state.data["jours_repos_B"] / 7)  
 
-            # Conversion en pourcentages  
-            results_percentage = results * 100  
+    # Calcul des probabilités avec la méthode de Poisson  
+    prob_A = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  # Probabilité de 0-0  
+    prob_B = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  # Probabilité de 1-1  
+    prob_C = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  # Probabilité de 2-2  
 
-            st.subheader("📊 Résultats de la Méthode de Poisson (en %)")  
-            st.write(results_percentage)  
+    # Affichage des résultats  
+    st.write(f"📊 Probabilité de 0-0 : {prob_A:.2%}")  
+    st.write(f"📊 Probabilité de 1-1 : {prob_B:.2%}")  
+    st.write(f"📊 Probabilité de 2-2 : {prob_C:.2%}")  
 
-            # Amélioration du schéma  
-            plt.figure(figsize=(10, 6))  
-            plt.imshow(results_percentage, cmap='Blues', interpolation='nearest')  
-            plt.colorbar(label='Probabilité (%)')  
-            plt.xticks(ticks=np.arange(6), labels=[f"Équipe B: {i}" for i in range(6)])  
-            plt.yticks(ticks=np.arange(6), labels=[f"Équipe A: {i}" for i in range(6)])  
-            plt.title("Probabilités des Résultats (Méthode de Poisson)")  
-            st.pyplot(plt)  
+    # Prédiction avec la régression logistique  
+    X = np.array([  
+        [  
+            st.session_state.data["score_rating_A"],  
+            st.session_state.data["score_rating_B"],  
+            st.session_state.data["buts_par_match_A"],  
+            st.session_state.data["buts_par_match_B"],  
+            st.session_state.data["possession_moyenne_A"],  
+            st.session_state.data["possession_moyenne_B"],  
+            st.session_state.data["expected_but_A"],  
+            st.session_state.data["expected_but_B"],  
+            st.session_state.data["tirs_cadres_A"],  
+            st.session_state.data["tirs_cadres_B"],  
+            st.session_state.data["grandes_chances_A"],  
+            st.session_state.data["grandes_chances_B"],  
+            st.session_state.data["passes_reussies_A"],  
+            st.session_state.data["passes_reussies_B"],  
+            st.session_state.data["corners_A"],  
+            st.session_state.data["corners_B"],  
+            st.session_state.data["interceptions_A"],  
+            st.session_state.data["interceptions_B"],  
+            st.session_state.data["tacles_reussis_A"],  
+            st.session_state.data["tacles_reussis_B"],  
+            st.session_state.data["fautes_A"],  
+            st.session_state.data["fautes_B"],  
+            st.session_state.data["cartons_jaunes_A"],  
+            st.session_state.data["cartons_jaunes_B"],  
+            st.session_state.data["cartons_rouges_A"],  
+            st.session_state.data["cartons_rouges_B"],  
+            st.session_state.data["joueurs_cles_absents_A"],  
+            st.session_state.data["joueurs_cles_absents_B"],  
+            st.session_state.data["motivation_A"],  
+            st.session_state.data["motivation_B"],  
+            st.session_state.data["clean_sheets_gardien_A"],  
+            st.session_state.data["clean_sheets_gardien_B"],  
+            st.session_state.data["ratio_tirs_arretes_A"],  
+            st.session_state.data["ratio_tirs_arretes_B"],  
+            st.session_state.data["victoires_domicile_A"],  
+            st.session_state.data["victoires_exterieur_B"],  
+            st.session_state.data["passes_longues_A"],  
+            st.session_state.data["passes_longues_B"],  
+            st.session_state.data["dribbles_reussis_A"],  
+            st.session_state.data["dribbles_reussis_B"],  
+            st.session_state.data["ratio_tirs_cadres_A"],  
+            st.session_state.data["ratio_tirs_cadres_B"],  
+            st.session_state.data["grandes_chances_manquees_A"],  
+            st.session_state.data["grandes_chances_manquees_B"],  
+            st.session_state.data["fautes_zones_dangereuses_A"],  
+            st.session_state.data["fautes_zones_dangereuses_B"],  
+            st.session_state.data["buts_corners_A"],  
+            st.session_state.data["buts_corners_B"],  
+            st.session_state.data["jours_repos_A"],  
+            st.session_state.data["jours_repos_B"],  
+            st.session_state.data["matchs_30_jours_A"],  
+            st.session_state.data["matchs_30_jours_B"],  
+        ]  
+    ])  
 
-            # Régression Logistique  
-            # Critères importants pour la régression logistique  
-            X_lr = np.array([  
-                [  
-                    st.session_state.data["score_rating_A"],  
-                    st.session_state.data["buts_par_match_A"],  
-                    st.session_state.data["buts_concedes_par_match_A"],  
-                    st.session_state.data["possession_moyenne_A"],  
-                    st.session_state.data["expected_but_A"],  
-                    st.session_state.data["score_rating_B"],  
-                    st.session_state.data["buts_par_match_B"],  
-                    st.session_state.data["buts_concedes_par_match_B"],  
-                    st.session_state.data["possession_moyenne_B"],  
-                    st.session_state.data["expected_but_B"]  
-                ]  
-            ])  
+    # Modèle de régression logistique  
+    model_lr = LogisticRegression()  
+    model_lr.fit(X, np.array([1]))  # Exemple d'entraînement (à adapter avec des données réelles)  
+    prediction_lr = model_lr.predict(X)  
 
-            # Génération de données d'entraînement  
-            np.random.seed(0)  
-            X_train_lr = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
-            y_train_lr = np.random.randint(0, 2, 100)  # Cible binaire  
+    # Modèle Random Forest  
+    model_rf = RandomForestClassifier()  
+    model_rf.fit(X, np.array([1]))  # Exemple d'entraînement (à adapter avec des données réelles)  
+    prediction_rf = model_rf.predict(X)  
 
-            # Entraînement du modèle  
-            model_lr = LogisticRegression()  
-            model_lr.fit(X_train_lr, y_train_lr)  
-
-            # Prédiction  
-            prediction_lr = model_lr.predict(X_lr)  
-            prediction_proba_lr = model_lr.predict_proba(X_lr)  
-
-            # Affichage des résultats  
-            st.subheader("📈 Résultats de la Régression Logistique")  
-            st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
-            st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
-
-            # Random Forest  
-            # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
-            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))]])  
-
-            # Vérification que toutes les valeurs sont numériques  
-            if X_rf.shape[1] != 52:  # Assurez-vous que vous avez le bon nombre de caractéristiques  
-                raise ValueError("Le nombre de caractéristiques doit être de 52.")  
-
-            # Génération de données d'entraînement  
-            np.random.seed(0)  
-            X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
-            y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
-
-            # Entraînement du modèle  
-            model_rf = RandomForestClassifier()  
-            model_rf.fit(X_train_rf, y_train_rf)  
-
-            # Prédiction  
-            prediction_rf = model_rf.predict(X_rf)  
-            prediction_proba_rf = model_rf.predict_proba(X_rf)  
-
-            # Affichage des résultats  
-            st.subheader("📈 Résultats de la Random Forest")  
-            st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
-            st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
-
-            # Comparaison des modèles  
-            st.subheader("📊 Comparaison des Modèles")  
-            comparison_df = pd.DataFrame({  
-                "Modèle": ["Poisson", "Régression Logistique", "Random Forest"],  
-                "Probabilité Équipe A": [results_percentage.iloc[1:].sum().sum(), prediction_proba_lr[0][1], prediction_proba_rf[0][1]],  
-                "Probabilité Équipe B": [results_percentage.iloc[:, 1:].sum().sum(), prediction_proba_lr[0][0], prediction_proba_rf[0][0]]  
-            })  
-            st.table(comparison_df)  
-
-            # Détermination du pari double chance  
-            if abs(prediction_proba_lr[0][0] - prediction_proba_lr[0][1]) < 0.1 or abs(prediction_proba_rf[0][0] - prediction_proba_rf[0][1]) < 0.1:  
-                st.success("🔔 Résultat serré : Pari Double Chance recommandé (1X ou X2) 🔔")  
-                if prediction_lr[0] == 1 and prediction_rf[0] == 1:  
-                    st.info("Pari Double Chance : 1X (Équipe A ou Match Nul)")  
-                elif prediction_lr[0] == 0 and prediction_rf[0] == 0:  
-                    st.info("Pari Double Chance : X2 (Match Nul ou Équipe B)")  
-                else:  
-                    st.info("Pari Double Chance : 1X ou X2 (Résultat trop incertain)")  
-            else:  
-                if prediction_lr[0] == 1 and prediction_rf[0] == 1:  
-                    st.success("Prédiction : L'Équipe A gagne 🎉")  
-                elif prediction_lr[0] == 0 and prediction_rf[0] == 0:  
-                    st.success("Prédiction : L'Équipe B gagne 🎉")  
-                else:  
-                    st.warning("Prédiction : Match Nul ou Résultat Incertain 🤔")  
-
-        except Exception as e:  
-            st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
+    # Affichage des prédictions  
+    if prediction_lr[0] == 1 and prediction_rf[0] == 1:  
+        st.success("🎉 Prédiction : L'Équipe A gagne !")  
+    elif prediction_lr[0] == 0 and prediction_rf[0] == 0:  
+        st.success("🎉 Prédiction : L'Équipe B gagne !")  
+    else:  
+        st.warning("🤔 Prédiction : Match Nul ou Résultat Incertain")  
 
 with tab4:  
-    st.title("🛠️ Outils de Paris")  
+    st.subheader("🛠️ Outils de Paris")  
 
     # Convertisseur de cotes  
     st.header("🧮 Convertisseur de Cotes")  
     cote_decimale = st.number_input("Cote décimale", min_value=1.01, value=2.0)  
     probabilite_implicite = cotes_vers_probabilite(cote_decimale)  
-    st.write(f"Probabilité implicite : **{probabilite_implicite:.2%}**")  
+    st.write(f"📊 Probabilité implicite : {probabilite_implicite:.2%}")  
 
-    # Calcul de value bets  
-    st.header("💰 Calcul de Value Bets")  
-    cote_value_bet = st.number_input("Cote (value bet)", min_value=1.01, value=2.0, key="cote_value_bet")  
-    probabilite_estimee = st.slider("Probabilité estimée (%)", min_value=1, max_value=100, value=50) / 100  
-    probabilite_implicite_value_bet = cotes_vers_probabilite(cote_value_bet)  
-    if probabilite_estimee > probabilite_implicite_value_bet:  
-        st.success("Value bet détecté !")  
-    else:  
-        st.warning("Pas de value bet.")  
-
-    # Simulateur de paris combinés  
-    st.header("➕ Simulateur de Paris Combinés")  
-    nombre_equipes = st.slider("Nombre d'équipes (jusqu'à 3)", min_value=1, max_value=3, value=2)  
-    probabilites = []  
-    for i in range(nombre_equipes):  
-        probabilite = st.slider(f"Probabilité implicite équipe {i + 1} (%)", min_value=1, max_value=100, value=50, key=f"probabilite_{i}") / 100  
-        probabilites.append(probabilite)  
-    probabilite_combinee = np.prod(probabilites)  
-    st.write(f"Probabilité combinée : **{probabilite_combinee:.2%}**")  
-
-    # Mise de Kelly  
-    st.header("🏦 Mise de Kelly")  
-    cote_kelly = st.number_input("Cote (Kelly)", min_value=1.01, value=2.0, key="cote_kelly")  
-    probabilite_kelly = st.slider("Probabilité estimée (Kelly) (%)", min_value=1, max_value=100, value=50, key="probabilite_kelly") / 100  
-    bankroll = st.number_input("Bankroll", min_value=1, value=1000)  
-    kelly_fraction = st.slider("Fraction de Kelly (1 à 5)", min_value=1, max_value=5, value=1) / 5  
-    mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
-    st.write(f"Mise de Kelly recommandée : **{mise_kelly:.2f}**")  
-
-    # Analyse de la marge du bookmaker  
-    st.header("📊 Analyse de la Marge du Bookmaker")  
-    cotes = []  
-    nombre_cotes = st.slider("Nombre de cotes à analyser", min_value=1, max_value=10, value=3)  
-    for i in range(nombre_cotes):  
-        cote = st.number_input(f"Cote {i + 1}", min_value=1.01, value=2.0, key=f"cote_{i}")  
-        cotes.append(cote)  
-
-    # Calcul des probabilités implicites  
-    probabilites_implicites = [cotes_vers_probabilite(cote) for cote in cotes]  
-    marge_bookmaker = sum(probabilites_implicites) - 1  
-    st.write(f"Marge du bookmaker : **{marge_bookmaker:.2%}**")  
-
-    # Enlève la marge pour obtenir les probabilités corrigées  
-    probabilites_corrigees = enlever_marge(probabilites_implicites, marge_bookmaker)  
-    for i, proba in enumerate(probabilites_corrigees):  
-        st.write(f"Probabilité corrigée pour la cote {cotes[i]} : **{proba:.2%}**")
+    # Calcul de la mise de Kelly  
+    st.header("💰 Calcul de la Mise de Kelly")  
+    bankroll = st.number_input("Bankroll (€)", min_value=1.0, value=100.0)  
+    kelly_fraction = st.number_input("Fraction de Kelly (0 à 1)", min_value=0.0, max_value=1.0, value=0.5)  
+    mise_kelly = kelly_criterion(cote_decimale, probabilite_implicite, bankroll, kelly_fraction)  
+    st.write(f"💶 Mise de Kelly recommandée : {mise_kelly:.2f} €")
