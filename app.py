@@ -309,22 +309,8 @@ with tab4:
     cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
     cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
     cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
-        cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
-    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
-
-# Onglet 5 : Système de Mise  
-with tab5:  
-    st.header("💰 Système de Mise")  
-    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
-    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
-    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
-    cote = st.number_input("Cote", value=2.0)  
-
-    # Calcul de la mise selon Kelly  
-    mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
-    mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
-    mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
-    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
+    cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
+    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")
 
     # Mise à jour de la bankroll  
     if st.button("Miser"):  
