@@ -506,34 +506,43 @@ with tab3:
             st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
             st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
 
-            # Random Forest  
-            # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
-            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))]])  
+       
+        # Random Forest  
+        # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
+        X_rf = np.array([  
+            [  
+                st.session_state.data[key]  
+                for key in st.session_state.data  
+                if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+            ]  
+        ])  
 
-          # Vérification de la forme de X_rf_pred  
-if X_rf_pred.shape[1] != 52:  
-    st.error(f"Erreur : Le nombre de caractéristiques doit être de 52. Actuellement : {X_rf_pred.shape[1]}")  
-else:  
-    prediction_rf = model_rf.predict(X_rf_pred)  
-    st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
-            # Génération de données d'entraînement  
-            np.random.seed(0)  
-            X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
-            y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
+        # Génération de données d'entraînement factices pour Random Forest  
+        # X_rf_train doit avoir le même nombre de caractéristiques que X_rf  
+        X_rf_train = np.random.rand(100, X_rf.shape[1]) * 100  # 100 échantillons, même nombre de caractéristiques  
+        y_rf_train = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
 
-            # Entraînement du modèle  
-            model_rf = RandomForestClassifier()  
-            model_rf.fit(X_train_rf, y_train_rf)  
+        # Entraînement du modèle Random Forest  
+        model_rf = RandomForestClassifier()  
+        model_rf.fit(X_rf_train, y_rf_train)  
 
-            # Prédiction  
+        # Vérification de la forme de X_rf  
+        if X_rf.shape[1] != X_rf_train.shape[1]:  
+            st.error(f"Erreur : Le nombre de caractéristiques doit être de {X_rf_train.shape[1]}. Actuellement : {X_rf.shape[1]}")  
+        else:  
+            # Prédiction avec Random Forest  
             prediction_rf = model_rf.predict(X_rf)  
-            prediction_proba_rf = model_rf.predict_proba(X_rf)  
+            st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
 
-            # Affichage des résultats  
-            st.subheader("📈 Résultats de la Random Forest")  
-            st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
-            st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
+        # Affichage des résultats  
+        st.subheader("Résultats des Prédictions")  
+        st.write(f"📊 **Probabilité de 0-0 (Poisson)** : {prob_0_0:.2%}")  
+        st.write(f"📊 **Probabilité de 1-1 (Poisson)** : {prob_1_1:.2%}")  
+        st.write(f"📊 **Probabilité de 2-2 (Poisson)** : {prob_2_2:.2%}")  
+        st.write(f"📊 **Régression Logistique** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
 
+    except Exception as e:  
+        st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
             # Comparaison des modèles  
             st.subheader("📊 Comparaison des Modèles")  
             comparison_df = pd.DataFrame({  
