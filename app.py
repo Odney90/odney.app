@@ -176,7 +176,7 @@ col1, col2 = st.columns(2)
 
 with col1:  
     st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0
-        st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0, value=st.session_state.data["fautes_A"], key="fautes_A")  
+    st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0, value=st.session_state.data["fautes_A"], key="fautes_A")  
     st.session_state.data["cartons_jaunes_A"] = st.number_input("Cartons Jaunes Équipe A", min_value=0.0, value=st.session_state.data["cartons_jaunes_A"], key="cartons_jaunes_A")  
 
 with col2:  
