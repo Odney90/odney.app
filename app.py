@@ -321,35 +321,37 @@ with tab3:
             ax.set_title("Probabilités des Paris Double Chance")  
             st.pyplot(fig)  
 
-           # Téléchargement des données organisées par équipe  
-            st.subheader("📥 Téléchargement des Données des Équipes")  
+         # Téléchargement des données organisées par équipe  
+st.subheader("📥 Téléchargement des Données des Équipes")  
 
-            # Création d'un document Word  
-            doc = Document()  
-            doc.add_heading("Données des Équipes", level=1)  
+# Création d'un document Word  
+doc = Document()  
+doc.add_heading("Données des Équipes", level=1)  
 
-            # Ajout des données de l'Équipe A  
-            doc.add_heading("Données Équipe A", level=2)  
-            for key, value in data["Données Équipe A"].items():  
-                doc.add_paragraph(f"{key}: {value[0]}")  
+# Ajout des données de l'Équipe A  
+doc.add_heading("Données Équipe A", level=2)  
+for key, value in st.session_state.data.items():  
+    if key.endswith("_A"):  
+        doc.add_paragraph(f"{key.replace('_A', '')}: {value}")  
 
-            # Ajout des données de l'Équipe B  
-            doc.add_heading("Données Équipe B", level=2)  
-            for key, value in data["Données Équipe B"].items():  
-                doc.add_paragraph(f"{key}: {value[0]}")  
+# Ajout des données de l'Équipe B  
+doc.add_heading("Données Équipe B", level=2)  
+for key, value in st.session_state.data.items():  
+    if key.endswith("_B"):  
+        doc.add_paragraph(f"{key.replace('_B', '')}: {value}")  
 
-            # Sauvegarde du document Word  
-            doc_filename = "donnees_equipes.docx"  
-            doc.save(doc_filename)  
+# Sauvegarde du document Word  
+doc_filename = "donnees_equipes.docx"  
+doc.save(doc_filename)  
 
-            # Téléchargement du document Word  
-            with open(doc_filename, "rb") as f:  
-                st.download_button(  
-                    label="📥 Télécharger les données des équipes en DOC",  
-                    data=f,  
-                    file_name=doc_filename,  
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",  
-                )  
+# Téléchargement du document Word  
+with open(doc_filename, "rb") as f:  
+    st.download_button(  
+        label="📥 Télécharger les données des équipes en DOC",  
+        data=f,  
+        file_name=doc_filename,  
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",  
+    )
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
 # Onglet 4 : Cotes et Value Bet  
