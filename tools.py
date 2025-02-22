@@ -232,30 +232,30 @@ with tab3:
             st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
             st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
 
-          # Random Forest  
-# Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
-X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B") and isinstance(st.session_state.data[key], (int, float))]])  
+            # Random Forest  
+            # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
+            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B") and isinstance(st.session_state.data[key], (int, float))]])  
 
-# Vérification que toutes les valeurs sont numériques  
-X_rf = np.array([float(val) for val in X_rf[0]]).reshape(1, -1)  
+            # Vérification que toutes les valeurs sont numériques  
+            X_rf = np.array([float(val) for val in X_rf[0]]).reshape(1, -1)  
 
-# Génération de données d'entraînement  
-np.random.seed(0)  
-X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
-y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
+            # Génération de données d'entraînement  
+            np.random.seed(0)  
+            X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
+            y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
 
-# Entraînement du modèle  
-model_rf = RandomForestClassifier()  
-model_rf.fit(X_train_rf, y_train_rf)  
+            # Entraînement du modèle  
+            model_rf = RandomForestClassifier()  
+            model_rf.fit(X_train_rf, y_train_rf)  
 
-# Prédiction  
-prediction_rf = model_rf.predict(X_rf)  
-prediction_proba_rf = model_rf.predict_proba(X_rf)  
+            # Prédiction  
+            prediction_rf = model_rf.predict(X_rf)  
+            prediction_proba_rf = model_rf.predict_proba(X_rf)  
 
-# Affichage des résultats  
-st.subheader("📈 Résultats de la Random Forest")  
-st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
-st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")
+            # Affichage des résultats  
+            st.subheader("📈 Résultats de la Random Forest")  
+            st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
+            st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
 
             # Comparaison des modèles  
             st.subheader("📊 Comparaison des Modèles")  
@@ -311,11 +311,10 @@ with tab4:
     probabilites = []  
     for i in range(nombre_equipes):  
         probabilite = st.slider(f"Probabilité implicite équipe {i + 1} (%)", min_value=1, max_value=100, value=50, key=f"probabilite_{i}") / 100  
-        probabilites.append(probabilite)  
-    probabilite_combinee = np.prod(probabilites)  
+        probabilites.append(    probabilite_combinee = np.prod(probabilites)  
     st.write(f"Probabilité combinée : **{probabilite_combinee:.2%}**")  
 
-        # Mise de Kelly  
+    # Mise de Kelly  
     st.header("🏦 Mise de Kelly")  
     cote_kelly = st.number_input("Cote (Kelly)", min_value=1.01, value=2.0, key="cote_kelly")  
     probabilite_kelly = st.slider("Probabilité estimée (Kelly) (%)", min_value=1, max_value=100, value=50, key="probabilite_kelly") / 100  
@@ -324,7 +323,7 @@ with tab4:
     mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
     st.write(f"Mise de Kelly recommandée : **{mise_kelly:.2f}**")  
 
-    # Nouvelle section : Analyse de la marge du bookmaker  
+    # Analyse de la marge du bookmaker  
     st.header("📊 Analyse de la Marge du Bookmaker")  
     cotes = []  
     nombre_cotes = st.slider("Nombre de cotes à analyser", min_value=1, max_value=10, value=3)  
