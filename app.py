@@ -86,21 +86,25 @@ try:
     model_rf = joblib.load("random_forest_model.pkl")
     model_poisson = joblib.load("poisson_model.pkl")
 except FileNotFoundError:
+    st.error("❌ Fichiers de modèles non trouvés. Vérifiez leur présence.")
     model_logistic = model_rf = model_poisson = None
 
 # Faire une prédiction
 if model_logistic and model_rf and model_poisson:
-    features = np.array([
-        buts_par_match, buts_concedes_par_match, xG, tirs_cadres,
-        grandes_chances, passes_reussies, corners, xGA, interceptions,
-        tacles, degagements, fautes, cartons_jaunes, cartons_rouges
-    ]).reshape(1, -1)
-    
-    prediction_logistic = model_logistic.predict(features)[0]
-    prediction_rf = model_rf.predict(features)[0]
-    prediction_poisson = model_poisson.predict(features)[0]
-    
-    st.header("🔮 Prédictions des Modèles")
-    st.write(f"📈 Régression Logistique: {prediction_logistic}")
-    st.write(f"📊 Random Forest: {prediction_rf}")
-    st.write(f"📉 Modèle de Poisson: {prediction_poisson}")
+    try:
+        features = np.array([
+            buts_par_match, buts_concedes_par_match, xG, tirs_cadres,
+            grandes_chances, passes_reussies, corners, xGA, interceptions,
+            tacles, degagements, fautes, cartons_jaunes, cartons_rouges
+        ]).reshape(1, -1)
+        
+        prediction_logistic = model_logistic.predict(features)[0]
+        prediction_rf = model_rf.predict(features)[0]
+        prediction_poisson = model_poisson.predict(features)[0]
+        
+        st.header("🔮 Prédictions des Modèles")
+        st.write(f"📈 Régression Logistique: {prediction_logistic}")
+        st.write(f"📊 Random Forest: {prediction_rf}")
+        st.write(f"📉 Modèle de Poisson: {prediction_poisson}")
+    except Exception as e:
+        st.error(f"❌ Erreur lors de la prédiction: {e}")
