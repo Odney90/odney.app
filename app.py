@@ -47,14 +47,6 @@ st.markdown(
     unsafe_allow_html=True  
 )
 
-    for key, value in default_values_A.items():  
-        if key not in st.session_state:  
-            st.session_state[key] = value  
-
-    for key, value in default_values_B.items():  
-        if key not in st.session_state:  
-            st.session_state[key] = value  
-
 init_session_state()
 # --- Fonctions Utilitaires ---  
 def calculer_forme(historique):  
