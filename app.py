@@ -194,6 +194,7 @@ with tab2:
     score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
     st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
     st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
+    
 # Onglet 3 : Prédictions  
 with tab3:  
     st.header("🔮 Prédictions")  
@@ -289,6 +290,35 @@ with tab3:
                 "Il est robuste et prend en compte de nombreuses variables pour améliorer la précision."  
             )  
             st.write(f"📊 **Résultat** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+
+            # Prédiction des Paris Double Chance  
+            st.subheader("🎰 Prédiction des Paris Double Chance")  
+            st.write(  
+                "Les paris Double Chance permettent de couvrir deux des trois résultats possibles : "  
+                "1X (Équipe A gagne ou match nul), 12 (Équipe A gagne ou Équipe B gagne), X2 (Match nul ou Équipe B gagne)."  
+            )  
+
+            # Calcul des probabilités Double Chance  
+            prob_victoire_A = prediction_lr[0]  # Probabilité de victoire de l'Équipe A  
+            prob_victoire_B = 1 - prediction_lr[0]  # Probabilité de victoire de l'Équipe B  
+            prob_nul = prob_1_1  # Probabilité de match nul (basée sur Poisson)  
+
+            # Probabilités Double Chance  
+            prob_1X = prob_victoire_A + prob_nul  
+            prob_12 = prob_victoire_A + prob_victoire_B  
+            prob_X2 = prob_nul + prob_victoire_B  
+
+            st.write(f"📊 **Probabilité 1X (Équipe A gagne ou match nul)** : {prob_1X:.2%}")  
+            st.write(f"📊 **Probabilité 12 (Équipe A gagne ou Équipe B gagne)** : {prob_12:.2%}")  
+            st.write(f"📊 **Probabilité X2 (Match nul ou Équipe B gagne)** : {prob_X2:.2%}")  
+
+            # Graphique des probabilités  
+            st.subheader("📉 Graphique des Probabilités")  
+            fig, ax = plt.subplots()  
+            ax.bar(["1X", "12", "X2"], [prob_1X, prob_12, prob_X2])  
+            ax.set_ylabel("Probabilité")  
+            ax.set_title("Probabilités des Paris Double Chance")  
+            st.pyplot(fig)  
 
             # Téléchargement des données organisées par équipe  
             st.subheader("📥 Téléchargement des Données des Équipes")  
