@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt  
 import io  
 
-# Configuration de la page (icône dans l'onglet du navigateur)  
+# Configuration de la page  
 st.set_page_config(page_title="Prédictions Football", page_icon="⚽")  
 
 # Fonction pour vérifier et convertir en float  
@@ -15,7 +15,7 @@ def safe_float(value):
     try:  
         return float(value)  
     except (ValueError, TypeError):  
-        return 0.0  # Retourne 0.0 si la conversion échoue  
+        return 0.0  
 
 # Fonction pour quantifier la forme récente  
 def quantifier_forme_recente(forme_recente):  
@@ -212,6 +212,8 @@ with tab3:
                     safe_float(st.session_state.data["tirs_cadres_B"]),  
                     safe_float(st.session_state.data["interceptions_A"]),  
                     safe_float(st.session_state.data["interceptions_B"]),  
+                    score_forme_A,  # Intégration de la forme récente  
+                    score_forme_B,  # Intégration de la forme récente  
                 ],  
                 [  
                     safe_float(st.session_state.data["score_rating_B"]),  
@@ -224,6 +226,8 @@ with tab3:
                     safe_float(st.session_state.data["tirs_cadres_A"]),  
                     safe_float(st.session_state.data["interceptions_B"]),  
                     safe_float(st.session_state.data["interceptions_A"]),  
+                    score_forme_B,  # Intégration de la forme récente  
+                    score_forme_A,  # Intégration de la forme récente  
                 ]  
             ])  
             y_lr = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
@@ -231,17 +235,19 @@ with tab3:
             model_lr.fit(X_lr, y_lr)  
             prediction_lr = model_lr.predict(X_lr)  
 
-            # Random Forest  
+            # Random Forest (exclut les données des onglets 4 et 5)  
             X_rf = np.array([  
                 [  
                     safe_float(st.session_state.data[key])  
                     for key in st.session_state.data  
                     if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+                    and not key.startswith("cote_") and not key.startswith("bankroll")  
                 ],  
                 [  
                     safe_float(st.session_state.data[key])  
                     for key in st.session_state.data  
                     if (key.endswith("_B") or key.endswith("_A")) and isinstance(st.session_state.data[key], (int, float))  
+                    and not key.startswith("cote_") and not key.startswith("bankroll")  
                 ]  
             ])  
             y_rf = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
@@ -308,31 +314,4 @@ with tab4:
 
     st.subheader("Calculateur de Paris Combiné")  
     cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
-    cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
-    cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
-    cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
-    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
-
-# Onglet 5 : Système de Mise  
-with tab5:  
-    st.header("💰 Système de Mise")  
-    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
-    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
-    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
-    cote = st.number_input("Cote", value=2.0)  
-
-    # Calcul de la mise selon Kelly  
-    mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
-    mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
-    mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
-    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
-
-    # Mise à jour de la bankroll  
-    if st.button("Miser"):  
-        bankroll -= mise_kelly  
-        st.session_state.data["bankroll"] = bankroll  
-        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")  
-
-# Fin de l'application  
-if __name__ == "__main__":  
-    st.write("Merci d'utiliser l'application de prédictions football !")
+    cote_equipe_2 = st.number_input("Cote Équipe
