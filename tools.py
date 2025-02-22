@@ -232,27 +232,30 @@ with tab3:
             st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
             st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
 
-            # Random Forest  
-            # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
-            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B") and isinstance(st.session_state.data[key], (int, float))]])  
+          # Random Forest  
+# Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
+X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B") and isinstance(st.session_state.data[key], (int, float))]])  
 
-            # Génération de données d'entraînement  
-            np.random.seed(0)  
-            X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
-            y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
+# Vérification que toutes les valeurs sont numériques  
+X_rf = np.array([float(val) for val in X_rf[0]]).reshape(1, -1)  
 
-            # Entraînement du modèle  
-            model_rf = RandomForestClassifier()  
-            model_rf.fit(X_train_rf, y_train_rf)  
+# Génération de données d'entraînement  
+np.random.seed(0)  
+X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
+y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
 
-            # Prédiction  
-            prediction_rf = model_rf.predict(X_rf)  
-            prediction_proba_rf = model_rf.predict_proba(X_rf)  
+# Entraînement du modèle  
+model_rf = RandomForestClassifier()  
+model_rf.fit(X_train_rf, y_train_rf)  
 
-            # Affichage des résultats  
-            st.subheader("📈 Résultats de la Random Forest")  
-            st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
-            st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
+# Prédiction  
+prediction_rf = model_rf.predict(X_rf)  
+prediction_proba_rf = model_rf.predict_proba(X_rf)  
+
+# Affichage des résultats  
+st.subheader("📈 Résultats de la Random Forest")  
+st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
+st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")
 
             # Comparaison des modèles  
             st.subheader("📊 Comparaison des Modèles")  
