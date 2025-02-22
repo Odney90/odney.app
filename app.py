@@ -227,55 +227,25 @@ with col_b:
         key="ratio_tirs_arretes_B_input"  # Clé unique  
     )
 
-    # Performances à domicile et à l'extérieur  
-    st.subheader("🏠 Performances à Domicile et à l'Extérieur")  
-    col_a, col_b = st.columns(2)  
-    with col_a:  
-        st.session_state.data["victoires_domicile_A"] = st.number_input(  
-            "🏆 Pourcentage de victoires à domicile (Équipe A)",  
-            min_value=0.0,  
-            max_value=100.0,  
-            value=float(st.session_state.data["victoires_domicile_A"]),  
-            key="victoires_domicile_A"  
-        )  
-    with col_b:  
-        st.session_state.data["victoires_exterieur_B"] = st.number_input(  
-            "🏆 Pourcentage de victoires à l'extérieur (Équipe B)",  
-            min_value=0.0,  
-            max_value=100.0,  
-            value=float(st.session_state.data["victoires_exterieur_B"]),  
-            key="victoires_exterieur_B"  
-        )  
-
-    # Style de jeu  
-    st.subheader("🎯 Style de Jeu")  
-    col_a, col_b = st.columns(2)  
-    with col_a:  
-        st.session_state.data["passes_longues_A"] = st.number_input(  
-            "📏 Passes longues par match (Équipe A)",  
-            min_value=0,  
-            value=int(st.session_state.data["passes_longues_A"]),  
-            key="passes_longues_A"  
-        )  
-        st.session_state.data["dribbles_reussis_A"] = st.number_input(  
-            "🏃 Dribbles réussis par match (Équipe A)",  
-            min_value=0,  
-            value=int(st.session_state.data["dribbles_reussis_A"]),  
-            key="dribbles_reussis_A"  
-        )  
-    with col_b:  
-        st.session_state.data["passes_longues_B"] = st.number_input(  
-            "📏 Passes longues par match (Équipe B)",  
-            min_value=0,  
-            value=int(st.session_state.data["passes_longues_B"]),  
-            key="passes_longues_B"  
-        )  
-        st.session_state.data["dribbles_reussis_B"] = st.number_input(  
-            "🏃 Dribbles réussis par match (Équipe B)",  
-            min_value=0,  
-            value=int(st.session_state.data["dribbles_reussis_B"]),  
-            key="dribbles_reussis_B"  
-        )  
+ # Performances à domicile et à l'extérieur  
+st.subheader("🏠 Performances à Domicile et à l'Extérieur")  
+col_a, col_b = st.columns(2)  
+with col_a:  
+    st.session_state.data["victoires_domicile_A"] = st.number_input(  
+        "🏆 Pourcentage de victoires à domicile (Équipe A)",  
+        min_value=0.0,  
+        max_value=100.0,  
+        value=float(st.session_state.data["victoires_domicile_A"]),  
+        key="victoires_domicile_A_input"  # Clé unique  
+    )  
+with col_b:  
+    st.session_state.data["victoires_exterieur_B"] = st.number_input(  
+        "🏆 Pourcentage de victoires à l'extérieur (Équipe B)",  
+        min_value=0.0,  
+        max_value=100.0,  
+        value=float(st.session_state.data["victoires_exterieur_B"]),  
+        key="victoires_exterieur_B_input"  # Clé unique  
+    )  
 
     # Efficacité offensive  
     st.subheader("⚽ Efficacité Offensive")  
