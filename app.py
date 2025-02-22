@@ -155,10 +155,17 @@ with tab2:
     col_a, col_b = st.columns(2)  
 
     # Vérification et initialisation de la forme récente  
-    if "forme_recente_A" not in st.session_state.data or len(st.session_state.data["forme_recente_A"]) != 5:  
+    if "forme_recente_A" not in st.session_state.data or not isinstance(st.session_state.data["forme_recente_A"], list):  
         st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
 
-    if "forme_recente_B" not in st.session_state.data or len(st.session_state.data["forme_recente_B"]) != 5:  
+    if "forme_recente_B" not in st.session_state.data or not isinstance(st.session_state.data["forme_recente_B"], list):  
+        st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
+
+    # Vérification de la longueur des listes  
+    if len(st.session_state.data["forme_recente_A"]) != 5:  
+        st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
+
+    if len(st.session_state.data["forme_recente_B"]) != 5:  
         st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
 
     with col_a:  
