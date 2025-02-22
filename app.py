@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 import joblib
+import matplotlib.pyplot as plt
 
 # Fonction pour sauvegarder les données localement
 DATA_FILE = "saved_data.json"
@@ -26,6 +27,15 @@ st.title("⚽ Analyse de Matchs de Football 📊")
 # Saisie des équipes
 team1 = st.text_input("🏆 Équipe 1", data.get("team1", ""))
 team2 = st.text_input("🏆 Équipe 2", data.get("team2", ""))
+
+# Forme récente des équipes
+st.header("📈 Forme Récente")
+forme_team1 = st.text_area(f"📊 Forme de {team1} (5 derniers matchs, ex: V,N,D,V,V)", data.get("forme_team1", ""))
+forme_team2 = st.text_area(f"📊 Forme de {team2} (5 derniers matchs, ex: D,V,N,N,V)", data.get("forme_team2", ""))
+
+# Face-à-face
+st.header("⚔️ Face-à-Face")
+face_a_face = st.text_area("📅 Résultats des dernières confrontations", data.get("face_a_face", ""))
 
 # Organisation des statistiques
 st.header("🔥 Top Statistiques")
@@ -61,34 +71,11 @@ cartons_jaunes = st.number_input("🟨 Cartons Jaunes", value=data.get("cartons_
 cartons_rouges = st.number_input("🟥 Cartons Rouges", value=data.get("cartons_rouges", 0))
 
 # Sauvegarde des données
-data = {
-    "team1": team1,
-    "team2": team2,
-    "scores": scores,
-    "buts_totals": buts_totals,
-    "buts_par_match": buts_par_match,
-    "buts_concedes_par_match": buts_concedes_par_match,
-    "xG": xG,
-    "tirs_cadres": tirs_cadres,
-    "grandes_chances": grandes_chances,
-    "grandes_chances_manquees": grandes_chances_manquees,
-    "passes_reussies": passes_reussies,
-    "passes_longues": passes_longues,
-    "centres_reussis": centres_reussis,
-    "penalities_obtenues": penalities_obtenues,
-    "balles_touchees_surface": balles_touchees_surface,
-    "corners": corners,
-    "xGA": xGA,
-    "interceptions": interceptions,
-    "tacles": tacles,
-    "degagements": degagements,
-    "penalities_concedees": penalities_concedees,
-    "possession_remportee_tiers": possession_remportee_tiers,
-    "arrets": arrets,
-    "fautes": fautes,
-    "cartons_jaunes": cartons_jaunes,
-    "cartons_rouges": cartons_rouges
-}
+data.update({
+    "forme_team1": forme_team1,
+    "forme_team2": forme_team2,
+    "face_a_face": face_a_face
+})
 save_data(data)
 
 st.success("💾 Données sauvegardées automatiquement !")
@@ -97,12 +84,12 @@ st.success("💾 Données sauvegardées automatiquement !")
 try:
     model_logistic = joblib.load("logistic_model.pkl")
     model_rf = joblib.load("random_forest_model.pkl")
+    model_poisson = joblib.load("poisson_model.pkl")
 except FileNotFoundError:
-    model_logistic = None
-    model_rf = None
+    model_logistic = model_rf = model_poisson = None
 
 # Faire une prédiction
-if model_logistic and model_rf:
+if model_logistic and model_rf and model_poisson:
     features = np.array([
         buts_par_match, buts_concedes_par_match, xG, tirs_cadres,
         grandes_chances, passes_reussies, corners, xGA, interceptions,
@@ -111,7 +98,9 @@ if model_logistic and model_rf:
     
     prediction_logistic = model_logistic.predict(features)[0]
     prediction_rf = model_rf.predict(features)[0]
+    prediction_poisson = model_poisson.predict(features)[0]
     
     st.header("🔮 Prédictions des Modèles")
-    st.write(f"📈 Prédiction Régression Logistique: {prediction_logistic}")
-    st.write(f"📊 Prédiction Random Forest: {prediction_rf}")
+    st.write(f"📈 Régression Logistique: {prediction_logistic}")
+    st.write(f"📊 Random Forest: {prediction_rf}")
+    st.write(f"📉 Modèle de Poisson: {prediction_poisson}")
