@@ -51,7 +51,8 @@
                 </div>
             </div>
 
-            <!-- Statistiques d'attaque -->
+            <-- Statistiques d'attaque -->
+            
             <div class="mb-8">
                 <h3 class="text-xl font-semibold mb-2">Statistiques d'attaque</h3>
                 <div class="grid grid-cols-2 gap-4">
