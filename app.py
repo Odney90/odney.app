@@ -162,9 +162,17 @@ with tab3:
                     safe_float(st.session_state.data["possession_moyenne_B"]),  
                     safe_float(st.session_state.data["motivation_A"]),  
                     safe_float(st.session_state.data["motivation_B"]),  
+                ],  
+                [  
+                    safe_float(st.session_state.data["score_rating_B"]),  
+                    safe_float(st.session_state.data["score_rating_A"]),  
+                    safe_float(st.session_state.data["possession_moyenne_B"]),  
+                    safe_float(st.session_state.data["possession_moyenne_A"]),  
+                    safe_float(st.session_state.data["motivation_B"]),  
+                    safe_float(st.session_state.data["motivation_A"]),  
                 ]  
             ])  
-            y_lr = np.array([1])  # Label factice pour correspondre à X_lr  
+            y_lr = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
             model_lr = LogisticRegression()  
             model_lr.fit(X_lr, y_lr)  
             prediction_lr = model_lr.predict(X_lr)  
@@ -175,9 +183,14 @@ with tab3:
                     safe_float(st.session_state.data[key])  
                     for key in st.session_state.data  
                     if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+                ],  
+                [  
+                    safe_float(st.session_state.data[key])  
+                    for key in st.session_state.data  
+                    if (key.endswith("_B") or key.endswith("_A")) and isinstance(st.session_state.data[key], (int, float))  
                 ]  
             ])  
-            y_rf = np.array([1])  # Label factice pour correspondre à X_rf  
+            y_rf = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
             model_rf = RandomForestClassifier()  
             model_rf.fit(X_rf, y_rf)  
             prediction_rf = model_rf.predict(X_rf)  
