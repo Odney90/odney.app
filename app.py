@@ -326,8 +326,8 @@ with tab5:
     mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
     st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
 
-    # Mise à jour de la bankroll  
-    if st.button("Miser"):  
-        bankroll -= mise_kelly  
-        st.session_state.data["bankroll"] = bankroll  
-        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €
+ # Mise à jour de la bankroll  
+if st.button("Miser"):  
+    bankroll -= mise_kelly  
+    st.session_state.data["bankroll"] = bankroll  
+    st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")  # Ajout du guillemet manquant ici
