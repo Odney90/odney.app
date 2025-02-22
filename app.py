@@ -24,6 +24,7 @@ if 'data' not in st.session_state:
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "head_to_head": [],  # Historique des confrontations  
+        "conditions_match": "",  # Conditions du match  
     }  
 
 # --- Interface Utilisateur ---  
@@ -42,6 +43,10 @@ with col2:
     st.write("Équipe B")  
     for i in range(5):  
         st.session_state.data["recent_form_B"][i] = st.number_input(f"Match {i + 1} (Buts marqués)", min_value=0, value=st.session_state.data["recent_form_B"][i], key=f"recent_form_B_{i}")  
+
+# --- Conditions du Match ---  
+st.subheader("🌦️ Conditions du Match")  
+st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex: pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"])  
 
 # --- Historique des confrontations ---  
 st.subheader("📊 Historique des Confrontations Directes")  
@@ -162,10 +167,8 @@ with col2:
 
 with col1:  
     st.session_state.data["fautes_B"] = st.number_input("Fautes par Match Équipe B", min_value=0.0, value=st.session_state.data["fautes_B"], key="fautes_B")  
-    st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons_jaunes_B")  
-
-with col2:  
-    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
+    st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons
+        st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
 
 # --- Méthode de Prédiction ---  
 st.subheader("🔮 Méthode de Prédiction")  
@@ -174,39 +177,27 @@ if st.button("Prédire le Résultat"):
     forme_A = np.mean(st.session_state.data["recent_form_A"])  
     forme_B = np.mean(st.session_state.data["recent_form_B"])  
 
-        # Calculer les poids des critères  
-    poids_criteres = {  
-        "Score Rating": (st.session_state.data["score_rating_A"] + st.session_state.data["score_rating_B"]) / 2,  
-        "Buts Totaux": (st.session_state.data["buts_totaux_A"] + st.session_state.data["buts_totaux_B"]) / 2,  
-        "Buts par Match": (st.session_state.data["buts_par_match_A"] + st.session_state.data["buts_par_match_B"]) / 2,  
-        "Buts Concédés": (st.session_state.data["buts_concedes_totaux_A"] + st.session_state.data["buts_concedes_totaux_B"]) / 2,  
-        "Possession": (st.session_state.data["possession_moyenne_A"] + st.session_state.data["possession_moyenne_B"]) / 2,  
-        "Forme Récente": (forme_A + forme_B) / 2,  
-        "Expected Buts": (st.session_state.data["expected_but_A"] + st.session_state.data["expected_but_B"]) / 2,  
-        "Tirs Cadres": (st.session_state.data["tirs_cadres_A"] + st.session_state.data["tirs_cadres_B"]) / 2,  
-        "Grandes Chances": (st.session_state.data["grandes_chances_A"] + st.session_state.data["grandes_chances_B"]) / 2,  
-        "Interceptions": (st.session_state.data["interceptions_A"] + st.session_state.data["interceptions_B"]) / 2,  
-        "Tacles Réussis": (st.session_state.data["tacles_reussis_A"] + st.session_state.data["tacles_reussis_B"]) / 2,  
-        "Arrêts": (st.session_state.data["arrets_A"] + st.session_state.data["arrets_B"]) / 2,  
-        "Fautes": (st.session_state.data["fautes_A"] + st.session_state.data["fautes_B"]) / 2,  
-    }  
+    # Calculer les moyennes des buts marqués et concédés  
+    moyenne_buts_A = st.session_state.data["buts_totaux_A"] / (len(st.session_state.data["recent_form_A"]) or 1)  
+    moyenne_buts_B = st.session_state.data["buts_totaux_B"] / (len(st.session_state.data["recent_form_B"]) or 1)  
+    moyenne_buts_concedes_A = st.session_state.data["buts_concedes_totaux_A"] / (len(st.session_state.data["recent_form_A"]) or 1)  
+    moyenne_buts_concedes_B = st.session_state.data["buts_concedes_totaux_B"] / (len(st.session_state.data["recent_form_B"]) or 1)  
 
-    # Afficher les poids des critères  
-    st.write("Poids des Critères :")  
-    df_poids = pd.DataFrame(list(poids_criteres.items()), columns=["Critère", "Poids"])  
-    st.table(df_poids)  
+    # Calculer les buts attendus avec le modèle de Poisson  
+    lambda_A = (moyenne_buts_A * forme_A) / (moyenne_buts_concedes_B + 1)  # Ajustement pour la défense de l'équipe B  
+    lambda_B = (moyenne_buts_B * forme_B) / (moyenne_buts_concedes_A + 1)  # Ajustement pour la défense de l'équipe A  
 
-    # Prédiction simple basée sur les poids  
-    prediction_A = (poids_criteres["Score Rating"] + poids_criteres["Buts Totaux"] - poids_criteres["Buts Concédés"] + poids_criteres["Forme Récente"] + poids_criteres["Expected Buts"]) / 5  
-    prediction_B = (poids_criteres["Score Rating"] + poids_criteres["Buts Totaux"] - poids_criteres["Buts Concédés"] + poids_criteres["Forme Récente"] + poids_criteres["Expected Buts"]) / 5  
+    # Prédire le nombre de buts  
+    buts_A = np.random.poisson(lambda_A)  
+    buts_B = np.random.poisson(lambda_B)  
 
-    st.write(f"Prédiction : Équipe A {prediction_A:.2f} - Équipe B {prediction_B:.2f}")  
+    st.write(f"Prédiction : Équipe A {buts_A} - Équipe B {buts_B}")  
 
-    # Modèle de probabilité 2 (par exemple, un modèle basé sur les statistiques de discipline)  
-    prob_A = (st.session_state.data["aucun_but_encaisse_A"] + st.session_state.data["arrets_A"] - st.session_state.data["fautes_A"]) / (st.session_state.data["aucun_but_encaisse_A"] + st.session_state.data["arrets_A"] + st.session_state.data["fautes_A"])  
-    prob_B = (st.session_state.data["aucun_but_encaisse_B"] + st.session_state.data["arrets_B"] - st.session_state.data["fautes_B"]) / (st.session_state.data["aucun_but_encaisse_B"] + st.session_state.data["arrets_B"] + st.session_state.data["fautes_B"])  
+    # Afficher les probabilités de victoire  
+    prob_A = (lambda_A / (lambda_A + lambda_B)) * 100  
+    prob_B = (lambda_B / (lambda_A + lambda_B)) * 100  
 
-    st.write(f"Probabilité de victoire Équipe A : {prob_A:.2%}")  
-    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2%}")  
+    st.write(f"Probabilité de victoire Équipe A : {prob_A:.2f}%")  
+    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2f}%")  
 
 # --- Fin du Code ---
