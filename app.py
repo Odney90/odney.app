@@ -50,31 +50,37 @@ def predict_goals_poisson(xG_A, xG_B):
 
 # Fonction pour la prédiction avec Random Forest  
 def predict_random_forest(data):  
-    scaler = StandardScaler()  
-    scaled_data = scaler.fit_transform(data)  
-    
-    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)  
-    rf_model.fit(scaled_data, [1])  
-    prediction = rf_model.predict(scaled_data)  
-    
-    if prediction[0] == 1:  
-        return "Équipe A"  
-    else:  
-        return "Équipe B"  
+    try:  
+        scaler = StandardScaler()  
+        scaled_data = scaler.fit_transform(data)  
+        
+        rf_model = RandomForestClassifier(n_estimators=100, random_state=42)  
+        rf_model.fit(scaled_data, [1])  
+        prediction = rf_model.predict(scaled_data)  
+        
+        if prediction[0] == 1:  
+            return "Équipe A"  
+        else:  
+            return "Équipe B"  
+    except Exception as e:  
+        return f"Error: {str(e)}"  
 
 # Fonction pour la prédiction avec Régression Logistique  
 def predict_logistic_regression(data):  
-    scaler = StandardScaler()  
-    scaled_data = scaler.fit_transform(data)  
-    
-    log_model = LogisticRegression(max_iter=1000)  
-    log_model.fit(scaled_data, [1])  
-    prediction = log_model.predict(scaled_data)  
-    
-    if prediction[0] == 1:  
-        return "Équipe A"  
-    else:  
-        return "Équipe B"  
+    try:  
+        scaler = StandardScaler()  
+        scaled_data = scaler.fit_transform(data)  
+        
+        log_model = LogisticRegression(max_iter=1000)  
+        log_model.fit(scaled_data, [1])  
+        prediction = log_model.predict(scaled_data)  
+        
+        if prediction[0] == 1:  
+            return "Équipe A"  
+        else:  
+            return "Équipe B"  
+    except Exception as e:  
+        return f"Error: {str(e)}"  
 
 # Interface utilisateur Streamlit  
 st.title("⚽ Prédiction de Matchs de Football")  
@@ -205,52 +211,67 @@ with st.expander("Prédiction"):
     col1, col2 = st.columns(2)  
     with col1:  
         if st.button("Prédire avec Random Forest", key="predict_rf"):  
-            data = np.array([  
-                score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
-                possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
-                expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
-                passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
-                fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
-                cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
-                interceptions_A, interceptions_B, degagements_A, degagements_B,  
-                arrets_A, arrets_B, corners_A, corners_B,  
-                touches_surface_adverse_A, touches_surface_adverse_B,  
-                penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
-                buts_concedes_par_match_A, buts_concedes_totaux_A,  
-                aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
-                buts_concedes_totaux_B, aucun_but_encaisse_B  
-            ]).reshape(1, -1)  
-            
-            prediction = predict_random_forest(data)  
-            st.success(f"Prédiction : {prediction}", key="rf_prediction")  
+            try:  
+                data = np.array([  
+                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                    arrets_A, arrets_B, corners_A, corners_B,  
+                    touches_surface_adverse_A, touches_surface_adverse_B,  
+                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                    buts_concedes_totaux_B, aucun_but_encaisse_B  
+                ]).reshape(1, -1)  
+                
+                prediction = predict_random_forest(data)  
+                if isinstance(prediction, str):  
+                    st.success(f"Prédiction : {prediction}", key="rf_prediction")  
+                else:  
+                    st.error("Erreur lors de la prédiction", key="rf_error")  
+            except Exception as e:  
+                st.error(f"Erreur lors de la prédiction : {str(e)}", key="rf_error")  
     
     with col2:  
         if st.button("Prédire avec Régression Logistique", key="predict_lr"):  
-            data = np.array([  
-                score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
-                possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
-                expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
-                passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
-                fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
-                cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
-                interceptions_A, interceptions_B, degagements_A, degagements_B,  
-                arrets_A, arrets_B, corners_A, corners_B,  
-                touches_surface_adverse_A, touches_surface_adverse_B,  
-                penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
-                buts_concedes_par_match_A, buts_concedes_totaux_A,  
-                aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
-                buts_concedes_totaux_B, aucun_but_encaisse_B  
-            ]).reshape(1, -1)  
-            
-            prediction = predict_logistic_regression(data)  
-            st.success(f"Prédiction : {prediction}", key="lr_prediction")  
+            try:  
+                data = np.array([  
+                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                    arrets_A, arrets_B, corners_A, corners_B,  
+                    touches_surface_adverse_A, touches_surface_adverse_B,  
+                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                    buts_concedes_totaux_B, aucun_but_encaisse_B  
+                ]).reshape(1, -1)  
+                
+                prediction = predict_logistic_regression(data)  
+                if isinstance(prediction, str):  
+                    st.success(f"Prédiction : {prediction}", key="lr_prediction")  
+                else:  
+                    st.error("Erreur lors de la prédiction", key="lr_error")  
+            except Exception as e:  
+                st.error(f"Erreur lors de la prédiction : {str(e)}", key="lr_error")  
 
 # Section pour la prédiction des buts  
 with st.expander("Prédiction des buts"):  
     if st.button("Prédire les buts", key="predict_goals"):  
-        buts_A, buts_B = predict_goals_poisson(expected_buts_A, expected_buts_B)  
-        st.write(f"Buts attendus pour l'équipe A : {buts_A}", key="buts_A")  
-        st.write(f"Buts attendus pour l'équipe B : {buts_B}", key="buts_B")  
+        try:  
+            buts_A, buts_B = predict_goals_poisson(expected_buts_A, expected_buts_B)  
+            st.write(f"Buts attendus pour l'équipe A : {buts_A}", key="buts_A")  
+            st.write(f"Buts attendus pour l'équipe B : {buts_B}", key="buts_B")  
+        except Exception as e:  
+            st.error(f"Erreur lors de la prédiction des buts : {str(e)}", key="goals_error")  
 
 # Sauvegarde automatique des données  
 def save_all_data():  
