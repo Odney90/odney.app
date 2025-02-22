@@ -267,7 +267,7 @@ with tab3:
                     st.session_state.data["motivation_B"],  
                 ]  
             ])  
-            y_lr = np.random.randint(0, 2, 100)  # Données factices pour l'entraînement  
+            y_lr = np.array([1])  # Label factice pour correspondre à X_lr  
             model_lr = LogisticRegression()  
             model_lr.fit(X_lr, y_lr)  
             prediction_lr = model_lr.predict(X_lr)  
@@ -280,7 +280,7 @@ with tab3:
                     if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
                 ]  
             ])  
-            y_rf = np.random.randint(0, 2, 100)  # Données factices pour l'entraînement  
+            y_rf = np.array([1])  # Label factice pour correspondre à X_rf  
             model_rf = RandomForestClassifier()  
             model_rf.fit(X_rf, y_rf)  
             prediction_rf = model_rf.predict(X_rf)  
