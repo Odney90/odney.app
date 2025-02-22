@@ -24,6 +24,9 @@ def generate_fake_data():
         'teamB_saves': np.random.randint(1, 10, 100),  
         'teamA_clean_sheet': np.random.randint(0, 2, 100),  
         'teamB_clean_sheet': np.random.randint(0, 2, 100),  
+        'teamA_form': np.random.randint(0, 15, 100),  # Score de forme (5 derniers matchs)  
+        'teamB_form': np.random.randint(0, 15, 100),  
+        'head_to_head': np.random.randint(0, 10, 100),  # Nombre de victoires de l'équipe A face à B  
         'result': np.random.choice(['A', 'B', 'D'], 100)  # A: Équipe A gagne, B: Équipe B gagne, D: Match nul  
     }  
     df = pd.DataFrame(data)  
@@ -71,56 +74,76 @@ with tab1:
 
     # Forme récente (5 derniers matchs)  
     st.subheader("Forme récente (5 derniers matchs)")  
-    teamA_form = [st.selectbox(f"Match {i+1} - Équipe A", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
-    teamB_form = [st.selectbox(f"Match {i+1} - Équipe B", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        teamA_form = [st.selectbox(f"Match {i+1} - Équipe A", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
+    with col2:  
+        teamB_form = [st.selectbox(f"Match {i+1} - Équipe B", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
+
+    # Conditions face à face  
+    st.subheader("Conditions face à face")  
+    head_to_head = st.number_input("Nombre de victoires de l'Équipe A face à l'Équipe B", min_value=0)  
 
     # Statistiques générales  
     st.subheader("Statistiques générales")  
-    teamA_possession = st.number_input("Possession de l'Équipe A (%)", min_value=0, max_value=100)  
-    teamB_possession = st.number_input("Possession de l'Équipe B (%)", min_value=0, max_value=100)  
-    teamA_passes = st.number_input("Passes réussies de l'Équipe A", min_value=0)  
-    teamB_passes = st.number_input("Passes réussies de l'Équipe B", min_value=0)  
-    teamA_tacles = st.number_input("Tacles réussis de l'Équipe A", min_value=0)  
-    teamB_tacles = st.number_input("Tacles réussis de l'Équipe B", min_value=0)  
-    teamA_fautes = st.number_input("Fautes de l'Équipe A", min_value=0)  
-    teamB_fautes = st.number_input("Fautes de l'Équipe B", min_value=0)  
-    teamA_yellow_cards = st.number_input("Cartons jaunes de l'Équipe A", min_value=0)  
-    teamB_yellow_cards = st.number_input("Cartons jaunes de l'Équipe B", min_value=0)  
-    teamA_red_cards = st.number_input("Cartons rouges de l'Équipe A", min_value=0)  
-    teamB_red_cards = st.number_input("Cartons rouges de l'Équipe B", min_value=0)  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        teamA_possession = st.number_input("Possession de l'Équipe A (%)", min_value=0, max_value=100)  
+        teamA_passes = st.number_input("Passes réussies de l'Équipe A", min_value=0)  
+        teamA_tacles = st.number_input("Tacles réussis de l'Équipe A", min_value=0)  
+        teamA_fautes = st.number_input("Fautes de l'Équipe A", min_value=0)  
+        teamA_yellow_cards = st.number_input("Cartons jaunes de l'Équipe A", min_value=0)  
+        teamA_red_cards = st.number_input("Cartons rouges de l'Équipe A", min_value=0)  
+    with col2:  
+        teamB_possession = st.number_input("Possession de l'Équipe B (%)", min_value=0, max_value=100)  
+        teamB_passes = st.number_input("Passes réussies de l'Équipe B", min_value=0)  
+        teamB_tacles = st.number_input("Tacles réussis de l'Équipe B", min_value=0)  
+        teamB_fautes = st.number_input("Fautes de l'Équipe B", min_value=0)  
+        teamB_yellow_cards = st.number_input("Cartons jaunes de l'Équipe B", min_value=0)  
+        teamB_red_cards = st.number_input("Cartons rouges de l'Équipe B", min_value=0)  
 
     # Statistiques d'attaque  
     st.subheader("Statistiques d'attaque")  
-    teamA_goals = st.number_input("Buts de l'Équipe A", min_value=0)  
-    teamB_goals = st.number_input("Buts de l'Équipe B", min_value=0)  
-    teamA_xg = st.number_input("xG de l'Équipe A", min_value=0.0)  
-    teamB_xg = st.number_input("xG de l'Équipe B", min_value=0.0)  
-    teamA_shots = st.number_input("Tirs cadrés de l'Équipe A", min_value=0)  
-    teamB_shots = st.number_input("Tirs cadrés de l'Équipe B", min_value=0)  
-    teamA_corners = st.number_input("Corners de l'Équipe A", min_value=0)  
-    teamB_corners = st.number_input("Corners de l'Équipe B", min_value=0)  
-    teamA_touches = st.number_input("Touches dans la surface adverse de l'Équipe A", min_value=0)  
-    teamB_touches = st.number_input("Touches dans la surface adverse de l'Équipe B", min_value=0)  
-    teamA_penalties = st.number_input("Pénalités obtenues de l'Équipe A", min_value=0)  
-    teamB_penalties = st.number_input("Pénalités obtenues de l'Équipe B", min_value=0)  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        teamA_goals = st.number_input("Buts de l'Équipe A", min_value=0)  
+        teamA_xg = st.number_input("xG de l'Équipe A", min_value=0.0)  
+        teamA_shots = st.number_input("Tirs cadrés de l'Équipe A", min_value=0)  
+        teamA_corners = st.number_input("Corners de l'Équipe A", min_value=0)  
+        teamA_touches = st.number_input("Touches dans la surface adverse de l'Équipe A", min_value=0)  
+        teamA_penalties = st.number_input("Pénalités obtenues de l'Équipe A", min_value=0)  
+    with col2:  
+        teamB_goals = st.number_input("Buts de l'Équipe B", min_value=0)  
+        teamB_xg = st.number_input("xG de l'Équipe B", min_value=0.0)  
+        teamB_shots = st.number_input("Tirs cadrés de l'Équipe B", min_value=0)  
+        teamB_corners = st.number_input("Corners de l'Équipe B", min_value=0)  
+        teamB_touches = st.number_input("Touches dans la surface adverse de l'Équipe B", min_value=0)  
+        teamB_penalties = st.number_input("Pénalités obtenues de l'Équipe B", min_value=0)  
 
     # Statistiques de défense  
     st.subheader("Statistiques de défense")  
-    teamA_xg_conceded = st.number_input("xG concédés de l'Équipe A", min_value=0.0)  
-    teamB_xg_conceded = st.number_input("xG concédés de l'Équipe B", min_value=0.0)  
-    teamA_interceptions = st.number_input("Interceptions de l'Équipe A", min_value=0)  
-    teamB_interceptions = st.number_input("Interceptions de l'Équipe B", min_value=0)  
-    teamA_clearances = st.number_input("Dégagements de l'Équipe A", min_value=0)  
-    teamB_clearances = st.number_input("Dégagements de l'Équipe B", min_value=0)  
-    teamA_saves = st.number_input("Arrêts de l'Équipe A", min_value=0)  
-    teamB_saves = st.number_input("Arrêts de l'Équipe B", min_value=0)  
-    teamA_goals_conceded = st.number_input("Buts concédés de l'Équipe A", min_value=0)  
-    teamB_goals_conceded = st.number_input("Buts concédés de l'Équipe B", min_value=0)  
-    teamA_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe A", ["Oui", "Non"])  
-    teamB_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe B", ["Oui", "Non"])  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        teamA_xg_conceded = st.number_input("xG concédés de l'Équipe A", min_value=0.0)  
+        teamA_interceptions = st.number_input("Interceptions de l'Équipe A", min_value=0)  
+        teamA_clearances = st.number_input("Dégagements de l'Équipe A", min_value=0)  
+        teamA_saves = st.number_input("Arrêts de l'Équipe A", min_value=0)  
+        teamA_goals_conceded = st.number_input("Buts concédés de l'Équipe A", min_value=0)  
+        teamA_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe A", ["Oui", "Non"])  
+    with col2:  
+        teamB_xg_conceded = st.number_input("xG concédés de l'Équipe B", min_value=0.0)  
+        teamB_interceptions = st.number_input("Interceptions de l'Équipe B", min_value=0)  
+        teamB_clearances = st.number_input("Dégagements de l'Équipe B", min_value=0)  
+        teamB_saves = st.number_input("Arrêts de l'Équipe B", min_value=0)  
+        teamB_goals_conceded = st.number_input("Buts concédés de l'Équipe B", min_value=0)  
+        teamB_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe B", ["Oui", "Non"])  
 
     # Bouton pour prédire  
     if st.button("Prédire le Résultat"):  
+        # Calculer le score de forme  
+        teamA_form_score = teamA_form.count("Victoire") * 3 + teamA_form.count("Match nul")  
+        teamB_form_score = teamB_form.count("Victoire") * 3 + teamB_form.count("Match nul")  
+
         # Préparer les données pour la prédiction  
         teamA_stats = {  
             'teamA_goals': teamA_goals,  
@@ -130,7 +153,9 @@ with tab1:
             'teamA_corners': teamA_corners,  
             'teamA_interceptions': teamA_interceptions,  
             'teamA_saves': teamA_saves,  
-            'teamA_clean_sheet': 1 if teamA_clean_sheet == "Oui" else 0  
+            'teamA_clean_sheet': 1 if teamA_clean_sheet == "Oui" else 0,  
+            'teamA_form': teamA_form_score,  
+            'head_to_head': head_to_head  
         }  
         teamB_stats = {  
             'teamB_goals': teamB_goals,  
@@ -140,7 +165,8 @@ with tab1:
             'teamB_corners': teamB_corners,  
             'teamB_interceptions': teamB_interceptions,  
             'teamB_saves': teamB_saves,  
-            'teamB_clean_sheet': 1 if teamB_clean_sheet == "Oui" else 0  
+            'teamB_clean_sheet': 1 if teamB_clean_sheet == "Oui" else 0,  
+            'teamB_form': teamB_form_score  
         }  
         
         # Faire la prédiction  
