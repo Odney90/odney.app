@@ -29,6 +29,9 @@ if 'data' not in st.session_state:
         "penalties_concedes_A": 0.0,
         "possessions_remporte_A": 0.0,
         "arrets_A": 0.0,
+        "fautes_A": 0.0, 
+        "cartons_jaunes_A": 0.0,
+        "cartons_rouges_A": 0.0,
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -54,6 +57,9 @@ if 'data' not in st.session_state:
         "penalties_concedes_B": 0.0,
         "possessions_remporte_B": 0.0,
         "arrets_B": 0.0,
+        "fautes_B": 0.0,
+        "cartons_jaunes_B": 0.0,
+        "cartons_rouges_B": 0.0,
 
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
