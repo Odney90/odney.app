@@ -167,27 +167,26 @@ with col2:
 
 with col1:  
     st.session_state.data["fautes_B"] = st.number_input("Fautes par Match Équipe B", min_value=0.0, value=st.session_state.data["fautes_B"], key="fautes_B")  
-    st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons_jaunes_B")
-  
-with col2:                                                            
-   st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
+    st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons_jaunes_B")  
+
+with col2:  
+    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
 
 # --- Méthode de Prédiction ---  
 st.subheader("🔮 Méthode de Prédiction")  
-if st.button("Prédire le Résultat"):  
-    # Calculer la forme récente  
+
+if st.button("Prédire le Résultat du Match"):  
+    # Calculer les moyennes des buts marqués et concédés  
+    moyenne_buts_A = st.session_state.data["buts_totaux_A"] / (st.session_state.data["aucun_but_encaisse_A"] + 1)  
+    moyenne_buts_B = st.session_state.data["buts_totaux_B"] / (st.session_state.data["aucun_but_encaisse_B"] + 1)  
+
+    # Ajuster les moyennes en fonction de la forme récente  
     forme_A = np.mean(st.session_state.data["recent_form_A"])  
     forme_B = np.mean(st.session_state.data["recent_form_B"])  
 
-    # Calculer les moyennes des buts marqués et concédés  
-    moyenne_buts_A = st.session_state.data["buts_totaux_A"] / (len(st.session_state.data["recent_form_A"]) or 1)  
-    moyenne_buts_B = st.session_state.data["buts_totaux_B"] / (len(st.session_state.data["recent_form_B"]) or 1)  
-    moyenne_buts_concedes_A = st.session_state.data["buts_concedes_totaux_A"] / (len(st.session_state.data["recent_form_A"]) or 1)  
-    moyenne_buts_concedes_B = st.session_state.data["buts_concedes_totaux_B"] / (len(st.session_state.data["recent_form_B"]) or 1)  
-
-    # Calculer les buts attendus avec le modèle de Poisson  
-    lambda_A = (moyenne_buts_A * forme_A) / (moyenne_buts_concedes_B + 1)  # Ajustement pour la défense de l'équipe B  
-    lambda_B = (moyenne_buts_B * forme_B) / (moyenne_buts_concedes_A + 1)  # Ajustement pour la défense de l'équipe A  
+    # Calculer les attentes de buts  
+    lambda_A = (moyenne_buts_A * forme_A) / (st.session_state.data["buts_concedes_par_match_B"] + 1)  # Ajustement pour la défense de l'équipe B  
+    lambda_B = (moyenne_buts_B * forme_B) / (st.session_state.data["buts_concedes_par_match_A"] + 1)  # Ajustement pour la défense de l'équipe A  
 
     # Prédire le nombre de buts  
     buts_A = np.random.poisson(lambda_A)  
