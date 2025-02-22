@@ -69,82 +69,108 @@ if "data" not in st.session_state:
         "conditions_match": "",  
     }  
 
-# Section 2 : Conditions du Match et Motivation  
-st.header("🌦️ Conditions du Match et Motivation")  
-col_a, col_b = st.columns(2)  
+# Création des onglets  
+tab1, tab2, tab3 = st.tabs(["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions"])  
 
-# Conditions du Match  
-with col_a:  
-    st.session_state.data["conditions_match"] = st.text_input(  
-        "🌧️ Conditions du Match (ex : pluie, terrain sec)",  
-        value=st.session_state.data["conditions_match"],  
-        key="conditions_match_input"  
-    )  
+# Onglet 1 : Statistiques  
+with tab1:  
+    st.header("📊 Statistiques des Équipes")  
+    col_a, col_b = st.columns(2)  
 
-# Motivation  
-with col_b:  
-    st.session_state.data["motivation_A"] = st.slider(  
-        "💪 Motivation de l'Équipe A (1 à 5)",  
-        min_value=1,  
-        max_value=5,  
-        value=int(st.session_state.data["motivation_A"]),  
-        key="motivation_A_slider"  
-    )  
-    st.session_state.data["motivation_B"] = st.slider(  
-        "💪 Motivation de l'Équipe B (1 à 5)",  
-        min_value=1,  
-        max_value=5,  
-        value=int(st.session_state.data["motivation_B"]),  
-        key="motivation_B_slider"  
-    )  
+    # Statistiques de l'Équipe A  
+    with col_a:  
+        st.subheader("Équipe A")  
+        st.write(f"Score Rating : {st.session_state.data['score_rating_A']}")  
+        st.write(f"Buts par Match : {st.session_state.data['buts_par_match_A']}")  
+        st.write(f"Possession Moyenne : {st.session_state.data['possession_moyenne_A']}%")  
+        st.write(f"Motivation : {st.session_state.data['motivation_A']}")  
 
-# Section 3 : Prédictions  
-st.header("🔮 Prédictions")  
-if st.button("Prédire le résultat"):  
-    try:  
-        # Prédiction des Buts avec Poisson  
-        avg_goals_A = st.session_state.data["buts_par_match_A"]  
-        avg_goals_B = st.session_state.data["buts_par_match_B"]  
-        prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
-        prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
-        prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
+    # Statistiques de l'Équipe B  
+    with col_b:  
+        st.subheader("Équipe B")  
+        st.write(f"Score Rating : {st.session_state.data['score_rating_B']}")  
+        st.write(f"Buts par Match : {st.session_state.data['buts_par_match_B']}")  
+        st.write(f"Possession Moyenne : {st.session_state.data['possession_moyenne_B']}%")  
+        st.write(f"Motivation : {st.session_state.data['motivation_B']}")  
 
-        # Régression Logistique  
-        X_lr = np.array([  
-            [  
-                st.session_state.data["score_rating_A"],  
-                st.session_state.data["score_rating_B"],  
-                st.session_state.data["possession_moyenne_A"],  
-                st.session_state.data["possession_moyenne_B"],  
-                st.session_state.data["motivation_A"],  
-                st.session_state.data["motivation_B"],  
-            ]  
-        ])  
-        y_lr = np.random.randint(0, 2, 100)  # Données factices pour l'entraînement  
-        model_lr = LogisticRegression()  
-        model_lr.fit(X_lr, y_lr)  
-        prediction_lr = model_lr.predict(X_lr)  
+# Onglet 2 : Conditions et Motivation  
+with tab2:  
+    st.header("🌦️ Conditions du Match et Motivation")  
+    col_a, col_b = st.columns(2)  
 
-        # Random Forest  
-        X_rf = np.array([  
-            [  
-                st.session_state.data[key]  
-                for key in st.session_state.data  
-                if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
-            ]  
-        ])  
-        y_rf = np.random.randint(0, 2, 100)  # Données factices pour l'entraînement  
-        model_rf = RandomForestClassifier()  
-        model_rf.fit(X_rf, y_rf)  
-        prediction_rf = model_rf.predict(X_rf)  
+    # Conditions du Match  
+    with col_a:  
+        st.session_state.data["conditions_match"] = st.text_input(  
+            "🌧️ Conditions du Match (ex : pluie, terrain sec)",  
+            value=st.session_state.data["conditions_match"],  
+            key="conditions_match_input"  
+        )  
 
-        # Affichage des résultats  
-        st.subheader("Résultats des Prédictions")  
-        st.write(f"📊 **Probabilité de 0-0 (Poisson)** : {prob_0_0:.2%}")  
-        st.write(f"📊 **Probabilité de 1-1 (Poisson)** : {prob_1_1:.2%}")  
-        st.write(f"📊 **Probabilité de 2-2 (Poisson)** : {prob_2_2:.2%}")  
-        st.write(f"📊 **Régression Logistique** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
-        st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+    # Motivation  
+    with col_b:  
+        st.session_state.data["motivation_A"] = st.slider(  
+            "💪 Motivation de l'Équipe A (1 à 5)",  
+            min_value=1,  
+            max_value=5,  
+            value=int(st.session_state.data["motivation_A"]),  
+            key="motivation_A_slider"  
+        )  
+        st.session_state.data["motivation_B"] = st.slider(  
+            "💪 Motivation de l'Équipe B (1 à 5)",  
+            min_value=1,  
+            max_value=5,  
+            value=int(st.session_state.data["motivation_B"]),  
+            key="motivation_B_slider"  
+        )  
 
-    except Exception as e:  
-        st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
+# Onglet 3 : Prédictions  
+with tab3:  
+    st.header("🔮 Prédictions")  
+    if st.button("Prédire le résultat"):  
+        try:  
+            # Prédiction des Buts avec Poisson  
+            avg_goals_A = st.session_state.data["buts_par_match_A"]  
+            avg_goals_B = st.session_state.data["buts_par_match_B"]  
+            prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
+            prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
+            prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
+
+            # Régression Logistique  
+            X_lr = np.array([  
+                [  
+                    st.session_state.data["score_rating_A"],  
+                    st.session_state.data["score_rating_B"],  
+                    st.session_state.data["possession_moyenne_A"],  
+                    st.session_state.data["possession_moyenne_B"],  
+                    st.session_state.data["motivation_A"],  
+                    st.session_state.data["motivation_B"],  
+                ]  
+            ])  
+            y_lr = np.random.randint(0, 2, 100)  # Données factices pour l'entraînement  
+            model_lr = LogisticRegression()  
+            model_lr.fit(X_lr, y_lr)  
+            prediction_lr = model_lr.predict(X_lr)  
+
+            # Random Forest  
+            X_rf = np.array([  
+                [  
+                    st.session_state.data[key]  
+                    for key in st.session_state.data  
+                    if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+                ]  
+            ])  
+            y_rf = np.random.randint(0, 2, 100)  # Données factices pour l'entraînement  
+            model_rf = RandomForestClassifier()  
+            model_rf.fit(X_rf, y_rf)  
+            prediction_rf = model_rf.predict(X_rf)  
+
+            # Affichage des résultats  
+            st.subheader("Résultats des Prédictions")  
+            st.write(f"📊 **Probabilité de 0-0 (Poisson)** : {prob_0_0:.2%}")  
+            st.write(f"📊 **Probabilité de 1-1 (Poisson)** : {prob_1_1:.2%}")  
+            st.write(f"📊 **Probabilité de 2-2 (Poisson)** : {prob_2_2:.2%}")  
+            st.write(f"📊 **Régression Logistique** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
+            st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+
+        except Exception as e:  
+            st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
