@@ -155,8 +155,8 @@ with tab2:
     col_a, col_b = st.columns(2)  
     with col_a:  
         st.write("Équipe A")  
-        # Vérifiez si la liste "forme_recente_A" contient exactement 5 éléments  
-        if len(st.session_state.data["forme_recente_A"]) != 5:  
+        # Vérifiez si la clé "forme_recente_A" existe et contient 5 éléments  
+        if "forme_recente_A" not in st.session_state.data or len(st.session_state.data["forme_recente_A"]) != 5:  
             st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
         for i in range(5):  
             # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
@@ -168,8 +168,8 @@ with tab2:
             )  
     with col_b:  
         st.write("Équipe B")  
-        # Vérifiez si la liste "forme_recente_B" contient exactement 5 éléments  
-        if len(st.session_state.data["forme_recente_B"]) != 5:  
+        # Vérifiez si la clé "forme_recente_B" existe et contient 5 éléments  
+        if "forme_recente_B" not in st.session_state.data or len(st.session_state.data["forme_recente_B"]) != 5:  
             st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
         for i in range(5):  
             # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
@@ -184,7 +184,7 @@ with tab2:
     score_forme_A = quantifier_forme_recente(st.session_state.data["forme_recente_A"])  
     score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
     st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
-    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
+    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")
 
 # Onglet 3 : Prédictions  
 with tab3:  
