@@ -97,12 +97,7 @@ if "data" not in st.session_state:
         # Forme Récente  
         "forme_recente_A": ["V", "N", "D", "V", "V"],  # Données fictives pour l'Équipe A  
         "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B  
-        # Cotes  
-        "cote_victoire_A": 2.0,  
-        "cote_nul": 3.0,  
-        "cote_victoire_B": 4.0,  
-        # Bankroll  
-        "bankroll": 1000.0,  
+      
     }  
 
 # Création des onglets  
