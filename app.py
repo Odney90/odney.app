@@ -1,11 +1,9 @@
 import streamlit as st  
 import numpy as np  
-import pandas as pd  
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import train_test_split  
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report  
+import pandas as pd  
 import matplotlib.pyplot as plt  
 
 # Initialisation des données par défaut  
@@ -13,56 +11,34 @@ if 'data' not in st.session_state:
     st.session_state.data = {  
         # Statistiques de l'Équipe A  
         "score_rating_A": 70.0,  
-        "buts_totaux_A": 50.0,  
         "buts_par_match_A": 1.5,  
         "buts_concedes_par_match_A": 1.0,  
-        "buts_concedes_totaux_A": 30.0,  
         "possession_moyenne_A": 55.0,  
-        "aucun_but_encaisse_A": 10,  
         "expected_but_A": 1.8,  
         "expected_concedes_A": 1.2,  
         "tirs_cadres_A": 120,  
         "grandes_chances_A": 25,  
-        "grandes_chances_manquees_A": 10,  
         "passes_reussies_A": 400,  
-        "passes_longues_A": 80,  
-        "centres_reussis_A": 30,  
-        "penalties_obtenues_A": 5,  
-        "balles_surface_A": 150,  
         "corners_A": 60,  
         "interceptions_A": 50,  
-        "degagements_A": 70,  
         "tacles_reussis_A": 40,  
-        "penalties_concedes_A": 3,  
-        "arrets_A": 45,  
         "fautes_A": 15,  
         "cartons_jaunes_A": 5,  
         "cartons_rouges_A": 1,  
 
         # Statistiques de l'Équipe B  
         "score_rating_B": 65.0,  
-        "buts_totaux_B": 40.0,  
         "buts_par_match_B": 1.0,  
         "buts_concedes_par_match_B": 1.5,  
-        "buts_concedes_totaux_B": 35.0,  
         "possession_moyenne_B": 45.0,  
-        "aucun_but_encaisse_B": 8,  
         "expected_but_B": 1.2,  
         "expected_concedes_B": 1.8,  
         "tirs_cadres_B": 100,  
         "grandes_chances_B": 20,  
-        "grandes_chances_manquees_B": 15,  
         "passes_reussies_B": 350,  
-        "passes_longues_B": 60,  
-        "centres_reussis_B": 25,  
-        "penalties_obtenues_B": 3,  
-        "balles_surface_B": 120,  
         "corners_B": 50,  
         "interceptions_B": 40,  
-        "degagements_B": 60,  
         "tacles_reussis_B": 35,  
-        "penalties_concedes_B": 4,  
-        "arrets_B": 30,  
         "fautes_B": 20,  
         "cartons_jaunes_B": 6,  
         "cartons_rouges_B": 2,  
@@ -70,8 +46,24 @@ if 'data' not in st.session_state:
         "recent_form_A": [1, 2, 1, 0, 3],  
         "recent_form_B": [0, 1, 2, 1, 1],  
         "head_to_head": {"victoires_A": 0, "nuls": 0, "victoires_B": 0},  
-        "conditions_match": "",  
     }  
+
+# Fonctions pour les outils de paris  
+def cotes_vers_probabilite(cote):  
+    """Convertit une cote décimale en probabilité implicite."""  
+    return 1 / cote  
+
+def enlever_marge(probabilites, marge):  
+    """Enlève la marge du bookmaker des probabilités."""  
+    total_probabilite = sum(probabilites)  
+    facteur_correction = (1 - marge) / total_probabilite  
+    return [p * facteur_correction for p in probabilites]  
+
+def kelly_criterion(cote, probabilite, bankroll, kelly_fraction):  
+    """Calcule la mise de Kelly."""  
+    probabilite_avantage = probabilite * cote - 1  
+    fraction = kelly_fraction * probabilite_avantage / (cote - 1)  
+    return bankroll * fraction  
 
 # Configuration de la page  
 st.set_page_config(page_title="Prédiction de Matchs de Football", page_icon="⚽", layout="wide")  
@@ -80,7 +72,7 @@ st.set_page_config(page_title="Prédiction de Matchs de Football", page_icon="�
 st.header("⚽ Analyse de Prédiction de Matchs de Football")  
 
 # Onglets pour les différentes sections  
-tab1, tab2, tab3 = st.tabs(["📊 Statistiques des Équipes", "🌦️ Conditions du Match", "🔮 Prédictions"])  
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Statistiques des Équipes", "🌦️ Conditions du Match", "🔮 Prédictions", "🛠️ Outils de Paris"])  
 
 with tab1:  
     st.subheader("📊 Statistiques des Équipes")  
@@ -111,7 +103,7 @@ with tab1:
 
 with tab2:  
     st.subheader("🌦️ Conditions du Match")  
-    st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"], key="conditions_match")  
+    st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value="", key="conditions_match")  
 
     col_h2h, col_recent_form = st.columns(2)  
 
@@ -193,10 +185,18 @@ with tab3:
             # Régression Logistique  
             # Critères importants pour la régression logistique  
             X_lr = np.array([  
-                [st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
-                 st.session_state.data["possession_moyenne_A"], st.session_state.data["expected_but_A"],  
-                 st.session_state.data["score_rating_B"], st.session_state.data["buts_par_match_B"], st.session_state.data["buts_concedes_par_match_B"],  
-                 st.session_state.data["possession_moyenne_B"], st.session_state.data["expected_but_B"]]  
+                [  
+                    st.session_state.data["score_rating_A"],  
+                    st.session_state.data["buts_par_match_A"],  
+                    st.session_state.data["buts_concedes_par_match_A"],  
+                    st.session_state.data["possession_moyenne_A"],  
+                    st.session_state.data["expected_but_A"],  
+                    st.session_state.data["score_rating_B"],  
+                    st.session_state.data["buts_par_match_B"],  
+                    st.session_state.data["buts_concedes_par_match_B"],  
+                    st.session_state.data["possession_moyenne_B"],  
+                    st.session_state.data["expected_but_B"]  
+                ]  
             ])  
 
             # Génération de données d'entraînement  
@@ -220,6 +220,10 @@ with tab3:
             # Random Forest  
             # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
             X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B") and isinstance(st.session_state.data[key], (int, float))]])  
+
+            # Vérification que toutes les valeurs sont numériques  
+            if X_rf.shape[1] != 52:  # Assurez-vous que vous avez le bon nombre de caractéristiques  
+                raise ValueError("Le nombre de caractéristiques doit être de 52.")  
 
             # Génération de données d'entraînement  
             np.random.seed(0)  
@@ -267,6 +271,59 @@ with tab3:
 
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
+
+with tab4:  
+    st.title("🛠️ Outils de Paris")  
+
+    # Convertisseur de cotes  
+    st.header("🧮 Convertisseur de Cotes")  
+    cote_decimale = st.number_input("Cote décimale", min_value=1.01, value=2.0)  
+    probabilite_implicite = cotes_vers_probabilite(cote_decimale)  
+    st.write(f"Probabilité implicite : **{probabilite_implicite:.2%}**")  
+
+    # Calcul de value bets  
+    st.header("💰 Calcul de Value Bets")  
+    cote_value_bet = st.number_input("Cote (value bet)", min_value=1.01, value=2.0, key="cote_value_bet")  
+    probabilite_estimee = st.slider("Probabilité estimée (%)", min_value=1, max_value=100, value=50) / 100  
+    probabilite_implicite_value_bet = cotes_vers_probabilite(cote_value_bet)  
+    if probabilite_estimee > probabilite_implicite_value_bet:  
+        st.success("Value bet détecté !")  
+    else:  
+        st.warning("Pas de value bet.")  
+
+    # Simulateur de paris combinés  
+    st.header("➕ Simulateur de Paris Combinés")  
+    nombre_equipes = st.slider("Nombre d'équipes (jusqu'à 3)", min_value=1, max_value=3, value=2)  
+    probabilites = []  
+    for i in range(nombre_equipes):  
+        probabilite = st.slider(f"Probabilité implicite équipe {i + 1} (%)", min_value=1, max_value=100, value=50, key=f"probabilite_{i}") / 100  
+        probabilites.append(probabilite)  
+    probabilite_combinee = np.prod(probabilites)  
+    st.write(f"Probabilité combinée : **{probabilite_combinee:.2%}**")  
+
+    # Mise de Kelly  
+    st.header("🏦 Mise de Kelly")  
+    cote_kelly = st.number_input("Cote (Kelly)", min_value=1.01, value=2.0, key="cote_kelly")  
+    probabilite_kelly = st.slider("Probabilité estimée (Kelly) (%)", min_value=1, max_value=100, value=50, key="probabilite_kelly") / 100  
+    bankroll = st.number_input("Bankroll", min_value=1, value=1000)  
+    kelly_fraction = st.slider("Fraction de Kelly (1 à 5)", min_value=1, max_value=5, value=1) / 5  
+    mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
+    st.write(f"Mise de Kelly recommandée : **{mise_kelly:.2f}**")  
+
+    # Analyse de la marge du bookmaker  
+    st.header("📊 Analyse de la Marge du Bookmaker")  
+    cotes = []  
+    nombre_cotes = st.slider("Nombre de cotes à analyser", min_value=1, max_value=10, value=3)  
+    for i in range(nombre_cotes):  
+        cote = st.number_input(f"Cote {i + 1}", min_value=1.01, value=2.0, key=f"cote_{i}")  
+        cotes.append(cote)  
+    probabilites_implicites = [cotes_vers_probabilite(cote) for cote in cotes]  
+    marge_bookmaker = sum(probabilites_implicites) - 1  
+    st.write(f"Marge du bookmaker : **{marge_bookmaker:.2%}**")
+        probabilites_corrigees = enlever_marge(probabilites_implicites, marge_bookmaker)  
+    st.write("Probabilités corrigées (sans marge) :")  
+    for i, p in enumerate(probabilites_corrigees):  
+        st.write(f"Événement {i + 1} : **{p:.2%}**")  
 
 # Pied de page simulé avec HTML  
 st.markdown(  
