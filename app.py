@@ -1,6 +1,7 @@
 import streamlit as st  
 import numpy as np  
 import pandas as pd  
+import matplotlib.pyplot as plt  
 
 # --- Initialisation des valeurs dans session_state ---  
 if 'data' not in st.session_state:  
@@ -12,8 +13,8 @@ if 'data' not in st.session_state:
         "buts_concedes_totaux_A": 30.0,  
         "possession_moyenne_A": 55.0,  
         "aucun_but_encaisse_A": 10,  
-        "expected_but_A": 0.0,  # Initialisation ajoutée  
-        "expected_concedes_A": 0.0,  # Clé ajoutée  
+        "expected_but_A": 0.0,  
+        "expected_concedes_A": 0.0,  
         "tirs_cadres_A": 0.0,  
         "grandes_chances_A": 0.0,  
         "grandes_chances_manquees_A": 0.0,  
@@ -22,17 +23,17 @@ if 'data' not in st.session_state:
         "centres_reussis_A": 0.0,  
         "penalties_obtenues_A": 0.0,  
         "balles_surface_A": 0.0,  
-        "corners_A": 0.0,
-        "interceptions_A": 0.0,
-        "degagements_A": 0.0,
-        "tacles_reussis_A": 0.0,
-        "penalties_concedes_A": 0.0,
-        "possessions_remporte_A": 0.0,
-        "arrets_A": 0.0,
-        "fautes_A": 0.0, 
-        "cartons_jaunes_A": 0.0,
-        "cartons_rouges_A": 0.0,
-        
+        "corners_A": 0.0,  
+        "interceptions_A": 0.0,  
+        "degagements_A": 0.0,  
+        "tacles_reussis_A": 0.0,  
+        "penalties_concedes_A": 0.0,  
+        "possessions_remporte_A": 0.0,  
+        "arrets_A": 0.0,  
+        "fautes_A": 0.0,  
+        "cartons_jaunes_A": 0.0,  
+        "cartons_rouges_A": 0.0,  
+
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
         "buts_par_match_B": 1.0,  
@@ -40,8 +41,8 @@ if 'data' not in st.session_state:
         "buts_concedes_totaux_B": 35.0,  
         "possession_moyenne_B": 45.0,  
         "aucun_but_encaisse_B": 8,  
-        "expected_but_B": 0.0,  # Initialisation ajoutée  
-        "expected_concedes_B": 0.0,  # Clé ajoutée  
+        "expected_but_B": 0.0,  
+        "expected_concedes_B": 0.0,  
         "tirs_cadres_B": 0.0,  
         "grandes_chances_B": 0.0,  
         "grandes_chances_manquees_B": 0.0,  
@@ -50,22 +51,22 @@ if 'data' not in st.session_state:
         "centres_reussis_B": 0.0,  
         "penalties_obtenues_B": 0.0,  
         "balles_surface_B": 0.0,  
-        "corners_B": 0.0, 
-        "interceptions_B": 0.0,
-        "degagements_B": 0.0,
-        "tacles_reussis_B": 0.0,
-        "penalties_concedes_B": 0.0,
-        "possessions_remporte_B": 0.0,
-        "arrets_B": 0.0,
-        "fautes_B": 0.0,
-        "cartons_jaunes_B": 0.0,
-        "cartons_rouges_B": 0.0,
+        "corners_B": 0.0,  
+        "interceptions_B": 0.0,  
+        "degagements_B": 0.0,  
+        "tacles_reussis_B": 0.0,  
+        "penalties_concedes_B": 0.0,  
+        "possessions_remporte_B": 0.0,  
+        "arrets_B": 0.0,  
+        "fautes_B": 0.0,  
+        "cartons_jaunes_B": 0.0,  
+        "cartons_rouges_B": 0.0,  
 
-        "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
-        "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
-        "head_to_head": [],  # Historique des confrontations  
-        "conditions_match": "",  # Conditions du match  
-    }
+        "recent_form_A": [0, 0, 0, 0, 0],  
+        "recent_form_B": [0, 0, 0, 0, 0],  
+        "head_to_head": [],  
+        "conditions_match": "",  
+    }  
 
 # --- Interface Utilisateur ---  
 st.header("⚽ Statistiques des Équipes de Football")  
@@ -86,12 +87,18 @@ with col2:
 
 # --- Conditions du Match ---  
 st.subheader("🌦️ Conditions du Match")  
-st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex: pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"])
+st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex: pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"])  
+
 # --- Historique des confrontations ---  
 st.subheader("📊 Historique des Confrontations Directes")  
-if st.button("Ajouter un résultat de confrontation"):  
+col1, col2 = st.columns(2)  
+
+with col1:  
     equipe_A_buts = st.number_input("Buts Équipe A", min_value=0)  
+with col2:  
     equipe_B_buts = st.number_input("Buts Équipe B", min_value=0)  
+
+if st.button("Ajouter un résultat de confrontation"):  
     st.session_state.data["head_to_head"].append((equipe_A_buts, equipe_B_buts))  
     st.success("Résultat ajouté !")  
 
@@ -99,8 +106,9 @@ if st.button("Ajouter un résultat de confrontation"):
 if st.session_state.data["head_to_head"]:  
     st.write("Historique des Confrontations :")  
     for index, (buts_A, buts_B) in enumerate(st.session_state.data["head_to_head"]):  
-        st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")
-        # --- Top Statistiques ---  
+        st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")  
+
+# --- Top Statistiques ---  
 st.subheader("📊 Top Statistiques")  
 col1, col2 = st.columns(2)  
 
@@ -124,10 +132,9 @@ with col1:
 
 with col2:  
     st.session_state.data["possession_moyenne_B"] = st.number_input("Ballon Possession Moyenne Équipe B (%)", min_value=0.0, max_value=100.0, value=st.session_state.data["possession_moyenne_B"], key="possession_moyenne_B")  
-    st.session_state.data["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé Équipe B", min_value=0, value=st.session_state.data["aucun_but_encaisse_B"], key="aucun_but_encaisse_B")
- 
-# --- Critères d'Attaque ---  
+    st.session_state.data["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé Équipe B", min_value=0, value=st.session_state.data["aucun_but_encaisse_B"], key="aucun_but_encaisse_B")  
 
+# --- Critères d'Attaque ---  
 st.subheader("⚔️ Critères d'Attaque")  
 col1, col2 = st.columns(2)  
 
@@ -146,7 +153,6 @@ with col2:
     st.session_state.data["corners_A"] = st.number_input("⚽ Corners Équipe A", min_value=0.0, value=st.session_state.data["corners_A"], key="corners_A")  
 
 # --- Critères de Défense ---  
-
 st.subheader("🛡️ Critères de Défense")  
 col1, col2 = st.columns(2)  
 
@@ -162,7 +168,6 @@ with col2:
     st.session_state.data["arrets_A"] = st.number_input("Arrêts Équipe A", min_value=0.0, value=st.session_state.data["arrets_A"], key="arrets_A")  
 
 # --- Critères d'Attaque Équipe B ---  
-
 st.subheader("⚔️ Critères d'Attaque Équipe B")  
 col1, col2 = st.columns(2)  
 
@@ -191,9 +196,9 @@ with col1:
     st.session_state.data["degagements_B"] = st.number_input("Dégagements Équipe B", min_value=0.0, value=st.session_state.data["degagements_B"], key="degagements_B")  
 
 with col2:  
-    st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0.0, value=st.session_state.data["penalties_concedes_B"], key="penalties_concedes_B")  
+    st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B",min_value=0.0, value=st.session_state.data["penalties_concedes_B"], key="penalties_concedes_B")  
     st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0.0, value=st.session_state.data["possessions_remporte_B"], key="possessions_remporte_B")  
-    st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0.0, value=st.session_state.data["arrets_B"], key="arrets_B")
+    st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0.0, value=st.session_state.data["arrets_B"], key="arrets_B")  
 
 # --- Discipline ---  
 st.subheader("📜 Discipline")  
@@ -211,8 +216,8 @@ with col1:
     st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons_jaunes_B")  
 
 with col2:  
-    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")
-   
+    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
+
 # --- Méthode de Prédiction ---  
 st.subheader("🔮 Méthode de Prédiction")  
 
@@ -240,7 +245,28 @@ if st.button("Prédire le Résultat du Match"):
     prob_B = (lambda_B / (lambda_A + lambda_B)) * 100  
 
     st.write(f"Probabilité de victoire Équipe A : {prob_A:.2f}%")  
-    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2f}%")
+    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2f}%")  
 
-    # --- Fin du Code ---
-                                                        
+    # --- Visualisation des Critères ---  
+    st.subheader("📊 Comparaison des Critères entre les Équipes")  
+    criteria = [  
+        "score_rating", "buts_totaux", "buts_par_match", "buts_concedes_par_match",  
+        "possession_moyenne", "tirs_cadres", "grandes_chances", "passes_reussies",  
+        "corners", "interceptions", "arrets", "fautes", "cartons_jaunes", "cartons_rouges"  
+    ]  
+
+    # Récupérer les valeurs pour chaque équipe  
+    values_A = [st.session_state.data[f"{criterion}_A"] for criterion in criteria]  
+    values_B = [st.session_state.data[f"{criterion}_B"] for criterion in criteria]  
+
+    # Créer un DataFrame pour la visualisation  
+    df_comparison = pd.DataFrame({  
+        'Critères': criteria,  
+        'Équipe A': values_A,  
+        'Équipe B': values_B  
+    })  
+
+    # Afficher le graphique  
+    st.bar_chart(df_comparison.set_index('Critères'))  
+
+# --- Fin du Code ---
