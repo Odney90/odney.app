@@ -354,20 +354,36 @@ with tab3:
                     "Forme Récente Équipe B": [st.session_state.data["forme_recente_B"]],  
                 },  
             }  
+# Téléchargement des données organisées par équipe  
+st.subheader("📥 Téléchargement des Données des Équipes")  
+data = {  
+    "Données Équipe A": {  
+        key.replace("_A", ""): [st.session_state.data[key]]  
+        for key in st.session_state.data  
+        if key.endswith("_A") and isinstance(st.session_state.data[key], (int, float, str))  
+        and not key.startswith("cote_") and not key.startswith("bankroll")  
+    },  
+    "Données Équipe B": {  
+        key.replace("_B", ""): [st.session_state.data[key]]  
+        for key in st.session_state.data  
+        if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float, str))  
+        and not key.startswith("cote_") and not key.startswith("bankroll")  
+    },  
+}  
 
-            # Conversion en DataFrame et téléchargement  
-            with pd.ExcelWriter("predictions_et_donnees.xlsx") as writer:  
-                for sheet_name, sheet_data in data.items():  
-                    df = pd.DataFrame(sheet_data)  
-                    df.to_excel(writer, sheet_name=sheet_name, index=False)  
+# Conversion en DataFrame et téléchargement  
+with pd.ExcelWriter("donnees_equipes.xlsx") as writer:  
+    for sheet_name, sheet_data in data.items():  
+        df = pd.DataFrame(sheet_data)  
+        df.to_excel(writer, sheet_name=sheet_name, index=False)  
 
-            with open("predictions_et_donnees.xlsx", "rb") as f:  
-                st.download_button(  
-                    label="📥 Télécharger les données et prédictions",  
-                    data=f,  
-                    file_name="predictions_et_donnees.xlsx",  
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
-                )  
+with open("donnees_equipes.xlsx", "rb") as f:  
+    st.download_button(  
+        label="📥 Télécharger les données des équipes",  
+        data=f,  
+        file_name="donnees_equipes.xlsx",  
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
+    )
 
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
