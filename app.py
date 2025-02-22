@@ -1,9 +1,14 @@
 import streamlit as st  
 import numpy as np  
 import pandas as pd  
+from scipy.stats import poisson  
+from sklearn.linear_model import LogisticRegression  
 import matplotlib.pyplot as plt  
 
-# --- Initialisation des valeurs dans session_state ---  
+# --- Configuration de la page ---  
+st.set_page_config(page_title="⚽ Statistiques des Équipes de Football", page_icon="⚽")  
+
+# --- Initialisation des valeurs dans session_state avec des données fictives ---  
 if 'data' not in st.session_state:  
     st.session_state.data = {  
         "score_rating_A": 70.0,  
@@ -13,26 +18,26 @@ if 'data' not in st.session_state:
         "buts_concedes_totaux_A": 30.0,  
         "possession_moyenne_A": 55.0,  
         "aucun_but_encaisse_A": 10,  
-        "expected_but_A": 0.0,  
-        "expected_concedes_A": 0.0,  
-        "tirs_cadres_A": 0.0,  
-        "grandes_chances_A": 0.0,  
-        "grandes_chances_manquees_A": 0.0,  
-        "passes_reussies_A": 0.0,  
-        "passes_longues_A": 0.0,  
-        "centres_reussis_A": 0.0,  
-        "penalties_obtenues_A": 0.0,  
-        "balles_surface_A": 0.0,  
-        "corners_A": 0.0,  
-        "interceptions_A": 0.0,  
-        "degagements_A": 0.0,  
-        "tacles_reussis_A": 0.0,  
-        "penalties_concedes_A": 0.0,  
-        "possessions_remporte_A": 0.0,  
-        "arrets_A": 0.0,  
-        "fautes_A": 0.0,  
-        "cartons_jaunes_A": 0.0,  
-        "cartons_rouges_A": 0.0,  
+        "expected_but_A": 1.8,  
+        "expected_concedes_A": 1.2,  
+        "tirs_cadres_A": 120,  
+        "grandes_chances_A": 25,  
+        "grandes_chances_manquees_A": 10,  
+        "passes_reussies_A": 400,  
+        "passes_longues_A": 80,  
+        "centres_reussis_A": 30,  
+        "penalties_obtenues_A": 5,  
+        "balles_surface_A": 150,  
+        "corners_A": 60,  
+        "interceptions_A": 50,  
+        "degagements_A": 70,  
+        "tacles_reussis_A": 40,  
+        "penalties_concedes_A": 3,  
+        "possessions_remporte_A": 20,  
+        "arrets_A": 45,  
+        "fautes_A": 15,  
+        "cartons_jaunes_A": 5,  
+        "cartons_rouges_A": 1,  
 
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -41,29 +46,29 @@ if 'data' not in st.session_state:
         "buts_concedes_totaux_B": 35.0,  
         "possession_moyenne_B": 45.0,  
         "aucun_but_encaisse_B": 8,  
-        "expected_but_B": 0.0,  
-        "expected_concedes_B": 0.0,  
-        "tirs_cadres_B": 0.0,  
-        "grandes_chances_B": 0.0,  
-        "grandes_chances_manquees_B": 0.0,  
-        "passes_reussies_B": 0.0,  
-        "passes_longues_B": 0.0,  
-        "centres_reussis_B": 0.0,  
-        "penalties_obtenues_B": 0.0,  
-        "balles_surface_B": 0.0,  
-        "corners_B": 0.0,  
-        "interceptions_B": 0.0,  
-        "degagements_B": 0.0,  
-        "tacles_reussis_B": 0.0,  
-        "penalties_concedes_B": 0.0,  
-        "possessions_remporte_B": 0.0,  
-        "arrets_B": 0.0,  
-        "fautes_B": 0.0,  
-        "cartons_jaunes_B": 0.0,  
-        "cartons_rouges_B": 0.0,  
+        "expected_but_B": 1.2,  
+        "expected_concedes_B": 1.8,  
+        "tirs_cadres_B": 100,  
+        "grandes_chances_B": 20,  
+        "grandes_chances_manquees_B": 15,  
+        "passes_reussies_B": 350,  
+        "passes_longues_B": 60,  
+        "centres_reussis_B": 25,  
+        "penalties_obtenues_B": 3,  
+        "balles_surface_B": 120,  
+        "corners_B": 50,  
+        "interceptions_B": 40,  
+        "degagements_B": 60,  
+        "tacles_reussis_B": 35,  
+        "penalties_concedes_B": 4,  
+        "possessions_remporte_B": 15,  
+        "arrets_B": 30,  
+        "fautes_B": 20,  
+        "cartons_jaunes_B": 6,  
+        "cartons_rouges_B": 2,  
 
-        "recent_form_A": [0, 0, 0, 0, 0],  
-        "recent_form_B": [0, 0, 0, 0, 0],  
+        "recent_form_A": [1, 2, 1, 0, 3],  # Buts marqués lors des 5 derniers matchs  
+        "recent_form_B": [0, 1, 2, 1, 1],  # Buts marqués lors des 5 derniers matchs  
         "head_to_head": [],  
         "conditions_match": "",  
     }  
@@ -196,77 +201,73 @@ with col1:
     st.session_state.data["degagements_B"] = st.number_input("Dégagements Équipe B", min_value=0.0, value=st.session_state.data["degagements_B"], key="degagements_B")  
 
 with col2:  
-    st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B",min_value=0.0, value=st.session_state.data["penalties_concedes_B"], key="penalties_concedes_B")  
+       st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0.0, value=st.session_state.data["penalties_concedes_B"], key="penalties_concedes_B")  
     st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0.0, value=st.session_state.data["possessions_remporte_B"], key="possessions_remporte_B")  
     st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0.0, value=st.session_state.data["arrets_B"], key="arrets_B")  
 
-# --- Discipline ---  
-st.subheader("📜 Discipline")  
-col1, col2 = st.columns(2)  
-
-with col1:  
-    st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0, value=st.session_state.data["fautes_A"], key="fautes_A")  
-    st.session_state.data["cartons_jaunes_A"] = st.number_input("Cartons Jaunes Équipe A", min_value=0.0, value=st.session_state.data["cartons_jaunes_A"], key="cartons_jaunes_A")  
-
-with col2:  
-    st.session_state.data["cartons_rouges_A"] = st.number_input("Cartons Rouges Équipe A", min_value=0.0, value=st.session_state.data["cartons_rouges_A"], key="cartons_rouges_A")  
-
-with col1:  
-    st.session_state.data["fautes_B"] = st.number_input("Fautes par Match Équipe B", min_value=0.0, value=st.session_state.data["fautes_B"], key="fautes_B")  
-    st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons_jaunes_B")  
-
-with col2:  
-    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
-
-# --- Méthode de Prédiction ---  
-st.subheader("🔮 Méthode de Prédiction")  
-
+# --- Prédictions ---  
 if st.button("Prédire le Résultat du Match"):  
-    # Calculer les moyennes des buts marqués et concédés  
-    moyenne_buts_A = st.session_state.data["buts_totaux_A"] / (st.session_state.data["aucun_but_encaisse_A"] + 1)  
-    moyenne_buts_B = st.session_state.data["buts_totaux_B"] / (st.session_state.data["aucun_but_encaisse_B"] + 1)  
+    # Méthode de Poisson  
+    avg_goals_A = st.session_state.data["expected_but_A"]  
+    avg_goals_B = st.session_state.data["expected_but_B"]  
 
-    # Ajuster les moyennes en fonction de la forme récente  
-    forme_A = np.mean(st.session_state.data["recent_form_A"])  
-    forme_B = np.mean(st.session_state.data["recent_form_B"])  
+    # Calcul des probabilités de marquer 0 à 5 buts  
+    goals_A = [poisson.pmf(i, avg_goals_A) for i in range(6)]  
+    goals_B = [poisson.pmf(i, avg_goals_B) for i in range(6)]  
 
-    # Calculer les attentes de buts  
-    lambda_A = (moyenne_buts_A * forme_A) / (st.session_state.data["buts_concedes_par_match_B"] + 1)  # Ajustement pour la défense de l'équipe B  
-    lambda_B = (moyenne_buts_B * forme_B) / (st.session_state.data["buts_concedes_par_match_A"] + 1)  # Ajustement pour la défense de l'équipe A  
+    # Calcul des résultats possibles  
+    results = pd.DataFrame(np.zeros((6, 6)), columns=[f"Buts Équipe B: {i}" for i in range(6)], index=[f"Buts Équipe A: {i}" for i in range(6)])  
+    for i in range(6):  
+        for j in range(6):  
+            results.iloc[i, j] = goals_A[i] * goals_B[j]  
 
-    # Prédire le nombre de buts  
-    buts_A = np.random.poisson(lambda_A)  
-    buts_B = np.random.poisson(lambda_B)  
+    # Affichage des résultats de la méthode de Poisson  
+    st.subheader("📊 Résultats de la Méthode de Poisson")  
+    st.write(results)  
 
-    st.write(f"Prédiction : Équipe A {buts_A} - Équipe B {buts_B}")  
+    # Graphique des résultats de la méthode de Poisson  
+    plt.figure(figsize=(10, 6))  
+    plt.imshow(results, cmap='Blues', interpolation='nearest')  
+    plt.colorbar(label='Probabilité')  
+    plt.xticks(ticks=np.arange(6), labels=[f"Buts Équipe B: {i}" for i in range(6)])  
+    plt.yticks(ticks=np.arange(6), labels=[f"Buts Équipe A: {i}" for i in range(6)])  
+    plt.title("Probabilités de Résultats (Méthode de Poisson)")  
+    st.pyplot(plt)  
 
-    # Afficher les probabilités de victoire  
-    prob_A = (lambda_A / (lambda_A + lambda_B)) * 100  
-    prob_B = (lambda_B / (lambda_A + lambda_B)) * 100  
+    # Méthode de Régression Logistique  
+    # Préparation des données pour la régression logistique  
+    X = np.array([[st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
+                   st.session_state.data["possession_moyenne_A"], st.session_state.data["expected_but_A"],  
+                   st.session_state.data["score_rating_B"], st.session_state.data["buts_par_match_B"], st.session_state.data["buts_concedes_par_match_B"],  
+                   st.session_state.data["possession_moyenne_B"], st.session_state.data["expected_but_B"]]])  
 
-    st.write(f"Probabilité de victoire Équipe A : {prob_A:.2f}%")  
-    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2f}%")  
+    # Simuler des résultats pour l'entraînement (données fictives)  
+    y = np.array([1, 0, 1, 0, 1])  # 1 pour victoire Équipe A, 0 pour victoire Équipe B (données fictives)  
 
-    # --- Visualisation des Critères ---  
-    st.subheader("📊 Comparaison des Critères entre les Équipes")  
-    criteria = [  
-        "score_rating", "buts_totaux", "buts_par_match", "buts_concedes_par_match",  
-        "possession_moyenne", "tirs_cadres", "grandes_chances", "passes_reussies",  
-        "corners", "interceptions", "arrets", "fautes", "cartons_jaunes", "cartons_rouges"  
-    ]  
+    # Entraînement du modèle  
+    model = LogisticRegression()  
+    model.fit(X, y)  
 
-    # Récupérer les valeurs pour chaque équipe  
-    values_A = [st.session_state.data[f"{criterion}_A"] for criterion in criteria]  
-    values_B = [st.session_state.data[f"{criterion}_B"] for criterion in criteria]  
+    # Prédiction  
+    prediction = model.predict(X)  
+    if prediction[0] == 1:  
+        st.success("Prédiction : Équipe A gagne !")  
+    else:  
+        st.success("Prédiction : Équipe B gagne !")  
 
-    # Créer un DataFrame pour la visualisation  
-    df_comparison = pd.DataFrame({  
-        'Critères': criteria,  
-        'Équipe A': values_A,  
-        'Équipe B': values_B  
-    })  
+    # Affichage des coefficients du modèle  
+    st.subheader("📊 Coefficients de la Régression Logistique")  
+    coefficients = pd.DataFrame(model.coef_, columns=["Score Rating A", "Buts par Match A", "Buts Concédés A", "Possession A", "Expected Buts A",  
+                                                      "Score Rating B", "Buts par Match B", "Buts Concédés B", "Possession B", "Expected Buts B"])  
+    st.write(coefficients)  
 
-    # Afficher le graphique  
-    st.bar_chart(df_comparison.set_index('Critères'))  
+    # Graphique des coefficients  
+    plt.figure(figsize=(10, 6))  
+    plt.barh(coefficients.columns, coefficients.values.flatten())  
+    plt.xlabel("Coefficient")  
+    plt.title("Coefficients de la Régression Logistique")  
+    st.pyplot(plt)  
 
-# --- Fin du Code ---
+# --- Fin de l'application ---  
+st.write("Merci d'utiliser l'application de prédiction de résultats de football !")
+    
