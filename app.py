@@ -510,10 +510,10 @@ with tab3:
         # Random Forest  
         # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
         X_rf = np.array([  
-            [  
-                st.session_state.data[key]  
+            
+            [    st.session_state.data[key]  
                 for key in st.session_state.data  
-                if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+                if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float)) 
             ]  
         ])  
 
