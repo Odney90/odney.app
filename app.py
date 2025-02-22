@@ -72,10 +72,6 @@ if 'data' not in st.session_state:
         "conditions_match": "",  
     }  
 
-# Vérification de sécurité avant l'accès  
-if "score_rating_A" not in st.session_state.data:  
-    st.session_state.data["score_rating_A"] = 70.0  # Valeur par défaut  
-
 # Configuration de la page  
 st.set_page_config(page_title="Prédiction de Matchs de Football", page_icon="⚽", layout="wide")  
 
@@ -176,18 +172,22 @@ with tab3:
                 for j in range(6):  
                     results.iloc[i, j] = goals_A[i] * goals_B[j]  
 
-            st.subheader("📊 Résultats de la Méthode de Poisson")  
-            st.write(results)  
+            # Conversion en pourcentages  
+            results_percentage = results * 100  
 
+            st.subheader("📊 Résultats de la Méthode de Poisson (en %)")  
+            st.write(results_percentage)  
+
+            # Amélioration du schéma  
             plt.figure(figsize=(10, 6))  
-            plt.imshow(results, cmap='Blues', interpolation='nearest')  
-            plt.colorbar(label='Probabilité')  
+            plt.imshow(results_percentage, cmap='Blues', interpolation='nearest')  
+            plt.colorbar(label='Probabilité (%)')  
             plt.xticks(ticks=np.arange(6), labels=[f"Équipe B: {i}" for i in range(6)])  
             plt.yticks(ticks=np.arange(6), labels=[f"Équipe A: {i}" for i in range(6)])  
             plt.title("Probabilités des Résultats (Méthode de Poisson)")  
             st.pyplot(plt)  
 
-                        # Régression Logistique  
+            # Régression Logistique  
             # Génération de données d'entraînement  
             np.random.seed(0)  
             X = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
@@ -206,14 +206,24 @@ with tab3:
             # Évaluation du modèle  
             accuracy = accuracy_score(y_test, prediction)  
             cm = confusion_matrix(y_test, prediction)  
-            report = classification_report(y_test, prediction)  
+            report = classification_report(y_test, output_dict=True)  
 
+            # Affichage des résultats dans un tableau  
             st.subheader("📈 Résultats de la Régression Logistique")  
             st.write(f"Précision du modèle : {accuracy:.2%}")  
-            st.write("Matrice de Confusion :")  
-            st.write(cm)  
-            st.write("Rapport de Classification :")  
-            st.write(report)  
+
+            # Tableau des résultats  
+            report_df = pd.DataFrame(report).transpose()  
+            st.table(report_df)  
+
+            # Explication des résultats  
+            st.markdown("""  
+            **Explication des résultats :**  
+            - **Précision (Precision)** : Proportion de prédictions positives correctes.  
+            - **Rappel (Recall)** : Proportion de cas positifs correctement identifiés.  
+            - **F1-Score** : Moyenne harmonique de la précision et du rappel.  
+            - **Support** : Nombre d'échantillons pour chaque classe.  
+            """)  
 
             # Prédiction du match actuel  
             current_match_features = np.array([[st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
