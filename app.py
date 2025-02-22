@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto p-8">
-        <h1 class="text-4xl font-bold text-center mb-8">⚽ Prédiction de Matchs de Football</h1>
+        <h1 class="text-4xl font-bold text-center mb-8"> Prédiction de Matchs de Football</h1>
         
         <!-- Onglets pour la navigation -->
         <div class="flex justify-center mb-8">
