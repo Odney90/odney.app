@@ -168,7 +168,9 @@ with col2:
 with col1:  
     st.session_state.data["fautes_B"] = st.number_input("Fautes par Match Équipe B", min_value=0.0, value=st.session_state.data["fautes_B"], key="fautes_B")  
     st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons
-    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
+  
+with col2:                                                             
+   st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
 
 # --- Méthode de Prédiction ---  
 st.subheader("🔮 Méthode de Prédiction")  
