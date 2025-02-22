@@ -90,6 +90,9 @@ if "data" not in st.session_state:
         "bankroll": 1000.0,  
     }  
 
+# Icône pour le site  
+st.sidebar.image("https://img.icons8.com/color/48/000000/football.png", use_column_width=True)  
+
 # Création des onglets  
 tab1, tab2, tab3, tab4, tab5 = st.tabs(  
     ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"]  
@@ -141,14 +144,22 @@ with tab2:
     with col_a:  
         st.write("Équipe A")  
         for i in range(5):  
+            # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
+            current_value = st.session_state.data["forme_recente_A"][i]  
+            if current_value not in ["V", "N", "D"]:  
+                current_value = "V"  # Valeur par défaut  
             st.session_state.data["forme_recente_A"][i] = st.selectbox(  
-                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(st.session_state.data["forme_recente_A"][i])  
+                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(current_value)  
             )  
     with col_b:  
         st.write("Équipe B")  
         for i in range(5):  
+            # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
+            current_value = st.session_state.data["forme_recente_B"][i]  
+            if current_value not in ["V", "N", "D"]:  
+                current_value = "V"  # Valeur par défaut  
             st.session_state.data["forme_recente_B"][i] = st.selectbox(  
-                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(st.session_state.data["forme_recente_B"][i])  
+                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(current_value)  
             )  
 
 # Onglet 3 : Prédictions  
@@ -163,7 +174,7 @@ with tab3:
             prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
             prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
 
-            # Régression Logistique  
+            # Régression Logistique avec critères supplémentaires  
             X_lr = np.array([  
                 [  
                     safe_float(st.session_state.data["score_rating_A"]),  
@@ -172,6 +183,10 @@ with tab3:
                     safe_float(st.session_state.data["possession_moyenne_B"]),  
                     safe_float(st.session_state.data["motivation_A"]),  
                     safe_float(st.session_state.data["motivation_B"]),  
+                    safe_float(st.session_state.data["tirs_cadres_A"]),  
+                    safe_float(st.session_state.data["tirs_cadres_B"]),  
+                    safe_float(st.session_state.data["interceptions_A"]),  
+                    safe_float(st.session_state.data["interceptions_B"]),  
                 ],  
                 [  
                     safe_float(st.session_state.data["score_rating_B"]),  
@@ -180,6 +195,10 @@ with tab3:
                     safe_float(st.session_state.data["possession_moyenne_A"]),  
                     safe_float(st.session_state.data["motivation_B"]),  
                     safe_float(st.session_state.data["motivation_A"]),  
+                    safe_float(st.session_state.data["tirs_cadres_B"]),  
+                    safe_float(st.session_state.data["tirs_cadres_A"]),  
+                    safe_float(st.session_state.data["interceptions_B"]),  
+                    safe_float(st.session_state.data["interceptions_A"]),  
                 ]  
             ])  
             y_lr = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
@@ -287,7 +306,4 @@ with tab5:
     if st.button("Miser"):  
         bankroll -= mise_kelly  
         st.session_state.data["bankroll"] = bankroll  
-        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")  
-
-# Icône pour le site  
-st.sidebar.image("https://img.icons8.com/color/48/000000/football.png", use_column_width=True)
+        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")
