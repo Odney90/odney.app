@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np  
 import pandas as pd  
 from scipy.stats import poisson  
+from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report  
@@ -189,83 +190,80 @@ with tab3:
             plt.title("Probabilités des Résultats (Méthode de Poisson)")  
             st.pyplot(plt)  
 
+            # Régression Logistique  
+            # Critères importants pour la régression logistique  
+            X_lr = np.array([  
+                [st.session_state.data["score_rating_A"], st.session_state.data["buts_par_match_A"], st.session_state.data["buts_concedes_par_match_A"],  
+                 st.session_state.data["possession_moyenne_A"], st.session_state.data["expected_but_A"],  
+                 st.session_state.data["score_rating_B"], st.session_state.data["buts_par_match_B"], st.session_state.data["buts_concedes_par_match_B"],  
+                 st.session_state.data["possession_moyenne_B"], st.session_state.data["expected_but_B"]]  
+            ])  
+
+            # Génération de données d'entraînement  
+            np.random.seed(0)  
+            X_train_lr = np.random.rand(100, 10)  # 100 échantillons, 10 caractéristiques  
+            y_train_lr = np.random.randint(0, 2, 100)  # Cible binaire  
+
+            # Entraînement du modèle  
+            model_lr = LogisticRegression()  
+            model_lr.fit(X_train_lr, y_train_lr)  
+
+            # Prédiction  
+            prediction_lr = model_lr.predict(X_lr)  
+            prediction_proba_lr = model_lr.predict_proba(X_lr)  
+
+            # Affichage des résultats  
+            st.subheader("📈 Résultats de la Régression Logistique")  
+            st.write(f"Probabilité Équipe A : {prediction_proba_lr[0][1]:.2%}")  
+            st.write(f"Probabilité Équipe B : {prediction_proba_lr[0][0]:.2%}")  
+
             # Random Forest  
-            # Préparation des données  
-            X = []  
-            y = []  
-            for _ in range(1000):  # Génération de données d'entraînement  
-                stats_A = [np.random.rand() * 100 for _ in range(26)]  # 26 statistiques pour l'Équipe A  
-                stats_B = [np.random.rand() * 100 for _ in range(26)]  # 26 statistiques pour l'Équipe B  
-                X.append(stats_A + stats_B)  
-                y.append(np.random.randint(0, 2))  # Cible binaire  
+            # Utilisation de toutes les statistiques disponibles  
+            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B")]])  
 
-            X = np.array(X)  
-            y = np.array(y)  
-
-            # Division en ensembles d'entraînement et de test  
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+            # Génération de données d'entraînement  
+            np.random.seed(0)  
+            X_train_rf = np.random.rand(100, 52)  # 100 échantillons, 52 caractéristiques  
+            y_train_rf = np.random.randint(0, 2, 100)  # Cible binaire  
 
             # Entraînement du modèle  
             model_rf = RandomForestClassifier()  
-            model_rf.fit(X_train, y_train)  
+            model_rf.fit(X_train_rf, y_train_rf)  
 
             # Prédiction  
-            y_pred_rf = model_rf.predict(X_test)  
+            prediction_rf = model_rf.predict(X_rf)  
+            prediction_proba_rf = model_rf.predict_proba(X_rf)  
 
-            # Évaluation du modèle  
-            accuracy_rf = accuracy_score(y_test, y_pred_rf)  
-            cm_rf = confusion_matrix(y_test, y_pred_rf)  
-
-            # Vérification que y_pred est bien défini avant d'appeler classification_report  
-            if y_pred_rf is not None:  
-                report_rf = classification_report(y_test, y_pred_rf, output_dict=True)  
-            else:  
-                st.error("La prédiction n'a pas pu être générée.")  
-
-            # Affichage des résultats dans un tableau  
+            # Affichage des résultats  
             st.subheader("📈 Résultats de la Random Forest")  
-            st.write(f"Précision du modèle : {accuracy_rf:.2%}")  
-
-            # Tableau des résultats  
-            if y_pred_rf is not None:  
-                report_df_rf = pd.DataFrame(report_rf).transpose()  
-                st.table(report_df_rf)  
-
-                # Explication des résultats  
-                st.markdown("""  
-                **Explication des résultats :**  
-                - **Précision (Precision)** : Proportion de prédictions positives correctes.  
-                - **Rappel (Recall)** : Proportion de cas positifs correctement identifiés.  
-                - **F1-Score** : Moyenne harmonique de la précision et du rappel.  
-                - **Support** : Nombre d'échantillons pour chaque classe.  
-                """)  
-            else:  
-                st.error("Impossible de générer le rapport de classification.")  
-
-            # Prédiction du match actuel  
-            current_match_features = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B")]])  
-
-            # Prédiction avec Random Forest  
-            prediction_rf = model_rf.predict(current_match_features)  
-            prediction_proba_rf = model_rf.predict_proba(current_match_features)  
-
-            # Détermination du pari double chance  
-            if abs(prediction_proba_rf[0][0] - prediction_proba_rf[0][1]) < 0.1:  
-                st.success("🔔 Résultat serré : Pari Double Chance recommandé (1X ou X2) 🔔")  
-                if prediction_rf[0] == 1:  
-                    st.info("Pari Double Chance : 1X (Équipe A ou Match Nul)")  
-                else:  
-                    st.info("Pari Double Chance : X2 (Match Nul ou Équipe B)")  
-            else:  
-                if prediction_rf[0] == 1:  
-                    st.success("Prédiction : L'Équipe A gagne 🎉")  
-                else:  
-                    st.success("Prédiction : L'Équipe B gagne 🎉")  
-
-            # Affichage des probabilités  
-            st.subheader("📊 Probabilités des Prédictions")  
             st.write(f"Probabilité Équipe A : {prediction_proba_rf[0][1]:.2%}")  
             st.write(f"Probabilité Équipe B : {prediction_proba_rf[0][0]:.2%}")  
+
+            # Comparaison des modèles  
+            st.subheader("📊 Comparaison des Modèles")  
+            comparison_df = pd.DataFrame({  
+                "Modèle": ["Poisson", "Régression Logistique", "Random Forest"],  
+                "Probabilité Équipe A": [results_percentage.iloc[1:].sum().sum(), prediction_proba_lr[0][1], prediction_proba_rf[0][1]],  
+                "Probabilité Équipe B": [results_percentage.iloc[:, 1:].sum().sum(), prediction_proba_lr[0][0], prediction_proba_rf[0][0]]  
+            })  
+            st.table(comparison_df)  
+
+            # Détermination du pari double chance  
+            if abs(prediction_proba_lr[0][0] - prediction_proba_lr[0][1]) < 0.1 or abs(prediction_proba_rf[0][0] - prediction_proba_rf[0][1]) < 0.1:  
+                st.success("🔔 Résultat serré : Pari Double Chance recommandé (1X ou X2) 🔔")  
+                if prediction_lr[0] == 1 and prediction_rf[0] == 1:  
+                    st.info("Pari Double Chance : 1X (Équipe A ou Match Nul)")  
+                elif prediction_lr[0] == 0 and prediction_rf[0] == 0:  
+                    st.info("Pari Double Chance : X2 (Match Nul ou Équipe B)")  
+                else:  
+                    st.info("Pari Double Chance : 1X ou X2 (Résultat trop incertain)")  
+            else:  
+                if prediction_lr[0] == 1 and prediction_rf[0] == 1:  
+                    st.success("Prédiction : L'Équipe A gagne 🎉")  
+                elif prediction_lr[0] == 0 and prediction_rf[0] == 0:  
+                    st.success("Prédiction : L'Équipe B gagne 🎉")  
+                else:  
+                    st.warning("Prédiction : Match Nul ou Résultat Incertain 🤔")  
 
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {str(e)}")  
