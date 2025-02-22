@@ -4,6 +4,13 @@ from scipy.stats import poisson
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 
+# Fonction pour vérifier et convertir en float  
+def safe_float(value):  
+    try:  
+        return float(value)  
+    except (ValueError, TypeError):  
+        return 0.0  # Retourne 0.0 si la conversion échoue  
+
 # Initialisation des données dans st.session_state  
 if "data" not in st.session_state:  
     st.session_state.data = {  
@@ -97,7 +104,7 @@ with tab1:
             if key.endswith("_A"):  
                 st.session_state.data[key] = st.number_input(  
                     key.replace("_", " ").title(),  
-                    value=float(st.session_state.data[key]),  
+                    value=safe_float(st.session_state.data[key]),  
                     min_value=-1e6,  
                     max_value=1e6,  
                 )  
@@ -109,7 +116,7 @@ with tab1:
             if key.endswith("_B"):  
                 st.session_state.data[key] = st.number_input(  
                     key.replace("_", " ").title(),  
-                    value=float(st.session_state.data[key]),  
+                    value=safe_float(st.session_state.data[key]),  
                     min_value=-1e6,  
                     max_value=1e6,  
                 )  
@@ -140,8 +147,8 @@ with tab3:
     if st.button("Prédire le résultat"):  
         try:  
             # Prédiction des Buts avec Poisson  
-            avg_goals_A = st.session_state.data["buts_par_match_A"]  
-            avg_goals_B = st.session_state.data["buts_par_match_B"]  
+            avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
+            avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"])  
             prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
             prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
             prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
@@ -149,12 +156,12 @@ with tab3:
             # Régression Logistique  
             X_lr = np.array([  
                 [  
-                    st.session_state.data["score_rating_A"],  
-                    st.session_state.data["score_rating_B"],  
-                    st.session_state.data["possession_moyenne_A"],  
-                    st.session_state.data["possession_moyenne_B"],  
-                    st.session_state.data["motivation_A"],  
-                    st.session_state.data["motivation_B"],  
+                    safe_float(st.session_state.data["score_rating_A"]),  
+                    safe_float(st.session_state.data["score_rating_B"]),  
+                    safe_float(st.session_state.data["possession_moyenne_A"]),  
+                    safe_float(st.session_state.data["possession_moyenne_B"]),  
+                    safe_float(st.session_state.data["motivation_A"]),  
+                    safe_float(st.session_state.data["motivation_B"]),  
                 ]  
             ])  
             y_lr = np.array([1])  # Label factice pour correspondre à X_lr  
@@ -165,7 +172,7 @@ with tab3:
             # Random Forest  
             X_rf = np.array([  
                 [  
-                    st.session_state.data[key]  
+                    safe_float(st.session_state.data[key])  
                     for key in st.session_state.data  
                     if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
                 ]  
@@ -190,9 +197,9 @@ with tab3:
 with tab4:  
     st.header("🎰 Cotes et Value Bet")  
     st.subheader("Convertisseur de Cotes Implicites")  
-    cote_victoire_A = st.number_input("Cote Victoire A", value=st.session_state.data["cote_victoire_A"])  
-    cote_nul = st.number_input("Cote Nul", value=st.session_state.data["cote_nul"])  
-    cote_victoire_B = st.number_input("Cote Victoire B", value=st.session_state.data["cote_victoire_B"])  
+    cote_victoire_A = st.number_input("Cote Victoire A", value=safe_float(st.session_state.data["cote_victoire_A"]))  
+    cote_nul = st.number_input("Cote Nul", value=safe_float(st.session_state.data["cote_nul"]))  
+    cote_victoire_B = st.number_input("Cote Victoire B", value=safe_float(st.session_state.data["cote_victoire_B"]))  
 
     # Calcul de la marge bookmaker  
     marge_bookmaker = (1 / cote_victoire_A) + (1 / cote_nul) + (1 / cote_victoire_B) - 1  
@@ -216,7 +223,7 @@ with tab4:
 # Onglet 5 : Système de Mise  
 with tab5:  
     st.header("💰 Système de Mise")  
-    bankroll = st.number_input("Bankroll (€)", value=st.session_state.data["bankroll"])  
+    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
     niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
     probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
     cote = st.number_input("Cote", value=2.0)  
