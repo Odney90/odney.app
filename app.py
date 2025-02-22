@@ -286,8 +286,7 @@ with tab4:
     probabilite_implicite_value_bet = cotes_vers_probabilite(cote_value_bet)  
     if probabilite_estimee > probabilite_implicite_value_bet:  
         st.success("Value bet détecté !")  
-    else:  
-        st.warning("Pas de value bet.")  
+    else: st.warning("Pas de value bet.")  
 
     # Simulateur de paris combinés  
     st.header("➕ Simulateur de Paris Combinés")  
