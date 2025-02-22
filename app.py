@@ -156,6 +156,7 @@ with st.expander("Forme récente (5 derniers matchs)"):
 # Calcul du score de forme  
 score_forme_A = np.mean(derniers_matchs_A)  
 score_forme_B = np.mean(derniers_matchs_B)
+
 with st.expander("Statistiques générales"):  
     
     st.subheader("Équipe A")  
@@ -169,7 +170,16 @@ with st.expander("Statistiques générales"):
     possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="possession_moyenne_B")  
     expected_buts_B = st.number_input("Expected Goals (xG)", min_value=0.0, value=0.0, key="expected_buts_B")  
     tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0.0, value=0.0, key="tirs_cadres_B")
- 
+ with st.expander("Critères d'attaque"):  
+    st.subheader("Équipe A")  
+    corners_A = st.number_input("Corners par match", min_value=0.0, value=0.0, key="corners_A")  
+    touches_surface_adverse_A = st.number_input("Touches dans la surface adverse", min_value=0.0, value=0.0, key="touches_surface_adverse_A")  
+    penalites_obtenues_A = st.number_input("Pénalités obtenues", min_value=0.0, value=0.0, key="penalites_obtenues_A")  
+    
+    st.subheader("Équipe B")  
+    corners_B = st.number_input("Corners par match", min_value=0.0, value=0.0, key="corners_B")  
+    touches_surface_adverse_B = st.number_input("Touches dans la surface adverse", min_value=0.0, value=0.0, key="touches_surface_adverse_B")  
+    penalites_obtenues_B = st.number_input("Pénalités obtenues", min_value=0.0, value=0.0, key="penalites_obtenues_B")
     with st.expander("Critères avancés"):  
     st.subheader("Équipe A")  
     passes_reussies_A = st.number_input("Passes réussies par match", min_value=0.0, value=0.0, key="passes_reussies_A")  
@@ -211,7 +221,8 @@ with st.expander("Critères d'attaque"):
     corners_B = st.number_input("Corners par match", min_value=0.0, value=0.0, key="corners_B")  
     touches_surface_adverse_B = st.number_input("Touches dans la surface adverse", min_value=0.0, value=0.0, key="touches_surface_adverse_B")  
     penalites_obtenues_B = st.number_input("Pénalités obtenues", min_value=0.0, value=0.0, key="penalites_obtenues_B")
- with st.expander("Statistiques complètes"):  
+
+with st.expander("Statistiques complètes"):  
     st.subheader("Équipe A")  
     buts_par_match_A = st.number_input("Buts par match", min_value=0.0, value=0.0, key="buts_par_match_A")  
     buts_concedes_par_match_A = st.number_input("Buts concédés par match", min_value=0.0, value=0.0, key="buts_concedes_par_match_A")  
