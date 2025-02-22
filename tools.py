@@ -11,56 +11,34 @@ if 'data' not in st.session_state:
     st.session_state.data = {  
         # Statistiques de l'Équipe A  
         "score_rating_A": 70.0,  
-        "buts_totaux_A": 50.0,  
         "buts_par_match_A": 1.5,  
         "buts_concedes_par_match_A": 1.0,  
-        "buts_concedes_totaux_A": 30.0,  
         "possession_moyenne_A": 55.0,  
-        "aucun_but_encaisse_A": 10,  
         "expected_but_A": 1.8,  
         "expected_concedes_A": 1.2,  
         "tirs_cadres_A": 120,  
         "grandes_chances_A": 25,  
-        "grandes_chances_manquees_A": 10,  
         "passes_reussies_A": 400,  
-        "passes_longues_A": 80,  
-        "centres_reussis_A": 30,  
-        "penalties_obtenues_A": 5,  
-        "balles_surface_A": 150,  
         "corners_A": 60,  
         "interceptions_A": 50,  
-        "degagements_A": 70,  
         "tacles_reussis_A": 40,  
-        "penalties_concedes_A": 3,  
-        "arrets_A": 45,  
         "fautes_A": 15,  
         "cartons_jaunes_A": 5,  
         "cartons_rouges_A": 1,  
 
         # Statistiques de l'Équipe B  
         "score_rating_B": 65.0,  
-        "buts_totaux_B": 40.0,  
         "buts_par_match_B": 1.0,  
         "buts_concedes_par_match_B": 1.5,  
-        "buts_concedes_totaux_B": 35.0,  
         "possession_moyenne_B": 45.0,  
-        "aucun_but_encaisse_B": 8,  
         "expected_but_B": 1.2,  
         "expected_concedes_B": 1.8,  
         "tirs_cadres_B": 100,  
         "grandes_chances_B": 20,  
-        "grandes_chances_manquees_B": 15,  
         "passes_reussies_B": 350,  
-        "passes_longues_B": 60,  
-        "centres_reussis_B": 25,  
-        "penalties_obtenues_B": 3,  
-        "balles_surface_B": 120,  
         "corners_B": 50,  
         "interceptions_B": 40,  
-        "degagements_B": 60,  
         "tacles_reussis_B": 35,  
-        "penalties_concedes_B": 4,  
-        "arrets_B": 30,  
         "fautes_B": 20,  
         "cartons_jaunes_B": 6,  
         "cartons_rouges_B": 2,  
@@ -68,7 +46,6 @@ if 'data' not in st.session_state:
         "recent_form_A": [1, 2, 1, 0, 3],  
         "recent_form_B": [0, 1, 2, 1, 1],  
         "head_to_head": {"victoires_A": 0, "nuls": 0, "victoires_B": 0},  
-        "conditions_match": "",  
     }  
 
 # Fonctions pour les outils de paris  
@@ -126,7 +103,7 @@ with tab1:
 
 with tab2:  
     st.subheader("🌦️ Conditions du Match")  
-    st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"], key="conditions_match")  
+    st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex : pluie, terrain sec, etc.)", value="", key="conditions_match")  
 
     col_h2h, col_recent_form = st.columns(2)  
 
@@ -311,7 +288,8 @@ with tab4:
     probabilites = []  
     for i in range(nombre_equipes):  
         probabilite = st.slider(f"Probabilité implicite équipe {i + 1} (%)", min_value=1, max_value=100, value=50, key=f"probabilite_{i}") / 100  
-        probabilites.append(    probabilite_combinee = np.prod(probabilites)  
+        probabilites.append(probabilite)  
+    probabilite_combinee = np.prod(probabilites)  
     st.write(f"Probabilité combinée : **{probabilite_combinee:.2%}**")  
 
     # Mise de Kelly  
@@ -320,7 +298,7 @@ with tab4:
     probabilite_kelly = st.slider("Probabilité estimée (Kelly) (%)", min_value=1, max_value=100, value=50, key="probabilite_kelly") / 100  
     bankroll = st.number_input("Bankroll", min_value=1, value=1000)  
     kelly_fraction = st.slider("Fraction de Kelly (1 à 5)", min_value=1, max_value=5, value=1) / 5  
-    mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
+        mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
     st.write(f"Mise de Kelly recommandée : **{mise_kelly:.2f}**")  
 
     # Analyse de la marge du bookmaker  
@@ -347,3 +325,4 @@ st.markdown(
     """,  
     unsafe_allow_html=True  
 )
+    
