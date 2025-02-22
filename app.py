@@ -95,8 +95,8 @@ if "data" not in st.session_state:
         # Historique Face-à-Face  
         "face_a_face": "",  
         # Forme Récente  
-        "forme_recente_A": ["V", "V", "V", "V", "V"],  # Données fictives pour l'Équipe A  
-        "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B  
+        "forme_recente_A":  
+        "forme_recente_B":   
         # Cotes  
         "cote_victoire_A": 2.0,  
         "cote_nul": 3.0,  
