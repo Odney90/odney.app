@@ -2,92 +2,133 @@ import streamlit as st
 import numpy as np  
 import pandas as pd  
 import matplotlib.pyplot as plt  
-import seaborn as sns  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.preprocessing import StandardScaler  
+from sklearn.model_selection import train_test_split  
 import pickle  
 import os  
-from scipy.stats import poisson  
-import json  
 from datetime import datetime  
 
-# Fonction pour sauvegarder les données  
-def save_data(data, filename='data.pkl'):  
-    with open(filename, 'wb') as f:  
-        pickle.dump(data, f)  
-    return True  # Return success status  
+# Configuration de base  
+RANDOM_STATE = 42  
+MODEL_PATH = "trained_models"  
+DATA_PATH = "data"  
 
-# Fonction pour charger les données sauvegardées  
-def load_saved_data(filename='data.pkl'):  
-    if os.path.exists(filename):  
-        with open(filename, 'rb') as f:  
-            return pickle.load(f)  
+# Création des répertoires si ils n'existent pas  
+os.makedirs(MODEL_PATH, exist_ok=True)  
+os.makedirs(DATA_PATH, exist_ok=True)  
+
+def load_data(file_name="data.csv"):  
+    """Charge les données depuis un fichier CSV"""  
+    file_path = os.path.join(DATA_PATH, file_name)  
+    if os.path.exists(file_path):  
+        return pd.read_csv(file_path)  
     return None  
 
-# Fonction pour charger les données historiques  
-def load_historical_data():  
-    return {  
-        'Équipe A': {  
-            'derniers_matchs': [1, 0, 1, 1, 0],  
-            'face_a_face': [1, 1, 0, 1, 0]  
-        },  
-        'Équipe B': {  
-            'derniers_matchs': [0, 1, 1, 0, 1],  
-            'face_a_face': [0, 0, 1, 0, 1]  
-        }  
-    }  
-
-# Fonction pour calculer le score de forme  
-def calculate_form_score(last_matches):  
-    return np.mean(last_matches)  
-
-# Fonction pour prédire les buts avec Poisson  
-def predict_goals_poisson(xG_A, xG_B):  
-    buts_A = [poisson.pmf(i, xG_A) for i in range(6)]  
-    buts_B = [poisson.pmf(i, xG_B) for i in range(6)]  
-    return buts_A, buts_B  
-
-# Fonction pour la prédiction avec Random Forest  
-def predict_random_forest(data):  
+def prepare_data(df):  
+    """Prépare les données pour l'entraînement"""  
     try:  
+        # Séparation des variables indépendantes et dépendantes  
+        X = df.drop(["target"], axis=1)  
+        y = df["target"]  
+        
+        # Équilibrement des données  
+        from imblearn.over_sampling import SMOTE  
+        smote = SMOTE(random_state=RANDOM_STATE)  
+        X_res, y_res = smote.fit_resample(X, y)  
+        
+        # Scalage des données  
         scaler = StandardScaler()  
-        scaled_data = scaler.fit_transform(data)  
+        X_scaled = scaler.fit_transform(X_res)  
         
-        rf_model = RandomForestClassifier(n_estimators=100, random_state=42)  
-        rf_model.fit(scaled_data, [1])  
-        prediction = rf_model.predict(scaled_data)  
-        
-        if prediction[0] == 1:  
-            return "Équipe A"  
-        else:  
-            return "Équipe B"  
+        return X_scaled, y_res, scaler  
     except Exception as e:  
-        return f"Error: {str(e)}"  
+        print(f"Error preparing data: {str(e)}")  
+        return None, None, None  
 
-# Fonction pour la prédiction avec Régression Logistique  
-def predict_logistic_regression(data):  
+def train_model(model_type="random_forest"):  
+    """Entraîne un modèle selon le type spécifié"""  
     try:  
-        scaler = StandardScaler()  
-        scaled_data = scaler.fit_transform(data)  
+        # Chargement des données  
+        df = load_data()  
+        if df is None:  
+            raise ValueError("No data found")  
+            
+        # Préparation des données  
+        X, y, scaler = prepare_data(df)  
+        if X is None or y is None:  
+            raise ValueError("Data preparation failed")  
+            
+        # Séparation en entraînement et test  
+        X_train, X_test, y_train, y_test = train_test_split(  
+            X, y,   
+            test_size=0.2,   
+            random_state=RANDOM_STATE  
+        )  
         
-        log_model = LogisticRegression(max_iter=1000)  
-        log_model.fit(scaled_data, [1])  
-        prediction = log_model.predict(scaled_data)  
-        
-        if prediction[0] == 1:  
-            return "Équipe A"  
+        # Initialisation du modèle  
+        if model_type == "random_forest":  
+            model = RandomForestClassifier(  
+                n_estimators=100,  
+                random_state=RANDOM_STATE,  
+                class_weight="balanced"  
+            )  
+        elif model_type == "logistic_regression":  
+            model = LogisticRegression(  
+                max_iter=1000,  
+                random_state=RANDOM_STATE,  
+                class_weight="balanced"  
+            )  
         else:  
-            return "Équipe B"  
+            raise ValueError("Invalid model type")  
+            
+        # Entraînement du modèle  
+        model.fit(X_train, y_train)  
+        
+        # Sauvegarde du modèle et du scaler  
+        model_path = os.path.join(MODEL_PATH, f"{model_type}_model.pkl")  
+        scaler_path = os.path.join(MODEL_PATH, "scaler.pkl")  
+        with open(model_path, "wb") as f:  
+            pickle.dump(model, f)  
+        with open(scaler_path, "wb") as f:  
+            pickle.dump(scaler, f)  
+            
+        return True  
     except Exception as e:  
-        return f"Error: {str(e)}"  
+        print(f"Error training model: {str(e)}")  
+        return False  
+
+def predict(model_type, data):  
+    """Fait une prédiction avec le modèle spécifié"""  
+    try:  
+        # Chargement du modèle et du scaler  
+        model_path = os.path.join(MODEL_PATH, f"{model_type}_model.pkl")  
+        scaler_path = os.path.join(MODEL_PATH, "scaler.pkl")  
+        
+        if not os.path.exists(model_path) or not os.path.exists(scaler_path):  
+            raise ValueError("Model or scaler not found")  
+            
+        with open(model_path, "rb") as f:  
+            model = pickle.load(f)  
+        with open(scaler_path, "rb") as f:  
+            scaler = pickle.load(f)  
+            
+        # Préparation des données  
+        scaled_data = scaler.transform(data)  
+        
+        # Prédiction  
+        prediction = model.predict(scaled_data)  
+        probability = model.predict_proba(scaled_data)  
+        
+        return prediction, probability  
+    except Exception as e:  
+        print(f"Error making prediction: {str(e)}")  
+        return None, None  
 
 # Interface utilisateur Streamlit  
 st.title("⚽ Prédiction de Matchs de Football")  
 st.write("Entrez les statistiques des deux équipes pour prédire le résultat du match.")  
-
-# Chargement des données historiques  
-historical_data = load_historical_data()  
 
 # Section pour les 5 derniers matchs  
 with st.expander("Forme récente (5 derniers matchs)"):  
@@ -118,8 +159,8 @@ with st.expander("Forme récente (5 derniers matchs)"):
             derniers_matchs_B.append(0.5)  
 
 # Calcul du score de forme  
-score_forme_A = calculate_form_score(derniers_matchs_A)  
-score_forme_B = calculate_form_score(derniers_matchs_B)  
+score_forme_A = np.mean(derniers_matchs_A)  
+score_forme_B = np.mean(derniers_matchs_B)  
 
 # Section pour les statistiques générales  
 with st.expander("Statistiques générales"):  
@@ -206,12 +247,27 @@ with st.expander("Visualisation des données"):
     ax[1].set_title("Évolution de la forme")  
     st.pyplot(fig)  
 
+# Section pour l'entraînement des modèles  
+with st.expander("Entraînement des modèles"):  
+    st.write("Entraînez les modèles avec vos données historiques.")  
+    if st.button("Entraîner les modèles"):  
+        if train_model("random_forest"):  
+            st.success("Modèle Random Forest entraîné avec succès !")  
+        else:  
+            st.error("Erreur lors de l'entraînement du modèle Random Forest")  
+        
+        if train_model("logistic_regression"):  
+            st.success("Modèle Logistic Regression entraîné avec succès !")  
+        else:  
+            st.error("Erreur lors de l'entraînement du modèle Logistic Regression")  
+
 # Section pour la prédiction  
 with st.expander("Prédiction"):  
     col1, col2 = st.columns(2)  
     with col1:  
         if st.button("Prédire avec Random Forest", key="predict_rf"):  
             try:  
+                # Préparation des données  
                 data = np.array([  
                     score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
                     possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
@@ -228,17 +284,20 @@ with st.expander("Prédiction"):
                     buts_concedes_totaux_B, aucun_but_encaisse_B  
                 ]).reshape(1, -1)  
                 
-                prediction = predict_random_forest(data)  
-                if isinstance(prediction, str):  
-                    st.success(f"Prédiction : {prediction}", key="rf_prediction")  
+                # Prédiction  
+                prediction, probability = predict("random_forest", data)  
+                if prediction is not None:  
+                    st.write(f"Prédiction : {prediction[0]}")  
+                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
                 else:  
-                    st.error("Erreur lors de la prédiction", key="rf_error")  
+                    st.error("Erreur lors de la prédiction")  
             except Exception as e:  
-                st.error(f"Erreur lors de la prédiction : {str(e)}", key="rf_error")  
+                st.error(f"Erreur : {str(e)}")  
     
     with col2:  
         if st.button("Prédire avec Régression Logistique", key="predict_lr"):  
             try:  
+                # Préparation des données  
                 data = np.array([  
                     score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
                     possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
@@ -255,80 +314,81 @@ with st.expander("Prédiction"):
                     buts_concedes_totaux_B, aucun_but_encaisse_B  
                 ]).reshape(1, -1)  
                 
-                prediction = predict_logistic_regression(data)  
-                if isinstance(prediction, str):  
-                    st.success(f"Prédiction : {prediction}", key="lr_prediction")  
+                # Prédiction  
+                prediction, probability = predict("logistic_regression", data)  
+                if prediction is not None:  
+                    st.write(f"Prédiction : {prediction[0]}")  
+                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
                 else:  
-                    st.error("Erreur lors de la prédiction", key="lr_error")  
+                    st.error("Erreur lors de la prédiction")  
             except Exception as e:  
-                st.error(f"Erreur lors de la prédiction : {str(e)}", key="lr_error")  
+                st.error(f"Erreur : {str(e)}")  
 
 # Section pour la prédiction des buts  
 with st.expander("Prédiction des buts"):  
     if st.button("Prédire les buts", key="predict_goals"):  
         try:  
-            buts_A, buts_B = predict_goals_poisson(expected_buts_A, expected_buts_B)  
-            st.write(f"Buts attendus pour l'équipe A : {buts_A}", key="buts_A")  
-            st.write(f"Buts attendus pour l'équipe B : {buts_B}", key="buts_B")  
+            from scipy.stats import poisson  
+            buts_A, buts_B = poisson(np.array([expected_buts_A, expected_buts_B]))  
+            st.write(f"Buts attendus pour l'équipe A : {buts_A}")  
+            st.write(f"Buts attendus pour l'équipe B : {buts_B}")  
         except Exception as e:  
-            st.error(f"Erreur lors de la prédiction des buts : {str(e)}", key="goals_error")  
+            st.error(f"Erreur lors de la prédiction des buts : {str(e)}")  
 
-# Sauvegarde automatique des données  
-def save_all_data():  
+# Données exemple pour test  
+if not os.path.exists(os.path.join(DATA_PATH, "data.csv")):  
+    # Création de données exemple  
     data = {  
-        'derniers_matchs_A': derniers_matchs_A,  
-        'derniers_matchs_B': derniers_matchs_B,  
-        'buts_totaux_A': buts_totaux_A,  
-        'buts_totaux_B': buts_totaux_B,  
-        'possession_moyenne_A': possession_moyenne_A,  
-        'possession_moyenne_B': possession_moyenne_B,  
-        'expected_buts_A': expected_buts_A,  
-        'expected_buts_B': expected_buts_B,  
-        'tirs_cadres_A': tirs_cadres_A,  
-        'tirs_cadres_B': tirs_cadres_B,  
-        'passes_reussies_A': passes_reussies_A,  
-        'passes_reussies_B': passes_reussies_B,  
-        'tacles_reussis_A': tacles_reussis_A,  
-        'tacles_reussis_B': tacles_reussis_B,  
-        'fautes_A': fautes_A,  
-        'fautes_B': fautes_B,  
-        'cartons_jaunes_A': cartons_jaunes_A,  
-        'cartons_jaunes_B': cartons_jaunes_B,  
-        'cartons_rouges_A': cartons_rouges_A,  
-        'cartons_rouges_B': cartons_rouges_B,  
-        'expected_concedes_A': expected_concedes_A,  
-        'expected_concedes_B': expected_concedes_B,  
-        'interceptions_A': interceptions_A,  
-        'interceptions_B': interceptions_B,  
-        'degagements_A': degagements_A,  
-        'degagements_B': degagements_B,  
-        'arrets_A': arrets_A,  
-        'arrets_B': arrets_B,  
-        'corners_A': corners_A,  
-        'corners_B': corners_B,  
-        'touches_surface_adverse_A': touches_surface_adverse_A,  
-        'touches_surface_adverse_B': touches_surface_adverse_B,  
-        'penalites_obtenues_A': penalites_obtenues_A,  
-        'penalites_obtenues_B': penalites_obtenues_B,  
-        'buts_par_match_A': buts_par_match_A,  
-        'buts_concedes_par_match_A': buts_concedes_par_match_A,  
-        'buts_concedes_totaux_A': buts_concedes_totaux_A,  
-        'aucun_but_encaisse_A': aucun_but_encaisse_A,  
-        'buts_par_match_B': buts_par_match_B,  
-        'buts_concedes_par_match_B': buts_concedes_par_match_B,  
-        'buts_concedes_totaux_B': buts_concedes_totaux_B,  
-        'aucun_but_encaisse_B': aucun_but_encaisse_B,  
-        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
+        "buts_totaux_A": [10, 15, 8, 12, 11],  
+        "buts_totaux_B": [8, 10, 12, 9, 14],  
+        "possession_moyenne_A": [55, 60, 50, 58, 52],  
+        "possession_moyenne_B": [45, 50, 55, 48, 53],  
+        "expected_buts_A": [1.2, 1.5, 1.0, 1.3, 1.1],  
+        "expected_buts_B": [0.9, 1.2, 1.4, 1.1, 1.3],  
+        "tirs_cadres_A": [4, 5, 3, 4, 5],  
+        "tirs_cadres_B": [3, 4, 5, 4, 4],  
+        "passes_reussies_A": [300, 350, 280, 320, 290],  
+        "passes_reussies_B": [280, 300, 350, 290, 310],  
+        "tacles_reussis_A": [15, 20, 10, 18, 12],  
+        "tacles_reussis_B": [10, 15, 20, 12, 18],  
+        "fautes_A": [8, 10, 6, 9, 7],  
+        "fautes_B": [6, 8, 10, 7, 9],  
+        "cartons_jaunes_A": [1, 2, 0, 1, 1],  
+        "cartons_jaunes_B": [0, 1, 2, 1, 1],  
+        "cartons_rouges_A": [0, 0, 0, 0, 0],  
+        "cartons_rouges_B": [0, 0, 0, 0, 0],  
+        "expected_concedes_A": [1.0, 1.2, 0.8, 1.1, 1.0],  
+        "expected_concedes_B": [0.8, 1.0, 1.2, 1.0, 1.1],  
+        "interceptions_A": [8, 10, 6, 9, 7],  
+        "interceptions_B": [6, 8, 10, 7, 9],  
+        "degagements_A": [20, 25, 15, 22, 18],  
+        "degagements_B": [15, 20, 25, 18, 22],  
+        "arrets_A": [3, 4, 2, 3, 3],  
+        "arrets_B": [2, 3, 4, 3, 3],  
+        "corners_A": [5, 6, 4, 5, 5],  
+        "corners_B": [4, 5, 6, 5, 5],  
+        "touches_surface_adverse_A": [30, 35, 25, 32, 28],  
+        "touches_surface_adverse_B": [25, 30, 35, 28, 32],  
+        "penalites_obtenues_A": [0, 1, 0, 1, 0],  
+        "penalites_obtenues_B": [1, 0, 1, 0, 1],  
+        "buts_par_match_A": [2, 3, 1, 2, 2],  
+        "buts_concedes_par_match_A": [1, 2, 0, 1, 1],  
+        "buts_concedes_totaux_A": [5, 10, 5, 8, 6],  
+        "aucun_but_encaisse_A": [0, 1, 1, 0, 0],  
+        "buts_par_match_B": [1, 2, 3, 2, 2],  
+        "buts_concedes_par_match_B": [2, 1, 0, 1, 2],  
+        "buts_concedes_totaux_B": [6, 5, 8, 7, 6],  
+        "aucun_but_encaisse_B": [1, 0, 0, 1, 0],  
+        "target": [1, 1, 0, 1, 0]  # 1 pour Équipe A, 0 pour Équipe B  
     }  
-    
-    success = save_data(data)  
-    if success:  
-        st.success("Données sauvegardées avec succès !")  
-    return success  
+    df = pd.DataFrame(data)  
+    df.to_csv(os.path.join(DATA_PATH, "data.csv"), index=False)  
+    st.info("Données exemple créées avec succès !")  
 
 # Appel à la fonction de sauvegarde  
 if __name__ == "__main__":  
     try:  
-        save_all_data()  
+        train_model("random_forest")  
+        train_model("logistic_regression")  
     except Exception as e:  
-        st.error(f"Erreur lors de la sauvegarde : {e}")
+        st.error(f"Erreur lors de l'exécution : {e}")
