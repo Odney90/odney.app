@@ -12,6 +12,16 @@ if 'data' not in st.session_state:
         "buts_concedes_totaux_A": 30.0,  
         "possession_moyenne_A": 55.0,  
         "aucun_but_encaisse_A": 10,  
+        "expected_but_A": 0.0,  # Initialisation ajoutée  
+        "tirs_cadres_A": 0.0,  
+        "grandes_chances_A": 0.0,  
+        "grandes_chances_manquees_A": 0.0,  
+        "passes_reussies_A": 0.0,  
+        "passes_longues_A": 0.0,  
+        "centres_reussis_A": 0.0,  
+        "penalties_obtenues_A": 0.0,  
+        "balles_surface_A": 0.0,  
+        "corners_A": 0.0,  
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -20,12 +30,22 @@ if 'data' not in st.session_state:
         "buts_concedes_totaux_B": 35.0,  
         "possession_moyenne_B": 45.0,  
         "aucun_but_encaisse_B": 8,  
-        
+        "expected_but_B": 0.0,  # Initialisation ajoutée  
+        "tirs_cadres_B": 0.0,  
+        "grandes_chances_B": 0.0,  
+        "grandes_chances_manquees_B": 0.0,  
+        "passes_reussies_B": 0.0,  
+        "passes_longues_B": 0.0,  
+        "centres_reussis_B": 0.0,  
+        "penalties_obtenues_B": 0.0,  
+        "balles_surface_B": 0.0,  
+        "corners_B": 0.0,  
+
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "head_to_head": [],  # Historique des confrontations  
         "conditions_match": "",  # Conditions du match  
-    }  
+    }
 
 # --- Interface Utilisateur ---  
 st.header("⚽ Statistiques des Équipes de Football")  
@@ -46,8 +66,7 @@ with col2:
 
 # --- Conditions du Match ---  
 st.subheader("🌦️ Conditions du Match")  
-st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex: pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"])  
-
+st.session_state.data["conditions_match"] = st.text_input("Conditions du Match (ex: pluie, terrain sec, etc.)", value=st.session_state.data["conditions_match"])
 # --- Historique des confrontations ---  
 st.subheader("📊 Historique des Confrontations Directes")  
 if st.button("Ajouter un résultat de confrontation"):  
@@ -60,9 +79,8 @@ if st.button("Ajouter un résultat de confrontation"):
 if st.session_state.data["head_to_head"]:  
     st.write("Historique des Confrontations :")  
     for index, (buts_A, buts_B) in enumerate(st.session_state.data["head_to_head"]):  
-        st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")  
-
-# --- Top Statistiques ---  
+        st.write(f"Match {index + 1}: Équipe A {buts_A} - Équipe B {buts_B}")
+        # --- Top Statistiques ---  
 st.subheader("📊 Top Statistiques")  
 col1, col2 = st.columns(2)  
 
@@ -86,9 +104,8 @@ with col1:
 
 with col2:  
     st.session_state.data["possession_moyenne_B"] = st.number_input("Ballon Possession Moyenne Équipe B (%)", min_value=0.0, max_value=100.0, value=st.session_state.data["possession_moyenne_B"], key="possession_moyenne_B")  
-    st.session_state.data["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé Équipe B", min_value=0, value=st.session_state.data["aucun_but_encaisse_B"], key="aucun_but_encaisse_B")  
-
-# --- Critères d'Attaque ---  
+    st.session_state.data["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé Équipe B", min_value=0, value=st.session_state.data["aucun_but_encaisse_B"], key="aucun_but_encaisse_B")
+    # --- Critères d'Attaque ---  
 st.subheader("⚔️ Critères d'Attaque")  
 col1, col2 = st.columns(2)  
 
@@ -152,14 +169,14 @@ with col1:
 with col2:  
     st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0.0, value=st.session_state.data["penalties_concedes_B"], key="penalties_concedes_B")  
     st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0.0, value=st.session_state.data["possessions_remporte_B"], key="possessions_remporte_B")  
-    st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0.0, value=st.session_state.data["arrets_B"], key="arrets_B")  
-
-# --- Discipline ---  
+    st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0.0, value=st.session_state.data["arrets_B"], key="arrets_B")
+    # --- Discipline ---  
 st.subheader("📜 Discipline")  
 col1, col2 = st.columns(2)  
 
 with col1:  
-    st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0, value=st.session_state.data["fautes_A"], key="fautes_A")  
+    st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0
+        st.session_state.data["fautes_A"] = st.number_input("Fautes par Match Équipe A", min_value=0.0, value=st.session_state.data["fautes_A"], key="fautes_A")  
     st.session_state.data["cartons_jaunes_A"] = st.number_input("Cartons Jaunes Équipe A", min_value=0.0, value=st.session_state.data["cartons_jaunes_A"], key="cartons_jaunes_A")  
 
 with col2:  
@@ -170,9 +187,8 @@ with col1:
     st.session_state.data["cartons_jaunes_B"] = st.number_input("Cartons Jaunes Équipe B", min_value=0.0, value=st.session_state.data["cartons_jaunes_B"], key="cartons_jaunes_B")  
 
 with col2:  
-    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")  
-
-# --- Méthode de Prédiction ---  
+    st.session_state.data["cartons_rouges_B"] = st.number_input("Cartons Rouges Équipe B", min_value=0.0, value=st.session_state.data["cartons_rouges_B"], key="cartons_rouges_B")
+    # --- Méthode de Prédiction ---  
 st.subheader("🔮 Méthode de Prédiction")  
 
 if st.button("Prédire le Résultat du Match"):  
@@ -199,6 +215,7 @@ if st.button("Prédire le Résultat du Match"):
     prob_B = (lambda_B / (lambda_A + lambda_B)) * 100  
 
     st.write(f"Probabilité de victoire Équipe A : {prob_A:.2f}%")  
-    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2f}%")  
+    st.write(f"Probabilité de victoire Équipe B : {prob_B:.2f}%")
 
-# --- Fin du Code ---
+    # --- Fin du Code ---
+                                                        
