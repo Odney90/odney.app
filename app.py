@@ -22,7 +22,10 @@ if 'data' not in st.session_state:
         "centres_reussis_A": 0.0,  
         "penalties_obtenues_A": 0.0,  
         "balles_surface_A": 0.0,  
-        "corners_A": 0.0,  
+        "corners_A": 0.0,
+        "interceptions_A": 0.0,
+        "degagements_A": 0.0,
+        "tacles_reussis_A": 0.0,
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -41,7 +44,10 @@ if 'data' not in st.session_state:
         "centres_reussis_B": 0.0,  
         "penalties_obtenues_B": 0.0,  
         "balles_surface_B": 0.0,  
-        "corners_B": 0.0,  
+        "corners_B": 0.0, 
+        "interceptions_B": 0.0,
+        "degagements_B": 0.0,
+        "tacles_reussis_B": 0.0,
 
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
@@ -107,7 +113,9 @@ with col1:
 with col2:  
     st.session_state.data["possession_moyenne_B"] = st.number_input("Ballon Possession Moyenne Équipe B (%)", min_value=0.0, max_value=100.0, value=st.session_state.data["possession_moyenne_B"], key="possession_moyenne_B")  
     st.session_state.data["aucun_but_encaisse_B"] = st.number_input("🔒 Aucun But Encaissé Équipe B", min_value=0, value=st.session_state.data["aucun_but_encaisse_B"], key="aucun_but_encaisse_B")
-    # --- Critères d'Attaque ---  
+ 
+# --- Critères d'Attaque ---  
+
 st.subheader("⚔️ Critères d'Attaque")  
 col1, col2 = st.columns(2)  
 
@@ -126,6 +134,7 @@ with col2:
     st.session_state.data["corners_A"] = st.number_input("⚽ Corners Équipe A", min_value=0.0, value=st.session_state.data["corners_A"], key="corners_A")  
 
 # --- Critères de Défense ---  
+
 st.subheader("🛡️ Critères de Défense")  
 col1, col2 = st.columns(2)  
 
@@ -141,6 +150,7 @@ with col2:
     st.session_state.data["arrets_A"] = st.number_input("Arrêts Équipe A", min_value=0.0, value=st.session_state.data["arrets_A"], key="arrets_A")  
 
 # --- Critères d'Attaque Équipe B ---  
+
 st.subheader("⚔️ Critères d'Attaque Équipe B")  
 col1, col2 = st.columns(2)  
 
