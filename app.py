@@ -23,7 +23,7 @@ if 'data' not in st.session_state:
         "penalties_obtenues_A": 0.0,  
         "balles_surface_A": 0.0,  
         "corners_A": 0.0,
-        "expected_concedes_A": 0.O,
+        "expected_concedes_A": 0.0,
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
