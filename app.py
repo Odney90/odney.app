@@ -6,10 +6,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression  
 from sklearn.preprocessing import StandardScaler  
 from sklearn.model_selection import train_test_split  
+from imblearn.over_sampling import SMOTE  
 import pickle  
 import os  
-from datetime import datetime  
-from imblearn.over_sampling import SMOTE  
 
 # Configuration de base  
 RANDOM_STATE = 42  
@@ -268,20 +267,6 @@ with st.expander("Prédiction"):
     with col1:  
         if st.button("Prédire avec Random Forest", key="predict_rf"):  
             try:  
-                # Chargement du modèle  
-                model_path = os.path.join(MODEL_PATH, "random_forest_model.pkl")  
-                scaler_path = os.path.join(MODEL_PATH, "scaler.pkl")  
-                
-                if not os.path.exists(model_path) or not os.path.exists(scaler_path):  
-                    st.error("Modèle Random Forest non trouvé")  
-                    raise FileNotFoundError("Modèle non trouvé")  
-                
-                # Chargement du modèle et du scaler  
-                with open(model_path, "rb") as f:  
-                    model = pickle.load(f)  
-                with open(scaler_path, "rb") as f:  
-                    scaler = pickle.load(f)  
-                
                 # Préparation des données  
                 data = np.array([  
                     score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
@@ -299,12 +284,8 @@ with st.expander("Prédiction"):
                     buts_concedes_totaux_B, aucun_but_encaisse_B  
                 ]).reshape(1, -1)  
                 
-                # Scalage des données  
-                scaled_data = scaler.transform(data)  
-                
                 # Prédiction  
-                prediction = model.predict(scaled_data)  
-                probability = model.predict_proba(scaled_data)  
+                prediction, probability = predict("random_forest", data)  
                 
                 if prediction is not None:  
                     st.write("Prédiction du Random Forest :")  
@@ -319,129 +300,6 @@ with st.expander("Prédiction"):
     with col2:  
         if st.button("Prédire avec Régression Logistique", key="predict_lr"):  
             try:  
-                # Chargement du modèle  
-                model_path = os.path.join(MODEL_PATH, "logistic_regression_model.pkl")  
-                scaler_path = os.path.join(MODEL_PATH, "scaler.pkl")  
-                
-                if not os.path.exists(model_path) or not os.path.exists(scaler_path):  
-                    st.error("Modèle de Régression Logistique non trouvé")  
-                    raise FileNotFoundError("Modèle non trouvé")  
-                
-                # Chargement du modèle et du scaler  
-                with open(model_path, "rb") as f:  
-                    model = pickle.load(f)  
-                with open(scaler_path, "rb") as f:  
-                    scaler = pickle.load(f)  
-                
                 # Préparation des données  
                 data = np.array([  
-                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
-                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
-                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
-                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
-                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
-                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
-                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
-                    arrets_A, arrets_B, corners_A, corners_B,  
-                    touches_surface_adverse_A, touches_surface_adverse_B,  
-                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
-                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
-                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
-                    buts_concedes_totaux_B, aucun_but_encaisse_B  
-                ]).reshape(1, -1)  
-                
-                # Scalage des données  
-                scaled_data = scaler.transform(data)  
-                
-                # Prédiction  
-                prediction = model.predict(scaled_data)  
-                probability = model.predict_proba(scaled_data)  
-                
-                if prediction is not None:  
-                    st.write("Prédiction de la Régression Logistique :")  
-                    st.write(f"Résultat prédit : {prediction[0]}")  
-                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
-                else:  
-                    st.error("Erreur lors de la prédiction")  
-                
-            except Exception as e:  
-                st.error(f"Erreur lors de la prédiction avec Régression Logistique : {str(e)}")  
-
-# Section pour la prédiction des buts  
-with st.expander("Prédiction des buts"):  
-    if st.button("Prédire les buts", key="predict_goals"):  
-        try:  
-            from scipy.stats import poisson  
-            
-            # Paramètres de la distribution de Poisson  
-            lambda_A = expected_buts_A  
-            lambda_B = expected_buts_B  
-            
-            # Génération des buts attendus  
-            buts_A = poisson.rvs(mu=lambda_A)  
-            buts_B = poisson.rvs(mu=lambda_B)  
-            
-            st.write(f"Prédiction des buts :")  
-            st.write(f"Équipe A : {buts_A} but(s)")  
-            st.write(f"Équipe B : {buts_B} but(s)")  
-            
-        except Exception as e:  
-            st.error(f"Erreur lors de la prédiction des buts : {str(e)}")  
-
-# Données exemple pour test  
-if not os.path.exists(os.path.join(DATA_PATH, "data.csv")):  
-    # Création de données exemple  
-    data = {  
-        "buts_totaux_A": [10, 15, 8, 12, 11],  
-        "buts_totaux_B": [8, 10, 12, 9, 14],  
-        "possession_moyenne_A": [55, 60, 50, 58, 52],  
-        "possession_moyenne_B": [45, 50, 55, 48, 53],  
-        "expected_buts_A": [1.2, 1.5, 1.0, 1.3, 1.1],  
-        "expected_buts_B": [0.9, 1.2, 1.4, 1.1, 1.3],  
-        "tirs_cadres_A": [4, 5, 3, 4, 5],  
-        "tirs_cadres_B": [3, 4, 5, 4, 4],  
-        "passes_reussies_A": [300, 350, 280, 320, 290],  
-        "passes_reussies_B": [280, 300, 350, 290, 310],  
-        "tacles_reussis_A": [15, 20, 10, 18, 12],  
-        "tacles_reussis_B": [10, 15, 20, 12, 18],  
-        "fautes_A": [8, 10, 6, 9, 7],  
-        "fautes_B": [6, 8, 10, 7, 9],  
-        "cartons_jaunes_A": [1, 2, 0, 1, 1],  
-        "cartons_jaunes_B": [0, 1, 2, 1, 1],  
-        "cartons_rouges_A": [0, 0, 0, 0, 0],  
-        "cartons_rouges_B": [0, 0, 0, 0, 0],  
-        "expected_concedes_A": [1.0, 1.2, 0.8, 1.1, 1.0],  
-        "expected_concedes_B": [0.8, 1.0, 1.2, 1.0, 1.1],  
-        "interceptions_A": [8, 10, 6, 9, 7],  
-        "interceptions_B": [6, 8, 10, 7, 9],  
-        "degagements_A": [20, 25, 15, 22, 18],  
-        "degagements_B": [15, 20, 25, 18, 22],  
-        "arrets_A": [3, 4, 2, 3, 3],  
-        "arrets_B": [2, 3, 4, 3, 3],  
-        "corners_A": [5, 6, 4, 5, 5],  
-        "corners_B": [4, 5, 6, 5, 5],  
-        "touches_surface_adverse_A": [30, 35, 25, 32, 28],  
-        "touches_surface_adverse_B": [25, 30, 35, 28, 32],  
-        "penalites_obtenues_A": [0, 1, 0, 1, 0],  
-        "penalites_obtenues_B": [1, 0, 1, 0, 1],  
-        "buts_par_match_A": [2, 3, 1, 2, 2],  
-        "buts_concedes_par_match_A": [1, 2, 0, 1, 1],  
-        "buts_concedes_totaux_A": [5, 10, 5, 8, 6],  
-        "aucun_but_encaisse_A": [0, 1, 1, 0, 0],  
-        "buts_par_match_B": [1, 2, 3, 2, 2],  
-        "buts_concedes_par_match_B": [2, 1, 0, 1, 2],  
-        "buts_concedes_totaux_B": [6, 5, 8, 7, 6],  
-        "aucun_but_encaisse_B": [1, 0, 0, 1, 0],  
-        "target": [1, 1, 0, 1, 0]  # 1 pour Équipe A, 0 pour Équipe B  
-    }  
-    df = pd.DataFrame(data)  
-    df.to_csv(os.path.join(DATA_PATH, "data.csv"), index=False)  
-    st.info("Données exemple créées avec succès !")  
-
-# Appel à la fonction de sauvegarde  
-if __name__ == "__main__":  
-    try:  
-        train_model("random_forest")  
-        train_model("logistic_regression")  
-    except Exception as e:  
-        st.error(f"Erreur lors de l'exécution : {e}")
+                    score_forme_A, score_forme_B,
