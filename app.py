@@ -74,11 +74,17 @@ col1, col2 = st.columns(2)
 with col1:  
     st.write("Équipe A")  
     for i in range(5):  
+        # Vérification de l'initialisation  
+        if "recent_form_A" not in st.session_state.data:  
+            st.session_state.data["recent_form_A"] = [0] * 5  
         st.session_state.data["recent_form_A"][i] = st.number_input(f"Match {i + 1} (Buts marqués)", min_value=0, value=st.session_state.data["recent_form_A"][i], key=f"recent_form_A_{i}")  
 
 with col2:  
     st.write("Équipe B")  
     for i in range(5):  
+        # Vérification de l'initialisation  
+        if "recent_form_B" not in st.session_state.data:  
+            st.session_state.data["recent_form_B"] = [0] * 5  
         st.session_state.data["recent_form_B"][i] = st.number_input(f"Match {i + 1} (Buts marqués)", min_value=0, value=st.session_state.data["recent_form_B"][i], key=f"recent_form_B_{i}")  
 
 # --- Historique des confrontations ---  
