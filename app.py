@@ -323,26 +323,111 @@ with st.expander("Prédiction"):
                     st.error("Erreur lors de la prédiction")  
             except Exception as e:  
                 st.error(f"Erreur : {str(e)}")  
-# Section pour la prédiction des buts  
-with st.expander("Prédiction des buts"):  
-    if st.button("Prédire les buts", key="predict_goals"):  
-        try:  
-            from scipy.stats import poisson  
-            
-            # Utilisation de la distribution de Poisson pour prédire les buts  
-            # La fonction poisson.rvs() génère des nombres aléatoires suivant la distribution de Poisson  
-            
-            # Paramètres de la distribution de Poisson (xG pour chaque équipe)  
-            lambda_A = expected_buts_A  
-            lambda_B = expected_buts_B  
-            
-            # Génération des buts attendus  
-            buts_A = poisson.rvs(mu=lambda_A)  
-            buts_B = poisson.rvs(mu=lambda_B)  
-            
-            st.write(f"Prédiction des buts :")  
-            st.write(f"Équipe A : {buts_A} but(s)")  
-            st.write(f"Équipe B : {buts_B} but(s)")  
+# Section pour la prédiction  
+with st.expander("Prédiction"):  
+    col1, col2 = st.columns(2)  
+    
+    with col1:  
+        if st.button("Prédire avec Random Forest", key="predict_rf"):  
+            try:  
+                # Chargement du modèle  
+                model_path = os.path.join(MODEL_PATH, "random_forest_model.pkl")  
+                scaler_path = os.path.join(MODEL_PATH, "scaler.pkl")  
+                
+                if not os.path.exists(model_path) or not os.path.exists(scaler_path):  
+                    st.error("Modèle Random Forest non trouvé")  
+                    raise FileNotFoundError("Modèle non trouvé")  
+                
+                # Chargement du modèle et du scaler  
+                with open(model_path, "rb") as f:  
+                    model = pickle.load(f)  
+                with open(scaler_path, "rb") as f:  
+                    scaler = pickle.load(f)  
+                
+                # Préparation des données  
+                data = np.array([  
+                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                    arrets_A, arrets_B, corners_A, corners_B,  
+                    touches_surface_adverse_A, touches_surface_adverse_B,  
+                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                    buts_concedes_totaux_B, aucun_but_encaisse_B  
+                ]).reshape(1, -1)  
+                
+                # Scalage des données  
+                scaled_data = scaler.transform(data)  
+                
+                # Prédiction  
+                prediction = model.predict(scaled_data)  
+                probability = model.predict_proba(scaled_data)  
+                
+                if prediction is not None:  
+                    st.write("Prédiction du Random Forest :")  
+                    st.write(f"Résultat prédit : {prediction[0]}")  
+                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
+                else:  
+                    st.error("Erreur lors de la prédiction")  
+                
+            except Exception as e:  
+                st.error(f"Erreur lors de la prédiction avec Random Forest : {str(e)}")  
+    
+    with col2:  
+        if st.button("Prédire avec Régression Logistique", key="predict_lr"):  
+            try:  
+                # Chargement du modèle  
+                model_path = os.path.join(MODEL_PATH, "logistic_regression_model.pkl")  
+                scaler_path = os.path.join(MODEL_PATH, "scaler.pkl")  
+                
+                if not os.path.exists(model_path) or not os.path.exists(scaler_path):  
+                    st.error("Modèle de Régression Logistique non trouvé")  
+                    raise FileNotFoundError("Modèle non trouvé")  
+                
+                # Chargement du modèle et du scaler  
+                with open(model_path, "rb") as f:  
+                    model = pickle.load(f)  
+                with open(scaler_path, "rb") as f:  
+                    scaler = pickle.load(f)  
+                
+                # Préparation des données  
+                data = np.array([  
+                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                    arrets_A, arrets_B, corners_A, corners_B,  
+                    touches_surface_adverse_A, touches_surface_adverse_B,  
+                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                    buts_concedes_totaux_B, aucun_but_encaisse_B  
+                ]).reshape(1, -1)  
+                
+                # Scalage des données  
+                scaled_data = scaler.transform(data)  
+                
+                # Prédiction  
+                prediction = model.predict(scaled_data)  
+                probability = model.predict_proba(scaled_data)  
+                
+                if prediction is not None:  
+                    st.write("Prédiction de la Régression Logistique :")  
+                    st.write(f"Résultat prédit : {prediction[0]}")  
+                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
+                else:  
+                    st.error("Erreur lors de la prédiction")  
+                
+            except Exception as e:  
+                st.error(f"Erreur lors de la prédiction avec Régression Logistique : {str(e)}")
             
         except Exception as e:  
             st.error(f"Erreur lors de la prédiction des buts : {str(e)}") 
