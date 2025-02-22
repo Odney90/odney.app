@@ -302,4 +302,4 @@ with st.expander("Prédiction"):
             try:  
                 # Préparation des données  
                 data = np.array([  
-                    score_forme_A, score_forme_B,
+                    score_forme_A, score_forme_B, buts_totaux_A
