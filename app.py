@@ -204,38 +204,42 @@ with st.expander("Prédiction"):
     col1, col2 = st.columns(2)  
     with col1:  
         if st.button("Prédire avec Random Forest"):  
-            data = np.array([[score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,   
-                             possession_moyenne_A, possession_moyenne_B, expected_buts_A,   
-                             expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,   
-                             passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,   
-                             fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,   
-                             cartons_rouges_B, expected_concedes_A, expected_concedes_B,   
-                             interceptions_A, interceptions_B, degagements_A, degagements_B,   
-                             arrets_A, arrets_B, corners_A, corners_B,   
-                             touches_surface_adverse_A, touches_surface_adverse_B,   
-                             penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,   
-                             buts_concedes_par_match_A, buts_concedes_totaux_A,   
-                             aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,   
-                             buts_concedes_totaux_B, aucun_but_encaisse_B]).reshape(1, -1)  
+            data = np.array([  
+                score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                arrets_A, arrets_B, corners_A, corners_B,  
+                touches_surface_adverse_A, touches_surface_adverse_B,  
+                penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                buts_concedes_totaux_B, aucun_but_encaisse_B  
+            ]).reshape(1, -1)  
             
             prediction = predict_random_forest(data)  
             st.success(f"Prédiction : {prediction}")  
     
     with col2:  
         if st.button("Prédire avec Régression Logistique"):  
-            data = np.array([[score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,   
-                             possession_moyenne_A, possession_moyenne_B, expected_buts_A,   
-                             expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,   
-                             passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,   
-                             fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,   
-                             cartons_rouges_B, expected_concedes_A, expected_concedes_B,   
-                             interceptions_A, interceptions_B, degagements_A, degagements_B,   
-                             arrets_A, arrets_B, corners_A, corners_B,   
-                             touches_surface_adverse_A, touches_surface_adverse_B,   
-                             penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,   
-                             buts_concedes_par_match_A, buts_concedes_totaux_A,   
-                             aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,   
-                             buts_concedes_totaux_B, aucun_but_encaisse_B]).reshape(1, -1)  
+            data = np.array([  
+                score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
+                possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
+                expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
+                passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
+                fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
+                cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
+                interceptions_A, interceptions_B, degagements_A, degagements_B,  
+                arrets_A, arrets_B, corners_A, corners_B,  
+                touches_surface_adverse_A, touches_surface_adverse_B,  
+                penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
+                buts_concedes_par_match_A, buts_concedes_totaux_A,  
+                aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
+                buts_concedes_totaux_B, aucun_but_encaisse_B  
+            ]).reshape(1, -1)  
             
             prediction = predict_logistic_regression(data)  
             st.success(f"Prédiction : {prediction}")  
