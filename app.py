@@ -67,10 +67,23 @@ if "data" not in st.session_state:
         "matchs_30_jours_B": 9.0,  
         # Conditions du Match  
         "conditions_match": "",  
+        # Historique Face-à-Face  
+        "face_a_face": "",  
+        # Forme Récente  
+        "forme_recente_A": "",  
+        "forme_recente_B": "",  
+        # Cotes  
+        "cote_victoire_A": 2.0,  
+        "cote_nul": 3.0,  
+        "cote_victoire_B": 4.0,  
+        # Bankroll  
+        "bankroll": 1000.0,  
     }  
 
 # Création des onglets  
-tab1, tab2, tab3 = st.tabs(["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions"])  
+tab1, tab2, tab3, tab4, tab5 = st.tabs(  
+    ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"]  
+)  
 
 # Onglet 1 : Statistiques  
 with tab1:  
@@ -80,160 +93,20 @@ with tab1:
     # Statistiques de l'Équipe A  
     with col_a:  
         st.subheader("Équipe A")  
-        st.session_state.data["score_rating_A"] = st.number_input(  
-            "Score Rating A", value=st.session_state.data["score_rating_A"]  
-        )  
-        st.session_state.data["buts_par_match_A"] = st.number_input(  
-            "Buts par Match A", value=st.session_state.data["buts_par_match_A"]  
-        )  
-        st.session_state.data["possession_moyenne_A"] = st.number_input(  
-            "Possession Moyenne A", value=st.session_state.data["possession_moyenne_A"]  
-        )  
-        st.session_state.data["motivation_A"] = st.slider(  
-            "Motivation A (1 à 5)", min_value=1, max_value=5, value=int(st.session_state.data["motivation_A"])  
-        )  
-        st.session_state.data["tirs_cadres_A"] = st.number_input(  
-            "Tirs Cadrés A", value=st.session_state.data["tirs_cadres_A"]  
-        )  
-        st.session_state.data["grandes_chances_A"] = st.number_input(  
-            "Grandes Chances A", value=st.session_state.data["grandes_chances_A"]  
-        )  
-        st.session_state.data["passes_reussies_A"] = st.number_input(  
-            "Passes Réussies A", value=st.session_state.data["passes_reussies_A"]  
-        )  
-        st.session_state.data["corners_A"] = st.number_input(  
-            "Corners A", value=st.session_state.data["corners_A"]  
-        )  
-        st.session_state.data["interceptions_A"] = st.number_input(  
-            "Interceptions A", value=st.session_state.data["interceptions_A"]  
-        )  
-        st.session_state.data["tacles_reussis_A"] = st.number_input(  
-            "Tacles Réussis A", value=st.session_state.data["tacles_reussis_A"]  
-        )  
-        st.session_state.data["fautes_A"] = st.number_input(  
-            "Fautes A", value=st.session_state.data["fautes_A"]  
-        )  
-        st.session_state.data["cartons_jaunes_A"] = st.number_input(  
-            "Cartons Jaunes A", value=st.session_state.data["cartons_jaunes_A"]  
-        )  
-        st.session_state.data["cartons_rouges_A"] = st.number_input(  
-            "Cartons Rouges A", value=st.session_state.data["cartons_rouges_A"]  
-        )  
-        st.session_state.data["joueurs_cles_absents_A"] = st.number_input(  
-            "Joueurs Clés Absents A", value=st.session_state.data["joueurs_cles_absents_A"]  
-        )  
-        st.session_state.data["clean_sheets_gardien_A"] = st.number_input(  
-            "Clean Sheets Gardien A", value=st.session_state.data["clean_sheets_gardien_A"]  
-        )  
-        st.session_state.data["ratio_tirs_arretes_A"] = st.number_input(  
-            "Ratio Tirs Arrêtés A", value=st.session_state.data["ratio_tirs_arretes_A"]  
-        )  
-        st.session_state.data["victoires_domicile_A"] = st.number_input(  
-            "Victoires Domicile A", value=st.session_state.data["victoires_domicile_A"]  
-        )  
-        st.session_state.data["passes_longues_A"] = st.number_input(  
-            "Passes Longues A", value=st.session_state.data["passes_longues_A"]  
-        )  
-        st.session_state.data["dribbles_reussis_A"] = st.number_input(  
-            "Dribbles Réussis A", value=st.session_state.data["dribbles_reussis_A"]  
-        )  
-        st.session_state.data["ratio_tirs_cadres_A"] = st.number_input(  
-            "Ratio Tirs Cadrés A", value=st.session_state.data["ratio_tirs_cadres_A"]  
-        )  
-        st.session_state.data["grandes_chances_manquees_A"] = st.number_input(  
-            "Grandes Chances Manquées A", value=st.session_state.data["grandes_chances_manquees_A"]  
-        )  
-        st.session_state.data["fautes_zones_dangereuses_A"] = st.number_input(  
-            "Fautes Zones Dangereuses A", value=st.session_state.data["fautes_zones_dangereuses_A"]  
-        )  
-        st.session_state.data["buts_corners_A"] = st.number_input(  
-            "Buts Corners A", value=st.session_state.data["buts_corners_A"]  
-        )  
-        st.session_state.data["jours_repos_A"] = st.number_input(  
-            "Jours de Repos A", value=st.session_state.data["jours_repos_A"]  
-        )  
-        st.session_state.data["matchs_30_jours_A"] = st.number_input(  
-            "Matchs (30 jours) A", value=st.session_state.data["matchs_30_jours_A"]  
-        )  
+        for key in st.session_state.data:  
+            if key.endswith("_A"):  
+                st.session_state.data[key] = st.number_input(  
+                    key.replace("_", " ").title(), value=st.session_state.data[key]  
+                )  
 
     # Statistiques de l'Équipe B  
     with col_b:  
         st.subheader("Équipe B")  
-        st.session_state.data["score_rating_B"] = st.number_input(  
-            "Score Rating B", value=st.session_state.data["score_rating_B"]  
-        )  
-        st.session_state.data["buts_par_match_B"] = st.number_input(  
-            "Buts par Match B", value=st.session_state.data["buts_par_match_B"]  
-        )  
-        st.session_state.data["possession_moyenne_B"] = st.number_input(  
-            "Possession Moyenne B", value=st.session_state.data["possession_moyenne_B"]  
-        )  
-        st.session_state.data["motivation_B"] = st.slider(  
-            "Motivation B (1 à 5)", min_value=1, max_value=5, value=int(st.session_state.data["motivation_B"])  
-        )  
-        st.session_state.data["tirs_cadres_B"] = st.number_input(  
-            "Tirs Cadrés B", value=st.session_state.data["tirs_cadres_B"]  
-        )  
-        st.session_state.data["grandes_chances_B"] = st.number_input(  
-            "Grandes Chances B", value=st.session_state.data["grandes_chances_B"]  
-        )  
-        st.session_state.data["passes_reussies_B"] = st.number_input(  
-            "Passes Réussies B", value=st.session_state.data["passes_reussies_B"]  
-        )  
-        st.session_state.data["corners_B"] = st.number_input(  
-            "Corners B", value=st.session_state.data["corners_B"]  
-        )  
-        st.session_state.data["interceptions_B"] = st.number_input(  
-            "Interceptions B", value=st.session_state.data["interceptions_B"]  
-        )  
-        st.session_state.data["tacles_reussis_B"] = st.number_input(  
-            "Tacles Réussis B", value=st.session_state.data["tacles_reussis_B"]  
-        )  
-        st.session_state.data["fautes_B"] = st.number_input(  
-            "Fautes B", value=st.session_state.data["fautes_B"]  
-        )  
-        st.session_state.data["cartons_jaunes_B"] = st.number_input(  
-            "Cartons Jaunes B", value=st.session_state.data["cartons_jaunes_B"]  
-        )  
-        st.session_state.data["cartons_rouges_B"] = st.number_input(  
-            "Cartons Rouges B", value=st.session_state.data["cartons_rouges_B"]  
-        )  
-        st.session_state.data["joueurs_cles_absents_B"] = st.number_input(  
-            "Joueurs Clés Absents B", value=st.session_state.data["joueurs_cles_absents_B"]  
-        )  
-        st.session_state.data["clean_sheets_gardien_B"] = st.number_input(  
-            "Clean Sheets Gardien B", value=st.session_state.data["clean_sheets_gardien_B"]  
-        )  
-        st.session_state.data["ratio_tirs_arretes_B"] = st.number_input(  
-            "Ratio Tirs Arrêtés B", value=st.session_state.data["ratio_tirs_arretes_B"]  
-        )  
-        st.session_state.data["victoires_exterieur_B"] = st.number_input(  
-            "Victoires Extérieur B", value=st.session_state.data["victoires_exterieur_B"]  
-        )  
-        st.session_state.data["passes_longues_B"] = st.number_input(  
-            "Passes Longues B", value=st.session_state.data["passes_longues_B"]  
-        )  
-        st.session_state.data["dribbles_reussis_B"] = st.number_input(  
-            "Dribbles Réussis B", value=st.session_state.data["dribbles_reussis_B"]  
-        )  
-        st.session_state.data["ratio_tirs_cadres_B"] = st.number_input(  
-            "Ratio Tirs Cadrés B", value=st.session_state.data["ratio_tirs_cadres_B"]  
-        )  
-        st.session_state.data["grandes_chances_manquees_B"] = st.number_input(  
-            "Grandes Chances Manquées B", value=st.session_state.data["grandes_chances_manquees_B"]  
-        )  
-        st.session_state.data["fautes_zones_dangereuses_B"] = st.number_input(  
-            "Fautes Zones Dangereuses B", value=st.session_state.data["fautes_zones_dangereuses_B"]  
-        )  
-        st.session_state.data["buts_corners_B"] = st.number_input(  
-            "Buts Corners B", value=st.session_state.data["buts_corners_B"]  
-        )  
-        st.session_state.data["jours_repos_B"] = st.number_input(  
-            "Jours de Repos B", value=st.session_state.data["jours_repos_B"]  
-        )  
-        st.session_state.data["matchs_30_jours_B"] = st.number_input(  
-            "Matchs (30 jours) B", value=st.session_state.data["matchs_30_jours_B"]  
-        )  
+        for key in st.session_state.data:  
+            if key.endswith("_B"):  
+                st.session_state.data[key] = st.number_input(  
+                    key.replace("_", " ").title(), value=st.session_state.data[key]  
+                )  
 
 # Onglet 2 : Conditions et Motivation  
 with tab2:  
@@ -241,7 +114,18 @@ with tab2:
     st.session_state.data["conditions_match"] = st.text_input(  
         "🌧️ Conditions du Match (ex : pluie, terrain sec)",  
         value=st.session_state.data["conditions_match"],  
-        key="conditions_match_input"  
+    )  
+    st.session_state.data["face_a_face"] = st.text_area(  
+        "📅 Historique des Face-à-Face (ex : 3 victoires A, 2 nuls, 1 victoire B)",  
+        value=st.session_state.data["face_a_face"],  
+    )  
+    st.session_state.data["forme_recente_A"] = st.text_area(  
+        "📈 Forme Récente de l'Équipe A (ex : 3 victoires, 1 nul, 1 défaite)",  
+        value=st.session_state.data["forme_recente_A"],  
+    )  
+    st.session_state.data["forme_recente_B"] = st.text_area(  
+        "📉 Forme Récente de l'Équipe B (ex : 2 victoires, 2 nuls, 1 défaite)",  
+        value=st.session_state.data["forme_recente_B"],  
     )  
 
 # Onglet 3 : Prédictions  
@@ -294,4 +178,45 @@ with tab3:
             st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
 
         except Exception as e:  
-            st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
+            st.error(f"Une erreur s'est produite lors de la prédiction : {e}")  
+
+# Onglet 4 : Cotes et Value Bet  
+with tab4:  
+    st.header("🎰 Cotes et Value Bet")  
+    st.subheader("Convertisseur de Cotes Implicites")  
+    cote_victoire_A = st.number_input("Cote Victoire A", value=st.session_state.data["cote_victoire_A"])  
+    cote_nul = st.number_input("Cote Nul", value=st.session_state.data["cote_nul"])  
+    cote_victoire_B = st.number_input("Cote Victoire B", value=st.session_state.data["cote_victoire_B"])  
+
+    # Calcul de la marge bookmaker  
+    marge_bookmaker = (1 / cote_victoire_A) + (1 / cote_nul) + (1 / cote_victoire_B) - 1  
+    st.write(f"📉 **Marge Bookmaker** : {marge_bookmaker:.2%}")  
+
+    # Calcul des cotes réelles  
+    cote_reelle_victoire_A = cote_victoire_A / (1 + marge_bookmaker)  
+    cote_reelle_nul = cote_nul / (1 + marge_bookmaker)  
+    cote_reelle_victoire_B = cote_victoire_B / (1 + marge_bookmaker)  
+    st.write(f"📊 **Cote Réelle Victoire A** : {cote_reelle_victoire_A:.2f}")  
+    st.write(f"📊 **Cote Réelle Nul** : {cote_reelle_nul:.2f}")  
+    st.write(f"📊 **Cote Réelle Victoire B** : {cote_reelle_victoire_B:.2f}")  
+
+    st.subheader("Calculateur de Paris Combiné")  
+    cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
+    cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
+    cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
+    cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
+    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
+
+# Onglet 5 : Système de Mise  
+with tab5:  
+    st.header("💰 Système de Mise")  
+    bankroll = st.number_input("Bankroll (€)", value=st.session_state.data["bankroll"])  
+    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
+    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
+    cote = st.number_input("Cote", value=2.0)  
+
+    # Calcul de la mise selon Kelly  
+    mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
+    mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
+    mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
+    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")
