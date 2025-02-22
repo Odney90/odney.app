@@ -331,4 +331,8 @@ with tab5:
     if st.button("Miser"):  
         bankroll -= mise_kelly  
         st.session_state.data["bankroll"] = bankroll  
-        st.write(f
+        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")  
+
+# Fin de l'application  
+if __name__ == "__main__":  
+    st.write("Merci d'utiliser l'application de prédictions football !")
