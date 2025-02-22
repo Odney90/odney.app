@@ -145,32 +145,33 @@ with tab2:
     # Joueurs clés absents et score rating des joueurs clés  
     st.subheader("👥 Joueurs Clés Absents")  
     col_a, col_b = st.columns(2)  
-    with col_a:  
-        st.session_state.data["joueurs_cles_absents_A"] = st.number_input(  
-            "🚑 Nombre de joueurs clés absents (Équipe A)",  
-            min_value=0,  
-            value=int(st.session_state.data["joueurs_cles_absents_A"]),  
-            key="joueurs_cles_absents_A"  
-        )  
-        st.session_state.data["score_rating_joueurs_cles_A"] = st.number_input(  
-            "⭐ Score rating des joueurs clés (Équipe A)",  
-            min_value=0.0,  
-            value=float(st.session_state.data["score_rating_joueurs_cles_A"]),  
-            key="score_rating_joueurs_cles_A"  
-        )  
-    with col_b:  
-        st.session_state.data["joueurs_cles_absents_B"] = st.number_input(  
-            "🚑 Nombre de joueurs clés absents (Équipe B)",  
-            min_value=0,  
-            value=int(st.session_state.data["joueurs_cles_absents_B"]),  
-            key="joueurs_cles_absents_B"  
-        )  
-        st.session_state.data["score_rating_joueurs_cles_B"] = st.number_input(  
-            "⭐ Score rating des joueurs clés (Équipe B)",  
-            min_value=0.0,  
-            value=float(st.session_state.data["score_rating_joueurs_cles_B"]),  
-            key="score_rating_joueurs_cles_B"  
-        )  
+with col_a:  
+    st.session_state.data["joueurs_cles_absents_A"] = st.number_input(  
+        "🚑 Nombre de joueurs clés absents (Équipe A)",  
+        min_value=0,  
+        value=int(st.session_state.data["joueurs_cles_absents_A"]),  
+        key="joueurs_cles_absents_A_input"  # Clé unique  
+    )  
+    st.session_state.data["score_rating_joueurs_cles_A"] = st.number_input(  
+        "⭐ Score rating des joueurs clés (Équipe A)",  
+        min_value=0.0,  
+        value=float(st.session_state.data["score_rating_joueurs_cles_A"]),  
+        key="score_rating_joueurs_cles_A_input"  # Clé unique  
+    )  
+
+with col_b:  
+    st.session_state.data["joueurs_cles_absents_B"] = st.number_input(  
+        "🚑 Nombre de joueurs clés absents (Équipe B)",  
+        min_value=0,  
+        value=int(st.session_state.data["joueurs_cles_absents_B"]),  
+        key="joueurs_cles_absents_B_input"  # Clé unique  
+    )  
+    st.session_state.data["score_rating_joueurs_cles_B"] = st.number_input(  
+        "⭐ Score rating des joueurs clés (Équipe B)",  
+        min_value=0.0,  
+        value=float(st.session_state.data["score_rating_joueurs_cles_B"]),  
+        key="score_rating_joueurs_cles_B_input"  # Clé unique  
+    )
 
     # Motivation des équipes  
     st.subheader("🔥 Motivation des Équipes")  
