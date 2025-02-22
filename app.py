@@ -323,17 +323,29 @@ with st.expander("Prédiction"):
                     st.error("Erreur lors de la prédiction")  
             except Exception as e:  
                 st.error(f"Erreur : {str(e)}")  
-
 # Section pour la prédiction des buts  
 with st.expander("Prédiction des buts"):  
     if st.button("Prédire les buts", key="predict_goals"):  
         try:  
             from scipy.stats import poisson  
-            buts_A, buts_B = poisson(np.array([expected_buts_A, expected_buts_B]))  
-            st.write(f"Buts attendus pour l'équipe A : {buts_A}")  
-            st.write(f"Buts attendus pour l'équipe B : {buts_B}")  
+            
+            # Utilisation de la distribution de Poisson pour prédire les buts  
+            # La fonction poisson.rvs() génère des nombres aléatoires suivant la distribution de Poisson  
+            
+            # Paramètres de la distribution de Poisson (xG pour chaque équipe)  
+            lambda_A = expected_buts_A  
+            lambda_B = expected_buts_B  
+            
+            # Génération des buts attendus  
+            buts_A = poisson.rvs(mu=lambda_A)  
+            buts_B = poisson.rvs(mu=lambda_B)  
+            
+            st.write(f"Prédiction des buts :")  
+            st.write(f"Équipe A : {buts_A} but(s)")  
+            st.write(f"Équipe B : {buts_B} but(s)")  
+            
         except Exception as e:  
-            st.error(f"Erreur lors de la prédiction des buts : {str(e)}")  
+            st.error(f"Erreur lors de la prédiction des buts : {str(e)}") 
 
 # Données exemple pour test  
 if not os.path.exists(os.path.join(DATA_PATH, "data.csv")):  
