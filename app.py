@@ -7,6 +7,9 @@ from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt  
 import io  
 
+# Configuration de la page (icône dans l'onglet du navigateur)  
+st.set_page_config(page_title="Prédictions Football", page_icon="⚽")  
+
 # Fonction pour vérifier et convertir en float  
 def safe_float(value):  
     try:  
@@ -80,8 +83,8 @@ if "data" not in st.session_state:
         # Historique Face-à-Face  
         "face_a_face": "",  
         # Forme Récente  
-        "forme_recente_A": ["V", "N", "D", "V", "V"],  
-        "forme_recente_B": ["D", "N", "V", "D", "V"],  
+        "forme_recente_A": ["V", "N", "D", "V", "V"],  # Assurez-vous qu'il y a 5 éléments  
+        "forme_recente_B": ["D", "N", "V", "D", "V"],  # Assurez-vous qu'il y a 5 éléments  
         # Cotes  
         "cote_victoire_A": 2.0,  
         "cote_nul": 3.0,  
@@ -89,9 +92,6 @@ if "data" not in st.session_state:
         # Bankroll  
         "bankroll": 1000.0,  
     }  
-
-# Icône pour le site  
-st.sidebar.image("https://img.icons8.com/color/48/000000/football.png", use_column_width=True)  
 
 # Création des onglets  
 tab1, tab2, tab3, tab4, tab5 = st.tabs(  
@@ -299,11 +299,4 @@ with tab5:
     # Calcul de la mise selon Kelly  
     mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
     mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
-    mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
-    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
-
-    # Mise à jour de la bankroll  
-    if st.button("Miser"):  
-        bankroll -= mise_kelly  
-        st.session_state.data["bankroll"] = bankroll  
-        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")
+    mise_kelly *= niveau_k
