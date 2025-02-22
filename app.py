@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd  
 
 # --- Initialisation des valeurs dans session_state ---  
+
 if 'data' not in st.session_state:  
     st.session_state.data = {  
         "score_rating_A": 70.0,  
@@ -21,7 +22,8 @@ if 'data' not in st.session_state:
         "centres_reussis_A": 0.0,  
         "penalties_obtenues_A": 0.0,  
         "balles_surface_A": 0.0,  
-        "corners_A": 0.0,  
+        "corners_A": 0.0,
+        "expected_concedes_A": 0.O,
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -40,6 +42,7 @@ if 'data' not in st.session_state:
         "penalties_obtenues_B": 0.0,  
         "balles_surface_B": 0.0,  
         "corners_B": 0.0,  
+        "expected_concedes_B": 0.0,
 
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
@@ -128,7 +131,6 @@ st.subheader("🛡️ Critères de Défense")
 col1, col2 = st.columns(2)  
 
 with col1:  
-
     st.session_state.data["expected_concedes_A"] = st.number_input("Expected Buts Concédés Équipe A", min_value=0.0, value=st.session_state.data["expected_concedes_A"], key="expected_concedes_A")  
     st.session_state.data["interceptions_A"] = st.number_input("Interceptions Équipe A", min_value=0.0, value=st.session_state.data["interceptions_A"], key="interceptions_A")  
     st.session_state.data["tacles_reussis_A"] = st.number_input("Tacles Réussis Équipe A", min_value=0.0, value=st.session_state.data["tacles_reussis_A"], key="tacles_reussis_A")  
