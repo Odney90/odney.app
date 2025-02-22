@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 import pickle  
 import os  
 from datetime import datetime  
+from imblearn.over_sampling import SMOTE  
 
 # Configuration de base  
 RANDOM_STATE = 42  
@@ -33,8 +34,7 @@ def prepare_data(df):
         X = df.drop(["target"], axis=1)  
         y = df["target"]  
         
-        # Équilibrement des données  
-        from imblearn.over_sampling import SMOTE  
+        # Équilibrement des données avec SMOTE  
         smote = SMOTE(random_state=RANDOM_STATE)  
         X_res, y_res = smote.fit_resample(X, y)  
         
@@ -264,68 +264,6 @@ with st.expander("Entraînement des modèles"):
 # Section pour la prédiction  
 with st.expander("Prédiction"):  
     col1, col2 = st.columns(2)  
-    with col1:  
-        if st.button("Prédire avec Random Forest", key="predict_rf"):  
-            try:  
-                # Préparation des données  
-                data = np.array([  
-                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
-                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
-                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
-                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
-                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
-                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
-                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
-                    arrets_A, arrets_B, corners_A, corners_B,  
-                    touches_surface_adverse_A, touches_surface_adverse_B,  
-                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
-                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
-                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
-                    buts_concedes_totaux_B, aucun_but_encaisse_B  
-                ]).reshape(1, -1)  
-                
-                # Prédiction  
-                prediction, probability = predict("random_forest", data)  
-                if prediction is not None:  
-                    st.write(f"Prédiction : {prediction[0]}")  
-                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
-                else:  
-                    st.error("Erreur lors de la prédiction")  
-            except Exception as e:  
-                st.error(f"Erreur : {str(e)}")  
-    
-    with col2:  
-        if st.button("Prédire avec Régression Logistique", key="predict_lr"):  
-            try:  
-                # Préparation des données  
-                data = np.array([  
-                    score_forme_A, score_forme_B, buts_totaux_A, buts_totaux_B,  
-                    possession_moyenne_A, possession_moyenne_B, expected_buts_A,  
-                    expected_buts_B, tirs_cadres_A, tirs_cadres_B, passes_reussies_A,  
-                    passes_reussies_B, tacles_reussis_A, tacles_reussis_B, fautes_A,  
-                    fautes_B, cartons_jaunes_A, cartons_jaunes_B, cartons_rouges_A,  
-                    cartons_rouges_B, expected_concedes_A, expected_concedes_B,  
-                    interceptions_A, interceptions_B, degagements_A, degagements_B,  
-                    arrets_A, arrets_B, corners_A, corners_B,  
-                    touches_surface_adverse_A, touches_surface_adverse_B,  
-                    penalites_obtenues_A, penalites_obtenues_B, buts_par_match_A,  
-                    buts_concedes_par_match_A, buts_concedes_totaux_A,  
-                    aucun_but_encaisse_A, buts_par_match_B, buts_concedes_par_match_B,  
-                    buts_concedes_totaux_B, aucun_but_encaisse_B  
-                ]).reshape(1, -1)  
-                
-                # Prédiction  
-                prediction, probability = predict("logistic_regression", data)  
-                if prediction is not None:  
-                    st.write(f"Prédiction : {prediction[0]}")  
-                    st.write(f"Probabilité : {np.max(probability[0]) * 100:.2f}%")  
-                else:  
-                    st.error("Erreur lors de la prédiction")  
-            except Exception as e:  
-                st.error(f"Erreur : {str(e)}")  
-# Section pour la prédiction  
-with st.expander("Prédiction"):  
-    col1, col2 = st.columns(2)  
     
     with col1:  
         if st.button("Prédire avec Random Forest", key="predict_rf"):  
@@ -427,10 +365,28 @@ with st.expander("Prédiction"):
                     st.error("Erreur lors de la prédiction")  
                 
             except Exception as e:  
-                st.error(f"Erreur lors de la prédiction avec Régression Logistique : {str(e)}")
+                st.error(f"Erreur lors de la prédiction avec Régression Logistique : {str(e)}")  
+
+# Section pour la prédiction des buts  
+with st.expander("Prédiction des buts"):  
+    if st.button("Prédire les buts", key="predict_goals"):  
+        try:  
+            from scipy.stats import poisson  
+            
+            # Paramètres de la distribution de Poisson  
+            lambda_A = expected_buts_A  
+            lambda_B = expected_buts_B  
+            
+            # Génération des buts attendus  
+            buts_A = poisson.rvs(mu=lambda_A)  
+            buts_B = poisson.rvs(mu=lambda_B)  
+            
+            st.write(f"Prédiction des buts :")  
+            st.write(f"Équipe A : {buts_A} but(s)")  
+            st.write(f"Équipe B : {buts_B} but(s)")  
             
         except Exception as e:  
-            st.error(f"Erreur lors de la prédiction des buts : {str(e)}") 
+            st.error(f"Erreur lors de la prédiction des buts : {str(e)}")  
 
 # Données exemple pour test  
 if not os.path.exists(os.path.join(DATA_PATH, "data.csv")):  
