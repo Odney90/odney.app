@@ -91,6 +91,9 @@ if "data" not in st.session_state:
         "cote_victoire_B": 4.0,  
         # Bankroll  
         "bankroll": 1000.0,  
+        # Mises  
+        "mise_A": 0.0,  
+        "mise_B": 0.0,  
     }  
 
 # Menu de Navigation  
@@ -102,13 +105,25 @@ if option == "📊 Statistiques":
     st.title("📊 Statistiques des Matchs")  
     st.write("Analyse des statistiques des équipes et des matchs.")  
 
-    # Exemple de graphique  
-    st.subheader("Graphique des Performances")  
-    fig, ax = plt.subplots(figsize=(6, 4))  
-    ax.bar(["Équipe A", "Équipe B"], [3, 5])  
-    ax.set_ylabel("Nombre de Victoires")  
-    ax.set_title("Performances des Équipes")  
+    # Graphique des Performances  
+    st.subheader("Performances des Équipes")  
+    fig, ax = plt.subplots(figsize=(10, 6))  
+    ax.bar(["Équipe A", "Équipe B"], [st.session_state.data["score_rating_A"], st.session_state.data["score_rating_B"]])  
+    ax.set_ylabel("Score de Rating")  
+    ax.set_title("Comparaison des Scores de Rating")  
     st.pyplot(fig)  
+
+    # Indicateurs Clés  
+    st.subheader("Indicateurs Clés")  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        st.metric("Buts par Match (Équipe A)", st.session_state.data["buts_par_match_A"])  
+        st.metric("Possession Moyenne (Équipe A)", f"{st.session_state.data['possession_moyenne_A']}%")  
+        st.metric("Tirs Cadrés (Équipe A)", st.session_state.data["tirs_cadres_A"])  
+    with col2:  
+        st.metric("Buts par Match (Équipe B)", st.session_state.data["buts_par_match_B"])  
+        st.metric("Possession Moyenne (Équipe B)", f"{st.session_state.data['possession_moyenne_B']}%")  
+        st.metric("Tirs Cadrés (Équipe B)", st.session_state.data["tirs_cadres_B"])  
 
 # 🌦️ Conditions et Motivation  
 elif option == "🌦️ Conditions et Motivation":  
@@ -263,7 +278,7 @@ elif option == "🔮 Prédictions":
         },  
     }  
 
-    # Conversion en DataFrame et téléchargement  
+      # Conversion en DataFrame et téléchargement  
     excel_data = pd.DataFrame(data["Données Équipe A"]).to_csv(index=False).encode("utf-8")  
     doc = Document()  
     doc.add_heading("Données des Équipes", level=1)  
@@ -308,12 +323,36 @@ elif option == "🎰 Cotes et Value Bet":
         if st.form_submit_button("Analyser"):  
             st.success("Analyse en cours...")  
 
+    # Calcul des probabilités implicites  
+    with st.expander("📊 Probabilités Implicites"):  
+        cote_A = safe_float(st.session_state.data["cote_A"])  
+        cote_B = safe_float(st.session_state.data["cote_B"])  
+        if cote_A > 0 and cote_B > 0:  
+            prob_A = 1 / cote_A  
+            prob_B = 1 / cote_B  
+            st.write(f"📉 **Probabilité implicite de victoire de l'Équipe A** : {prob_A:.2%}")  
+            st.write(f"📉 **Probabilité implicite de victoire de l'Équipe B** : {prob_B:.2%}")  
+        else:  
+            st.error("Les cotes doivent être positives.")  
+
+    # Identification des value bets  
+    with st.expander("🔍 Identification des Value Bets"):  
+        if cote_A > 0 and cote_B > 0:  
+            prob_pred_A = prediction_lr[0]  # Probabilité prédite de victoire de l'Équipe A  
+            prob_pred_B = 1 - prediction_lr[0]  # Probabilité prédite de victoire de l'Équipe B  
+
+            value_A = prob_pred_A - prob_A  
+            value_B = prob_pred_B - prob_B  
+
+            st.write(f"📊 **Value Bet pour l'Équipe A** : {'✅ Oui' if value_A > 0 else '❌ Non'}")  
+            st.write(f"📊 **Value Bet pour l'Équipe B** : {'✅ Oui' if value_B > 0 else '❌ Non'}")  
+
 # 💰 Système de Mise  
 elif option == "💰 Système de Mise":  
     st.title("💰 Système de Mise")  
     st.write("Gestion des mises et optimisation des gains.")  
 
-        # Formulaire de saisie des mises  
+    # Formulaire de saisie des mises  
     with st.form("mises_form"):  
         col1, col2 = st.columns(2)  
         with col1:  
