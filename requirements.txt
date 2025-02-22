@@ -8,5 +8,6 @@ python-dotenv
 scipy
 seaborn
 imblearn
+plotly==5.15.0
 
 
