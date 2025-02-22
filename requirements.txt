@@ -8,6 +8,7 @@ python-dotenv
 scipy
 seaborn
 imblearn
+openpyxl
 
 
 
