@@ -40,7 +40,7 @@ if 'data' not in st.session_state:
         "passes_longues_A": data.get("passes_longues_A", 15.0),  
         "centres_reussis_A": data.get("centres_reussis_A", 5.0),  
         "penalties_obtenues_A": data.get("penalties_obtenues_A", 1.0),  
-        "balles_surface_A": data.get("balles_surface_A", 10.0),  
+        "balles_surface_A": data.get("balles_surface_A", 10.0),  # Assurez-vous que cette clé est initialisée  
         "corners_A": data.get("corners_A", 4.0),  
         "expected_concedes_A": data.get("expected_concedes_A", 1.0),  
         "interceptions_A": data.get("interceptions_A", 10.0),  
@@ -64,7 +64,7 @@ if 'data' not in st.session_state:
         "passes_longues_B": data.get("passes_longues_B", 10.0),  
         "centres_reussis_B": data.get("centres_reussis_B", 3.0),  
         "penalties_obtenues_B": data.get("penalties_obtenues_B", 0.0),  
-        "balles_surface_B": data.get("balles_surface_B", 8.0),  
+        "balles_surface_B": data.get("balles_surface_B", 8.0),  # Assurez-vous que cette clé est initialisée  
         "corners_B": data.get("corners_B", 3.0),  
         "expected_concedes_B": data.get("expected_concedes_B", 1.5),  
         "interceptions_B": data.get("interceptions_B", 8.0),  
