@@ -175,7 +175,7 @@ with tab2:
             if current_value not in ["V", "N", "D"]:  
                 current_value = "V"  # Valeur par défaut  
             st.session_state.data["forme_recente_A"][i] = st.select_slider(  
-                f"Match {i+1}", options=["V", "N", "D"], value=current_value  
+                f"Match {i+1}", options=["V", "N", "D"], value=current_value, key=f"match_A_{i}"  
             )  
     
     with col_b:  
@@ -185,15 +185,14 @@ with tab2:
             if current_value not in ["V", "N", "D"]:  
                 current_value = "V"  # Valeur par défaut  
             st.session_state.data["forme_recente_B"][i] = st.select_slider(  
-                f"Match {i+1}", options=["V", "N", "D"], value=current_value  
+                f"Match {i+1}", options=["V", "N", "D"], value=current_value, key=f"match_B_{i}"  
             )  
 
     # Quantification de la forme récente  
     score_forme_A = quantifier_forme_recente(st.session_state.data["forme_recente_A"])  
     score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
     st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
-    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
-
+    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")
 # Onglet 3 : Prédictions  
 with tab3:  
     st.header("🔮 Prédictions")  
