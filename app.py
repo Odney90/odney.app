@@ -157,6 +157,7 @@ with st.expander("Forme récente (5 derniers matchs)"):
 score_forme_A = np.mean(derniers_matchs_A)  
 score_forme_B = np.mean(derniers_matchs_B)
 with st.expander("Statistiques générales"):  
+    
     st.subheader("Équipe A")  
     buts_totaux_A = st.number_input("Buts totaux", min_value=0.0, value=0.0, key="buts_totaux_A")  
     possession_moyenne_A = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="possession_moyenne_A")  
@@ -168,6 +169,7 @@ with st.expander("Statistiques générales"):
     possession_moyenne_B = st.number_input("Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0, key="possession_moyenne_B")  
     expected_buts_B = st.number_input("Expected Goals (xG)", min_value=0.0, value=0.0, key="expected_buts_B")  
     tirs_cadres_B = st.number_input("Tirs cadrés par match", min_value=0.0, value=0.0, key="tirs_cadres_B")
+ 
     with st.expander("Critères avancés"):  
     st.subheader("Équipe A")  
     passes_reussies_A = st.number_input("Passes réussies par match", min_value=0.0, value=0.0, key="passes_reussies_A")  
@@ -178,7 +180,7 @@ with st.expander("Statistiques générales"):
     passes_reussies_B = st.number_input("Passes réussies par match", min_value=0.0, value=0.0, key="passes_reussies_B")  
     tacles_reussis_B = st.number_input("Tacles réussis par match", min_value=0.0, value=0.0, key="tacles_reussis_B")  
     fautes_B = st.number_input("Fautes par match", min_value=0.0, value=0.0, key="fautes_B")
-    with st.expander("Critères de discipline"):  
+ with st.expander("Critères de discipline"):  
     st.subheader("Équipe A")  
     cartons_jaunes_A = st.number_input("Cartons jaunes", min_value=0.0, value=0.0, key="cartons_jaunes_A")  
     cartons_rouges_A = st.number_input("Cartons rouges", min_value=0.0, value=0.0, key="cartons_rouges_A")  
@@ -186,7 +188,8 @@ with st.expander("Statistiques générales"):
     st.subheader("Équipe B")  
     cartons_jaunes_B = st.number_input("Cartons jaunes", min_value=0.0, value=0.0, key="cartons_jaunes_B")  
     cartons_rouges_B = st.number_input("Cartons rouges", min_value=0.0, value=0.0, key="cartons_rouges_B")
-    with st.expander("Critères de défense"):  
+    
+with st.expander("Critères de défense"):  
     st.subheader("Équipe A")  
     expected_concedes_A = st.number_input("Expected Goals concédés (xG)", min_value=0.0, value=0.0, key="expected_concedes_A")  
     interceptions_A = st.number_input("Interceptions par match", min_value=0.0, value=0.0, key="interceptions_A")  
@@ -198,7 +201,7 @@ with st.expander("Statistiques générales"):
     interceptions_B = st.number_input("Interceptions par match", min_value=0.0, value=0.0, key="interceptions_B")  
     degagements_B = st.number_input("Dégagements par match", min_value=0.0, value=0.0, key="degagements_B")  
     arrets_B = st.number_input("Arrêts par match", min_value=0.0, value=0.0, key="arrets_B")
-    with st.expander("Critères d'attaque"):  
+with st.expander("Critères d'attaque"):  
     st.subheader("Équipe A")  
     corners_A = st.number_input("Corners par match", min_value=0.0, value=0.0, key="corners_A")  
     touches_surface_adverse_A = st.number_input("Touches dans la surface adverse", min_value=0.0, value=0.0, key="touches_surface_adverse_A")  
@@ -208,7 +211,7 @@ with st.expander("Statistiques générales"):
     corners_B = st.number_input("Corners par match", min_value=0.0, value=0.0, key="corners_B")  
     touches_surface_adverse_B = st.number_input("Touches dans la surface adverse", min_value=0.0, value=0.0, key="touches_surface_adverse_B")  
     penalites_obtenues_B = st.number_input("Pénalités obtenues", min_value=0.0, value=0.0, key="penalites_obtenues_B")
-    with st.expander("Statistiques complètes"):  
+ with st.expander("Statistiques complètes"):  
     st.subheader("Équipe A")  
     buts_par_match_A = st.number_input("Buts par match", min_value=0.0, value=0.0, key="buts_par_match_A")  
     buts_concedes_par_match_A = st.number_input("Buts concédés par match", min_value=0.0, value=0.0, key="buts_concedes_par_match_A")  
