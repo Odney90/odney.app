@@ -1,9 +1,11 @@
 import streamlit as st  
 import numpy as np  
+import pandas as pd  
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 import matplotlib.pyplot as plt  
+import io  
 
 # Fonction pour vérifier et convertir en float  
 def safe_float(value):  
@@ -218,6 +220,25 @@ with tab3:
             ax.set_title("Probabilités des Scores")  
             st.pyplot(fig)  
 
+            # Téléchargement des données  
+            data = {  
+                "Probabilité 0-0": [prob_0_0],  
+                "Probabilité 1-1": [prob_1_1],  
+                "Probabilité 2-2": [prob_2_2],  
+                "Régression Logistique": [prediction_lr[0]],  
+                "Random Forest": [prediction_rf[0]],  
+            }  
+            df = pd.DataFrame(data)  
+            towrite = io.BytesIO()  
+            df.to_excel(towrite, index=False)  
+            towrite.seek(0)  
+            st.download_button(  
+                label="📥 Télécharger les données",  
+                data=towrite,  
+                file_name="predictions.xlsx",  
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
+            )  
+
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {e}")  
 
@@ -266,4 +287,7 @@ with tab5:
     if st.button("Miser"):  
         bankroll -= mise_kelly  
         st.session_state.data["bankroll"] = bankroll  
-        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")
+        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")  
+
+# Icône pour le site  
+st.sidebar.image("https://img.icons8.com/color/48/000000/football.png", use_column_width=True)
