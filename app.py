@@ -2,8 +2,43 @@ import streamlit as st
 import pandas as pd  
 import numpy as np  
 import plotly.express as px  
+import plotly.graph_objs as go  
+from scipy.stats import poisson  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.model_selection import train_test_split, GridSearchCV  
+from sklearn.preprocessing import StandardScaler  
+
+# Configuration de la page Streamlit  
+st.set_page_config(  
+    page_title="⚽ Prédicteur de Matchs de Football",  
+    page_icon="⚽",  
+    layout="wide",  
+    initial_sidebar_state="expanded"  
+)  
+
+# Style personnalisé  
+st.markdown("""  
+<style>  
+.big-font {  
+    font-size:20px !important;  
+    font-weight:bold;  
+    color:#2C3E50;  
+}  
+.highlight {  
+    background-color:#F1C40F;  
+    padding:10px;  
+    border-radius:10px;  
+}  
+.stButton>button {  
+    background-color:#3498DB;  
+    color:white;  
+    font-weight:bold;  
+}  
+.stButton>button:hover {  
+    background-color:#2980B9;  
+}  
+</style>  
+""", unsafe_allow_html=True)  
 
 # Fonction pour générer des données factices (à remplacer par des données réelles)  
 def generate_fake_data():  
@@ -24,10 +59,10 @@ def generate_fake_data():
         'teamB_saves': np.random.randint(1, 10, 100),  
         'teamA_clean_sheet': np.random.randint(0, 2, 100),  
         'teamB_clean_sheet': np.random.randint(0, 2, 100),  
-        'teamA_form': np.random.randint(0, 15, 100),  # Score de forme (5 derniers matchs)  
+        'teamA_form': np.random.randint(0, 15, 100),  
         'teamB_form': np.random.randint(0, 15, 100),  
-        'head_to_head': np.random.randint(0, 10, 100),  # Nombre de victoires de l'équipe A face à B  
-        'result': np.random.choice(['A', 'B', 'D'], 100)  # A: Équipe A gagne, B: Équipe B gagne, D: Match nul  
+        'head_to_head': np.random.randint(0, 10, 100),  
+        'result': np.random.choice(['A', 'B', 'D'], 100)  
     }  
     df = pd.DataFrame(data)  
     df['result'] = df['result'].map({'A': 0, 'B': 1, 'D': 2})  
@@ -35,8 +70,13 @@ def generate_fake_data():
 
 # Entraînement du modèle avec GridSearchCV  
 def train_model(df):  
+    # Séparer les features et la cible  
     X = df.drop('result', axis=1)  
     y = df['result']  
+    
+    # Normaliser les features  
+    scaler = StandardScaler()  
+    X_scaled = scaler.fit_transform(X)  
     
     # Hyperparamètres à tester  
     param_grid = {  
@@ -47,158 +87,190 @@ def train_model(df):
     
     # Recherche des meilleurs hyperparamètres  
     model = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)  
-    model.fit(X, y)  
+    model.fit(X_scaled, y)  
     
-    return model  
+    return model, scaler  
 
-# Fonction pour prédire le résultat  
-def predict_match(model, teamA_stats, teamB_stats):  
-    data = {**teamA_stats, **teamB_stats}  
+# Fonction de prédiction de Poisson pour les buts  
+def predict_poisson_goals(team_avg_goals, opponent_avg_defense, max_goals=6):  
+    """  
+    Calcule la probabilité de marquer un nombre de buts selon la distribution de Poisson  
+    """  
+    # Ajuster l'espérance de buts en fonction de la défense de l'adversaire  
+    adjusted_goals = team_avg_goals * (1 - opponent_avg_defense/10)  
+    
+    probabilities = [poisson.pmf(k, adjusted_goals) for k in range(max_goals)]  
+    cumulative_probabilities = [sum(probabilities[:i+1]) for i in range(max_goals)]  
+    
+    return {  
+        'probabilities': probabilities,  
+        'cumulative_probabilities': cumulative_probabilities  
+    }  
+
+# Visualisation des probabilités de buts  
+def plot_goal_probabilities(team_name, probabilities):  
+    """  
+    Crée un graphique des probabilités de buts  
+    """  
+    fig = go.Figure(data=[  
+        go.Bar(  
+            x=list(range(len(probabilities))),   
+            y=probabilities,   
+            text=[f'{p:.2%}' for p in probabilities],  
+            textposition='auto',  
+            name=team_name  
+        )  
+    ])  
+    fig.update_layout(  
+        title=f'Probabilités de Buts pour {team_name}',  
+        xaxis_title='Nombre de Buts',  
+        yaxis_title='Probabilité',  
+        template='plotly_white'  
+    )  
+    return fig  
+
+# Fonction pour prédire le résultat du modèle de machine learning  
+def predict_match_ml(model, scaler, teamA_stats, teamB_stats):  
+    # Créer un DataFrame avec toutes les colonnes nécessaires  
+    columns = [  
+        'teamA_goals', 'teamB_goals',   
+        'teamA_possession', 'teamB_possession',   
+        'teamA_xg', 'teamB_xg',   
+        'teamA_shots', 'teamB_shots',   
+        'teamA_corners', 'teamB_corners',   
+        'teamA_interceptions', 'teamB_interceptions',   
+        'teamA_saves', 'teamB_saves',   
+        'teamA_clean_sheet', 'teamB_clean_sheet',   
+        'teamA_form', 'teamB_form',   
+        'head_to_head'  
+    ]  
+    
+    # Combiner les statistiques des deux équipes  
+    data = {col: teamA_stats.get(col, teamB_stats.get(col, 0)) for col in columns}  
+    
+    # Créer le DataFrame  
     df = pd.DataFrame([data])  
-    prediction = model.predict(df)[0]  
+    
+    # Normaliser les données  
+    df_scaled = scaler.transform(df)  
+    
+    # Faire la prédiction  
+    prediction = model.predict(df_scaled)[0]  
     return prediction  
 
-# Interface Streamlit  
-st.title("⚽ Prédiction de Matchs de Football")  
-
-# Onglets pour la navigation  
-tab1, tab2 = st.tabs(["Formulaire", "Performances des Équipes"])  
-
-# Générer des données factices et entraîner le modèle  
-df = generate_fake_data()  
-model = train_model(df)  
-
-# Onglet Formulaire  
-with tab1:  
-    st.header("Statistiques des Équipes")  
-
-    # Forme récente (5 derniers matchs)  
-    st.subheader("Forme récente (5 derniers matchs)")  
-    col1, col2 = st.columns(2)  
+# Interface principale  
+def main():  
+    st.title("🏆 Prédicteur Avancé de Matchs de Football")  
+    
+    # Sidebar pour les paramètres  
+    st.sidebar.header("🛠️ Paramètres du Match")  
+    
+    # Sélection des équipes (à remplacer par une vraie base de données)  
+    equipes = ["Real Madrid", "Barcelona", "Manchester City", "Liverpool", "Bayern Munich", "PSG"]  
+    col1, col2 = st.sidebar.columns(2)  
+    
     with col1:  
-        teamA_form = [st.selectbox(f"Match {i+1} - Équipe A", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
+        equipe_domicile = st.selectbox("Équipe Domicile", equipes)  
     with col2:  
-        teamB_form = [st.selectbox(f"Match {i+1} - Équipe B", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
-
-    # Conditions face à face  
-    st.subheader("Conditions face à face")  
-    head_to_head = st.number_input("Nombre de victoires de l'Équipe A face à l'Équipe B", min_value=0)  
-
-    # Statistiques générales  
-    st.subheader("Statistiques générales")  
-    col1, col2 = st.columns(2)  
+        equipe_exterieur = st.selectbox("Équipe Extérieure", [e for e in equipes if e != equipe_domicile])  
+    
+    # Statistiques de base  
+    st.sidebar.subheader("📊 Statistiques Clés")  
+    
+    # Colonnes pour les statistiques  
+    col1, col2 = st.sidebar.columns(2)  
+    
     with col1:  
-        teamA_possession = st.number_input("Possession de l'Équipe A (%)", min_value=0, max_value=100)  
-        teamA_passes = st.number_input("Passes réussies de l'Équipe A", min_value=0)  
-        teamA_tacles = st.number_input("Tacles réussis de l'Équipe A", min_value=0)  
-        teamA_fautes = st.number_input("Fautes de l'Équipe A", min_value=0)  
-        teamA_yellow_cards = st.number_input("Cartons jaunes de l'Équipe A", min_value=0)  
-        teamA_red_cards = st.number_input("Cartons rouges de l'Équipe A", min_value=0)  
+        forme_domicile = st.slider("Forme Domicile", 0, 10, 7)  
+        attaque_domicile = st.slider("Force Attaque Domicile", 0, 10, 8)  
+        defense_domicile = st.slider("Force Défense Domicile", 0, 10, 7)  
+    
     with col2:  
-        teamB_possession = st.number_input("Possession de l'Équipe B (%)", min_value=0, max_value=100)  
-        teamB_passes = st.number_input("Passes réussies de l'Équipe B", min_value=0)  
-        teamB_tacles = st.number_input("Tacles réussis de l'Équipe B", min_value=0)  
-        teamB_fautes = st.number_input("Fautes de l'Équipe B", min_value=0)  
-        teamB_yellow_cards = st.number_input("Cartons jaunes de l'Équipe B", min_value=0)  
-        teamB_red_cards = st.number_input("Cartons rouges de l'Équipe B", min_value=0)  
-
-    # Statistiques d'attaque  
-    st.subheader("Statistiques d'attaque")  
-    col1, col2 = st.columns(2)  
-    with col1:  
-        teamA_goals = st.number_input("Buts de l'Équipe A", min_value=0)  
-        teamA_xg = st.number_input("xG de l'Équipe A", min_value=0.0)  
-        teamA_shots = st.number_input("Tirs cadrés de l'Équipe A", min_value=0)  
-        teamA_corners = st.number_input("Corners de l'Équipe A", min_value=0)  
-        teamA_touches = st.number_input("Touches dans la surface adverse de l'Équipe A", min_value=0)  
-        teamA_penalties = st.number_input("Pénalités obtenues de l'Équipe A", min_value=0)  
-    with col2:  
-        teamB_goals = st.number_input("Buts de l'Équipe B", min_value=0)  
-        teamB_xg = st.number_input("xG de l'Équipe B", min_value=0.0)  
-        teamB_shots = st.number_input("Tirs cadrés de l'Équipe B", min_value=0)  
-        teamB_corners = st.number_input("Corners de l'Équipe B", min_value=0)  
-        teamB_touches = st.number_input("Touches dans la surface adverse de l'Équipe B", min_value=0)  
-        teamB_penalties = st.number_input("Pénalités obtenues de l'Équipe B", min_value=0)  
-
-    # Statistiques de défense  
-    st.subheader("Statistiques de défense")  
-    col1, col2 = st.columns(2)  
-    with col1:  
-        teamA_xg_conceded = st.number_input("xG concédés de l'Équipe A", min_value=0.0)  
-        teamA_interceptions = st.number_input("Interceptions de l'Équipe A", min_value=0)  
-        teamA_clearances = st.number_input("Dégagements de l'Équipe A", min_value=0)  
-        teamA_saves = st.number_input("Arrêts de l'Équipe A", min_value=0)  
-        teamA_goals_conceded = st.number_input("Buts concédés de l'Équipe A", min_value=0)  
-        teamA_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe A", ["Oui", "Non"])  
-    with col2:  
-        teamB_xg_conceded = st.number_input("xG concédés de l'Équipe B", min_value=0.0)  
-        teamB_interceptions = st.number_input("Interceptions de l'Équipe B", min_value=0)  
-        teamB_clearances = st.number_input("Dégagements de l'Équipe B", min_value=0)  
-        teamB_saves = st.number_input("Arrêts de l'Équipe B", min_value=0)  
-        teamB_goals_conceded = st.number_input("Buts concédés de l'Équipe B", min_value=0)  
-        teamB_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe B", ["Oui", "Non"])  
-
-    # Bouton pour prédire  
-    if st.button("Prédire le Résultat"):  
-        # Calculer le score de forme  
-        teamA_form_score = teamA_form.count("Victoire") * 3 + teamA_form.count("Match nul")  
-        teamB_form_score = teamB_form.count("Victoire") * 3 + teamB_form.count("Match nul")  
-
-        # Préparer les données pour la prédiction  
+        forme_exterieur = st.slider("Forme Extérieur", 0, 10, 5)  
+        attaque_exterieur = st.slider("Force Attaque Extérieur", 0, 10, 6)  
+        defense_exterieur = st.slider("Force Défense Extérieur", 0, 10, 6)  
+    
+    # Bouton de prédiction  
+    if st.sidebar.button("🎲 Prédire le Match", use_container_width=True):  
+        # Générer des données factices et entraîner le modèle  
+        df = generate_fake_data()  
+        model, scaler = train_model(df)  
+        
+        # Calcul des probabilités de buts  
+        domicile_goals = predict_poisson_goals(attaque_domicile, defense_exterieur)  
+        exterieur_goals = predict_poisson_goals(attaque_exterieur, defense_domicile)  
+        
+        # Affichage des résultats  
+        st.header(f"🏟️ {equipe_domicile} vs {equipe_exterieur}")  
+        
+        # Colonnes pour les graphiques  
+        col1, col2 = st.columns(2)  
+        
+        with col1:  
+            st.plotly_chart(plot_goal_probabilities(equipe_domicile, domicile_goals['probabilities']))  
+        
+        with col2:  
+            st.plotly_chart(plot_goal_probabilities(equipe_exterieur, exterieur_goals['probabilities']))  
+        
+        # Calcul du résultat le plus probable  
+        max_domicile = np.argmax(domicile_goals['probabilities'])  
+        max_exterieur = np.argmax(exterieur_goals['probabilities'])  
+        
+        # Préparation des statistiques pour le modèle ML  
         teamA_stats = {  
-            'teamA_goals': teamA_goals,  
-            'teamA_possession': teamA_possession,  
-            'teamA_xg': teamA_xg,  
-            'teamA_shots': teamA_shots,  
-            'teamA_corners': teamA_corners,  
-            'teamA_interceptions': teamA_interceptions,  
-            'teamA_saves': teamA_saves,  
-            'teamA_clean_sheet': 1 if teamA_clean_sheet == "Oui" else 0,  
-            'teamA_form': teamA_form_score,  
-            'head_to_head': head_to_head  
+            'teamA_goals': max_domicile,  
+            'teamA_possession': forme_domicile * 10,  
+            'teamA_xg': attaque_domicile,  
+            'teamA_shots': attaque_domicile * 2,  
+            'teamA_corners': attaque_domicile,  
+            'teamA_interceptions': defense_domicile,  
+            'teamA_saves': defense_domicile,  
+            'teamA_clean_sheet': 1 if defense_domicile > 7 else 0,  
+            'teamA_form': forme_domicile,  
+            'head_to_head': 5  # Valeur arbitraire à remplacer par des données réelles  
         }  
+        
         teamB_stats = {  
-            'teamB_goals': teamB_goals,  
-            'teamB_possession': teamB_possession,  
-            'teamB_xg': teamB_xg,  
-            'teamB_shots': teamB_shots,  
-            'teamB_corners': teamB_corners,  
-            'teamB_interceptions': teamB_interceptions,  
-            'teamB_saves': teamB_saves,  
-            'teamB_clean_sheet': 1 if teamB_clean_sheet == "Oui" else 0,  
-            'teamB_form': teamB_form_score  
+            'teamB_goals': max_exterieur,  
+            'teamB_possession': forme_exterieur * 10,  
+            'teamB_xg': attaque_exterieur,  
+            'teamB_shots': attaque_exterieur * 2,  
+            'teamB_corners': attaque_exterieur,  
+            'teamB_interceptions': defense_exterieur,  
+            'teamB_saves': defense_exterieur,  
+            'teamB_clean_sheet': 1 if defense_exterieur > 7 else 0,  
+            'teamB_form': forme_exterieur  
         }  
         
-        # Faire la prédiction  
-        prediction = predict_match(model, teamA_stats, teamB_stats)  
-        result = {0: "Victoire de l'Équipe A", 1: "Victoire de l'Équipe B", 2: "Match nul"}[prediction]  
+        # Prédiction du résultat par machine learning  
+        ml_prediction = predict_match_ml(model, scaler, teamA_stats, teamB_stats)  
         
-        # Afficher le résultat  
-        st.success(f"Résultat prédit : {result}")  
+        # Résultat du match  
+        st.subheader("🏆 Résultat Probable")  
+        
+        if ml_prediction == 0:  
+            resultat = f"🏆 Victoire de {equipe_domicile}"  
+            emoji = "🥇"  
+        elif ml_prediction == 1:  
+            resultat = f"🏆 Victoire de {equipe_exterieur}"  
+            emoji = "🥇"  
+        else:  
+            resultat = "🤝 Match Nul"  
+            emoji = "🤝"  
+        
+        st.markdown(f"<div class='highlight'>{emoji} {resultat} {emoji}</div>", unsafe_allow_html=True)  
+        
+        # Probabilités détaillées  
+        st.subheader("📊 Probabilités Détaillées")  
+        
+        col1, col2 = st.columns(2)  
+        
+        with col1:  
+            st.metric(f"Probabilité Victoire {equipe_domicile}", f"{max(domicile_goals['probabilities']):.2%}")  
+        
+        with col2:  
+            st.metric(f"Probabilité Victoire {equipe_exterieur}", f"{max(exterieur_goals['probabilities']):.2%}")  
 
-# Onglet Performances des Équipes  
-with tab2:  
-    st.header("Performances des Équipes")  
-
-    # Tableau récapitulatif  
-    st.subheader("Tableau des Performances")  
-    performance_data = {  
-        'Équipe': ['Équipe A', 'Équipe B'],  
-        'Buts': [teamA_goals, teamB_goals],  
-        'Possession (%)': [teamA_possession, teamB_possession],  
-        'xG': [teamA_xg, teamB_xg],  
-        'Tirs cadrés': [teamA_shots, teamB_shots],  
-        'Corners': [teamA_corners, teamB_corners],  
-        'Interceptions': [teamA_interceptions, teamB_interceptions],  
-        'Arrêts': [teamA_saves, teamB_saves],  
-        'Aucun but encaissé': [teamA_clean_sheet, teamB_clean_sheet]  
-    }  
-    performance_df = pd.DataFrame(performance_data)  
-    st.dataframe(performance_df)  
-
-    # Graphique des scores de forme  
-    st.subheader("Scores de Forme")  
-    teamA_form_score = teamA_form.count("Victoire") * 3 + teamA_form.count("Match nul")  
-    teamB_form_score = teamB_form.count("Victoire") * 3 + teamB_form.count("Match nul")  
-    fig = px.bar(x=['Équipe A', 'Équipe B'], y=[teamA_form_score, teamB_form_score], labels={'x': 'Équipe', 'y': 'Score de Forme'})  
-    st.plotly_chart(fig)
+# Exécution de l'application  
+if __name__ == "__main__":  
+    main()
