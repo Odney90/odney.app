@@ -320,7 +320,7 @@ with tab4:
     probabilites_implicites = [cotes_vers_probabilite(cote) for cote in cotes]  
     marge_bookmaker = sum(probabilites_implicites) - 1  
     st.write(f"Marge du bookmaker : **{marge_bookmaker:.2%}**")
-        probabilites_corrigees = enlever_marge(probabilites_implicites, marge_bookmaker)  
+    probabilites_corrigees = enlever_marge(probabilites_implicites, marge_bookmaker)  
     st.write("Probabilités corrigées (sans marge) :")  
     for i, p in enumerate(probabilites_corrigees):  
         st.write(f"Événement {i + 1} : **{p:.2%}**")  
