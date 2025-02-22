@@ -167,8 +167,8 @@ with tab2:
             current_value = st.session_state.data["forme_recente_A"][i]  
             if current_value not in ["V", "N", "D"]:  
                 current_value = "V"  # Valeur par défaut  
-            st.session_state.data["forme_recente_A"][i] = st.selectbox(  
-                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(current_value)  
+            st.session_state.data["forme_recente_A"][i] = st.select_slider(  
+                f"Match {i+1}", options=["V", "N", "D"], value=current_value  
             )  
     
     with col_b:  
@@ -177,8 +177,8 @@ with tab2:
             current_value = st.session_state.data["forme_recente_B"][i]  
             if current_value not in ["V", "N", "D"]:  
                 current_value = "V"  # Valeur par défaut  
-            st.session_state.data["forme_recente_B"][i] = st.selectbox(  
-                f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(current_value)  
+            st.session_state.data["forme_recente_B"][i] = st.select_slider(  
+                f"Match {i+1}", options=["V", "N", "D"], value=current_value  
             )  
 
     # Quantification de la forme récente  
@@ -317,4 +317,21 @@ with tab4:
     cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
     cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
     cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
-    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")
+    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
+
+# Onglet 5 : Système de Mise  
+with tab5:  
+    st.header("💰 Système de Mise")  
+    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
+    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
+    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
+    cote = st.number_input("Cote", value=2.0)  
+
+    # Calcul de la mise selon Kelly  
+    mise_kelly = (probabilite_victoire * (cote - 1) - (1 - probabilite_victoire)) / (cote - 1)  
+    mise_kelly = max(0, mise_kelly)  # Éviter les valeurs négatives  
+    mise_kelly *= niveau_kelly / 5  # Ajuster selon le niveau de Kelly  
+    mise_finale = bankroll * mise_kelly  
+
+    st.write(f"📊 **Mise Kelly** : {mise_kelly:.2%}")  
+    st.write(f"💰 **Mise Finale** : {mise_finale:.2f} €")
