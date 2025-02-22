@@ -298,8 +298,8 @@ with tab4:
     probabilite_kelly = st.slider("Probabilité estimée (Kelly) (%)", min_value=1, max_value=100, value=50, key="probabilite_kelly") / 100  
     bankroll = st.number_input("Bankroll", min_value=1, value=1000)  
     kelly_fraction = st.slider("Fraction de Kelly (1 à 5)", min_value=1, max_value=5, value=1) / 5  
-        mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
-    st.write(f"Mise de Kelly recommandée : **{mise_kelly:.2f}**")  
+    mise_kelly = kelly_criterion(cote_kelly, probabilite_kelly, bankroll, kelly_fraction)  
+        st.write(f"Mise de Kelly recommandée : **{mise_kelly:.2f}**")  
 
     # Analyse de la marge du bookmaker  
     st.header("📊 Analyse de la Marge du Bookmaker")  
@@ -325,4 +325,3 @@ st.markdown(
     """,  
     unsafe_allow_html=True  
 )
-    
