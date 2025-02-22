@@ -138,13 +138,16 @@ with tab1:
 
 with tab2:  
     st.subheader("🌦️ Conditions du Match")  
+# Conditions du match  
+st.session_state.data["conditions_match"] = st.text_input(  
+    "🌧️ Conditions du Match (ex : pluie, terrain sec, etc.)",  
+    value="",  
+    key="conditions_match_input"  # Clé unique  
+)  
 
-    # Conditions du match  
-    st.session_state.data["conditions_match"] = st.text_input("🌧️ Conditions du Match (ex : pluie, terrain sec, etc.)", value="", key="conditions_match")  
-
-    # Joueurs clés absents et score rating des joueurs clés  
-    st.subheader("👥 Joueurs Clés Absents")  
-    col_a, col_b = st.columns(2)  
+# Joueurs clés absents et score rating des joueurs clés  
+st.subheader("👥 Joueurs Clés Absents")  
+col_a, col_b = st.columns(2)  
 with col_a:  
     st.session_state.data["joueurs_cles_absents_A"] = st.number_input(  
         "🚑 Nombre de joueurs clés absents (Équipe A)",  
@@ -158,7 +161,6 @@ with col_a:
         value=float(st.session_state.data["score_rating_joueurs_cles_A"]),  
         key="score_rating_joueurs_cles_A_input"  # Clé unique  
     )  
-
 with col_b:  
     st.session_state.data["joueurs_cles_absents_B"] = st.number_input(  
         "🚑 Nombre de joueurs clés absents (Équipe B)",  
@@ -171,27 +173,27 @@ with col_b:
         min_value=0.0,  
         value=float(st.session_state.data["score_rating_joueurs_cles_B"]),  
         key="score_rating_joueurs_cles_B_input"  # Clé unique  
-    )
+   )  
 
-    # Motivation des équipes  
-    st.subheader("🔥 Motivation des Équipes")  
-    col_a, col_b = st.columns(2)  
-    with col_a:  
-        st.session_state.data["motivation_A"] = st.slider(  
-            "💪 Motivation de l'Équipe A (1 à 5)",  
-            min_value=1,  
-            max_value=5,  
-            value=int(st.session_state.data["motivation_A"]),  
-            key="motivation_A"  
-        )  
-    with col_b:  
-        st.session_state.data["motivation_B"] = st.slider(  
-            "💪 Motivation de l'Équipe B (1 à 5)",  
-            min_value=1,  
-            max_value=5,  
-            value=int(st.session_state.data["motivation_B"]),  
-            key="motivation_B"  
-        )  
+# Motivation des équipes  
+st.subheader("🔥 Motivation des Équipes")  
+col_a, col_b = st.columns(2)  
+with col_a:  
+    st.session_state.data["motivation_A"] = st.slider(  
+        "💪 Motivation de l'Équipe A (1 à 5)",  
+        min_value=1,  
+        max_value=5,  
+        value=int(st.session_state.data["motivation_A"]),  
+        key="motivation_A_slider"  # Clé unique  
+    )  
+with col_b:  
+    st.session_state.data["motivation_B"] = st.slider(  
+        "💪 Motivation de l'Équipe B (1 à 5)",  
+        min_value=1,  
+        max_value=5,  
+        value=int(st.session_state.data["motivation_B"]),  
+        key="motivation_B_slider"  # Clé unique  
+   )
 
     # Forme des gardiens  
     st.subheader("🧤 Forme des Gardiens")  
