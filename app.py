@@ -95,8 +95,8 @@ if "data" not in st.session_state:
         # Historique Face-à-Face  
         "face_a_face": "",  
         # Forme Récente  
-        "forme_recente_A":  
-        "forme_recente_B":   
+        "forme_recente_A": ["V", "V", "V", "V", "V"],  # Données fictives pour l'Équipe A  
+        "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B  
         # Cotes  
         "cote_victoire_A": 2.0,  
         "cote_nul": 3.0,  
@@ -153,12 +153,13 @@ with tab2:
 
     st.subheader("Forme Récente (5 derniers matchs)")  
     col_a, col_b = st.columns(2)  
-    
+
     # Vérification et initialisation de la forme récente  
-    if "forme_recente_A" not in st.session_state.data:  
-        st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  
-    if "forme_recente_B" not in st.session_state.data:  
-        st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  
+    if "forme_recente_A" not in st.session_state.data or len(st.session_state.data["forme_recente_A"]) != 5:  
+        st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
+
+    if "forme_recente_B" not in st.session_state.data or len(st.session_state.data["forme_recente_B"]) != 5:  
+        st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
 
     with col_a:  
         st.write("Équipe A")  
@@ -326,8 +327,8 @@ with tab5:
     mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
     st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
 
- # Mise à jour de la bankroll  
-if st.button("Miser"):  
-    bankroll -= mise_kelly  
-    st.session_state.data["bankroll"] = bankroll  
-    st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")  # Ajout du guillemet manquant ici
+    # Mise à jour de la bankroll  
+    if st.button("Miser"):  
+        bankroll -= mise_kelly  
+        st.session_state.data["bankroll"] = bankroll  
+        st.write(f
