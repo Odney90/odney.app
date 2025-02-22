@@ -90,7 +90,7 @@ with tab1:
     with col_a:  
         st.subheader("Équipe A 🟡")  
         for key in st.session_state.data:  
-            if key.endswith("_A"):  
+            if key.endswith("_A") and isinstance(st.session_state.data[key], (int, float)):  
                 st.session_state.data[key] = st.number_input(  
                     key.replace("_", " ").title(),  
                     min_value=0.0,  
@@ -101,7 +101,7 @@ with tab1:
     with col_b:  
         st.subheader("Équipe B 🔴")  
         for key in st.session_state.data:  
-            if key.endswith("_B"):  
+            if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float)):  
                 st.session_state.data[key] = st.number_input(  
                     key.replace("_", " ").title(),  
                     min_value=0.0,  
@@ -219,7 +219,7 @@ with tab3:
 
             # Random Forest  
             # Utilisation de toutes les statistiques disponibles  
-            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B")]])  
+            X_rf = np.array([[st.session_state.data[key] for key in st.session_state.data if key.endswith("_A") or key.endswith("_B") and isinstance(st.session_state.data[key], (int, float))]])  
 
             # Génération de données d'entraînement  
             np.random.seed(0)  
