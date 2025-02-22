@@ -95,9 +95,14 @@ if "data" not in st.session_state:
         # Historique Face-à-Face  
         "face_a_face": "",  
         # Forme Récente  
-        "forme_recente_A": ["V", "N", "D", "V", "V"],  # Données fictives pour l'Équipe A  
+        "forme_recente_A": ["V", "V", "V", "V", "V"],  # Données fictives pour l'Équipe A  
         "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B  
-      
+        # Cotes  
+        "cote_victoire_A": 2.0,  
+        "cote_nul": 3.0,  
+        "cote_victoire_B": 4.0,  
+        # Bankroll  
+        "bankroll": 1000.0,  
     }  
 
 # Création des onglets  
@@ -148,26 +153,26 @@ with tab2:
 
     st.subheader("Forme Récente (5 derniers matchs)")  
     col_a, col_b = st.columns(2)  
+    
+    # Vérification et initialisation de la forme récente  
+    if "forme_recente_A" not in st.session_state.data:  
+        st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  
+    if "forme_recente_B" not in st.session_state.data:  
+        st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  
+
     with col_a:  
         st.write("Équipe A")  
-        # Vérifiez si la clé "forme_recente_A" existe et contient 5 éléments  
-        if "forme_recente_A" not in st.session_state.data or len(st.session_state.data["forme_recente_A"]) != 5:  
-            st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
         for i in range(5):  
-            # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
             current_value = st.session_state.data["forme_recente_A"][i]  
             if current_value not in ["V", "N", "D"]:  
                 current_value = "V"  # Valeur par défaut  
             st.session_state.data["forme_recente_A"][i] = st.selectbox(  
                 f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(current_value)  
             )  
+    
     with col_b:  
         st.write("Équipe B")  
-        # Vérifiez si la clé "forme_recente_B" existe et contient 5 éléments  
-        if "forme_recente_B" not in st.session_state.data or len(st.session_state.data["forme_recente_B"]) != 5:  
-            st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
         for i in range(5):  
-            # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
             current_value = st.session_state.data["forme_recente_B"][i]  
             if current_value not in ["V", "N", "D"]:  
                 current_value = "V"  # Valeur par défaut  
@@ -179,7 +184,7 @@ with tab2:
     score_forme_A = quantifier_forme_recente(st.session_state.data["forme_recente_A"])  
     score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
     st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
-    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")
+    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
 
 # Onglet 3 : Prédictions  
 with tab3:  
@@ -305,10 +310,24 @@ with tab4:
     cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
     cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
     cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
-    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")
+    st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
+
+# Onglet 5 : Système de Mise  
+with tab5:  
+    st.header("💰 Système de Mise")  
+    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
+    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
+    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
+    cote = st.number_input("Cote", value=2.0)  
+
+    # Calcul de la mise selon Kelly  
+    mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
+    mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
+    mise_kelly *= niveau_kelly / 5  # Ajustement selon le niveau de Kelly  
+    st.write(f"📊 **Mise Recommandée** : {mise_kelly:.2f} €")  
 
     # Mise à jour de la bankroll  
     if st.button("Miser"):  
         bankroll -= mise_kelly  
         st.session_state.data["bankroll"] = bankroll  
-        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €")
+        st.write(f"💵 **Nouvelle Bankroll** : {bankroll:.2f} €
