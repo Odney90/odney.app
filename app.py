@@ -155,6 +155,9 @@ with tab2:
     col_a, col_b = st.columns(2)  
     with col_a:  
         st.write("Équipe A")  
+        # Vérifiez si la liste "forme_recente_A" contient exactement 5 éléments  
+        if len(st.session_state.data["forme_recente_A"]) != 5:  
+            st.session_state.data["forme_recente_A"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
         for i in range(5):  
             # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
             current_value = st.session_state.data["forme_recente_A"][i]  
@@ -165,6 +168,9 @@ with tab2:
             )  
     with col_b:  
         st.write("Équipe B")  
+        # Vérifiez si la liste "forme_recente_B" contient exactement 5 éléments  
+        if len(st.session_state.data["forme_recente_B"]) != 5:  
+            st.session_state.data["forme_recente_B"] = ["V", "V", "V", "V", "V"]  # Réinitialiser avec des valeurs par défaut  
         for i in range(5):  
             # Vérifiez si la valeur actuelle est valide, sinon utilisez "V" par défaut  
             current_value = st.session_state.data["forme_recente_B"][i]  
@@ -303,7 +309,7 @@ with tab4:
     cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
     cote_equipe_2 = st.number_input("Cote Équipe 2", value=2.0)  
     cote_equipe_3 = st.number_input("Cote Équipe 3", value=2.5)  
-    cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
+        cote_finale = cote_equipe_1 * cote_equipe_2 * cote_equipe_3  
     st.write(f"📈 **Cote Finale** : {cote_finale:.2f}")  
 
 # Onglet 5 : Système de Mise  
