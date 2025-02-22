@@ -46,6 +46,39 @@ st.markdown(
     """,  
     unsafe_allow_html=True  
 )
+# --- Initialisation de session_state ---  
+def init_session_state():  
+    default_values_A = {  
+        "score_rating_A": 70.0, "buts_totaux_A": 50.0, "buts_par_match_A": 1.5,  
+        "buts_concedes_par_match_A": 1.0, "buts_concedes_totaux_A": 30.0, "possession_moyenne_A": 55.0,  
+        "aucun_but_encaisse_A": 10, "expected_but_A": 1.5, "tirs_cadres_A": 10.0,  
+        "grandes_chances_A": 5.0, "grandes_chances_manquees_A": 2.0, "passes_reussies_A": 300.0,  
+        "passes_longues_A": 15.0, "centres_reussis_A": 5.0, "penalties_obtenues_A": 1.0,  
+        "balles_surface_A": 10.0, "corners_A": 4.0, "expected_concedes_A": 1.0,  
+        "interceptions_A": 10.0, "tacles_reussis_A": 5.0, "degagements_A": 8.0,  
+        "penalties_concedes_A": 0.0, "arrets_A": 3.0  
+    }  
+
+    default_values_B = {  
+        "score_rating_B": 65.0, "buts_totaux_B": 40.0, "buts_par_match_B": 1.0,  
+        "buts_concedes_par_match_B": 1.5, "buts_concedes_totaux_B": 35.0, "possession_moyenne_B": 45.0,  
+        "aucun_but_encaisse_B": 8, "expected_but_B": 1.0, "tirs_cadres_B": 8.0,  
+        "grandes_chances_B": 3.0, "grandes_chances_manquees_B": 1.0, "passes_reussies_B": 250.0,  
+        "passes_longues_B": 10.0, "centres_reussis_B": 3.0, "penalties_obtenues_B": 0.0,  
+        "balles_surface_B": 8.0, "corners_B": 3.0, "expected_concedes_B": 1.5,  
+        "interceptions_B": 8.0, "tacles_reussis_B": 4.0, "degagements_B": 6.0,  
+        "penalties_concedes_B": 1.0, "arrets_B": 2.0  
+    }  
+
+    for key, value in default_values_A.items():  
+        if key not in st.session_state:  
+            st.session_state[key] = value  
+
+    for key, value in default_values_B.items():  
+        if key not in st.session_state:  
+            st.session_state[key] = value  
+
+init_session_state()
 
 init_session_state()
 # --- Fonctions Utilitaires ---  
