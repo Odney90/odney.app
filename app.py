@@ -195,37 +195,37 @@ with col_b:
         key="motivation_B_slider"  # Clé unique  
    )
 
-    # Forme des gardiens  
-    st.subheader("🧤 Forme des Gardiens")  
-    col_a, col_b = st.columns(2)  
-    with col_a:  
-        st.session_state.data["clean_sheets_gardien_A"] = st.number_input(  
-            "🛡️ Clean sheets du gardien (Équipe A)",  
-            min_value=0,  
-            value=int(st.session_state.data["clean_sheets_gardien_A"]),  
-            key="clean_sheets_gardien_A"  
-        )  
-        st.session_state.data["ratio_tirs_arretes_A"] = st.number_input(  
-            "🎯 Ratio de tirs arrêtés (Équipe A)",  
-            min_value=0.0,  
-            max_value=1.0,  
-            value=float(st.session_state.data["ratio_tirs_arretes_A"]),  
-            key="ratio_tirs_arretes_A"  
-        )  
-    with col_b:  
-        st.session_state.data["clean_sheets_gardien_B"] = st.number_input(  
-            "🛡️ Clean sheets du gardien (Équipe B)",  
-            min_value=0,  
-            value=int(st.session_state.data["clean_sheets_gardien_B"]),  
-            key="clean_sheets_gardien_B"  
-        )  
-        st.session_state.data["ratio_tirs_arretes_B"] = st.number_input(  
-            "🎯 Ratio de tirs arrêtés (Équipe B)",  
-            min_value=0.0,  
-            max_value=1.0,  
-            value=float(st.session_state.data["ratio_tirs_arretes_B"]),  
-            key="ratio_tirs_arretes_B"  
-        )  
+   # Forme des gardiens  
+st.subheader("🧤 Forme des Gardiens")  
+col_a, col_b = st.columns(2)  
+with col_a:  
+    st.session_state.data["clean_sheets_gardien_A"] = st.number_input(  
+        "🛡️ Clean sheets du gardien (Équipe A)",  
+        min_value=0,  
+        value=int(st.session_state.data["clean_sheets_gardien_A"]),  
+        key="clean_sheets_gardien_A_input"  # Clé unique  
+    )  
+    st.session_state.data["ratio_tirs_arretes_A"] = st.number_input(  
+        "🎯 Ratio de tirs arrêtés (Équipe A)",  
+        min_value=0.0,  
+        max_value=1.0,  
+        value=float(st.session_state.data["ratio_tirs_arretes_A"]),  
+        key="ratio_tirs_arretes_A_input"  # Clé unique  
+    )  
+with col_b:  
+    st.session_state.data["clean_sheets_gardien_B"] = st.number_input(  
+        "🛡️ Clean sheets du gardien (Équipe B)",  
+        min_value=0,  
+        value=int(st.session_state.data["clean_sheets_gardien_B"]),  
+        key="clean_sheets_gardien_B_input"  # Clé unique  
+    )  
+    st.session_state.data["ratio_tirs_arretes_B"] = st.number_input(  
+        "🎯 Ratio de tirs arrêtés (Équipe B)",  
+        min_value=0.0,  
+        max_value=1.0,  
+        value=float(st.session_state.data["ratio_tirs_arretes_B"]),  
+        key="ratio_tirs_arretes_B_input"  # Clé unique  
+    )
 
     # Performances à domicile et à l'extérieur  
     st.subheader("🏠 Performances à Domicile et à l'Extérieur")  
