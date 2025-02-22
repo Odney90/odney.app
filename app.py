@@ -17,6 +17,18 @@ def safe_float(value):
     except (ValueError, TypeError):  
         return 0.0  # Retourne 0.0 si la conversion échoue  
 
+# Fonction pour quantifier la forme récente  
+def quantifier_forme_recente(forme_recente):  
+    score = 0  
+    for resultat in forme_recente:  
+        if resultat == "V":  
+            score += 3  # Victoire = 3 points  
+        elif resultat == "N":  
+            score += 1  # Nul = 1 point  
+        elif resultat == "D":  
+            score += 0  # Défaite = 0 point  
+    return score  
+
 # Initialisation des données dans st.session_state  
 if "data" not in st.session_state:  
     st.session_state.data = {  
@@ -83,8 +95,8 @@ if "data" not in st.session_state:
         # Historique Face-à-Face  
         "face_a_face": "",  
         # Forme Récente  
-        "forme_recente_A": ["V", "N", "D", "V", "V"],  # Assurez-vous qu'il y a 5 éléments  
-        "forme_recente_B": ["D", "N", "V", "D", "V"],  # Assurez-vous qu'il y a 5 éléments  
+        "forme_recente_A": ["V", "N", "D", "V", "V"],  # Données fictives pour l'Équipe A  
+        "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B  
         # Cotes  
         "cote_victoire_A": 2.0,  
         "cote_nul": 3.0,  
@@ -161,6 +173,12 @@ with tab2:
             st.session_state.data["forme_recente_B"][i] = st.selectbox(  
                 f"Match {i+1}", ["V", "N", "D"], index=["V", "N", "D"].index(current_value)  
             )  
+
+    # Quantification de la forme récente  
+    score_forme_A = quantifier_forme_recente(st.session_state.data["forme_recente_A"])  
+    score_forme_B = quantifier_forme_recente(st.session_state.data["forme_recente_B"])  
+    st.write(f"📊 **Score Forme Récente Équipe A** : {score_forme_A}")  
+    st.write(f"📊 **Score Forme Récente Équipe B** : {score_forme_B}")  
 
 # Onglet 3 : Prédictions  
 with tab3:  
@@ -291,12 +309,4 @@ with tab4:
 # Onglet 5 : Système de Mise  
 with tab5:  
     st.header("💰 Système de Mise")  
-    bankroll = st.number_input("Bankroll (€)", value=safe_float(st.session_state.data["bankroll"]))  
-    niveau_kelly = st.slider("Niveau de Kelly (1 à 5)", min_value=1, max_value=5, value=3)  
-    probabilite_victoire = st.number_input("Probabilité de Victoire (%)", value=50.0) / 100  
-    cote = st.number_input("Cote", value=2.0)  
-
-    # Calcul de la mise selon Kelly  
-    mise_kelly = (bankroll * (cote * probabilite_victoire - (1 - probabilite_victoire))) / cote  
-    mise_kelly = max(0, mise_kelly)  # Éviter les mises négatives  
-    mise_kelly *= niveau_k
+    bankroll = st.number_input("Bankroll (€)", value=safe_float
