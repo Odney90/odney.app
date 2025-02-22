@@ -1,46 +1,135 @@
 import streamlit as st  
 import pandas as pd  
 from sklearn.ensemble import RandomForestClassifier  
+from sklearn.model_selection import train_test_split  
+import numpy as np  
 
-# Charger le modèle (à remplacer par ton modèle entraîné)  
-model = RandomForestClassifier(n_estimators=100, random_state=42)  
+# Fonction pour générer des données factices (à remplacer par des données réelles)  
+def generate_fake_data():  
+    data = {  
+        'teamA_goals': np.random.randint(0, 5, 100),  
+        'teamB_goals': np.random.randint(0, 5, 100),  
+        'teamA_possession': np.random.randint(40, 80, 100),  
+        'teamB_possession': np.random.randint(40, 80, 100),  
+        'teamA_xg': np.random.uniform(0.5, 3.5, 100),  
+        'teamB_xg': np.random.uniform(0.5, 3.5, 100),  
+        'teamA_shots': np.random.randint(5, 20, 100),  
+        'teamB_shots': np.random.randint(5, 20, 100),  
+        'teamA_corners': np.random.randint(1, 10, 100),  
+        'teamB_corners': np.random.randint(1, 10, 100),  
+        'teamA_interceptions': np.random.randint(5, 15, 100),  
+        'teamB_interceptions': np.random.randint(5, 15, 100),  
+        'teamA_saves': np.random.randint(1, 10, 100),  
+        'teamB_saves': np.random.randint(1, 10, 100),  
+        'teamA_clean_sheet': np.random.randint(0, 2, 100),  
+        'teamB_clean_sheet': np.random.randint(0, 2, 100),  
+        'result': np.random.choice(['A', 'B', 'D'], 100)  # A: Équipe A gagne, B: Équipe B gagne, D: Match nul  
+    }  
+    df = pd.DataFrame(data)  
+    df['result'] = df['result'].map({'A': 0, 'B': 1, 'D': 2})  
+    return df  
+
+# Entraînement du modèle  
+def train_model(df):  
+    X = df.drop('result', axis=1)  
+    y = df['result']  
+    model = RandomForestClassifier(n_estimators=100, random_state=42)  
+    model.fit(X, y)  
+    return model  
 
 # Fonction pour prédire le résultat  
-def predict_match(teamA_stats, teamB_stats):  
-    # Créer un DataFrame avec les statistiques des deux équipes  
+def predict_match(model, teamA_stats, teamB_stats):  
     data = {**teamA_stats, **teamB_stats}  
     df = pd.DataFrame([data])  
-    
-    # Faire la prédiction  
     prediction = model.predict(df)[0]  
     return prediction  
 
 # Interface Streamlit  
 st.title("⚽ Prédiction de Matchs de Football")  
 
+# Générer des données factices et entraîner le modèle  
+df = generate_fake_data()  
+model = train_model(df)  
+
 # Formulaire pour saisir les statistiques  
-teamA_goals = st.number_input("Buts de l'Équipe A", min_value=0)  
-teamB_goals = st.number_input("Buts de l'Équipe B", min_value=0)  
+st.header("Statistiques des Équipes")  
+
+# Forme récente (5 derniers matchs)  
+st.subheader("Forme récente (5 derniers matchs)")  
+teamA_form = [st.selectbox(f"Match {i+1} - Équipe A", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
+teamB_form = [st.selectbox(f"Match {i+1} - Équipe B", ["Victoire", "Défaite", "Match nul"]) for i in range(5)]  
+
+# Statistiques générales  
+st.subheader("Statistiques générales")  
 teamA_possession = st.number_input("Possession de l'Équipe A (%)", min_value=0, max_value=100)  
 teamB_possession = st.number_input("Possession de l'Équipe B (%)", min_value=0, max_value=100)  
+teamA_passes = st.number_input("Passes réussies de l'Équipe A", min_value=0)  
+teamB_passes = st.number_input("Passes réussies de l'Équipe B", min_value=0)  
+teamA_tacles = st.number_input("Tacles réussis de l'Équipe A", min_value=0)  
+teamB_tacles = st.number_input("Tacles réussis de l'Équipe B", min_value=0)  
+teamA_fautes = st.number_input("Fautes de l'Équipe A", min_value=0)  
+teamB_fautes = st.number_input("Fautes de l'Équipe B", min_value=0)  
+teamA_yellow_cards = st.number_input("Cartons jaunes de l'Équipe A", min_value=0)  
+teamB_yellow_cards = st.number_input("Cartons jaunes de l'Équipe B", min_value=0)  
+teamA_red_cards = st.number_input("Cartons rouges de l'Équipe A", min_value=0)  
+teamB_red_cards = st.number_input("Cartons rouges de l'Équipe B", min_value=0)  
+
+# Statistiques d'attaque  
+st.subheader("Statistiques d'attaque")  
+teamA_goals = st.number_input("Buts de l'Équipe A", min_value=0)  
+teamB_goals = st.number_input("Buts de l'Équipe B", min_value=0)  
 teamA_xg = st.number_input("xG de l'Équipe A", min_value=0.0)  
 teamB_xg = st.number_input("xG de l'Équipe B", min_value=0.0)  
+teamA_shots = st.number_input("Tirs cadrés de l'Équipe A", min_value=0)  
+teamB_shots = st.number_input("Tirs cadrés de l'Équipe B", min_value=0)  
+teamA_corners = st.number_input("Corners de l'Équipe A", min_value=0)  
+teamB_corners = st.number_input("Corners de l'Équipe B", min_value=0)  
+teamA_touches = st.number_input("Touches dans la surface adverse de l'Équipe A", min_value=0)  
+teamB_touches = st.number_input("Touches dans la surface adverse de l'Équipe B", min_value=0)  
+teamA_penalties = st.number_input("Pénalités obtenues de l'Équipe A", min_value=0)  
+teamB_penalties = st.number_input("Pénalités obtenues de l'Équipe B", min_value=0)  
+
+# Statistiques de défense  
+st.subheader("Statistiques de défense")  
+teamA_xg_conceded = st.number_input("xG concédés de l'Équipe A", min_value=0.0)  
+teamB_xg_conceded = st.number_input("xG concédés de l'Équipe B", min_value=0.0)  
+teamA_interceptions = st.number_input("Interceptions de l'Équipe A", min_value=0)  
+teamB_interceptions = st.number_input("Interceptions de l'Équipe B", min_value=0)  
+teamA_clearances = st.number_input("Dégagements de l'Équipe A", min_value=0)  
+teamB_clearances = st.number_input("Dégagements de l'Équipe B", min_value=0)  
+teamA_saves = st.number_input("Arrêts de l'Équipe A", min_value=0)  
+teamB_saves = st.number_input("Arrêts de l'Équipe B", min_value=0)  
+teamA_goals_conceded = st.number_input("Buts concédés de l'Équipe A", min_value=0)  
+teamB_goals_conceded = st.number_input("Buts concédés de l'Équipe B", min_value=0)  
+teamA_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe A", ["Oui", "Non"])  
+teamB_clean_sheet = st.selectbox("Aucun but encaissé de l'Équipe B", ["Oui", "Non"])  
 
 # Bouton pour prédire  
 if st.button("Prédire le Résultat"):  
+    # Préparer les données pour la prédiction  
     teamA_stats = {  
         'teamA_goals': teamA_goals,  
         'teamA_possession': teamA_possession,  
-        'teamA_xg': teamA_xg  
+        'teamA_xg': teamA_xg,  
+        'teamA_shots': teamA_shots,  
+        'teamA_corners': teamA_corners,  
+        'teamA_interceptions': teamA_interceptions,  
+        'teamA_saves': teamA_saves,  
+        'teamA_clean_sheet': 1 if teamA_clean_sheet == "Oui" else 0  
     }  
     teamB_stats = {  
         'teamB_goals': teamB_goals,  
         'teamB_possession': teamB_possession,  
-        'teamB_xg': teamB_xg  
+        'teamB_xg': teamB_xg,  
+        'teamB_shots': teamB_shots,  
+        'teamB_corners': teamB_corners,  
+        'teamB_interceptions': teamB_interceptions,  
+        'teamB_saves': teamB_saves,  
+        'teamB_clean_sheet': 1 if teamB_clean_sheet == "Oui" else 0  
     }  
     
     # Faire la prédiction  
-    prediction = predict_match(teamA_stats, teamB_stats)  
+    prediction = predict_match(model, teamA_stats, teamB_stats)  
     result = {0: "Victoire de l'Équipe A", 1: "Victoire de l'Équipe B", 2: "Match nul"}[prediction]  
     
     # Afficher le résultat  
