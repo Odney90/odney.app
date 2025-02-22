@@ -96,7 +96,10 @@ with tab1:
         for key in st.session_state.data:  
             if key.endswith("_A"):  
                 st.session_state.data[key] = st.number_input(  
-                    key.replace("_", " ").title(), value=st.session_state.data[key]  
+                    key.replace("_", " ").title(),  
+                    value=float(st.session_state.data[key]),  
+                    min_value=-1e6,  
+                    max_value=1e6,  
                 )  
 
     # Statistiques de l'Équipe B  
@@ -105,7 +108,10 @@ with tab1:
         for key in st.session_state.data:  
             if key.endswith("_B"):  
                 st.session_state.data[key] = st.number_input(  
-                    key.replace("_", " ").title(), value=st.session_state.data[key]  
+                    key.replace("_", " ").title(),  
+                    value=float(st.session_state.data[key]),  
+                    min_value=-1e6,  
+                    max_value=1e6,  
                 )  
 
 # Onglet 2 : Conditions et Motivation  
