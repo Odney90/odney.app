@@ -180,102 +180,73 @@ with col_b:
         value=int(st.session_state.data["motivation_B"]),  
         key="motivation_B_slider"  
     )  
-
 # Section 3 : Prédictions  
 st.header("🔮 Prédictions")  
 if st.button("Prédire le résultat"):  
-    # Prédiction des Buts avec Poisson  
-    avg_goals_A = st.session_state.data["buts_par_match_A"]  
-    avg_goals_B = st.session_state.data["buts_par_match_B"]  
-    prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
-    prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
-    prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
+    try:  
+        # Prédiction des Buts avec Poisson  
+        avg_goals_A = st.session_state.data["buts_par_match_A"]  
+        avg_goals_B = st.session_state.data["buts_par_match_B"]  
+        prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
+        prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
+        prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
 
-    # Génération de données d'entraînement factices pour la régression logistique  
-    np.random.seed(42)  
-    X_lr = np.random.rand(100, 6) * 100  # 100 échantillons, 6 caractéristiques  
-    y_lr = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
+        # Génération de données d'entraînement factices pour la régression logistique  
+        np.random.seed(42)  
+        X_lr = np.random.rand(100, 6) * 100  # 100 échantillons, 6 caractéristiques  
+        y_lr = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
 
-    # Régression Logistique  
-    model_lr = LogisticRegression()  
-    model_lr.fit(X_lr, y_lr)  
-    X_lr_pred = np.array([  
-        [  
-            st.session_state.data["score_rating_A"],  
-            st.session_state.data["score_rating_B"],  
-            st.session_state.data["possession_moyenne_A"],  
-            st.session_state.data["possession_moyenne_B"],  
-            st.session_state.data["motivation_A"],  
-            st.session_state.data["motivation_B"],  
-        ]  
-    ])  
-    prediction_lr = model_lr.predict(X_lr_pred)  
+        # Régression Logistique  
+        model_lr = LogisticRegression()  
+        model_lr.fit(X_lr, y_lr)  
+        X_lr_pred = np.array([  
+            [  
+                st.session_state.data["score_rating_A"],  
+                st.session_state.data["score_rating_B"],  
+                st.session_state.data["possession_moyenne_A"],  
+                st.session_state.data["possession_moyenne_B"],  
+                st.session_state.data["motivation_A"],  
+                st.session_state.data["motivation_B"],  
+            ]  
+        ])  
+        prediction_lr = model_lr.predict(X_lr_pred)  
 
-    # Génération de données d'entraînement factices pour Random Forest  
-    X_rf = np.random.rand(100, 50) * 100  # 100 échantillons, 50 caractéristiques  
-    y_rf = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
+        # Random Forest  
+        # Utilisation de toutes les statistiques disponibles (uniquement les valeurs numériques)  
+        X_rf = np.array([  
+            [  
+                st.session_state.data[key]  
+                for key in st.session_state.data  
+                if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
+            ]  
+        ])  
 
-    # Random Forest  
-    model_rf = RandomForestClassifier()  
-    model_rf.fit(X_rf, y_rf)  
-    X_rf_pred = np.array([  
-        [  
-            st.session_state.data["score_rating_A"],  
-            st.session_state.data["score_rating_B"],  
-            st.session_state.data["buts_par_match_A"],  
-            st.session_state.data["buts_par_match_B"],  
-            st.session_state.data["possession_moyenne_A"],  
-            st.session_state.data["possession_moyenne_B"],  
-            st.session_state.data["joueurs_cles_absents_A"],  
-            st.session_state.data["joueurs_cles_absents_B"],  
-            st.session_state.data["motivation_A"],  
-            st.session_state.data["motivation_B"],  
-            st.session_state.data["expected_but_A"],  
-            st.session_state.data["expected_but_B"],  
-            st.session_state.data["tirs_cadres_A"],  
-            st.session_state.data["tirs_cadres_B"],  
-            st.session_state.data["grandes_chances_A"],  
-            st.session_state.data["grandes_chances_B"],  
-            st.session_state.data["passes_reussies_A"],  
-            st.session_state.data["passes_reussies_B"],  
-            st.session_state.data["corners_A"],  
-            st.session_state.data["corners_B"],  
-            st.session_state.data["interceptions_A"],  
-            st.session_state.data["interceptions_B"],  
-            st.session_state.data["tacles_reussis_A"],  
-            st.session_state.data["tacles_reussis_B"],  
-            st.session_state.data["fautes_A"],  
-            st.session_state.data["fautes_B"],  
-            st.session_state.data["cartons_jaunes_A"],  
-            st.session_state.data["cartons_jaunes_B"],  
-            st.session_state.data["cartons_rouges_A"],  
-            st.session_state.data["cartons_rouges_B"],  
-            st.session_state.data["clean_sheets_gardien_A"],  
-            st.session_state.data["clean_sheets_gardien_B"],  
-            st.session_state.data["ratio_tirs_arretes_A"],  
-            st.session_state.data["ratio_tirs_arretes_B"],  
-            st.session_state.data["victoires_domicile_A"],  
-            st.session_state.data["victoires_exterieur_B"],  
-            st.session_state.data["passes_longues_A"],  
-            st.session_state.data["passes_longues_B"],  
-            st.session_state.data["dribbles_reussis_A"],  
-            st.session_state.data["dribbles_reussis_B"],  
-            st.session_state.data["ratio_tirs_cadres_A"],  
-            st.session_state.data["ratio_tirs_cadres_B"],  
-            st.session_state.data["grandes_chances_manquees_A"],  
-            st.session_state.data["grandes_chances_manquees_B"],  
-            st.session_state.data["fautes_zones_dangereuses_A"],  
-            st.session_state.data["fautes_zones_dangereuses_B"],  
-            st.session_state.data["buts_corners_A"],  
-            st.session_state.data["buts_corners_B"],  
-            st.session_state.data["jours_repos_A"],  
-            st.session_state.data["jours_repos_B"],  
-            st.session_state.data["matchs_30_jours_A"],  
-            st.session_state.data["matchs_30_jours_B"],  
-        ]  
-    ])  
-    prediction_rf = model_rf.predict(X_rf_pred)  
+        # Génération de données d'entraînement factices pour Random Forest  
+        # X_rf_train doit avoir le même nombre de caractéristiques que X_rf  
+        X_rf_train = np.random.rand(100, X_rf.shape[1]) * 100  # 100 échantillons, même nombre de caractéristiques  
+        y_rf_train = np.random.randint(0, 2, 100)  # 100 labels binaires (0 ou 1)  
 
+        # Entraînement du modèle Random Forest  
+        model_rf = RandomForestClassifier()  
+        model_rf.fit(X_rf_train, y_rf_train)  
+
+        # Vérification de la forme de X_rf  
+        if X_rf.shape[1] != X_rf_train.shape[1]:  
+            st.error(f"Erreur : Le nombre de caractéristiques doit être de {X_rf_train.shape[1]}. Actuellement : {X_rf.shape[1]}")  
+        else:  
+            # Prédiction avec Random Forest  
+            prediction_rf = model_rf.predict(X_rf)  
+            st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+
+        # Affichage des résultats  
+        st.subheader("Résultats des Prédictions")  
+        st.write(f"📊 **Probabilité de 0-0 (Poisson)** : {prob_0_0:.2%}")  
+        st.write(f"📊 **Probabilité de 1-1 (Poisson)** : {prob_1_1:.2%}")  
+        st.write(f"📊 **Probabilité de 2-2 (Poisson)** : {prob_2_2:.2%}")  
+        st.write(f"📊 **Régression Logistique** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
+
+    except Exception as e:  
+        st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
     # Affichage des résultats  
     st.subheader("Résultats des Prédictions")  
     st.write(f"📊 **Probabilité de 0-0 (Poisson)** : {prob_0_0:.2%}")  
