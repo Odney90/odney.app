@@ -26,6 +26,9 @@ if 'data' not in st.session_state:
         "interceptions_A": 0.0,
         "degagements_A": 0.0,
         "tacles_reussis_A": 0.0,
+        "penalties_concedes_A": 0.0,
+        "possessions_remporte_A": 0.0,
+        "arrets_A": 0.0,
         
         "score_rating_B": 65.0,  
         "buts_totaux_B": 40.0,  
@@ -48,6 +51,9 @@ if 'data' not in st.session_state:
         "interceptions_B": 0.0,
         "degagements_B": 0.0,
         "tacles_reussis_B": 0.0,
+        "penalties_concedes_B": 0.0,
+        "possessions_remporte_B": 0.0,
+        "arrets_B": 0.0,
 
         "recent_form_A": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
         "recent_form_B": [0, 0, 0, 0, 0],  # Forme récente sur 5 matchs  
@@ -182,7 +188,8 @@ with col2:
     st.session_state.data["penalties_concedes_B"] = st.number_input("Pénalités Concédées Équipe B", min_value=0.0, value=st.session_state.data["penalties_concedes_B"], key="penalties_concedes_B")  
     st.session_state.data["possessions_remporte_B"] = st.number_input("Possessions Remportées Équipe B", min_value=0.0, value=st.session_state.data["possessions_remporte_B"], key="possessions_remporte_B")  
     st.session_state.data["arrets_B"] = st.number_input("Arrêts Équipe B", min_value=0.0, value=st.session_state.data["arrets_B"], key="arrets_B")
-    # --- Discipline ---  
+
+# --- Discipline ---  
 st.subheader("📜 Discipline")  
 col1, col2 = st.columns(2)  
 
