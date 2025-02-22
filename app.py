@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 import matplotlib.pyplot as plt  
 import io  
+from docx import Document  
 import openpyxl  # Module nécessaire pour exporter en Excel  
 
 # Configuration de la page  
@@ -320,37 +321,35 @@ with tab3:
             ax.set_title("Probabilités des Paris Double Chance")  
             st.pyplot(fig)  
 
-            # Téléchargement des données organisées par équipe  
+           # Téléchargement des données organisées par équipe  
             st.subheader("📥 Téléchargement des Données des Équipes")  
-            data = {  
-                "Données Équipe A": {  
-                    key.replace("_A", ""): [st.session_state.data[key]]  
-                    for key in st.session_state.data  
-                    if key.endswith("_A") and isinstance(st.session_state.data[key], (int, float, str))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                },  
-                "Données Équipe B": {  
-                    key.replace("_B", ""): [st.session_state.data[key]]  
-                    for key in st.session_state.data  
-                    if key.endswith("_B") and isinstance(st.session_state.data[key], (int, float, str))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                },  
-            }  
 
-            # Conversion en DataFrame et téléchargement  
-            with pd.ExcelWriter("donnees_equipes.xlsx") as writer:  
-                for sheet_name, sheet_data in data.items():  
-                    df = pd.DataFrame(sheet_data)  
-                    df.to_excel(writer, sheet_name=sheet_name, index=False)  
+            # Création d'un document Word  
+            doc = Document()  
+            doc.add_heading("Données des Équipes", level=1)  
 
-            with open("donnees_equipes.xlsx", "rb") as f:  
+            # Ajout des données de l'Équipe A  
+            doc.add_heading("Données Équipe A", level=2)  
+            for key, value in data["Données Équipe A"].items():  
+                doc.add_paragraph(f"{key}: {value[0]}")  
+
+            # Ajout des données de l'Équipe B  
+            doc.add_heading("Données Équipe B", level=2)  
+            for key, value in data["Données Équipe B"].items():  
+                doc.add_paragraph(f"{key}: {value[0]}")  
+
+            # Sauvegarde du document Word  
+            doc_filename = "donnees_equipes.docx"  
+            doc.save(doc_filename)  
+
+            # Téléchargement du document Word  
+            with open(doc_filename, "rb") as f:  
                 st.download_button(  
-                    label="📥 Télécharger les données des équipes",  
+                    label="📥 Télécharger les données des équipes en DOC",  
                     data=f,  
-                    file_name="donnees_equipes.xlsx",  
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
+                    file_name=doc_filename,  
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",  
                 )  
-
         except Exception as e:  
             st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
 # Onglet 4 : Cotes et Value Bet  
