@@ -209,6 +209,16 @@ with tab3:
             prob_1_1 = poisson.pmf(1, avg_goals_A) * poisson.pmf(1, avg_goals_B)  
             prob_2_2 = poisson.pmf(2, avg_goals_A) * poisson.pmf(2, avg_goals_B)  
 
+            # Explication Poisson  
+            st.subheader("📊 Prédiction des Scores avec la Loi de Poisson")  
+            st.write(  
+                "La loi de Poisson est utilisée pour prédire la probabilité des scores en fonction des moyennes de buts des équipes. "  
+                "Elle est particulièrement utile pour estimer les scores les plus probables."  
+            )  
+            st.write(f"📉 **Probabilité de 0-0** : {prob_0_0:.2%}")  
+            st.write(f"📉 **Probabilité de 1-1** : {prob_1_1:.2%}")  
+            st.write(f"📉 **Probabilité de 2-2** : {prob_2_2:.2%}")  
+
             # Régression Logistique avec critères supplémentaires  
             X_lr = np.array([  
                 [  
@@ -245,6 +255,14 @@ with tab3:
             model_lr.fit(X_lr, y_lr)  
             prediction_lr = model_lr.predict(X_lr)  
 
+            # Explication Régression Logistique  
+            st.subheader("📈 Prédiction avec Régression Logistique")  
+            st.write(  
+                "La régression logistique est un modèle de classification qui prédit la probabilité de victoire d'une équipe "  
+                "en fonction de plusieurs critères, tels que le score de rating, la possession, la motivation, et la forme récente."  
+            )  
+            st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
+
             # Random Forest (exclut les données des onglets 4 et 5)  
             X_rf = np.array([  
                 [  
@@ -265,15 +283,16 @@ with tab3:
             model_rf.fit(X_rf, y_rf)  
             prediction_rf = model_rf.predict(X_rf)  
 
-            # Affichage des résultats  
-            st.subheader("Résultats des Prédictions")  
-            st.write(f"📊 **Probabilité de 0-0 (Poisson)** : {prob_0_0:.2%}")  
-            st.write(f"📊 **Probabilité de 1-1 (Poisson)** : {prob_1_1:.2%}")  
-            st.write(f"📊 **Probabilité de 2-2 (Poisson)** : {prob_2_2:.2%}")  
-            st.write(f"📊 **Régression Logistique** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
-            st.write(f"🌲 **Random Forest** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+            # Explication Random Forest  
+            st.subheader("🌲 Prédiction avec Random Forest")  
+            st.write(  
+                "Le Random Forest est un modèle d'apprentissage automatique qui utilise plusieurs arbres de décision pour prédire le résultat. "  
+                "Il est robuste et prend en compte de nombreuses variables pour améliorer la précision."  
+            )  
+            st.write(f"📊 **Résultat** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
 
             # Graphique des probabilités  
+            st.subheader("📉 Graphique des Probabilités")  
             fig, ax = plt.subplots()  
             ax.bar(["0-0", "1-1", "2-2"], [prob_0_0, prob_1_1, prob_2_2])  
             ax.set_ylabel("Probabilité")  
@@ -281,27 +300,28 @@ with tab3:
             st.pyplot(fig)  
 
             # Téléchargement des données  
+            st.subheader("📥 Téléchargement des Données")  
             data = {  
                 "Probabilité 0-0": [prob_0_0],  
                 "Probabilité 1-1": [prob_1_1],  
                 "Probabilité 2-2": [prob_2_2],  
                 "Régression Logistique": [prediction_lr[0]],  
                 "Random Forest": [prediction_rf[0]],  
+                **{key: [st.session_state.data[key]] for key in st.session_state.data if isinstance(st.session_state.data[key], (int, float, str))}  
             }  
             df = pd.DataFrame(data)  
             towrite = io.BytesIO()  
             df.to_excel(towrite, index=False)  
             towrite.seek(0)  
             st.download_button(  
-                label="📥 Télécharger les données",  
+                label="📥 Télécharger toutes les données",  
                 data=towrite,  
-                file_name="predictions.xlsx",  
+                file_name="predictions_et_donnees.xlsx",  
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  
             )  
 
         except Exception as e:  
-            st.error(f"Une erreur s'est produite lors de la prédiction : {e}")  
-
+            st.error(f"Une erreur s'est produite lors de la prédiction : {e}")
 # Onglet 4 : Cotes et Value Bet  
 with tab4:  
     st.header("🎰 Cotes et Value Bet")  
