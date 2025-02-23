@@ -54,7 +54,19 @@ with tab1:
             "Grandes Chances (A)",  
             min_value=0,  
             max_value=50,  
-            value=int(st.session_state.data["grandes_chances_A"]),  # Convertir en entier  
+            value=int(st.session_state.data["grandes_chances_A"]),  
+            key="grandes_chances_A_slider"  # Clé unique  
+        )  
+
+    # Statistiques de l'Équipe B  
+    with col_b:  
+        st.subheader("Équipe B")  
+        st.session_state.data["grandes_chances_B"] = st.slider(  
+            "Grandes Chances (B)",  
+            min_value=0,  
+            max_value=50,  
+            value=int(st.session_state.data["grandes_chances_B"]),  
+            key="grandes_chances_B_slider"  # Clé unique  
         )
     # Statistiques de l'Équipe A  
     with col_a:  
