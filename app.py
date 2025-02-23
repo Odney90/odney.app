@@ -5,7 +5,6 @@ from scipy.stats import poisson
 from sklearn.model_selection import StratifiedKFold, cross_val_score  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.metrics import accuracy_score  
 import traceback  
 
 # Configuration de la page  
@@ -53,33 +52,49 @@ with st.form("data_form"):
 # Section d'analyse et de prédiction  
 if submitted:  
     try:  
-        # Préparation des données pour les modèles  
-        features = pd.DataFrame({  
-            'score_rating_A': [st.session_state.data['score_rating_A']],  
-            'buts_par_match_A': [st.session_state.data['buts_par_match_A']],  
-            'buts_concedes_par_match_A': [st.session_state.data['buts_concedes_par_match_A']],  
-            'possession_moyenne_A': [st.session_state.data['possession_moyenne_A']],  
-            'expected_but_A': [st.session_state.data['expected_but_A']],  
-            'expected_concedes_A': [st.session_state.data['expected_concedes_A']],  
-            'tirs_cadres_A': [st.session_state.data['tirs_cadres_A']],  
-            'grandes_chances_A': [st.session_state.data['grandes_chances_A']],  
-            'corners_A': [st.session_state.data['corners_A']],  
-            'fautes_A': [st.session_state.data['fautes_A']],  
-            'motivation_A': [st.session_state.data['motivation_A']],  
-            'jours_repos_A': [st.session_state.data['jours_repos_A']],  
-            'score_rating_B': [st.session_state.data['score_rating_B']],  
-            'buts_par_match_B': [st.session_state.data['buts_par_match_B']],  
-            'buts_concedes_par_match_B': [st.session_state.data['buts_concedes_par_match_B']],  
-            'possession_moyenne_B': [st.session_state.data['possession_moyenne_B']],  
-            'expected_but_B': [st.session_state.data['expected_but_B']],  
-            'expected_concedes_B': [st.session_state.data['expected_concedes_B']],  
-            'tirs_cadres_B': [st.session_state.data['tirs_cadres_B']],  
-            'grandes_chances_B': [st.session_state.data['grandes_chances_B']],  
-            'corners_B': [st.session_state.data['corners_B']],  
-            'fautes_B': [st.session_state.data['fautes_B']],  
-            'motivation_B': [st.session_state.data['motivation_B']],  
-            'jours_repos_B': [st.session_state.data['jours_repos_B']],  
-        })  
+        # Génération de données synthétiques pour la validation croisée  
+        n_samples = 100  # Nombre d'échantillons synthétiques  
+        np.random.seed(42)  
+
+        # Données synthétiques pour l'équipe A  
+        data_A = {  
+            'score_rating_A': np.random.normal(st.session_state.data['score_rating_A'], 5, n_samples),  
+            'buts_par_match_A': np.random.normal(st.session_state.data['buts_par_match_A'], 0.5, n_samples),  
+            'buts_concedes_par_match_A': np.random.normal(st.session_state.data['buts_concedes_par_match_A'], 0.5, n_samples),  
+            'possession_moyenne_A': np.random.normal(st.session_state.data['possession_moyenne_A'], 5, n_samples),  
+            'expected_but_A': np.random.normal(st.session_state.data['expected_but_A'], 0.5, n_samples),  
+            'expected_concedes_A': np.random.normal(st.session_state.data['expected_concedes_A'], 0.5, n_samples),  
+            'tirs_cadres_A': np.random.normal(st.session_state.data['tirs_cadres_A'], 10, n_samples),  
+            'grandes_chances_A': np.random.normal(st.session_state.data['grandes_chances_A'], 5, n_samples),  
+            'corners_A': np.random.normal(st.session_state.data['corners_A'], 5, n_samples),  
+            'fautes_A': np.random.normal(st.session_state.data['fautes_A'], 5, n_samples),  
+            'motivation_A': np.random.normal(st.session_state.data['motivation_A'], 1, n_samples),  
+            'jours_repos_A': np.random.normal(st.session_state.data['jours_repos_A'], 1, n_samples),  
+        }  
+
+        # Données synthétiques pour l'équipe B  
+        data_B = {  
+            'score_rating_B': np.random.normal(st.session_state.data['score_rating_B'], 5, n_samples),  
+            'buts_par_match_B': np.random.normal(st.session_state.data['buts_par_match_B'], 0.5, n_samples),  
+            'buts_concedes_par_match_B': np.random.normal(st.session_state.data['buts_concedes_par_match_B'], 0.5, n_samples),  
+            'possession_moyenne_B': np.random.normal(st.session_state.data['possession_moyenne_B'], 5, n_samples),  
+            'expected_but_B': np.random.normal(st.session_state.data['expected_but_B'], 0.5, n_samples),  
+            'expected_concedes_B': np.random.normal(st.session_state.data['expected_concedes_B'], 0.5, n_samples),  
+            'tirs_cadres_B': np.random.normal(st.session_state.data['tirs_cadres_B'], 10, n_samples),  
+            'grandes_chances_B': np.random.normal(st.session_state.data['grandes_chances_B'], 5, n_samples),  
+            'corners_B': np.random.normal(st.session_state.data['corners_B'], 5, n_samples),  
+            'fautes_B': np.random.normal(st.session_state.data['fautes_B'], 5, n_samples),  
+            'motivation_B': np.random.normal(st.session_state.data['motivation_B'], 1, n_samples),  
+            'jours_repos_B': np.random.normal(st.session_state.data['jours_repos_B'], 1, n_samples),  
+        }  
+
+        # Création du DataFrame synthétique  
+        df_A = pd.DataFrame(data_A)  
+        df_B = pd.DataFrame(data_B)  
+        df = pd.concat([df_A, df_B], axis=1)  
+
+        # Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
+        y = (df['buts_par_match_A'] > df['buts_par_match_B']).astype(int)  
 
         # Modèle Poisson  
         lambda_A = (  
@@ -112,21 +127,17 @@ if submitted:
             st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
             st.metric("⚽ Buts Prévus (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
 
-        # Modèles de classification  
-        X = features  
-        y = np.array([1 if st.session_state.data['buts_par_match_A'] > st.session_state.data['buts_par_match_B'] else 0])  
-
-        # Validation croisée  
+        # Modèles de classification avec validation croisée  
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
 
         # Logistic Regression  
         log_reg = LogisticRegression()  
-        log_reg_scores = cross_val_score(log_reg, X, y, cv=skf, scoring='accuracy')  
+        log_reg_scores = cross_val_score(log_reg, df, y, cv=skf, scoring='accuracy')  
         log_reg_mean_score = np.mean(log_reg_scores)  
 
         # Random Forest Classifier  
         rf_clf = RandomForestClassifier()  
-        rf_scores = cross_val_score(rf_clf, X, y, cv=skf, scoring='accuracy')  
+        rf_scores = cross_val_score(rf_clf, df, y, cv=skf, scoring='accuracy')  
         rf_mean_score = np.mean(rf_scores)  
 
         # Affichage des résultats des modèles  
