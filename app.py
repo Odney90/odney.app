@@ -440,18 +440,35 @@ def preparer_donnees_random_forest(data):
         ]  
     ])  
     return X_rf
+import streamlit as st  
+import numpy as np  
+import pandas as pd  
+import matplotlib.pyplot as plt  
+from sklearn.linear_model import LogisticRegression  
+from sklearn.ensemble import RandomForestClassifier  
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score  
+from scipy.stats import poisson  
+import math  
+import traceback  
+
 # Configuration Streamlit  
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
 st.title("🏆 Système de Prédiction de Matchs de Football")  
 
-# Initialisation du state  
-if 'data' not in st.session_state:  
-    st.session_state.data = {}  
+# Fonction pour générer des données fictives  
+def generer_donnees_fictives():  
+    """Génère un jeu de données fictif pour la démonstration."""  
+    np.random.seed(42)  
+    n_samples = 1000  
+    X = np.random.rand(n_samples, 10)  # 10 caractéristiques  
+    y = np.random.choice([0, 1, 2], size=n_samples)  # 0: Victoire B, 1: Victoire A, 2: Match Nul  
+    return X, y  
 
 # Formulaire de saisie  
 with st.form("Données du Match"):  
     st.subheader("📊 Saisie des Données du Match")  
     
+    # Colonnes pour les équipes A et B  
     col1, col2 = st.columns(2)  
     
     with col1:  
@@ -461,7 +478,7 @@ with st.form("Données du Match"):
             "buts_par_match_A": st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A"),  
             "buts_concedes_par_match_A": st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A"),  
             "possession_moyenne_A": st.number_input("🎯 Possession Moyenne", value=55, key="possession_A"),  
-            "expected_but_A": st.number_input("📊 Expected Goals (xG)", value=1.8, key="xG_A"),  
+            "expected_but_A": st.number_input("📊 Expected Goals (xG)", value=1.5, key="xG_A"),  
             "expected_concedes_A": st.number_input("📉 Expected Goals Against (xGA)", value=1.2, key="xGA_A"),  
             "tirs_cadres_A": st.number_input("🎯 Tirs Cadrés", value=120, key="tirs_A"),  
             "grandes_chances_A": st.number_input("🔥 Grandes Chances", value=25, key="chances_A"),  
@@ -486,7 +503,7 @@ with st.form("Données du Match"):
             "jours_repos_A": st.number_input("⏳ Jours de Repos", value=4, key="repos_A"),  
             "matchs_30_jours_A": st.number_input("📅 Matchs (30 jours)", value=8, key="matchs_A")  
         })  
-
+    
     with col2:  
         st.markdown("**Équipe B**")  
         st.session_state.data.update({  
@@ -519,7 +536,7 @@ with st.form("Données du Match"):
             "jours_repos_B": st.number_input("⏳ Jours de Repos", value=3, key="repos_B"),  
             "matchs_30_jours_B": st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
         })  
-
+    
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
 # Section d'analyse et de prédiction  
@@ -622,4 +639,4 @@ st.markdown("""
 - **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")  
+""")
