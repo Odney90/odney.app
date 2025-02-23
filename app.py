@@ -10,7 +10,623 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from scipy.stats import poisson  
 from sklearn.base import clone  
 
-# [Toutes les fonctions précédentes restent identiques]  
+def safe_float(value, default=0.0):  
+    try:  
+        return float(value) if value is not None else default  
+    except (ValueError, TypeError):  
+        return default  
+
+def safe_int(value, default=0):  
+    try:  
+        return int(value) if value is not None else default  
+    except (ValueError, TypeError):  
+        return default  
+
+def calculer_lambda_attendus(data, equipe):  
+    facteurs = [  
+        data.get(f"buts_marques_{equipe}", 1.5),  
+        data.get(f"performance_domicile_{equipe}", 75.0) / 100,  
+        data.get(f"tirs_cadres_par_match_{equipe}", 5),  
+        data.get(f"classement_championnat_{equipe}", 5) / 20,  
+        1 - (data.get(f"joueurs_blesses_{equipe}", 2) / 11)  
+    ]  
+    
+    lambda_base = np.prod(facteurs)  
+    return max(0.5, min(lambda_base, 3.0))  
+
+def calculer_probabilite_score_poisson(lambda_moyenne, k_buts):  
+    return (lambda_moyenne ** k_buts * np.exp(-lambda_moyenne)) / np.math.factorial(k_buts)  
+
+def predire_resultat_match_poisson(lambda_A, lambda_B, max_buts=5):  
+    probabilites = np.zeros((max_buts + 1, max_buts + 1))  
+    
+    for buts_A in range(max_buts + 1):  
+        for buts_B in range(max_buts + 1):  
+            prob_A = calculer_probabilite_score_poisson(lambda_A, buts_A)  
+            prob_B = calculer_probabilite_score_poisson(lambda_B, buts_B)  
+            probabilites[buts_A, buts_B] = prob_A * prob_B  
+    
+    victoire_A = np.sum(probabilites[np.triu_indices(max_buts + 1, 1)])  
+    victoire_B = np.sum(probabilites[np.tril_indices(max_buts + 1, -1)])  
+    nul = probabilites.trace()  
+    
+    return {  
+        'Victoire Équipe A': victoire_A,  
+        'Victoire Équipe B': victoire_B,  
+        'Match Nul': nul  
+    }  
+
+def validation_croisee_stratifiee(X, y, modele, n_splits=5):  
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)  
+    
+    accuracies = []  
+    precisions = []  
+    recalls = []  
+    f1_scores_list = []  
+    
+    for train_index, test_index in skf.split(X, y):  
+        X_train, X_test = X[train_index], X[test_index]  
+        y_train, y_test = y[train_index], y[test_index]  
+        
+        modele_clone = clone(modele)  
+        modele_clone.fit(X_train, y_train)  
+        
+        y_pred = modele_clone.predict(X_test)  
+        
+        accuracies.append(accuracy_score(y_test, y_pred))  
+        precisions.append(precision_score(y_test, y_pred, average='weighted'))  
+        recalls.append(recall_score(y_test, y_pred, average='weighted'))  
+        f1_scores_list.append(f1_score(y_test, y_pred, average='weighted'))  
+    
+    return {  
+        'accuracy': np.mean(accuracies),  
+        'precision': np.mean(precisions),  
+        'recall': np.mean(recalls),  
+        'f1_score': np.mean(f1_scores_list)  
+    }  
+
+def generer_donnees_historiques_defaut(nombre_matchs=50):  
+    donnees = []  
+    for _ in range(nombre_matchs):  
+        match = {  
+            'score_rating_A': np.random.normal(1500, 200),  
+            'classement_championnat_A': np.random.randint(1, 20),  
+            'buts_marques_A': np.random.normal(1.5, 0.5),  
+            'tirs_cadres_par_match_A': np.random.normal(5, 1),  
+            'performance_domicile_A': np.random.normal(70, 10),  
+            
+            'score_rating_B': np.random.normal(1500, 200),  
+            'classement_championnat_B': np.random.randint(1, 20),  
+            'buts_marques_B': np.random.normal(1.5, 0.5),  
+            'tirs_cadres_par_match_B': np.random.normal(5, 1),  
+            'performance_domicile_B': np.random.normal(70, 10),  
+            
+            'joueurs_blesses_A': np.random.randint(0, 5),  
+            'joueurs_blesses_B': np.random.randint(0, 5),  
+            
+            'resultat': np.random.choice([0, 0.5, 1])  # 0: défaite, 0.5: nul, 1: victoire  
+        }  
+        donnees.append(match)  
+    return donnees  
+
+def preparer_donnees_entrainement(donnees_historiques):  
+    if not donnees_historiques:  
+        donnees_historiques = generer_donnees_historiques_defaut()  
+    
+    X = []  
+    y = []  
+    
+    for donnee in donnees_historiques:  
+        features = [  
+            safe_float(donnee.get('score_rating_A', 1500)),  
+            safe_float(donnee.get('classement_championnat_A', 10)),  
+            safe_float(donnee.get('buts_marques_A', 1.5)),  
+            safe_float(donnee.get('tirs_cadres_par_match_A', 5)),  
+            safe_float(donnee.get('performance_domicile_A', 70)),  
+            
+            safe_float(donnee.get('score_rating_B', 1500)),  
+            safe_float(donnee.get('classement_championnat_B', 10)),  
+            safe_float(donnee.get('buts_marques_B', 1.5)),  
+            safe_float(donnee.get('tirs_cadres_par_match_B', 5)),  
+            safe_float(donnee.get('performance_domicile_B', 70)),  
+            
+            safe_float(donnee.get('joueurs_blesses_A', 2)),  
+            safe_float(donnee.get('joueurs_blesses_B', 2))  
+        ]  
+        
+        X.append(features)  
+        
+        resultat = donnee.get('resultat', 0.5)  
+        if resultat == 1:  
+            y.append(1)  # Victoire de l'équipe A  
+        elif resultat == 0:  
+            y.append(0)  # Victoire de l'équipe B  
+        else:  
+            y.append(0.5)  # Match nul  
+    
+    return np.array(X), np.array(y)  
+
+def preparer_donnees_regression_logistique(data):  
+    if not data:  
+        data = {  
+            'score_rating_A': 1500, 'classement_championnat_A': 10,  
+            'score_rating_B': 1500, 'classement_championnat_B': 10,  
+            'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
+            'performance_domicile_A': 50, 'performance_domicile_B': 50,  
+            'tirs_cadres_par_match_A': 4, 'tirs_cadres_par_match_B': 4,  
+            'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
+        }  
+    
+    X_lr = np.array([  
+        [  
+            safe_float(data.get("score_rating_A", 1500)),  
+            safe_float(data.get("classement_championnat_A", 10)),  
+            safe_float(data.get("score_rating_B", 1500)),  
+            safe_float(data.get("classement_championnat_B", 10)),  
+            
+            safe_float(data.get("buts_marques_A", 1.5)),  
+            safe_float(data.get("tirs_cadres_par_match_A", 4)),  
+            safe_float(data.get("buts_marques_B", 1.5)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 4)),  
+            
+            safe_float(data.get("performance_domicile_A", 50)),  
+            safe_float(data.get("performance_domicile_B", 50)),  
+            
+            safe_float(data.get("joueurs_blesses_A", 2)),  
+            safe_float(data.get("joueurs_blesses_B", 2))  
+        ]  
+    ])  
+    return X_lr  
+
+def preparer_donnees_random_forest(data):  
+    if not data:  
+        data = {  
+            'classement_championnat_A': 10, 'classement_championnat_B': 10,  
+            'score_rating_A': 1500, 'score_rating_B': 1500,  
+            'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
+            'tirs_cadres_par_match_A': 5, 'tirs_cadres_par_match_B': 5,  
+            'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
+        }  
+    
+    X_rf = np.array([  
+        [  
+            safe_float(data.get("classement_championnat_A", 10)),  
+            safe_float(data.get("classement_championnat_B", 10)),  
+            
+            safe_float(data.get("score_rating_A", 1500)),  
+            safe_float(data.get("score_rating_B", 1500)),  
+            
+            safe_float(data.get("buts_marques_A", 1.5)),  
+            safe_float(data.get("buts_marques_B", 1.5)),  
+            
+            safe_float(data.get("tirs_cadres_par_match_A", 5)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 5)),  
+            
+            safe_float(data.get("joueurs_blesses_A", 2)),  
+            safe_float(data.get("joueurs_blesses_B", 2))  
+        ]  
+    ])  
+    return X_rf  
+
+import streamlit as st  
+import numpy as np  
+import pandas as pd  
+import traceback  
+import matplotlib.pyplot as plt  
+from sklearn.linear_model import LogisticRegression  
+from sklearn.ensemble import RandomForestClassifier  
+from sklearn.model_selection import StratifiedKFold  
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score  
+from scipy.stats import poisson  
+from sklearn.base import clone  
+
+def safe_float(value, default=0.0):  
+    try:  
+        return float(value) if value is not None else default  
+    except (ValueError, TypeError):  
+        return default  
+
+def safe_int(value, default=0):  
+    try:  
+        return int(value) if value is not None else default  
+    except (ValueError, TypeError):  
+        return default  
+
+def calculer_lambda_attendus(data, equipe):  
+    facteurs = [  
+        data.get(f"buts_marques_{equipe}", 1.5),  
+        data.get(f"performance_domicile_{equipe}", 75.0) / 100,  
+        data.get(f"tirs_cadres_par_match_{equipe}", 5),  
+        data.get(f"classement_championnat_{equipe}", 5) / 20,  
+        1 - (data.get(f"joueurs_blesses_{equipe}", 2) / 11)  
+    ]  
+    
+    lambda_base = np.prod(facteurs)  
+    return max(0.5, min(lambda_base, 3.0))  
+
+def calculer_probabilite_score_poisson(lambda_moyenne, k_buts):  
+    return (lambda_moyenne ** k_buts * np.exp(-lambda_moyenne)) / np.math.factorial(k_buts)  
+
+def predire_resultat_match_poisson(lambda_A, lambda_B, max_buts=5):  
+    probabilites = np.zeros((max_buts + 1, max_buts + 1))  
+    
+    for buts_A in range(max_buts + 1):  
+        for buts_B in range(max_buts + 1):  
+            prob_A = calculer_probabilite_score_poisson(lambda_A, buts_A)  
+            prob_B = calculer_probabilite_score_poisson(lambda_B, buts_B)  
+            probabilites[buts_A, buts_B] = prob_A * prob_B  
+    
+    victoire_A = np.sum(probabilites[np.triu_indices(max_buts + 1, 1)])  
+    victoire_B = np.sum(probabilites[np.tril_indices(max_buts + 1, -1)])  
+    nul = probabilites.trace()  
+    
+    return {  
+        'Victoire Équipe A': victoire_A,  
+        'Victoire Équipe B': victoire_B,  
+        'Match Nul': nul  
+    }  
+
+def validation_croisee_stratifiee(X, y, modele, n_splits=5):  
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)  
+    
+    accuracies = []  
+    precisions = []  
+    recalls = []  
+    f1_scores_list = []  
+    
+    for train_index, test_index in skf.split(X, y):  
+        X_train, X_test = X[train_index], X[test_index]  
+        y_train, y_test = y[train_index], y[test_index]  
+        
+        modele_clone = clone(modele)  
+        modele_clone.fit(X_train, y_train)  
+        
+        y_pred = modele_clone.predict(X_test)  
+        
+        accuracies.append(accuracy_score(y_test, y_pred))  
+        precisions.append(precision_score(y_test, y_pred, average='weighted'))  
+        recalls.append(recall_score(y_test, y_pred, average='weighted'))  
+        f1_scores_list.append(f1_score(y_test, y_pred, average='weighted'))  
+    
+    return {  
+        'accuracy': np.mean(accuracies),  
+        'precision': np.mean(precisions),  
+        'recall': np.mean(recalls),  
+        'f1_score': np.mean(f1_scores_list)  
+    }  
+
+def generer_donnees_historiques_defaut(nombre_matchs=50):  
+    donnees = []  
+    for _ in range(nombre_matchs):  
+        match = {  
+            'score_rating_A': np.random.normal(1500, 200),  
+            'classement_championnat_A': np.random.randint(1, 20),  
+            'buts_marques_A': np.random.normal(1.5, 0.5),  
+            'tirs_cadres_par_match_A': np.random.normal(5, 1),  
+            'performance_domicile_A': np.random.normal(70, 10),  
+            
+            'score_rating_B': np.random.normal(1500, 200),  
+            'classement_championnat_B': np.random.randint(1, 20),  
+            'buts_marques_B': np.random.normal(1.5, 0.5),  
+            'tirs_cadres_par_match_B': np.random.normal(5, 1),  
+            'performance_domicile_B': np.random.normal(70, 10),  
+            
+            'joueurs_blesses_A': np.random.randint(0, 5),  
+            'joueurs_blesses_B': np.random.randint(0, 5),  
+            
+            'resultat': np.random.choice([0, 0.5, 1])  # 0: défaite, 0.5: nul, 1: victoire  
+        }  
+        donnees.append(match)  
+    return donnees  
+
+def preparer_donnees_entrainement(donnees_historiques):  
+    if not donnees_historiques:  
+        donnees_historiques = generer_donnees_historiques_defaut()  
+    
+    X = []  
+    y = []  
+    
+    for donnee in donnees_historiques:  
+        features = [  
+            safe_float(donnee.get('score_rating_A', 1500)),  
+            safe_float(donnee.get('classement_championnat_A', 10)),  
+            safe_float(donnee.get('buts_marques_A', 1.5)),  
+            safe_float(donnee.get('tirs_cadres_par_match_A', 5)),  
+            safe_float(donnee.get('performance_domicile_A', 70)),  
+            
+            safe_float(donnee.get('score_rating_B', 1500)),  
+            safe_float(donnee.get('classement_championnat_B', 10)),  
+            safe_float(donnee.get('buts_marques_B', 1.5)),  
+            safe_float(donnee.get('tirs_cadres_par_match_B', 5)),  
+            safe_float(donnee.get('performance_domicile_B', 70)),  
+            
+            safe_float(donnee.get('joueurs_blesses_A', 2)),  
+            safe_float(donnee.get('joueurs_blesses_B', 2))  
+        ]  
+        
+        X.append(features)  
+        
+        resultat = donnee.get('resultat', 0.5)  
+        if resultat == 1:  
+            y.append(1)  # Victoire de l'équipe A  
+        elif resultat == 0:  
+            y.append(0)  # Victoire de l'équipe B  
+        else:  
+            y.append(0.5)  # Match nul  
+    
+    return np.array(X), np.array(y)  
+
+def preparer_donnees_regression_logistique(data):  
+    if not data:  
+        data = {  
+            'score_rating_A': 1500, 'classement_championnat_A': 10,  
+            'score_rating_B': 1500, 'classement_championnat_B': 10,  
+            'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
+            'performance_domicile_A': 50, 'performance_domicile_B': 50,  
+            'tirs_cadres_par_match_A': 4, 'tirs_cadres_par_match_B': 4,  
+            'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
+        }  
+    
+    X_lr = np.array([  
+        [  
+            safe_float(data.get("score_rating_A", 1500)),  
+            safe_float(data.get("classement_championnat_A", 10)),  
+            safe_float(data.get("score_rating_B", 1500)),  
+            safe_float(data.get("classement_championnat_B", 10)),  
+            
+            safe_float(data.get("buts_marques_A", 1.5)),  
+            safe_float(data.get("tirs_cadres_par_match_A", 4)),  
+            safe_float(data.get("buts_marques_B", 1.5)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 4)),  
+            
+            safe_float(data.get("performance_domicile_A", 50)),  
+            safe_float(data.get("performance_domicile_B", 50)),  
+            
+            safe_float(data.get("joueurs_blesses_A", 2)),  
+            safe_float(data.get("joueurs_blesses_B", 2))  
+        ]  
+    ])  
+    return X_lr  
+
+def preparer_donnees_random_forest(data):  
+    if not data:  
+        data = {  
+            'classement_championnat_A': 10, 'classement_championnat_B': 10,  
+            'score_rating_A': 1500, 'score_rating_B': 1500,  
+            'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
+            'tirs_cadres_par_match_A': 5, 'tirs_cadres_par_match_B': 5,  
+            'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
+        }  
+    
+    X_rf = np.array([  
+        [  
+            safe_float(data.get("classement_championnat_A", 10)),  
+            safe_float(data.get("classement_championnat_B", 10)),  
+            
+            safe_float(data.get("score_rating_A", 1500)),  
+            safe_float(data.get("score_rating_B", 1500)),  
+            
+            safe_float(data.get("buts_marques_A", 1.5)),  
+            safe_float(data.get("buts_marques_B", 1.5)),  
+            
+            safe_float(data.get("tirs_cadres_par_match_A", 5)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 5)),  
+            
+            safe_float(data.get("joueurs_blesses_A", 2)),  
+            safe_float(data.get("joueurs_blesses_B", 2))  
+        ]  
+    ])  
+    return X_rf  
+
+import streamlit as st  
+import numpy as np  
+import pandas as pd  
+import traceback  
+import matplotlib.pyplot as plt  
+from sklearn.linear_model import LogisticRegression  
+from sklearn.ensemble import RandomForestClassifier  
+from sklearn.model_selection import StratifiedKFold  
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score  
+from scipy.stats import poisson  
+from sklearn.base import clone  
+
+def safe_float(value, default=0.0):  
+    try:  
+        return float(value) if value is not None else default  
+    except (ValueError, TypeError):  
+        return default  
+
+def safe_int(value, default=0):  
+    try:  
+        return int(value) if value is not None else default  
+    except (ValueError, TypeError):  
+        return default  
+
+def calculer_lambda_attendus(data, equipe):  
+    facteurs = [  
+        data.get(f"buts_marques_{equipe}", 1.5),  
+        data.get(f"performance_domicile_{equipe}", 75.0) / 100,  
+        data.get(f"tirs_cadres_par_match_{equipe}", 5),  
+        data.get(f"classement_championnat_{equipe}", 5) / 20,  
+        1 - (data.get(f"joueurs_blesses_{equipe}", 2) / 11)  
+    ]  
+    
+    lambda_base = np.prod(facteurs)  
+    return max(0.5, min(lambda_base, 3.0))  
+
+def calculer_probabilite_score_poisson(lambda_moyenne, k_buts):  
+    return (lambda_moyenne ** k_buts * np.exp(-lambda_moyenne)) / np.math.factorial(k_buts)  
+
+def predire_resultat_match_poisson(lambda_A, lambda_B, max_buts=5):  
+    probabilites = np.zeros((max_buts + 1, max_buts + 1))  
+    
+    for buts_A in range(max_buts + 1):  
+        for buts_B in range(max_buts + 1):  
+            prob_A = calculer_probabilite_score_poisson(lambda_A, buts_A)  
+            prob_B = calculer_probabilite_score_poisson(lambda_B, buts_B)  
+            probabilites[buts_A, buts_B] = prob_A * prob_B  
+    
+    victoire_A = np.sum(probabilites[np.triu_indices(max_buts + 1, 1)])  
+    victoire_B = np.sum(probabilites[np.tril_indices(max_buts + 1, -1)])  
+    nul = probabilites.trace()  
+    
+    return {  
+        'Victoire Équipe A': victoire_A,  
+        'Victoire Équipe B': victoire_B,  
+        'Match Nul': nul  
+    }  
+
+def validation_croisee_stratifiee(X, y, modele, n_splits=5):  
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)  
+    
+    accuracies = []  
+    precisions = []  
+    recalls = []  
+    f1_scores_list = []  
+    
+    for train_index, test_index in skf.split(X, y):  
+        X_train, X_test = X[train_index], X[test_index]  
+        y_train, y_test = y[train_index], y[test_index]  
+        
+        modele_clone = clone(modele)  
+        modele_clone.fit(X_train, y_train)  
+        
+        y_pred = modele_clone.predict(X_test)  
+        
+        accuracies.append(accuracy_score(y_test, y_pred))  
+        precisions.append(precision_score(y_test, y_pred, average='weighted'))  
+        recalls.append(recall_score(y_test, y_pred, average='weighted'))  
+        f1_scores_list.append(f1_score(y_test, y_pred, average='weighted'))  
+    
+    return {  
+        'accuracy': np.mean(accuracies),  
+        'precision': np.mean(precisions),  
+        'recall': np.mean(recalls),  
+        'f1_score': np.mean(f1_scores_list)  
+    }  
+
+def generer_donnees_historiques_defaut(nombre_matchs=50):  
+    donnees = []  
+    for _ in range(nombre_matchs):  
+        match = {  
+            'score_rating_A': np.random.normal(1500, 200),  
+            'classement_championnat_A': np.random.randint(1, 20),  
+            'buts_marques_A': np.random.normal(1.5, 0.5),  
+            'tirs_cadres_par_match_A': np.random.normal(5, 1),  
+            'performance_domicile_A': np.random.normal(70, 10),  
+            
+            'score_rating_B': np.random.normal(1500, 200),  
+            'classement_championnat_B': np.random.randint(1, 20),  
+            'buts_marques_B': np.random.normal(1.5, 0.5),  
+            'tirs_cadres_par_match_B': np.random.normal(5, 1),  
+            'performance_domicile_B': np.random.normal(70, 10),  
+            
+            'joueurs_blesses_A': np.random.randint(0, 5),  
+            'joueurs_blesses_B': np.random.randint(0, 5),  
+            
+            'resultat': np.random.choice([0, 0.5, 1])  # 0: défaite, 0.5: nul, 1: victoire  
+        }  
+        donnees.append(match)  
+    return donnees  
+
+def preparer_donnees_entrainement(donnees_historiques):  
+    if not donnees_historiques:  
+        donnees_historiques = generer_donnees_historiques_defaut()  
+    
+    X = []  
+    y = []  
+    
+    for donnee in donnees_historiques:  
+        features = [  
+            safe_float(donnee.get('score_rating_A', 1500)),  
+            safe_float(donnee.get('classement_championnat_A', 10)),  
+            safe_float(donnee.get('buts_marques_A', 1.5)),  
+            safe_float(donnee.get('tirs_cadres_par_match_A', 5)),  
+            safe_float(donnee.get('performance_domicile_A', 70)),  
+            
+            safe_float(donnee.get('score_rating_B', 1500)),  
+            safe_float(donnee.get('classement_championnat_B', 10)),  
+            safe_float(donnee.get('buts_marques_B', 1.5)),  
+            safe_float(donnee.get('tirs_cadres_par_match_B', 5)),  
+            safe_float(donnee.get('performance_domicile_B', 70)),  
+            
+            safe_float(donnee.get('joueurs_blesses_A', 2)),  
+            safe_float(donnee.get('joueurs_blesses_B', 2))  
+        ]  
+        
+        X.append(features)  
+        
+        resultat = donnee.get('resultat', 0.5)  
+        if resultat == 1:  
+            y.append(1)  # Victoire de l'équipe A  
+        elif resultat == 0:  
+            y.append(0)  # Victoire de l'équipe B  
+        else:  
+            y.append(0.5)  # Match nul  
+    
+    return np.array(X), np.array(y)  
+
+def preparer_donnees_regression_logistique(data):  
+    if not data:  
+        data = {  
+            'score_rating_A': 1500, 'classement_championnat_A': 10,  
+            'score_rating_B': 1500, 'classement_championnat_B': 10,  
+            'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
+            'performance_domicile_A': 50, 'performance_domicile_B': 50,  
+            'tirs_cadres_par_match_A': 4, 'tirs_cadres_par_match_B': 4,  
+            'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
+        }  
+    
+    X_lr = np.array([  
+        [  
+            safe_float(data.get("score_rating_A", 1500)),  
+            safe_float(data.get("classement_championnat_A", 10)),  
+            safe_float(data.get("score_rating_B", 1500)),  
+            safe_float(data.get("classement_championnat_B", 10)),  
+            
+            safe_float(data.get("buts_marques_A", 1.5)),  
+            safe_float(data.get("tirs_cadres_par_match_A", 4)),  
+            safe_float(data.get("buts_marques_B", 1.5)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 4)),  
+            
+            safe_float(data.get("performance_domicile_A", 50)),  
+            safe_float(data.get("performance_domicile_B", 50)),  
+            
+            safe_float(data.get("joueurs_blesses_A", 2)),  
+            safe_float(data.get("joueurs_blesses_B", 2))  
+        ]  
+    ])  
+    return X_lr  
+
+def preparer_donnees_random_forest(data):  
+    if not data:  
+        data = {  
+            'classement_championnat_A': 10, 'classement_championnat_B': 10,  
+            'score_rating_A': 1500, 'score_rating_B': 1500,  
+            'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
+            'tirs_cadres_par_match_A': 5, 'tirs_cadres_par_match_B': 5,  
+            'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
+        }  
+    
+    X_rf = np.array([  
+        [  
+            safe_float(data.get("classement_championnat_A", 10)),  
+            safe_float(data.get("classement_championnat_B", 10)),  
+            
+            safe_float(data.get("score_rating_A", 1500)),  
+            safe_float(data.get("score_rating_B", 1500)),  
+            
+            safe_float(data.get("buts_marques_A", 1.5)),  
+            safe_float(data.get("buts_marques_B", 1.5)),  
+            
+            safe_float(data.get("tirs_cadres_par_match_A", 5)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 5)),  
+            
+            safe_float(data.get("joueurs_blesses_A", 2)),  
+            safe_float(data.get("joueurs_blesses_B", 2))  
+        ]  
+    ])  
+    return X_rf  
 
 # Configuration Streamlit  
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
@@ -73,8 +689,8 @@ if st.button("🏆 Prédire le Résultat"):
         lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
         lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
         
-        # Résultats Poisson  
-        resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
+        # Résultats Poisson
+                resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
         
         # Résultats  
         st.subheader("🔮 Résultats de Prédiction")  
@@ -163,4 +779,7 @@ st.markdown("""
 - **Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
+""")  
+
+# Ajout des imports manquants  
+import matplotlib.pyplot as plt
