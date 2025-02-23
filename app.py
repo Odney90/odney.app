@@ -236,4 +236,4 @@ st.markdown("""
 ### 🤔 Comment Interpréter ces Résultats ?  
 - **📊 Prédiction des Buts (Poisson)** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
 - **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
-- **📈 Comparateur de Cotes** :
+- **📈 Comparateur de Cotes** :)
