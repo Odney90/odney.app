@@ -600,6 +600,7 @@ if submitted:
             proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
             
         # Affichage des métriques simplifiées  
+
 st.markdown("### 🤖 Performance des Modèles")  
 resultats_modeles = {}  
 for nom, modele in modeles.items():  
