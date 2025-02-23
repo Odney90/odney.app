@@ -87,8 +87,24 @@ with st.form("data_form"):
 # Section d'analyse et de prédiction  
 if submitted:  
     try:  
-        # Génération des données fictives (100 échantillons)  
-        X = np.random.rand(100, len(st.session_state.data))  # 100 échantillons, nombre de caractéristiques = nombre de données  
+        # Préparation des données pour Poisson  
+        lambda_A = st.session_state.data['buts_par_match_A']  # Taux de buts de l'équipe A  
+        lambda_B = st.session_state.data['buts_par_match_B']  # Taux de buts de l'équipe B  
+
+        # Prédiction des buts avec Poisson  
+        buts_A = poisson.rvs(mu=lambda_A, size=100)  # 100 simulations pour l'équipe A  
+        buts_B = poisson.rvs(mu=lambda_B, size=100)  # 100 simulations pour l'équipe B  
+
+        # Résultats Poisson  
+        st.subheader("📊 Prédiction des Buts (Poisson)")  
+        col_poisson_A, col_poisson_B = st.columns(2)  
+        with col_poisson_A:  
+            st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
+        with col_poisson_B:  
+            st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
+
+        # Préparation des données pour Régression Logistique et Random Forest  
+        X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
         y = np.random.randint(0, 3, 100)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
 
         # Modèles  
