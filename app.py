@@ -440,6 +440,7 @@ def preparer_donnees_random_forest(data):
         ]  
     ])  
     return X_rf
+    
 # Configuration Streamlit  
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
 st.title("🏆 Système de Prédiction de Matchs de Football")  
@@ -476,6 +477,17 @@ def calculer_cotes_implicites(proba):
 def detecter_value(cote_implicite, cote_predite):  
     """Détecte si une value existe."""  
     return cote_predite > cote_implicite  
+
+def validation_croisee_stratifiee(X, y, modele):  
+    """Effectue une validation croisée stratifiée."""  
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
+    scores = cross_val_score(modele, X, y, cv=cv, scoring='accuracy')  
+    return {  
+        "accuracy": np.mean(scores),  
+        "precision": np.mean(cross_val_score(modele, X, y, cv=cv, scoring='precision_weighted')),  
+        "recall": np.mean(cross_val_score(modele, X, y, cv=cv, scoring='recall_weighted')),  
+        "f1_score": np.mean(cross_val_score(modele, X, y, cv=cv, scoring='f1_weighted'))  
+    }  
 
 # Formulaire de saisie  
 with st.form("Données du Match"):  
@@ -542,7 +554,7 @@ with st.form("Données du Match"):
             "passes_longues_B": st.number_input("🎯 Passes Longes", value=40, key="passes_longues_B"),  
             "dribbles_reussis_B": st.number_input("🔥 Dribbles Réussis", value=8, key="dribbles_B"),  
             "ratio_tirs_cadres_B": st.number_input("🎯 Ratio Tirs Cadrés", value=0.35, key="ratio_tirs_cadres_B"),  
-            "grandes_chances_manquees_B": st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B"),  
+            "grandes_chances_manqueuees_B": st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B"),  
             "fautes_zones_dangereuses_B": st.number_input("⚠️ Fautes Zones Dangereuses", value=4, key="fautes_zones_B"),  
             "buts_corners_B": st.number_input("⚽ Buts Corners", value=1, key="buts_corners_B"),  
             "jours_repos_B": st.number_input("⏳ Jours de Repos", value=3, key="repos_B"),  
@@ -600,6 +612,55 @@ if submitted:
             st.metric("🤝 Cote Implicite (Match Nul)", cotes_implicites["Match Nul"])  
             st.metric("🤝 Cote Prédite (Match Nul)", cotes_predites["Match Nul"])  
             st.write("**Value ?**", "✅ Oui" if detecter_value(cotes_implicites["Match Nul"], cotes_predites["Match Nul"]) else "❌ Non")  
+        
+        # Modèles  
+        modeles = {  
+            "Régression Logistique": LogisticRegression(max_iter=1000),  
+            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
+        }  
+        
+        # Validation croisée et prédictions  
+        st.markdown("### 🤖 Performance des Modèles")  
+        resultats_modeles = {}  
+        for nom, modele in modeles.items():  
+            # Validation croisée stratifiée  
+            resultats_cv = validation_croisee_stratifiee(  
+                X_train,   
+                y_train,   
+                modele  
+            )  
+            
+            # Stockage des résultats  
+            resultats_modeles[nom] = resultats_cv  
+            
+            # Affichage des métriques de validation croisée  
+            st.markdown(f"#### {nom}")  
+            col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
+            with col_accuracy:  
+                st.metric("🎯 Précision Globale", f"{resultats_cv['accuracy']:.2%}",   
+                         help="Pourcentage de prédictions correctes.")  
+            with col_precision:  
+                st.metric("🎯 Précision", f"{resultats_cv['precision']:.2%}",   
+                         help="Pourcentage de victoires prédites qui étaient correctes.")  
+            with col_recall:  
+                st.metric("🎯 Rappel", f"{resultats_cv['recall']:.2%}",   
+                         help="Pourcentage de victoires réelles correctement prédites.")  
+            with col_f1:  
+                st.metric("🎯 Score F1", f"{resultats_cv['f1_score']:.2%}",   
+                         help="Moyenne équilibrée entre la précision et le rappel.")  
+            
+            # Prédiction finale  
+            modele.fit(X_train, y_train)  
+            proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
+            
+            st.markdown("**📊 Prédictions**")  
+            col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
+            with col_victoire_A:  
+                st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
+            with col_victoire_B:  
+                st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
+            with col_nul:  
+                st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
         
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
