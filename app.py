@@ -16,7 +16,8 @@ if 'data' not in st.session_state:
     st.session_state.data = {}  
 
 # Titre de l'application  
-st.title("⚽ Analyse de Match de Football")
+st.title("⚽ Analyse de Match de Football")  
+
 # Fonction pour mettre en couleur les données utilisées par Poisson et Régression Logistique  
 def highlight_data(data, key):  
     if key in ['expected_but_A', 'buts_par_match_A', 'tirs_cadres_A', 'grandes_chances_A', 'corners_A',  
@@ -26,8 +27,9 @@ def highlight_data(data, key):
                  'score_rating_B', 'possession_moyenne_B', 'motivation_B', 'victoires_exterieur_B']:  
         return f"<span style='color: #ff7f0e; font-size: 16px;'>{data}</span>"  
     else:  
-        return f"<span style='font-size: 16px;'>{data}</span>"
-        # Formulaire de collecte des données  
+        return f"<span style='font-size: 16px;'>{data}</span>"  
+
+# Formulaire de collecte des données  
 with st.form("data_form"):  
     st.markdown("### Équipe A")  
     col1, col2 = st.columns(2)  
@@ -126,7 +128,7 @@ if submitted:
             st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
         with col_poisson_B:  
             st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
-            st.metric("⚽ Buts Prévus (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
+            st.metric("⚽ Buts Prédits (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
 
         # Préparation des données pour Régression Logistique et Random Forest  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
@@ -191,8 +193,74 @@ if submitted:
             st.metric("Probabilité de Match Nul", f"{(1 - (probabilite_victoire_A + (1 - probabilite_victoire_A))):.2%}")  
 
     except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")
-                st.error(traceback.format_exc())  
+        st.error(f"Erreur lors de la prédiction : {e}")  
+        st.error(traceback.format_exc()) 
+        
+# Convertisseur de score  
+st.subheader("🔄 Analyse des Cotes Implicites")  
+cote_A = st.number_input("Cote de Victoire Équipe A", value=2.0, key="cote_A")  
+cote_B = st.number_input("Cote de Victoire Équipe B", value=2.5, key="cote_B")  
+cote_Nul = st.number_input("Cote de Match Nul", value=3.0, key="cote_Nul")  
+
+# Calcul des probabilités implicites  
+proba_implicite_A = 1 / cote_A  
+proba_implicite_B = 1 / cote_B  
+proba_implicite_Nul = 1 / cote_Nul  
+
+# Normalisation des probabilités implicites pour qu'elles somment à 1  
+total_proba_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
+proba_implicite_A /= total_proba_implicite  
+proba_implicite_B /= total_proba_implicite  
+proba_implicite_Nul /= total_proba_implicite  
+
+# Récupération des probabilités prédites par le modèle  
+proba_predite_A = proba[1]  # Victoire A  
+proba_predite_B = proba[0]  # Victoire B  
+proba_predite_Nul = proba[2]  # Match Nul  
+
+# Affichage des résultats  
+st.write("##### Probabilités Implicites (Cotes)")  
+col_implicite_A, col_implicite_B, col_implicite_Nul = st.columns(3)  
+with col_implicite_A:  
+    st.metric("Victoire A", f"{proba_implicite_A:.2%}")  
+with col_implicite_B:  
+    st.metric("Victoire B", f"{proba_implicite_B:.2%}")  
+with col_implicite_Nul:  
+    st.metric("Match Nul", f"{proba_implicite_Nul:.2%}")  
+
+st.write("##### Probabilités Prédites (Modèle)")  
+col_predite_A, col_predite_B, col_predite_Nul = st.columns(3)  
+with col_predite_A:  
+    st.metric("Victoire A", f"{proba_predite_A:.2%}")  
+with col_predite_B:  
+    st.metric("Victoire B", f"{proba_predite_B:.2%}")  
+with col_predite_Nul:  
+    st.metric("Match Nul", f"{proba_predite_Nul:.2%}")  
+
+# Comparaison des probabilités  
+st.write("##### Comparaison")  
+col_comparaison_A, col_comparaison_B, col_comparaison_Nul = st.columns(3)  
+with col_comparaison_A:  
+    st.metric("Différence Victoire A", f"{(proba_predite_A - proba_implicite_A):.2%}")  
+with col_comparaison_B:  
+    st.metric("Différence Victoire B", f"{(proba_predite_B - proba_implicite_B):.2%}")  
+with col_comparaison_Nul:  
+    st.metric("Différence Match Nul", f"{(proba_predite_Nul - proba_implicite_Nul):.2%}")  
+
+# Explication des modèles  
+st.markdown("""  
+### 🤖 Explication des Modèles  
+
+- **Régression Logistique** :  
+  - Un modèle linéaire simple qui prédit les résultats basés sur les caractéristiques des équipes.  
+  - Idéal pour les données où la relation entre les variables est linéaire.  
+  - Rapide à entraîner et facile à interpréter.  
+
+- **Random Forest** :  
+  - Un modèle plus complexe qui utilise plusieurs arbres de décision pour améliorer la précision des prédictions.  
+  - Capable de capturer des relations non linéaires entre les variables.  
+  - Moins sujet au surajustement (overfitting) que la régression logistique.  
+""")  
 
 # Pied de page informatif  
 st.markdown("""  
@@ -214,4 +282,4 @@ st.markdown("""
   - Une différence positive suggère une possible value bet.  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
+""")  
