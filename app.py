@@ -126,10 +126,10 @@ if submitted:
         col_poisson_A, col_poisson_B = st.columns(2)  
         with col_poisson_A:  
             st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
-            st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
+            st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_A, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
         with col_poisson_B:  
             st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
-            st.metric("⚽ Buts Prévus (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
+            st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_B, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
 
         # Modèles de classification avec validation croisée  
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
@@ -160,28 +160,31 @@ if submitted:
         probabilite_implicite = cote_en_probabilite(cote_input)  
         st.metric("Probabilité Implicite", f"{probabilite_implicite:.2%}")  
 
-        # Comparateur de cotes et Value Bet  
-        st.subheader("📊 Comparateur de Cotes et Value Bet")  
-        col_cotes_A, col_cotes_B, col_cotes_Nul = st.columns(3)  
-        with col_cotes_A:  
-            st.metric("Cote Prédite A", f"{cote_predite_A:.2f}")  
-            st.metric("Cote Bookmaker A", f"{st.session_state.data['cote_bookmaker_A']:.2f}")  
-            st.write(f"**Value Bet**: {'✅' if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else '❌'}")  
-        with col_cotes_B:  
-            st.metric("Cote Prédite B", f"{cote_predite_B:.2f}")  
-            st.metric("Cote Bookmaker B", f"{st.session_state.data['cote_bookmaker_B']:.2f}")  
-            st.write(f"**Value Bet**: {'✅' if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else '❌'}")  
-        with col_cotes_Nul:  
-            st.metric("Cote Prédite Nul", f"{cote_predite_Nul:.2f}")  
-            st.metric("Cote Bookmaker Nul", f"{st.session_state.data['cote_bookmaker_Nul']:.2f}")  
-            st.write(f"**Value Bet**: {'✅' if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else '❌'}")  
+        # Tableau synthétique des résultats  
+        st.subheader("📊 Tableau Synthétique des Résultats")  
+        data = {  
+            "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
+            "Probabilité Prédite": [f"{proba_A:.2%}", f"{proba_B:.2%}", f"{proba_Nul:.2%}"],  
+            "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
+            "Cote Bookmaker": [  
+                f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
+                f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
+                f"{st.session_state.data['cote_bookmaker_Nul']:.2f}",  
+            ],  
+            "Value Bet": [  
+                "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
+                "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
+                "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
+            ],  
+        }  
+        df_resultats = pd.DataFrame(data)  
+        st.table(df_resultats)  
 
-        # Explication des résultats  
+        # Message rappel sur le Value Bet  
         st.markdown("""  
-        ### 📝 Explication des Résultats  
-        Les prédictions sont basées sur les statistiques fournies et les modèles utilisés (Poisson, Régression Logistique et Forêt Aléatoire).   
-        Les **cotes prédites** sont calculées à partir des probabilités estimées, tandis que les **cotes des bookmakers** reflètent les cotes du marché.   
-        Un **Value Bet** (✅) est identifié lorsque la cote prédite est inférieure à la cote du bookmaker, indiquant un pari potentiellement rentable.  
+        ### 💡 Qu'est-ce qu'un Value Bet ?  
+        Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
+        Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
         """)  
 
     except Exception as e:  
