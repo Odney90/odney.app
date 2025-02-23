@@ -19,7 +19,7 @@ if 'data' not in st.session_state:
 if 'historique' not in st.session_state:  
     st.session_state.historique = []  
 if 'poids_criteres' not in st.session_state:  
-    st.session_state.poids_criteres = []  # Initialisation à une liste vide  
+    st.session_state.poids_criteres = []  
 
 # Fonction pour générer un rapport DOC  
 def generer_rapport(predictions):  
@@ -242,15 +242,14 @@ with tabs[0]:
 
             # Message rappel sur le Value Bet  
             st.markdown("""  
-            ### 💡 Qu'est-ce qu'un Value Bet ?  
+             ### 💡 Qu'est-ce qu'un Value Bet ?  
             Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
             Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
             """)  
 
             # Affichage des poids des critères  
             st.subheader("📊 Poids des Critères du Modèle Random Forest")  
-            if st.session_state.poids_criteres:
-                                # Vérification si les poids existent  
+            if st.session_state.poids_criteres:  # Vérification si les poids existent  
                 poids_df = pd.DataFrame({  
                     'Critères': [  
                         'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
