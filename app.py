@@ -335,7 +335,7 @@ with tab1:
                 step=1  
             )  
             st.session_state.data["forme_recente_B_defaites"] = st.number_input
-			     "❌ Défaites (B) sur les 5 derniers matchs",  
+			    "❌ Défaites (B) sur les 5 derniers matchs",  
                 value=safe_int(st.session_state.data.get("forme_recente_B_defaites", 0)),  
                 key="forme_recente_B_defaites_input",  
                 step=1  
