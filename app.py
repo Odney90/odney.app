@@ -113,7 +113,6 @@ if submitted:
         # Résultats Poisson  
         st.subheader("📊 Prédiction des Buts (Poisson)")  
         col_poisson_A, col_poisson_B = st.columns(2)  
-        
         with col_poisson_A:  
             st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
             st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
@@ -144,7 +143,7 @@ if submitted:
             st.markdown(f"#### {nom}")  
             col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
             with col_accuracy:  
-            st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
+                st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
 
             # Prédiction finale  
             modele.fit(X, y)  
@@ -167,6 +166,11 @@ if submitted:
                 'recall': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='recall_macro')),  
                 'f1_score': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='f1_macro'))  
             }  
+
+        # Analyse finale  
+        probabilite_victoire_A = (  
+            (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
+        )  
 
         st.subheader("🏆 Résultat Final")  
         st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
@@ -213,7 +217,7 @@ if submitted:
         proba_implicite_B /= total_proba_implicite  
         proba_implicite_Nul /= total_proba_implicite  
 
-        # Récupération des probabilités prédites par le modèle  
+                # Récupération des probabilités prédites par le modèle  
         proba_predite_A = proba[1]  # Victoire A  
         proba_predite_B = proba[0]  # Victoire B  
         proba_predite_Nul = proba[2]  # Match Nul  
