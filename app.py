@@ -113,6 +113,7 @@ if submitted:
         # Résultats Poisson  
         st.subheader("📊 Prédiction des Buts (Poisson)")  
         col_poisson_A, col_poisson_B = st.columns(2)  
+        
         with col_poisson_A:  
             st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
             st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
@@ -143,7 +144,7 @@ if submitted:
             st.markdown(f"#### {nom}")  
             col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
             with col_accuracy:  
-                st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
+            st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
 
             # Prédiction finale  
             modele.fit(X, y)  
