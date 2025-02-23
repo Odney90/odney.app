@@ -59,7 +59,6 @@ if "data" not in st.session_state:
         "dribbles_reussis_A": 10.0,  
         "ratio_tirs_cadres_A": 0.4,  
         "grandes_chances_manquees_A": 5.0,    
-        "buts_corners_A": 2.0,  
         "jours_repos_A": 4.0,  
         "matchs_30_jours_A": 8.0, 
         
