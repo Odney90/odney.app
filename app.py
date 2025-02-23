@@ -131,7 +131,7 @@ with tab1:
     # Statistiques de l'Équipe A  
     with col_a:  
         st.subheader("Équipe A")  
-        for key in st.session_state 
+        for key in st.session_state.data:
             if key.endswith("_A"):  
                 st.session_state.data[key] = st.number_input(  
                     key.replace("_", " ").title(),  
