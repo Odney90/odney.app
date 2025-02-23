@@ -71,9 +71,7 @@ if 'data' not in st.session_state:
 st.set_page_config(page_title="Prédiction de Matchs", layout="wide", page_icon="⚽")  
 
 # Création des onglets  
-tab1, tab2, tab3, tab4 = st.tabs(["Données des Équipes", "Prédictions", "Cotes et Value Bet", "Système de Mise"])  
-
-# Onglet 1 : Données des Équipes  
+tab1, tab2, tab3, tab4 = st.tabs(["Données des Équipes", "Prédictions", "Cotes et Value Bet", "Système de Mise"])
 with tab1:  
     st.header("📊 Données des Équipes")  
 
@@ -336,24 +334,17 @@ with tab1:
                 key="forme_recente_B_nuls_input",  
                 step=1  
             )  
-            st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
-                "❌ Défaites (B) sur les 5 derniers matchs",  
+            st.session_state.data["forme_recente_B_defaites"] = st.number_input
+			     "❌ Défaites (B) sur les 5 derniers matchs",  
                 value=safe_int(st.session_state.data.get("forme_recente_B_defaites", 0)),  
                 key="forme_recente_B_defaites_input",  
                 step=1  
             )  
-            submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
+              submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
 
             if submitted_B:  
                 st.success("Données de l'Équipe B enregistrées avec succès !")
-            )  
-            submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
-
-            if submitted_B:  
-                st.success("Données de l'Équipe B enregistrées avec succès !")  
-
-# Onglet 2 : Prédictions  
-with tab2:  
+			with tab2:  
     st.header("🔮 Prédictions du Match")  
 
     # Calcul du score de forme récente  
@@ -422,10 +413,8 @@ with tab2:
     st.subheader("📈 Résultats des Prédictions")  
     st.write(f"Régression Logistique : {prediction_lr}")  
     st.write(f"Random Forest : {prediction_rf}")  
-    st.write(f"Modèle de Poisson : Équipe A {prediction_poisson[0]} - Équipe B {prediction_poisson[1]}")  
-
-# Onglet 3 : Cotes et Value Bet  
-with tab3:  
+    st.write(f"Modèle de Poisson : Équipe A {prediction_poisson[0]} - Équipe B {prediction_poisson[1]}")
+	with tab3:  
     st.header("💰 Cotes et Value Bet")  
 
     # Formulaire pour les cotes  
@@ -474,10 +463,8 @@ with tab3:
         if value_bet_nul > 0:  
             st.success("✅ Value Bet détectée pour le Match Nul !")  
         if value_bet_B > 0:  
-            st.success("✅ Value Bet détectée pour l'Équipe B !")  
-
-# Onglet 4 : Système de Mise  
-with tab4:  
+            st.success("✅ Value Bet détectée pour l'Équipe B !")
+			with tab4:  
     st.header("💰 Système de Mise")  
     st.write("Cette section calcule la mise optimale selon la méthode de Kelly.")  
 
