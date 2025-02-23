@@ -3,6 +3,30 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from scipy.stats import poisson  
+import streamlit as st  
+
+# Create tabs  
+tab1, tab2, tab3, tab4 = st.tabs(["Données des Équipes", "Prédictions", "Cotes et Value Bet", "Système de Mise"])  
+
+# Tab 1 content  
+with tab1:  
+    st.header("📊 Données des Équipes")  
+    # Add your content here with proper indentation  
+
+# Tab 2 content  
+with tab2:  
+    st.header("🔮 Prédictions du Match")  
+    # Add your content here with proper indentation  
+
+# Tab 3 content  
+with tab3:  
+    st.header("🎰 Cotes et Value Bet")  
+    # Add your content here with proper indentation  
+
+# Tab 4 content  
+with tab4:  
+    st.header("💰 Système de Mise")  
+    # Add your content here with proper indentation
 
 # Initialisation de st.session_state.data  
 if "data" not in st.session_state:  
