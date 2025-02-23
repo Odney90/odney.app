@@ -41,11 +41,19 @@ with st.form(key='match_form'):
         st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, format="%.2f", key="buts_A")  
         st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, format="%.2f", key="concedes_A")  
         st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55.0, format="%.2f", key="possession_A")  
-    with col2:  
         st.session_state.data['expected_but_A'] = st.number_input("📊 Expected Goals (xG)", value=1.5, format="%.2f", key="xG_A")  
         st.session_state.data['expected_concedes_A'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, format="%.2f", key="xGA_A")  
         st.session_state.data['tirs_cadres_A'] = st.number_input("🎯 Tirs Cadrés", value=120.0, format="%.2f", key="tirs_A")  
         st.session_state.data['grandes_chances_A'] = st.number_input("🔥 Grandes Chances", value=25.0, format="%.2f", key="chances_A")  
+    with col2:  
+        st.session_state.data['victoires_domicile_A'] = st.number_input("🏠 Victoires à Domicile", value=5, key="victoires_domicile_A")  
+        st.session_state.data['victoires_exterieur_A'] = st.number_input("✈️ Victoires à l'Extérieur", value=3, key="victoires_exterieur_A")  
+        st.session_state.data['joueurs_absents_A'] = st.number_input("🚫 Joueurs Absents", value=2, key="joueurs_absents_A")  
+        st.session_state.data['joueurs_cles_absents_A'] = st.number_input("🔑 Joueurs Clés Absents", value=1, key="joueurs_cles_absents_A")  
+        st.session_state.data['degagements_A'] = st.number_input("🚀 Dégagements", value=50, key="degagements_A")  
+        st.session_state.data['balles_touchees_camp_adverse_A'] = st.number_input("⚽ Balles Touchées Camp Adverse", value=30, key="balles_touchees_A")  
+        st.session_state.data['motivation_A'] = st.number_input("💪 Motivation (1-10)", value=8, key="motivation_A")  
+        st.session_state.data['face_a_face_A'] = st.number_input("🤝 Face à Face (Victoires)", value=3, key="face_a_face_A")  
 
     # Équipe B  
     st.markdown("#### Équipe B")  
@@ -55,25 +63,19 @@ with st.form(key='match_form'):
         st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, format="%.2f", key="buts_B")  
         st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, format="%.2f", key="concedes_B")  
         st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45.0, format="%.2f", key="possession_B")  
-    with col4:  
         st.session_state.data['expected_but_B'] = st.number_input("📊 Expected Goals (xG)", value=1.2, format="%.2f", key="xG_B")  
         st.session_state.data['expected_concedes_B'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, format="%.2f", key="xGA_B")  
         st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100.0, format="%.2f", key="tirs_B")  
         st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20.0, format="%.2f", key="chances_B")  
-
-    # Nouveaux critères  
-    st.markdown("#### 🆕 Nouveaux Critères")  
-    col5, col6 = st.columns(2)  
-    with col5:  
-        st.session_state.data['victoires_A'] = st.number_input("🏆 Victoires (Équipe A)", value=3, key="victoires_A")  
-        st.session_state.data['nuls_A'] = st.number_input("🤝 Nuls (Équipe A)", value=1, key="nuls_A")  
-        st.session_state.data['defaites_A'] = st.number_input("❌ Défaites (Équipe A)", value=1, key="defaites_A")  
-        st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=3.0, format="%.2f", key="forme_A")  # Moyenne des 5 derniers matchs  
-    with col6:  
-        st.session_state.data['victoires_B'] = st.number_input("🏆 Victoires (Équipe B)", value=2, key="victoires_B")  
-        st.session_state.data['nuls_B'] = st.number_input("🤝 Nuls (Équipe B)", value=2, key="nuls_B")  
-        st.session_state.data['defaites_B'] = st.number_input("❌ Défaites (Équipe B)", value=1, key="defaites_B")  
-        st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=2.0, format="%.2f", key="forme_B")  # Moyenne des 5 derniers matchs  
+    with col4:  
+        st.session_state.data['victoires_domicile_B'] = st.number_input("🏠 Victoires à Domicile", value=4, key="victoires_domicile_B")  
+        st.session_state.data['victoires_exterieur_B'] = st.number_input("✈️ Victoires à l'Extérieur", value=2, key="victoires_exterieur_B")  
+        st.session_state.data['joueurs_absents_B'] = st.number_input("🚫 Joueurs Absents", value=1, key="joueurs_absents_B")  
+        st.session_state.data['joueurs_cles_absents_B'] = st.number_input("🔑 Joueurs Clés Absents", value=0, key="joueurs_cles_absents_B")  
+        st.session_state.data['degagements_B'] = st.number_input("🚀 Dégagements", value=40, key="degagements_B")  
+        st.session_state.data['balles_touchees_camp_adverse_B'] = st.number_input("⚽ Balles Touchées Camp Adverse", value=25, key="balles_touchees_B")  
+        st.session_state.data['motivation_B'] = st.number_input("💪 Motivation (1-10)", value=7, key="motivation_B")  
+        st.session_state.data['face_a_face_B'] = st.number_input("🤝 Face à Face (Victoires)", value=2, key="face_a_face_B")  
 
     # Cotes des bookmakers  
     st.markdown("#### 📊 Cotes des Bookmakers")  
@@ -101,10 +103,14 @@ if submitted:
             'expected_concedes': [st.session_state.data['expected_concedes_A'], st.session_state.data['expected_concedes_B']],  
             'tirs_cadres': [st.session_state.data['tirs_cadres_A'], st.session_state.data['tirs_cadres_B']],  
             'grandes_chances': [st.session_state.data['grandes_chances_A'], st.session_state.data['grandes_chances_B']],  
-            'victoires': [st.session_state.data['victoires_A'], st.session_state.data['victoires_B']],  
-            'nuls': [st.session_state.data['nuls_A'], st.session_state.data['nuls_B']],  
-            'defaites': [st.session_state.data['defaites_A'], st.session_state.data['defaites_B']],  
-            'forme_recente': [st.session_state.data['forme_recente_A'], st.session_state.data['forme_recente_B']],  
+            'victoires_domicile': [st.session_state.data['victoires_domicile_A'], st.session_state.data['victoires_domicile_B']],  
+            'victoires_exterieur': [st.session_state.data['victoires_exterieur_A'], st.session_state.data['victoires_exterieur_B']],  
+            'joueurs_absents': [st.session_state.data['joueurs_absents_A'], st.session_state.data['joueurs_absents_B']],  
+            'joueurs_cles_absents': [st.session_state.data['joueurs_cles_absents_A'], st.session_state.data['joueurs_cles_absents_B']],  
+            'degagements': [st.session_state.data['degagements_A'], st.session_state.data['degagements_B']],  
+            'balles_touchees_camp_adverse': [st.session_state.data['balles_touchees_camp_adverse_A'], st.session_state.data['balles_touchees_camp_adverse_B']],  
+            'motivation': [st.session_state.data['motivation_A'], st.session_state.data['motivation_B']],  
+            'face_a_face': [st.session_state.data['face_a_face_A'], st.session_state.data['face_a_face_B']],  
         }  
         df = pd.DataFrame(data, index=['Équipe A', 'Équipe B'])  
 
@@ -117,7 +123,7 @@ if submitted:
             st.session_state.data['buts_par_match_A'] +  
             st.session_state.data['tirs_cadres_A'] * 0.1 +  
             st.session_state.data['grandes_chances_A'] * 0.2 +  
-            (st.session_state.data['victoires_A'] * 0.3) - (st.session_state.data['defaites_B'] * 0.2)  # Impact des victoires et défaites  
+            (st.session_state.data['victoires_domicile_A'] * 0.3) - (st.session_state.data['defaites_B'] * 0.2)  # Impact des victoires et défaites  
         )  
 
         lambda_B = (  
@@ -125,7 +131,7 @@ if submitted:
             st.session_state.data['buts_par_match_B'] +  
             st.session_state.data['tirs_cadres_B'] * 0.1 +  
             st.session_state.data['grandes_chances_B'] * 0.2 +  
-            (st.session_state.data['victoires_B'] * 0.3) - (st.session_state.data['defaites_A'] * 0.2)  # Impact des victoires et défaites  
+            (st.session_state.data['victoires_domicile_B'] * 0.3) - (st.session_state.data['defaites_A'] * 0.2)  # Impact des victoires et défaites  
         )  
 
         # Prédiction des buts avec Poisson  
@@ -216,10 +222,8 @@ if submitted:
         st.markdown("""  
         ### 💡 Qu'est-ce qu'un Value Bet ?  
         Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
-        Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
-        """)  
-
-        # Affichage des poids des critères  
+        Cela indique que le bookmaker sous-estime la probabilité de cet événement
+                # Affichage des poids des critères  
         st.subheader("📊 Poids des Critères du Modèle Random Forest")  
         if st.session_state.poids_criteres:  # Vérification si les poids existent  
             poids_df = pd.DataFrame({  
@@ -248,7 +252,7 @@ if submitted:
         else:  
             st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")  
 
-                # Comparaison des probabilités prédites et implicites  
+        # Comparaison des probabilités prédites et implicites  
         st.subheader("📊 Comparaison des Probabilités Prédites et Implicites")  
         proba_implicite_A = 1 / st.session_state.data['cote_bookmaker_A']  
         proba_implicite_B = 1 / st.session_state.data['cote_bookmaker_B']  
@@ -291,4 +295,3 @@ st.markdown("""
 # Fin de l'application  
 if __name__ == "__main__":  
     st.write("Merci d'utiliser l'application d'analyse de match de football !")
-        
