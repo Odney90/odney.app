@@ -168,14 +168,8 @@ if submitted:
                 'f1_score': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='f1_macro'))  
             }  
 
-        # Analyse finale  
-        probabilite_victoire_A = (  
-            (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
-        )  
-
         st.subheader("🏆 Résultat Final")  
-        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")
-        'Équipe A', f"{probabilite_victoire_A:.2%}")  
+        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
 
         # Visualisation des performances des modèles  
         st.subheader("📈 Comparaison des Performances des Modèles")  
