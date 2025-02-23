@@ -362,4 +362,4 @@ st.markdown("""
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
 """)
-⚠️ *Ces prédictions sont
+
