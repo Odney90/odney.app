@@ -9,6 +9,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score  
 from scipy.stats import poisson  
 from sklearn.base import clone  
+import math  # Ajout de l'import manquant  
 
 def safe_float(value, default=0.0):  
     try:  
