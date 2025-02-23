@@ -215,105 +215,108 @@ if st.button("🔮 Lancer les Prédictions"):
         except Exception as e:  
             prediction_poisson = "Erreur"  
             st.error(f"Erreur dans le modèle de Poisson : {e}")  
-
-        # Affichage des résultats  
-        st.subheader("📊 Résultats des Prédictions")  
-
-        # Affichage des prédictions  
-        col1, col2, col3 = st.columns(3)  
-        
-with col1:  
-    st.markdown("**Régression Logistique**")  
-    if prediction_lr != "Erreur":  
-        st.success(f"Victoire de l'Équipe A" if prediction_lr == 1 else "Victoire de l'Équipe B")  
-    else:  
-        st.error("Erreur") 
-
-with col2:  
-    st.markdown("**Random Forest**")  
-    if prediction_rf != "Erreur":  
-        st.success(f"Victoire de l'Équipe A" if prediction_rf == 1 else "Victoire de l'Équipe B")  
-    else:  
-        st.error("Erreur")  
-
-with col3:  
-    st.markdown("**Modèle de Poisson**")  
-    if prediction_poisson != "Erreur":  
-        st.write(f"**Buts prédits**")  
-        st.write(f"Équipe A : {prediction_poisson['buts_predits_A']}")  
-        st.write(f"Équipe B : {prediction_poisson['buts_predits_B']}")  
-    else:  
-        st.error("Erreur")  
-
-# Affichage des probabilités de buts  
-if prediction_poisson != "Erreur":  
-    st.markdown("---")  
-    st.subheader("📈 Probabilités de Buts")  
-
-    col4, col5 = st.columns(2)  
-
-    with col4:  
-        st.markdown("**Équipe A**")  
-        for k, proba in enumerate(prediction_poisson["proba_buts_A"]):  
-            st.write(f"{k} but(s) : {proba:.2f}%")  
-
-    with col5:  
-        st.markdown("**Équipe B**")  
-        for k, proba in enumerate(prediction_poisson["proba_buts_B"]):  
-            st.write(f"{k} but(s) : {proba:.2f}%")  
-
-# Comparaison des probabilités prédites vs implicites  
-st.markdown("---")  
-st.subheader("📊 Comparaison des Probabilités")  
+# Affichage des résultats  
+st.subheader("📊 Résultats des Prédictions")  
 
 try:  
-    # Calcul des probabilités implicites  
-    cote_A = safe_float(st.session_state.data["cote_victoire_X"])  
-    cote_nul = safe_float(st.session_state.data["cote_nul"])  
-    cote_B = safe_float(st.session_state.data["cote_victoire_Z"])  
+    # Affichage des prédictions dans des colonnes  
+    col1, col2, col3 = st.columns(3)  
 
-    proba_implicite_A = cote_to_probabilite_implicite(cote_A)  
-    proba_implicite_nul = cote_to_probabilite_implicite(cote_nul)  
-    proba_implicite_B = cote_to_probabilite_implicite(cote_B)  
+    with col1:  
+        st.markdown("**Régression Logistique**")  
+        if prediction_lr != "Erreur":  
+            st.success(f"Victoire de l'Équipe A" if prediction_lr == 1 else "Victoire de l'Équipe B")  
+        else:  
+            st.error("Erreur")  
 
-    # Calcul des probabilités prédites (exemple avec le modèle de Poisson)  
-    proba_predite_A = prediction_poisson["proba_buts_A"][1]  # Probabilité de 1 but pour l'équipe A  
-    proba_predite_B = prediction_poisson["proba_buts_B"][1]  # Probabilité de 1 but pour l'équipe B  
+    with col2:  
+        st.markdown("**Random Forest**")  
+        if prediction_rf != "Erreur":  
+            st.success(f"Victoire de l'Équipe A" if prediction_rf == 1 else "Victoire de l'Équipe B")  
+        else:  
+            st.error("Erreur")  
 
-    # Affichage des probabilités  
-    col6, col7, col8 = st.columns(3)  
+    with col3:  
+        st.markdown("**Modèle de Poisson**")  
+        if prediction_poisson != "Erreur":  
+            st.write(f"**Buts prédits**")  
+            st.write(f"Équipe A : {prediction_poisson['buts_predits_A']}")  
+            st.write(f"Équipe B : {prediction_poisson['buts_predits_B']}")  
+        else:  
+            st.error("Erreur")  
 
-    with col6:  
-        st.markdown("**Équipe A**")  
-        st.write(f"Prédite : {proba_predite_A:.2f}%")  
-        st.write(f"Implicite : {proba_implicite_A:.2f}%")  
+    # Affichage des probabilités de buts  
+    if prediction_poisson != "Erreur":  
+        st.markdown("---")  
+        st.subheader("📈 Probabilités de Buts")  
 
-    with col7:  
-        st.markdown("**Match Nul**")  
-        st.write(f"Prédite : N/A")  # À adapter selon vos modèles  
-        st.write(f"Implicite : {proba_implicite_nul:.2f}%")  
+        col4, col5 = st.columns(2)  
 
-    with col8:  
-        st.markdown("**Équipe B**")  
-        st.write(f"Prédite : {proba_predite_B:.2f}%")  
-        st.write(f"Implicite : {proba_implicite_B:.2f}%")  
+        with col4:  
+            st.markdown("**Équipe A**")  
+            for k, proba in enumerate(prediction_poisson["proba_buts_A"]):  
+                st.write(f"{k} but(s) : {proba:.2f}%")  
 
-    # Détermination de la Value Bet  
+        with col5:  
+            st.markdown("**Équipe B**")  
+            for k, proba in enumerate(prediction_poisson["proba_buts_B"]):  
+                st.write(f"{k} but(s) : {proba:.2f}%")  
+
+    # Comparaison des probabilités prédites vs implicites  
     st.markdown("---")  
-    st.subheader("💰 Value Bet")  
+    st.subheader("📊 Comparaison des Probabilités")  
 
-    value_bet_A = proba_predite_A - proba_implicite_A  
-    value_bet_B = proba_predite_B - proba_implicite_B  
+    try:  
+        # Calcul des probabilités implicites  
+        cote_A = safe_float(st.session_state.data["cote_victoire_X"])  
+        cote_nul = safe_float(st.session_state.data["cote_nul"])  
+        cote_B = safe_float(st.session_state.data["cote_victoire_Z"])  
 
-    if value_bet_A > 0:  
-        st.success(f"**Value Bet Équipe A** : +{value_bet_A:.2f}%")  
-    else:  
-        st.warning(f"**Value Bet Équipe A** : {value_bet_A:.2f}%")  
+        proba_implicite_A = cote_to_probabilite_implicite(cote_A)  
+        proba_implicite_nul = cote_to_probabilite_implicite(cote_nul)  
+        proba_implicite_B = cote_to_probabilite_implicite(cote_B)  
 
-    if value_bet_B > 0:  
-        st.success(f"**Value Bet Équipe B** : +{value_bet_B:.2f}%")  
-    else:  
-        st.warning(f"**Value Bet Équipe B** : {value_bet_B:.2f}%")  
+        # Calcul des probabilités prédites (exemple avec le modèle de Poisson)  
+        proba_predite_A = prediction_poisson["proba_buts_A"][1]  # Probabilité de 1 but pour l'équipe A  
+        proba_predite_B = prediction_poisson["proba_buts_B"][1]  # Probabilité de 1 but pour l'équipe B  
+
+        # Affichage des probabilités  
+        col6, col7, col8 = st.columns(3)  
+
+        with col6:  
+            st.markdown("**Équipe A**")  
+            st.write(f"Prédite : {proba_predite_A:.2f}%")  
+            st.write(f"Implicite : {proba_implicite_A:.2f}%")  
+
+        with col7:  
+            st.markdown("**Match Nul**")  
+            st.write(f"Prédite : N/A")  # À adapter selon vos modèles  
+            st.write(f"Implicite : {proba_implicite_nul:.2f}%")  
+
+        with col8:  
+            st.markdown("**Équipe B**")  
+            st.write(f"Prédite : {proba_predite_B:.2f}%")  
+            st.write(f"Implicite : {proba_implicite_B:.2f}%")  
+
+        # Détermination de la Value Bet  
+        st.markdown("---")  
+        st.subheader("💰 Value Bet")  
+
+        value_bet_A = proba_predite_A - proba_implicite_A  
+        value_bet_B = proba_predite_B - proba_implicite_B  
+
+        if value_bet_A > 0:  
+            st.success(f"**Value Bet Équipe A** : +{value_bet_A:.2f}%")  
+        else:  
+            st.warning(f"**Value Bet Équipe A** : {value_bet_A:.2f}%")  
+
+        if value_bet_B > 0:  
+            st.success(f"**Value Bet Équipe B** : +{value_bet_B:.2f}%")  
+        else:  
+            st.warning(f"**Value Bet Équipe B** : {value_bet_B:.2f}%")  
+
+    except Exception as e:  
+        st.error(f"Erreur lors de la comparaison des probabilités : {e}")  
 
 except Exception as e:  
-    st.error(f"Erreur lors de la comparaison des probabilités : {e}")
+    st.error(f"Erreur lors de l'affichage des résultats : {e}")
