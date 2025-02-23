@@ -14,6 +14,10 @@ st.set_page_config(page_title="⚽ Analyse de Match de Football", page_icon="⚽
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
 
+# Fonction pour convertir une cote en probabilité implicite  
+def cote_en_probabilite(cote):  
+    return 1 / cote  
+
 # Formulaire de collecte des données  
 with st.form("data_form"):  
     st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
@@ -150,29 +154,27 @@ if submitted:
         cote_predite_B = 1 / proba_B  
         cote_predite_Nul = 1 / proba_Nul  
 
-        # Value Bet  
-        def value_bet(cote_predite, cote_bookmaker):  
-            return cote_predite < cote_bookmaker  
+        # Convertisseur de cote implicite en probabilité  
+        st.subheader("📊 Convertisseur de Cote Implicite en Probabilité")  
+        cote_input = st.number_input("Entrez une cote pour convertir en probabilité implicite", value=2.0, format="%.2f")  
+        probabilite_implicite = cote_en_probabilite(cote_input)  
+        st.metric("Probabilité Implicite", f"{probabilite_implicite:.2%}")  
 
-        value_bet_A = value_bet(cote_predite_A, st.session_state.data['cote_bookmaker_A'])  
-        value_bet_B = value_bet(cote_predite_B, st.session_state.data['cote_bookmaker_B'])  
-        value_bet_Nul = value_bet(cote_predite_Nul, st.session_state.data['cote_bookmaker_Nul'])  
-
-        # Comparateur de cotes  
+        # Comparateur de cotes et Value Bet  
         st.subheader("📊 Comparateur de Cotes et Value Bet")  
         col_cotes_A, col_cotes_B, col_cotes_Nul = st.columns(3)  
         with col_cotes_A:  
             st.metric("Cote Prédite A", f"{cote_predite_A:.2f}")  
             st.metric("Cote Bookmaker A", f"{st.session_state.data['cote_bookmaker_A']:.2f}")  
-            st.write(f"**Value Bet**: {'✅' if value_bet_A else '❌'}")  
+            st.write(f"**Value Bet**: {'✅' if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else '❌'}")  
         with col_cotes_B:  
             st.metric("Cote Prédite B", f"{cote_predite_B:.2f}")  
             st.metric("Cote Bookmaker B", f"{st.session_state.data['cote_bookmaker_B']:.2f}")  
-            st.write(f"**Value Bet**: {'✅' if value_bet_B else '❌'}")  
+            st.write(f"**Value Bet**: {'✅' if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else '❌'}")  
         with col_cotes_Nul:  
             st.metric("Cote Prédite Nul", f"{cote_predite_Nul:.2f}")  
             st.metric("Cote Bookmaker Nul", f"{st.session_state.data['cote_bookmaker_Nul']:.2f}")  
-            st.write(f"**Value Bet**: {'✅' if value_bet_Nul else '❌'}")  
+            st.write(f"**Value Bet**: {'✅' if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else '❌'}")  
 
         # Explication des résultats  
         st.markdown("""  
