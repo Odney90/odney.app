@@ -291,11 +291,11 @@ with tab1:
                 step=0.01  
             )  
             
-           st.session_state.data["possession_moyenne_B"] = st.number_input(  
-               "⏳ Possession (%) (B)",  
-               value=safe_float(st.session_state.data["possession_moyenne_B"]),  
-               key="possession_moyenne_B_input",  
-               step=0.01  
+         st.session_state.data["possession_moyenne_B"] = st.number_input(  
+        "⏳ Possession (%) (B)",  
+        value=safe_float(st.session_state.data["possession_moyenne_B"]),  
+        key="possession_moyenne_B_input",  
+        step=0.01  
             )  
             st.session_state.data["corners_par_match_B"] = st.number_input(  
                 "🔄 Corners par Match (B)",  
