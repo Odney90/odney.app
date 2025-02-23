@@ -35,6 +35,9 @@ with st.form("Données des Équipes"):
         "tirs_par_match_A": st.number_input("🎯 Tirs par Match (A)", value=0.0, key="tirs_par_match_A_input"),  
         "possession_moyenne_A": st.number_input("⏳ Possession (%) (A)", value=0.0, key="possession_moyenne_A_input"),  
         "corners_par_match_A": st.number_input("🔄 Corners par Match (A)", value=0.0, key="corners_par_match_A_input"),  
+        "interceptions_A": st.number_input("🛑 Interceptions par Match (A)", value=0.0, key="interceptions_A_input"),  
+        "historique_victoires_A": st.number_input("🏆 Victoires Historiques (A)", value=0.0, key="historique_victoires_A_input"),  
+        "historique_nuls": st.number_input("➖ Nuls Historiques", value=0.0, key="historique_nuls_input"),  
         "forme_recente_A_victoires": st.number_input("✅ Victoires (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_victoires_input"),  
         "forme_recente_A_nuls": st.number_input("➖ Nuls (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_nuls_input"),  
         "forme_recente_A_defaites": st.number_input("❌ Défaites (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_defaites_input"),  
@@ -48,6 +51,8 @@ with st.form("Données des Équipes"):
         "tirs_par_match_B": st.number_input("🎯 Tirs par Match (B)", value=0.0, key="tirs_par_match_B_input"),  
         "possession_moyenne_B": st.number_input("⏳ Possession (%) (B)", value=0.0, key="possession_moyenne_B_input"),  
         "corners_par_match_B": st.number_input("🔄 Corners par Match (B)", value=0.0, key="corners_par_match_B_input"),  
+        "interceptions_B": st.number_input("🛑 Interceptions par Match (B)", value=0.0, key="interceptions_B_input"),  
+        "historique_victoires_B": st.number_input("🏆 Victoires Historiques (B)", value=0.0, key="historique_victoires_B_input"),  
         "forme_recente_B_victoires": st.number_input("✅ Victoires (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_victoires_input"),  
         "forme_recente_B_nuls": st.number_input("➖ Nuls (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_nuls_input"),  
         "forme_recente_B_defaites": st.number_input("❌ Défaites (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_defaites_input"),  
@@ -84,6 +89,11 @@ if st.button("🔮 Lancer les Prédictions"):
                 safe_float(st.session_state.data["tirs_par_match_B"]),  
                 safe_float(st.session_state.data["corners_par_match_A"]),  
                 safe_float(st.session_state.data["corners_par_match_B"]),  
+                safe_float(st.session_state.data["interceptions_A"]),  
+                safe_float(st.session_state.data["interceptions_B"]),  
+                safe_float(st.session_state.data["historique_victoires_A"]),  
+                safe_float(st.session_state.data["historique_victoires_B"]),  
+                safe_float(st.session_state.data["historique_nuls"]),  
                 score_forme_A,  
                 score_forme_B,  
             ]  
@@ -93,8 +103,8 @@ if st.button("🔮 Lancer les Prédictions"):
         try:  
             # Exemple de données d'entraînement (à remplacer par vos données réelles)  
             X_train = np.array([  
-                [1.0, 2.0, 50.0, 50.0, 5, 5, 5.0, 5.0, 3.0, 3.0, 10, 10],  
-                [2.0, 1.0, 60.0, 40.0, 4, 6, 6.0, 4.0, 4.0, 2.0, 8, 12],  
+                [1.0, 2.0, 50.0, 50.0, 5, 5, 5.0, 5.0, 3.0, 3.0, 10.0, 10.0, 3.0, 2.0, 1.0, 10, 10],  
+                [2.0, 1.0, 60.0, 40.0, 4, 6, 6.0, 4.0, 4.0, 2.0, 8.0, 8.0, 2.0, 3.0, 1.0, 8, 12],  
             ])  
             y_train = np.array([1, 0])  # Exemple de labels (à remplacer par vos vraies étiquettes)  
 
@@ -121,11 +131,19 @@ if st.button("🔮 Lancer les Prédictions"):
             lambda_B = safe_float(st.session_state.data["buts_marques_B"])  
 
             # Prédiction des buts avec la distribution de Poisson  
-            prediction_poisson = [  
-                poisson.pmf(k, lambda_A) for k in range(5)  # Probabilité de 0 à 4 buts pour l'équipe A  
-            ], [  
-                poisson.pmf(k, lambda_B) for k in range(5)  # Probabilité de 0 à 4 buts pour l'équipe B  
-            ]  
+            buts_predits_A = poisson.rvs(lambda_A)  # Buts prédits pour l'équipe A  
+            buts_predits_B = poisson.rvs(lambda_B)  # Buts prédits pour l'équipe B  
+
+            # Calcul des probabilités en pourcentage  
+            proba_buts_A = [poisson.pmf(k, lambda_A) * 100 for k in range(5)]  # Probabilité de 0 à 4 buts pour l'équipe A  
+            proba_buts_B = [poisson.pmf(k, lambda_B) * 100 for k in range(5)]  # Probabilité de 0 à 4 buts pour l'équipe B  
+
+            prediction_poisson = {  
+                "buts_predits_A": buts_predits_A,  
+                "buts_predits_B": buts_predits_B,  
+                "proba_buts_A": proba_buts_A,  
+                "proba_buts_B": proba_buts_B,  
+            }  
         except Exception as e:  
             prediction_poisson = "Erreur"  
             st.error(f"Erreur dans le modèle de Poisson : {e}")  
@@ -138,8 +156,11 @@ if st.button("🔮 Lancer les Prédictions"):
             st.write(f"Random Forest : Équipe A {prediction_rf} - Équipe B {1 - prediction_rf}")  
         if prediction_poisson != "Erreur":  
             st.write("Modèle de Poisson :")  
-            st.write(f"Probabilité de buts pour l'Équipe A : {prediction_poisson[0]}")  
-            st.write(f"Probabilité de buts pour l'Équipe B : {prediction_poisson[1]}")  
+            st.write(f"⚽ Buts Prédits - Équipe A : {prediction_poisson['buts_predits_A']}")  
+            st.write(f"⚽ Buts Prédits - Équipe B : {prediction_poisson['buts_predits_B']}")  
+            st.write("📊 Probabilité de Buts (en %) :")  
+            st.write(f"Équipe A : {prediction_poisson['proba_buts_A']}")  
+            st.write(f"Équipe B : {prediction_poisson['proba_buts_B']}")  
 
     except Exception as e:  
         st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
@@ -148,8 +169,8 @@ if st.button("🔮 Lancer les Prédictions"):
 if prediction_lr is not None and prediction_poisson is not None and prediction_lr != "Erreur" and prediction_poisson != "Erreur":  
     try:  
         # Calcul des value bets  
-        proba_victoire_A = prediction_poisson[0][1]  # Probabilité de 1 but pour l'équipe A  
-        proba_victoire_B = prediction_poisson[1][1]  # Probabilité de 1 but pour l'équipe B  
+        proba_victoire_A = prediction_poisson["proba_buts_A"][1] / 100  # Probabilité de 1 but pour l'équipe A  
+        proba_victoire_B = prediction_poisson["proba_buts_B"][1] / 100  # Probabilité de 1 but pour l'équipe B  
         proba_nul = 1 - (proba_victoire_A + proba_victoire_B)  
 
         # Calcul des value bets  
