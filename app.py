@@ -444,175 +444,106 @@ def preparer_donnees_random_forest(data):
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
 st.title("🏆 Système de Prédiction de Matchs de Football")  
 
-# Fonctions utilitaires  
-def safe_float(value):  
-    """Convertit une valeur en float de manière sécurisée."""  
-    try:  
-        return float(value)  
-    except (TypeError, ValueError):  
-        return 0.0  
-
-def calculer_lambda_attendus(data, equipe):  
-    """Calcule les buts attendus (lambda) pour une équipe."""  
-    facteurs = [  
-        safe_float(data.get(f"score_rating_{equipe}", 65)) / 100,  
-        safe_float(data.get(f"buts_par_match_{equipe}", 1.0)),  
-        safe_float(data.get(f"buts_concedes_par_match_{equipe}", 1.5)),  
-        safe_float(data.get(f"possession_moyenne_{equipe}", 50.0)) / 100,  
-        safe_float(data.get(f"expected_but_{equipe}", 1.5)),  
-        safe_float(data.get(f"expected_concedes_{equipe}", 1.0)),  
-        safe_float(data.get(f"tirs_cadres_{equipe}", 100)) / 100,  
-        safe_float(data.get(f"grandes_chances_{equipe}", 20)) / 100,  
-        safe_float(data.get(f"passes_reussies_{equipe}", 350)) / 1000,  
-        safe_float(data.get(f"corners_{equipe}", 50)) / 100,  
-        safe_float(data.get(f"interceptions_{equipe}", 40)) / 100,  
-        safe_float(data.get(f"tacles_reussis_{equipe}", 35)) / 100,  
-        safe_float(data.get(f"fautes_{equipe}", 20)) / 100,  
-        safe_float(data.get(f"cartons_jaunes_{equipe}", 6)) / 10,  
-        safe_float(data.get(f"cartons_rouges_{equipe}", 2)) / 10,  
-        safe_float(data.get(f"joueurs_cles_absents_{equipe}", 0)) / 11,  
-        safe_float(data.get(f"motivation_{equipe}", 3)) / 5,  
-        safe_float(data.get(f"clean_sheets_gardien_{equipe}", 1)) / 10,  
-        safe_float(data.get(f"ratio_tirs_arretees_{equipe}", 0.75)),  
-        safe_float(data.get(f"victoires_domicile_{equipe}", 50)) / 100,  
-        safe_float(data.get(f"passes_longues_{equipe}", 50)) / 100,  
-        safe_float(data.get(f"dribbles_reussis_{equipe}", 10)) / 100,  
-        safe_float(data.get(f"ratio_tirs_cadres_{equipe}", 0.4)),  
-        safe_float(data.get(f"grandes_chances_manquees_{equipe}", 5)) / 100,  
-        safe_float(data.get(f"fautes_zones_dangereuses_{equipe}", 3)) / 100,  
-        safe_float(data.get(f"buts_corners_{equipe}", 2)) / 100,  
-        safe_float(data.get(f"jours_repos_{equipe}", 4)) / 10,  
-        safe_float(data.get(f"matchs_30_jours_{equipe}", 8)) / 10  
-    ]  
-    
-    lambda_base = np.prod(facteurs)  
-    return max(0.5, min(lambda_base, 3.0))  
-
-def calculer_probabilite_score_poisson(lambda_moyenne, k_buts):  
-    """Calcule la probabilité d'un score précis en utilisant la distribution de Poisson."""  
-    return (lambda_moyenne ** k_buts * math.exp(-lambda_moyenne)) / math.factorial(k_buts)  
-
-def predire_resultat_match_poisson(lambda_A, lambda_b, max_buts=5):  
-    """Prédit les résultats du match en utilisant le modèle de Poisson."""  
-    probabilites = np.zeros((max_buts + 1, max_buts + 1))  
-    
-    for buts_A in range(max_buts + 1):  
-        for buts_b in range(max_buts + 1):  
-            prob_A = calculer_probabilite_score_poisson(lambda_A, buts_A)  
-            prob_b = calculer_probabilite_score_poisson(lambda_b, buts_b)  
-            probabilites[buts_A, buts_b] = prob_A * prob_b  
-    
-    victoire_A = np.sum(probabilites[np.triu_indices(max_buts + 1, 1)])  
-    victoire_b = np.sum(probabilites[np.tril_indices(max_buts + 1, -1)])  
-    nul = probabilites.trace()  
-    
-    return {  
-        'Victoire Équipe A': victoire_A,  
-        'Victoire Équipe B': victoire_b,  
-        'Match Nul': nul  
-   }  
-
-def preparation_donnees(donnees):  
-    """Prépare les données pour l'entraînement des modèles."""  
-    X = []  
-    y = []  
-    
-    for donnee in donnees:  
-        features = [  
-            # Équipe A  
-            safe_float(donnee.get("score_rating_A", 65)) / 100,  
-            safe_float(donnee.get("buts_par_match_A", 1.0)),  
-            safe_float(donnee.get("buts_concedes_par_match_A", 1.5)),  
-            safe_float(donnee.get("possession_moyenne_A", 50.0)) / 100,  
-            safe_float(donnee.get("expected_but_A", 1.5)),  
-            safe_float(donnee.get("expected_concedes_A", 1.0)),  
-            safe_float(donnee.get("tirs_cadres_A", 100)) / 100,  
-            safe_float(donnee.get("grandes_chances_A", 20)) / 100,  
-            safe_float(donnee.get("passes_reussies_A", 350)) / 1000,  
-            safe_float(donnee.get("corners_A", 50)) / 100,  
-            safe_float(donnee.get("interceptions_A", 40)) / 100,  
-            safe_float(donnee.get("tacles_reussis_A", 35)) / 100,  
-            safe_float(donnee.get("fautes_A", 20)) / 100,  
-            safe_float(donnee.get("cartons_jaunes_A", 6)) / 10,  
-            safe_float(donnee.get("cartons_rouges_A", 2)) / 10,  
-            safe_float(donnee.get("joueurs_cles_absents_A", 0)) / 11,  
-            safe_float(donnee.get("motivation_A", 3)) / 5,  
-            safe_float(donnee.get("clean_sheets_gardien_A", 1)) / 10,  
-            safe_float(donnee.get("ratio_tirs_arretees_A", 0.75)),  
-            safe_float(donnee.get("victoires_domicile_A", 50)) / 100,  
-            safe_float(donnee.get("passes_longues_A", 50)) / 100,  
-            safe_float(donnee.get("dribbles_reussis_A", 10)) / 100,  
-            safe_float(donnee.get("ratio_tirs_cadres_A", 0.4)),  
-            safe_float(donnee.get("grandes_chances_manquees_A", 5)) / 100,  
-            safe_float(donnee.get("fautes_zones_dangereuses_A", 3)) / 100,  
-            safe_float(donnee.get("buts_corners_A", 2)) / 100,  
-            safe_float(donnee.get("jours_repos_A", 4)) / 10,  
-            safe_float(donnee.get("matchs_30_jours_A", 8)) / 10,  
-            
-            # Équipe B  
-            safe_float(donnee.get("score_rating_B", 65)) / 100,  
-            safe_float(donnee.get("buts_par_match_B", 1.0)),  
-            safe_float(donnee.get("buts_concedes_par_match_B", 1.5)),  
-            safe_float(donnee.get("possession_moyenne_B", 45.0)) / 100,  
-            safe_float(donnee.get("expected_but_B", 1.2)),  
-            safe_float(donnee.get("expected_concedes_B", 1.8)),  
-            safe_float(donnee.get("tirs_cadres_B", 100)) / 100,  
-            safe_float(donnee.get("grandes_chances_B", 20)) / 100,  
-            safe_float(donnee.get("passes_reussies_B", 350)) / 1000,  
-            safe_float(donnee.get("corners_B", 50)) / 100,  
-            safe_float(donnee.get("interceptions_B", 40)) / 100,  
-            safe_float(donnee.get("tacles_reussis_B", 35)) / 100,  
-            safe_float(donnee.get("fautes_B", 20)) / 100,  
-            safe_float(donnee.get("cartons_jaunes_B", 6)) / 10,  
-            safe_float(donnee.get("cartons_rouges_B", 2)) / 10,  
-            safe_float(donnee.get("joueurs_cles_absents_B", 0)) / 11,  
-            safe_float(donnee.get("motivation_B", 3)) / 5,  
-            safe_float(donnee.get("clean_sheets_gardien_B", 1)) / 10,  
-            safe_float(donnee.get("ratio_tirs_arretees_B", 0.65)),  
-            safe_float(donnee.get("victoires_exterieur_B", 40)) / 100,  
-            safe_float(donnee.get("passes_longues_B", 40)) / 100,  
-            safe_float(donnee.get("dribbles_reussis_B", 8)) / 100,  
-            safe_float(donnee.get("ratio_tirs_cadres_B", 0.35)),  
-            safe_float(donnee.get("grandes_chances_manquees_B", 6)) / 100,  
-            safe_float(donnee.get("fautes_zones_dangereuses_B", 4)) / 100,  
-            safe_float(donnee.get("buts_corners_B", 1)) / 100,  
-            safe_float(donnee.get("jours_repos_B", 3)) / 10,  
-            safe_float(donnee.get("matchs_30_jours_B", 9)) / 10  
-        ]  
-        
-        X.append(features)  
-        
-        # Définition de la cible (résultat du match)  
-        # 0: Défaite de l'équipe A, 1: Victoire de l'équipe A, 2: Match Nul  
-        resultat = donnee.get("resultat", 2)  
-        y.append(resultat)  
-    
-    return np.array(X), np.array(y)  
+# Initialisation du state  
+if 'data' not in st.session_state:  
+    st.session_state.data = {}  
 
 # Formulaire de saisie  
 with st.form("Données du Match"):  
     st.subheader("📊 Saisie des Données du Match")  
     
-    col1, col_second = st.columns(2)  
+    col1, col2 = st.columns(2)  
     
     with col1:  
         st.markdown("**Équipe A**")  
-        expected_but_A = st.number_input("📊 Expected Goals (xG)", value=1.8, key="xg_A")  
-        expected_concedes_A = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, key="xGA_A")  
-    
-    with col_second:  
+        st.session_state.data.update({  
+            "score_rating_A": st.number_input("⭐ Score Rating", value=70, key="rating_A"),  
+            "buts_par_match_A": st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A"),  
+            "buts_concedes_par_match_A": st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A"),  
+            "possession_moyenne_A": st.number_input("🎯 Possession Moyenne", value=55, key="possession_A"),  
+            "expected_but_A": st.number_input("📊 Expected Goals (xG)", value=1.8, key="xG_A"),  
+            "expected_concedes_A": st.number_input("📉 Expected Goals Against (xGA)", value=1.2, key="xGA_A"),  
+            "tirs_cadres_A": st.number_input("🎯 Tirs Cadrés", value=120, key="tirs_A"),  
+            "grandes_chances_A": st.number_input("🔥 Grandes Chances", value=25, key="chances_A"),  
+            "passes_reussies_A": st.number_input("🔄 Passes Réussies", value=400, key="passes_A"),  
+            "corners_A": st.number_input("🔄 Corners", value=60, key="corners_A"),  
+            "interceptions_A": st.number_input("🛡️ Interceptions", value=50, key="interceptions_A"),  
+            "tacles_reussis_A": st.number_input("🛡️ Tacles Réussis", value=40, key="tacles_A"),  
+            "fautes_A": st.number_input("⚠️ Fautes", value=15, key="fautes_A"),  
+            "cartons_jaunes_A": st.number_input("🟨 Cartons Jaunes", value=5, key="jaunes_A"),  
+            "cartons_rouges_A": st.number_input("🟥 Cartons Rouges", value=1, key="rouges_A"),  
+            "joueurs_cles_absents_A": st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_A"),  
+            "motivation_A": st.number_input("💪 Motivation", value=3, key="motivation_A"),  
+            "clean_sheets_gardien_A": st.number_input("🧤 Clean Sheets Gardien", value=2, key="clean_sheets_A"),  
+            "ratio_tirs_arretes_A": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.75, key="ratio_tirs_A"),  
+            "victoires_domicile_A": st.number_input("🏠 Victoires Domicile", value=60, key="victoires_A"),  
+            "passes_longues_A": st.number_input("🎯 Passes Longes", value=50, key="passes_longues_A"),  
+            "dribbles_reussis_A": st.number_input("🔥 Dribbles Réussis", value=10, key="dribbles_A"),  
+            "ratio_tirs_cadres_A": st.number_input("🎯 Ratio Tirs Cadrés", value=0.4, key="ratio_tirs_cadres_A"),  
+            "grandes_chances_manquees_A": st.number_input("🔥 Grandes Chances Manquées", value=5, key="chances_manquees_A"),  
+            "fautes_zones_dangereuses_A": st.number_input("⚠️ Fautes Zones Dangereuses", value=3, key="fautes_zones_A"),  
+            "buts_corners_A": st.number_input("⚽ Buts Corners", value=2, key="buts_corners_A"),  
+            "jours_repos_A": st.number_input("⏳ Jours de Repos", value=4, key="repos_A"),  
+            "matchs_30_jours_A": st.number_input("📅 Matchs (30 jours)", value=8, key="matchs_A")  
+        })  
+
+    with col2:  
         st.markdown("**Équipe B**")  
-        expected_but_B = st.number_input("📊 Expected Goals (xG)", value=1.2, key="xg_B")  
-        expected_concedes_B = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, key="xGA_B")  
-    
+        st.session_state.data.update({  
+            "score_rating_B": st.number_input("⭐ Score Rating", value=65, key="rating_B"),  
+            "buts_par_match_B": st.number_input("⚽ Buts Marqués", value=1.0, key="buts_B"),  
+            "buts_concedes_par_match_B": st.number_input("🥅 Buts Concédés", value=1.5, key="concedes_B"),  
+            "possession_moyenne_B": st.number_input("🎯 Possession Moyenne", value=45, key="possession_B"),  
+            "expected_but_B": st.number_input("📊 Expected Goals (xG)", value=1.2, key="xG_B"),  
+            "expected_concedes_B": st.number_input("📉 Expected Goals Against (xGA)", value=1.8, key="xGA_B"),  
+            "tirs_cadres_B": st.number_input("🎯 Tirs Cadrés", value=100, key="tirs_B"),  
+            "grandes_chances_B": st.number_input("🔥 Grandes Chances", value=20, key="chances_B"),  
+            "passes_reussies_B": st.number_input("🔄 Passes Réussies", value=350, key="passes_B"),  
+            "corners_B": st.number_input("🔄 Corners", value=50, key="corners_B"),  
+            "interceptions_B": st.number_input("🛡️ Interceptions", value=40, key="interceptions_B"),  
+            "tacles_reussis_B": st.number_input("🛡️ Tacles Réussis", value=35, key="tacles_B"),  
+            "fautes_B": st.number_input("⚠️ Fautes", value=20, key="fautes_B"),  
+            "cartons_jaunes_B": st.number_input("🟨 Cartons Jaunes", value=6, key="jaunes_B"),  
+            "cartons_rouges_B": st.number_input("🟥 Cartons Rouges", value=2, key="rouges_B"),  
+            "joueurs_cles_absents_B": st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_B"),  
+            "motivation_B": st.number_input("💪 Motivation", value=3, key="motivation_B"),  
+            "clean_sheets_gardien_B": st.number_input("🧤 Clean Sheets Gardien", value=1, key="clean_sheets_B"),  
+            "ratio_tirs_arretes_B": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.65, key="ratio_tirs_B"),  
+            "victoires_exterieur_B": st.number_input("🏠 Victoires Extérieur", value=40, key="victoires_B"),  
+            "passes_longues_B": st.number_input("🎯 Passes Longes", value=40, key="passes_longues_B"),  
+            "dribbles_reussis_B": st.number_input("🔥 Dribbles Réussis", value=8, key="dribbles_B"),  
+            "ratio_tirs_cadres_B": st.number_input("🎯 Ratio Tirs Cadrés", value=0.35, key="ratio_tirs_cadres_B"),  
+            "grandes_chances_manquees_B": st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B"),  
+            "fautes_zones_dangereuses_B": st.number_input("⚠️ Fautes Zones Dangereuses", value=4, key="fautes_zones_B"),  
+            "buts_corners_B": st.number_input("⚽ Buts Corners", value=1, key="buts_corners_B"),  
+            "jours_repos_B": st.number_input("⏳ Jours de Repos", value=3, key="repos_B"),  
+            "matchs_30_jours_B": st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
+        })  
+
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
 # Section d'analyse et de prédiction  
 if submitted:  
     try:  
+        # Génération de données historiques  
+        donnees_historiques = generer_donnees_historiques_defaut()  
+        
+        # Préparation des données  
+        X_train, y_train = preparer_donnees_entrainement(donnees_historiques)  
+        
+        # Préparation des données du match actuel  
+        X_lr = preparer_donnees_regression_logistique(st.session_state.data)  
+        X_rf = preparer_donnees_random_forest(st.session_state.data)  
+        
+        # Modèles  
+        modeles = {  
+            "Régression Logistique": LogisticRegression(max_iter=1000),  
+            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
+        }  
+        
         # Calcul des lambda pour Poisson  
-        lambda_A = calculer_lambda_attendus({"expected_but_A": expected_but_A, "expected_concedes_A": expected_concedes_A}, "A")  
-        lambda_B = calculer_lambda_attendus({"expected_but_B": expected_but_B, "expected_concedes_B": expected_concedes_B}, "B")  
+        lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
+        lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
         
         # Résultats Poisson  
         resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
@@ -630,49 +561,45 @@ if submitted:
         
         # Probabilités de Poisson  
         st.markdown("### 📊 Probabilités de Poisson")  
-        col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
-        with col_victoire_A:  
+        col_poisson_A, col_poisson_B, col_poisson_nul = st.columns(3)  
+        with col_poisson_A:  
             st.metric("🏆 Victoire Équipe A", f"{resultats_poisson['Victoire Équipe A']:.2%}")  
-        with col_victoire_B:  
+        with col_poisson_B:  
             st.metric("🏆 Victoire Équipe B", f"{resultats_poisson['Victoire Équipe B']:.2%}")  
-        with col_nul:  
+        with col_poisson_nul:  
             st.metric("🤝 Match Nul", f"{resultats_poisson['Match Nul']:.2%}")  
         
-        # Modèles  
-        modeles = {  
-            "Régression Logistique": LogisticRegression(max_iter=1000),  
-            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
-        }  
-        
-        # Génération des données fictives  
-        x, y = preparation_donnees([{  
-            "expected_but_A": expected_but_A,  
-            "expected_concedes_A": expected_concedes_A,  
-            "expected_but_B": expected_but_B,  
-            "expected_concedes_B": expected_concedes_B  
-        }])  
-        X_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)  
-        
-        # Validation croisée et prédictions  
+        # Résultats des autres modèles  
         st.markdown("### 🤖 Performance des Modèles")  
         resultats_modeles = {}  
         for nom, modele in modeles.items():  
             # Validation croisée stratifiée  
-            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
-            scores = cross_val_score(modele, X_train, y_train, cv=cv, scoring='accuracy')  
+            resultats_cv = validation_croisee_stratifiee(  
+                X_train,   
+                y_train,   
+                modele  
+            )  
+            
+            # Stockage des résultats  
+            resultats_modeles[nom] = resultats_cv  
             
             # Affichage des métriques de validation croisée  
             st.markdown(f"#### {nom}")  
             col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
             with col_accuracy:  
-                st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
+                st.metric("🎯 Accuracy", f"{resultats_cv['accuracy']:.2%}")  
+            with col_precision:  
+                st.metric("🎯 Precision", f"{resultats_cv['precision']:.2%}")  
+            with col_recall:  
+                st.metric("🎯 Recall", f"{resultats_cv['recall']:.2%}")  
+            with col_f1:  
+                st.metric("🎯 F1-Score", f"{resultats_cv['f1_score']:.2%}")  
             
             # Prédiction finale  
             modele.fit(X_train, y_train)  
-            proba = modele.predict_proba(x_test)[0]  
+            proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
             
-            # Affichage des prédictions  
-            st.markdown("**📊 Prédiction**")  
+            st.markdown("**📊 Prédictions**")  
             col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
             with col_victoire_A:  
                 st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
@@ -681,7 +608,55 @@ if submitted:
             with col_nul:  
                 st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
         
+        # Analyse finale  
+        probabilite_victoire_A = (  
+            resultats_poisson['Victoire Équipe A'] +   
+            (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
+            (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
+        ) / 2  
+        
+        st.subheader("🏆 Résultat Final")  
+        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
+        
+        # Visualisation des performances des modèles  
+        st.subheader("📈 Comparaison des Performances des Modèles")  
+        
+        # Préparation des données pour le graphique  
+        metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
+        
+        # Création du DataFrame  
+        df_performances = pd.DataFrame({  
+            nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
+            for nom in resultats_modeles.keys()  
+        }, index=metriques)  
+        
+        # Affichage du DataFrame  
+        st.dataframe(df_performances)  
+        
+        # Graphique de comparaison  
+        fig, ax = plt.subplots(figsize=(10, 6))  
+        df_performances.T.plot(kind='bar', ax=ax)  
+        plt.title("Comparaison des Performances des Modèles")  
+        plt.xlabel("Modèles")  
+        plt.ylabel("Score")  
+        plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
+        plt.tight_layout()  
+        st.pyplot(fig)  
+        
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
+        st.error(traceback.format_exc())  
 
-# Fin du code  
+# Pied de page informatif  
+st.markdown("""  
+### 🤔 Comment Interpréter ces Résultats ?  
+
+- **📊 Prédiction des Buts (Poisson)** : Basée sur les statistiques historiques et les caractéristiques des équipes.  
+- **🤖 Performance des Modèles** :   
+  - **Régression Logistique** : Modèle linéaire simple.  
+  - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
+- **📈 K-Fold Cross-Validation** : Cette méthode permet d'évaluer la performance des modèles en divisant les données en plusieurs sous-ensembles (folds). Chaque fold est utilisé comme ensemble de test, tandis que les autres servent à l'entraînement. Cela garantit une estimation plus robuste de la performance.  
+- **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
+
+⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
+""")
