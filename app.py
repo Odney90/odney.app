@@ -63,7 +63,7 @@ with st.form("data_form"):
 
     # Bouton de soumission  
     submitted = st.form_submit_button("🔍 Analyser le Match")
-    if submitted:  
+ if submitted:  
     try:  
         # Génération des données fictives  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  
