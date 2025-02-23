@@ -218,9 +218,8 @@ with tabs[0]:
                 buffer = io.BytesIO()  
                 doc.save(buffer)  
                 buffer.seek(0)  
-                st.download_button("Télécharger le rapport", buffer, "rapport_predictions.docx")  
-
-            # Tableau synthétique des résultats  
+                st.download_button("Télécharger le rapport", buffer, "rapport_predictions.docx")
+                            # Tableau synthétique des résultats  
             st.subheader("📊 Tableau Synthétique des Résultats")  
             data = {  
                 "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
@@ -242,7 +241,7 @@ with tabs[0]:
 
             # Message rappel sur le Value Bet  
             st.markdown("""  
-             ### 💡 Qu'est-ce qu'un Value Bet ?  
+            ### 💡 Qu'est-ce qu'un Value Bet ?  
             Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
             Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
             """)  
