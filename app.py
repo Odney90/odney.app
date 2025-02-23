@@ -336,11 +336,16 @@ with tab1:
                 key="forme_recente_B_nuls_input",  
                 step=1  
             )  
-                st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
+            st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
                 "❌ Défaites (B) sur les 5 derniers matchs",  
                 value=safe_int(st.session_state.data.get("forme_recente_B_defaites", 0)),  
                 key="forme_recente_B_defaites_input",  
                 step=1  
+            )  
+            submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
+
+            if submitted_B:  
+                st.success("Données de l'Équipe B enregistrées avec succès !")
             )  
             submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
 
