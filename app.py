@@ -198,8 +198,68 @@ if st.button("🔮 Lancer les Prédictions"):
             st.write(f"⚽ Buts Prédits - Équipe A : {prediction_poisson['buts_predits_A']}")  
             st.write(f"⚽ Buts Prédits - Équipe B : {prediction_poisson['buts_predits_B']}")  
             st.write("📊 Probabilité de Buts (en %) :")  
-
-            # Affichage des probabilités dans un tableau  
+            
+         # Affichage des probabilités dans un tableau  
             st.table({  
                 "Nombre de Buts": [0, 1, 2, 3, 4],  
-                "Équipe A (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts
+                "Équipe A (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_A"]],  
+                "Équipe B (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_B"]],  
+            })  
+
+        # Comparaison des probabilités prédites avec les probabilités implicites  
+        st.subheader("🔍 Comparaison des Probabilités")  
+        proba_implicite_A = cote_to_probabilite_implicite(st.session_state.data["cote_victoire_X"])  
+        proba_implicite_nul = cote_to_probabilite_implicite(st.session_state.data["cote_nul"])  
+        proba_implicite_B = cote_to_probabilite_implicite(st.session_state.data["cote_victoire_Z"])  
+
+        # Calcul des probabilités prédites (simplifié pour l'exemple)  
+        proba_predite_A = prediction_poisson["proba_buts_A"][1]  # Probabilité de 1 but pour l'équipe A  
+        proba_predite_B = prediction_poisson["proba_buts_B"][1]  # Probabilité de 1 but pour l'équipe B  
+        proba_predite_nul = 1 - (proba_predite_A + proba_predite_B)  
+
+        # Affichage des comparaisons  
+        st.write("### Probabilités Prédites vs Implicites")  
+        st.write(f"**Équipe A** : Prédite = {proba_predite_A:.2f}% | Implicite = {proba_implicite_A:.2f}%")  
+        st.write(f"**Match Nul** : Prédite = {proba_predite_nul:.2f}% | Implicite = {proba_implicite_nul:.2f}%")  
+        st.write(f"**Équipe B** : Prédite = {proba_predite_B:.2f}% | Implicite = {proba_implicite_B:.2f}%")  
+
+        # Détection des value bets  
+        st.subheader("💎 Value Bets")  
+        value_bet_A = proba_predite_A > proba_implicite_A  
+        value_bet_nul = proba_predite_nul > proba_implicite_nul  
+        value_bet_B = proba_predite_B > proba_implicite_B  
+
+        # Affichage des value bets avec des couleurs  
+        if value_bet_A:  
+            st.success("✅ Value Bet détectée pour l'Équipe A !")  
+        else:  
+            st.error("❌ Pas de Value Bet pour l'Équipe A.")  
+
+        if value_bet_nul:  
+            st.success("✅ Value Bet détectée pour le Match Nul !")  
+        else:  
+            st.error("❌ Pas de Value Bet pour le Match Nul.")  
+
+        if value_bet_B:  
+            st.success("✅ Value Bet détectée pour l'Équipe B !")  
+        else:  
+            st.error("❌ Pas de Value Bet pour l'Équipe B.")  
+
+        # Calcul des mises optimales (simplifié pour l'exemple)  
+        st.subheader("💰 Mises Optimales")  
+        bankroll = safe_float(st.session_state.data["bankroll"])  
+        if bankroll > 0:  
+            mise_A = (proba_predite_A / 100) * bankroll  
+            mise_nul = (proba_predite_nul / 100) * bankroll  
+            mise_B = (proba_predite_B / 100) * bankroll  
+
+            st.write(f"**Mise sur Équipe A** : {mise_A:.2f} €")  
+            st.write(f"**Mise sur Match Nul** : {mise_nul:.2f} €")  
+            st.write(f"**Mise sur Équipe B** : {mise_B:.2f} €")  
+        else:  
+            st.warning("⚠️ Veuillez entrer une bankroll valide pour calculer les mises optimales.")  
+
+    except Exception as e:  
+        st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
+else:  
+    st.warning("⚠️ Les prédictions ne sont pas encore disponibles ou une erreur s'est produite. Veuillez lancer les prédictions d'abord.")
