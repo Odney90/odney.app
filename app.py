@@ -23,73 +23,21 @@ with st.form("data_form"):
     st.markdown("### Équipe A")  
     col1, col2 = st.columns(2)  
     with col1:  
-        st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70, key="rating_A")  
-        st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A")  
-        st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A")  
-        st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55, key="possession_A")  
         st.session_state.data['expected_but_A'] = st.number_input("📊 Expected Goals (xG)", value=1.5, key="xG_A")  
-        st.session_state.data['expected_concedes_A'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, key="xGA_A")  
+        st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A")  
         st.session_state.data['tirs_cadres_A'] = st.number_input("🎯 Tirs Cadrés", value=120, key="tirs_A")  
-        st.session_state.data['tirs_non_cadres_A'] = st.number_input("🎯 Tirs Non Cadrés", value=80, key="tirs_non_cadres_A")  
         st.session_state.data['grandes_chances_A'] = st.number_input("🔥 Grandes Chances", value=25, key="chances_A")  
-        st.session_state.data['passes_reussies_A'] = st.number_input("🔄 Passes Réussies", value=400, key="passes_A")  
         st.session_state.data['corners_A'] = st.number_input("🔄 Corners", value=60, key="corners_A")  
-        st.session_state.data['interceptions_A'] = st.number_input("🛡️ Interceptions", value=50, key="interceptions_A")  
-        st.session_state.data['tacles_reussis_A'] = st.number_input("🛡️ Tacles Réussis", value=40, key="tacles_A")  
-        st.session_state.data['fautes_A'] = st.number_input("⚠️ Fautes", value=15, key="fautes_A")  
-        st.session_state.data['fautes_strategiques_A'] = st.number_input("⚠️ Fautes Stratégiques", value=3, key="fautes_strategiques_A")  
-        st.session_state.data['cartons_jaunes_A'] = st.number_input("🟨 Cartons Jaunes", value=5, key="jaunes_A")  
-        st.session_state.data['cartons_rouges_A'] = st.number_input("🟥 Cartons Rouges", value=1, key="rouges_A")  
-        st.session_state.data['joueurs_cles_absents_A'] = st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_A")  
-        st.session_state.data['motivation_A'] = st.number_input("💪 Motivation", value=4, key="motivation_A")  
-        st.session_state.data['clean_sheets_gardien_A'] = st.number_input("🧤 Clean Sheets Gardien", value=2, key="clean_sheets_A")  
-        st.session_state.data['ratio_tirs_arretes_A'] = st.number_input("🧤 Ratio Tirs Arrêtés", value=0.7, key="ratio_tirs_A")  
-        st.session_state.data['victoires_domicile_A'] = st.number_input("🏠 Victoires Domicile", value=50, key="victoires_A")  
-        st.session_state.data['passes_longues_A'] = st.number_input("🎯 Passes Longes", value=60, key="passes_longues_A")  
-        st.session_state.data['dribbles_reussis_A'] = st.number_input("🔥 Dribbles Réussis", value=12, key="dribbles_A")  
         st.session_state.data['ratio_tirs_cadres_A'] = st.number_input("🎯 Ratio Tirs Cadrés", value=0.4, key="ratio_tirs_cadres_A")  
-        st.session_state.data['grandes_chances_manquees_A'] = st.number_input("🔥 Grandes Chances Manquées", value=5, key="chances_manquees_A")  
-        st.session_state.data['fautes_zones_dangereuses_A'] = st.number_input("⚠️ Fautes Zones Dangereuses", value=3, key="fautes_zones_A")  
-        st.session_state.data['buts_corners_A'] = st.number_input("⚽ Buts Corners", value=2, key="buts_corners_A")  
-        st.session_state.data['jours_repos_A'] = st.number_input("⏳ Jours de Repos", value=4, key="repos_A")  
-        st.session_state.data['matchs_30_jours_A'] = st.number_input("📅 Matchs (30 jours)", value=8, key="matchs_A")  
-        st.session_state.data['conditions_meteo_A'] = st.selectbox("🌤️ Conditions Météo", ["Ensoleillé", "Pluie", "Neige"], key="meteo_A")  
-        st.session_state.data['blessures_A'] = st.number_input("🚑 Blessures", value=1, key="blessures_A")  
 
     with col2:  
         st.markdown("### Équipe B")  
-        st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65, key="rating_B")  
-        st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, key="buts_B")  
-        st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, key="concedes_B")  
-        st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45, key="possession_B")  
         st.session_state.data['expected_but_B'] = st.number_input("📊 Expected Goals (xG)", value=1.2, key="xG_B")  
-        st.session_state.data['expected_concedes_B'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, key="xGA_B")  
+        st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, key="buts_B")  
         st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100, key="tirs_B")  
-        st.session_state.data['tirs_non_cadres_B'] = st.number_input("🎯 Tirs Non Cadrés", value=70, key="tirs_non_cadres_B")  
         st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20, key="chances_B")  
-        st.session_state.data['passes_reussies_B'] = st.number_input("🔄 Passes Réussies", value=350, key="passes_B")  
         st.session_state.data['corners_B'] = st.number_input("🔄 Corners", value=50, key="corners_B")  
-        st.session_state.data['interceptions_B'] = st.number_input("🛡️ Interceptions", value=40, key="interceptions_B")  
-        st.session_state.data['tacles_reussis_B'] = st.number_input("🛡️ Tacles Réussis", value=35, key="tacles_B")  
-        st.session_state.data['fautes_B'] = st.number_input("⚠️ Fautes", value=20, key="fautes_B")  
-        st.session_state.data['fautes_strategiques_B'] = st.number_input("⚠️ Fautes Stratégiques", value=4, key="fautes_strategiques_B")  
-        st.session_state.data['cartons_jaunes_B'] = st.number_input("🟨 Cartons Jaunes", value=6, key="jaunes_B")  
-        st.session_state.data['cartons_rouges_B'] = st.number_input("🟥 Cartons Rouges", value=2, key="rouges_B")  
-        st.session_state.data['joueurs_cles_absents_B'] = st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_B")  
-        st.session_state.data['motivation_B'] = st.number_input("💪 Motivation", value=3, key="motivation_B")  
-        st.session_state.data['clean_sheets_gardien_B'] = st.number_input("🧤 Clean Sheets Gardien", value=1, key="clean_sheets_B")  
-        st.session_state.data['ratio_tirs_arretes_B'] = st.number_input("🧤 Ratio Tirs Arrêtés", value=0.65, key="ratio_tirs_B")  
-        st.session_state.data['victoires_exterieur_B'] = st.number_input("🏠 Victoires Extérieur", value=40, key="victoires_B")  
-        st.session_state.data['passes_longues_B'] = st.number_input("🎯 Passes Longes", value=40, key="passes_longues_B")  
-        st.session_state.data['dribbles_reussis_B'] = st.number_input("🔥 Dribbles Réussis", value=8, key="dribbles_B")  
         st.session_state.data['ratio_tirs_cadres_B'] = st.number_input("🎯 Ratio Tirs Cadrés", value=0.35, key="ratio_tirs_cadres_B")  
-        st.session_state.data['grandes_chances_manquees_B'] = st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B")  
-        st.session_state.data['fautes_zones_dangereuses_B'] = st.number_input("⚠️ Fautes Zones Dangereuses", value=4, key="fautes_zones_B")  
-        st.session_state.data['buts_corners_B'] = st.number_input("⚽ Buts Corners", value=1, key="buts_corners_B")  
-        st.session_state.data['jours_repos_B'] = st.number_input("⏳ Jours de Repos", value=3, key="repos_B")  
-        st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
-        st.session_state.data['conditions_meteo_B'] = st.selectbox("🌤️ Conditions Météo", ["Ensoleillé", "Pluie", "Neige"], key="meteo_B")  
-        st.session_state.data['blessures_B'] = st.number_input("🚑 Blessures", value=2, key="blessures_B")  
 
     # Bouton de soumission dans le formulaire  
     submitted = st.form_submit_button("🔍 Analyser le Match")  
@@ -98,8 +46,21 @@ with st.form("data_form"):
 if submitted:  
     try:  
         # Préparation des données pour Poisson  
-        lambda_A = st.session_state.data['expected_but_A']  # Taux de buts de l'équipe A (xG)  
-        lambda_B = st.session_state.data['expected_but_B']  # Taux de buts de l'équipe B (xG)  
+        lambda_A = (  
+            st.session_state.data['expected_but_A']  # xG  
+            + st.session_state.data['buts_par_match_A']  # Buts marqués  
+            + st.session_state.data['tirs_cadres_A'] * 0.1  # Tirs cadrés (pondération)  
+            + st.session_state.data['grandes_chances_A'] * 0.2  # Grandes chances (pondération)  
+            + st.session_state.data['corners_A'] * 0.05  # Corners (pondération)  
+        ) / 3  # Normalisation  
+
+        lambda_B = (  
+            st.session_state.data['expected_but_B']  # xG  
+            + st.session_state.data['buts_par_match_B']  # Buts marqués  
+            + st.session_state.data['tirs_cadres_B'] * 0.1  # Tirs cadrés (pondération)  
+            + st.session_state.data['grandes_chances_B'] * 0.2  # Grandes chances (pondération)  
+            + st.session_state.data['corners_B'] * 0.05  # Corners (pondération)  
+        ) / 3  # Normalisation  
 
         # Prédiction des buts avec Poisson  
         buts_A = poisson.rvs(mu=lambda_A, size=1000)  # 1000 simulations pour l'équipe A  
@@ -177,4 +138,36 @@ if submitted:
         # Création du DataFrame  
         df_performances = pd.DataFrame({  
             nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
-            for nom in resultats_modeles.keys()
+            for nom in resultats_modeles.keys()  
+        }, index=metriques)  
+
+        # Affichage du DataFrame  
+        st.dataframe(df_performances)  
+
+        # Graphique de comparaison  
+        fig, ax = plt.subplots(figsize=(10, 6))  
+        df_performances.T.plot(kind='bar', ax=ax)  
+        plt.title("Comparaison des Performances des Modèles")  
+        plt.xlabel("Modèles")  
+        plt.ylabel("Score")  
+        plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
+        plt.tight_layout()  
+        st.pyplot(fig)  
+
+    except Exception as e:  
+        st.error(f"Erreur lors de la prédiction : {e}")  
+        st.error(traceback.format_exc())  
+
+# Pied de page informatif  
+st.markdown("""  
+### 🤔 Comment Interpréter ces Résultats ?  
+
+- **📊 Prédiction des Buts (Poisson)** : Basée sur les Expected Goals (xG) des équipes.  
+- **🤖 Performance des Modèles** :   
+  - **Régression Logistique** : Modèle linéaire simple.  
+  - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
+- **📈 K-Fold Cross-Validation** : Cette méthode permet d'évaluer la performance des modèles en divisant les données en plusieurs sous-ensembles (folds). Chaque fold est utilisé comme ensemble de test, tandis que les autres servent à l'entraînement. Cela garantit une estimation plus robuste de la performance.  
+- **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
+
+⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
+""")
