@@ -70,6 +70,16 @@ with tab1:
     # Statistiques de l'Équipe A  
     with col_a:  
         st.subheader("Équipe A")  
+        st.session_state.data["grandes_chances_A"] = st.slider(  
+            "Grandes Chances (A)",  
+            min_value=0,  
+            max_value=50,  
+            value=int(st.session_state.data["grandes_chances_A"]),  # Convertir en entier  
+        )  
+
+    # Statistiques de l'Équipe A  
+    with col_a:  
+        st.subheader("Équipe A")  
         st.session_state.data["tirs_cadres_par_match_A"] = st.slider("Tirs Cadres par Match (A)", 0.0, 1.0, st.session_state.data["tirs_cadres_par_match_A"])  
         st.session_state.data["grandes_chances_A"] = st.slider("Grandes Chances (A)", 0, 50, st.session_state.data["grandes_chances_A"])  
         st.session_state.data["passes_reussies_par_match_A"] = st.slider("Passes Réussies par Match (A)", 0.0, 50.0, st.session_state.data["passes_reussies_par_match_A"])  
