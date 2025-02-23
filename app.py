@@ -34,39 +34,58 @@ with st.form("Données des Équipes"):
     st.subheader("⚽ Données de l'Équipe A")  
     st.session_state.data = {  
         "score_rating_A": st.number_input("📊 Score Rating (A)", value=0.0, key="score_rating_A_input"),  
+        "tirs_cadres_par_match_A": st.number_input("🎯 Tirs Cadrés par Match (A)", value=0.0, key="tirs_cadres_par_match_A_input"),  
+        "grandes_chances_A": st.number_input("🔥 Grandes Chances (A)", value=0, key="grandes_chances_A_input"),  
+        "passes_reussies_par_match_A": st.number_input("🎯 Passes Réussies par Match (A)", value=0.0, key="passes_reussies_par_match_A_input"),  
+        "centres_reussies_par_match_A": st.number_input("🔄 Centres Réussies par Match (A)", value=0.0, key="centres_reussies_par_match_A_input"),  
+        "dribbles_reussis_par_match_A": st.number_input("⚡ Dribbles Réussis par Match (A)", value=0.0, key="dribbles_reussis_par_match_A_input"),  
+        "buts_attendus_concedes_A": st.number_input("🚫 Buts Attendus Concédés (A)", value=0.0, key="buts_attendus_concedes_A_input"),  
+        "interceptions_A": st.number_input("🛑 Interceptions par Match (A)", value=0.0, key="interceptions_A_input"),  
+        "tacles_reussis_par_match_A": st.number_input("🛡️ Tacles Réussis par Match (A)", value=0.0, key="tacles_reussis_par_match_A_input"),  
+        "penalties_concedees_A": st.number_input("⚠️ Pénalties Concédées (A)", value=0, key="penalties_concedees_A_input"),  
+        "fautes_par_match_A": st.number_input("🚩 Fautes par Match (A)", value=0.0, key="fautes_par_match_A_input"),  
         "motivation_A": st.number_input("💪 Motivation (A)", value=0, key="motivation_A_input"),  
         "buts_marques_A": st.number_input("⚽ Buts Marqués par Match (A)", value=0.0, key="buts_marques_A_input"),  
         "tirs_par_match_A": st.number_input("🎯 Tirs par Match (A)", value=0.0, key="tirs_par_match_A_input"),  
         "possession_moyenne_A": st.number_input("⏳ Possession (%) (A)", value=0.0, key="possession_moyenne_A_input"),  
         "corners_par_match_A": st.number_input("🔄 Corners par Match (A)", value=0.0, key="corners_par_match_A_input"),  
-        "interceptions_A": st.number_input("🛑 Interceptions par Match (A)", value=0.0, key="interceptions_A_input"),  
-        "historique_victoires_A": st.number_input("🏆 Victoires Historiques (A)", value=0.0, key="historique_victoires_A_input"),  
-        "historique_nuls": st.number_input("➖ Nuls Historiques", value=0.0, key="historique_nuls_input"),  
         "forme_recente_A_victoires": st.number_input("✅ Victoires (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_victoires_input"),  
         "forme_recente_A_nuls": st.number_input("➖ Nuls (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_nuls_input"),  
         "forme_recente_A_defaites": st.number_input("❌ Défaites (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_defaites_input"),  
+        "historique_victoires_A": st.number_input("🏆 Victoires Historiques (A)", value=0, key="historique_victoires_A_input"),  
     }  
 
     st.subheader("⚽ Données de l'Équipe B")  
     st.session_state.data.update({  
         "score_rating_B": st.number_input("📊 Score Rating (B)", value=0.0, key="score_rating_B_input"),  
+        "tirs_cadres_par_match_B": st.number_input("🎯 Tirs Cadrés par Match (B)", value=0.0, key="tirs_cadres_par_match_B_input"),  
+        "grandes_chances_B": st.number_input("🔥 Grandes Chances (B)", value=0, key="grandes_chances_B_input"),  
+        "passes_reussies_par_match_B": st.number_input("🎯 Passes Réussies par Match (B)", value=0.0, key="passes_reussies_par_match_B_input"),  
+        "centres_reussies_par_match_B": st.number_input("🔄 Centres Réussies par Match (B)", value=0.0, key="centres_reussies_par_match_B_input"),  
+        "dribbles_reussis_par_match_B": st.number_input("⚡ Dribbles Réussis par Match (B)", value=0.0, key="dribbles_reussis_par_match_B_input"),  
+        "buts_attendus_concedes_B": st.number_input("🚫 Buts Attendus Concédés (B)", value=0.0, key="buts_attendus_concedes_B_input"),  
+        "interceptions_B": st.number_input("🛑 Interceptions par Match (B)", value=0.0, key="interceptions_B_input"),  
+        "tacles_reussis_par_match_B": st.number_input("🛡️ Tacles Réussis par Match (B)", value=0.0, key="tacles_reussis_par_match_B_input"),  
+        "penalties_concedees_B": st.number_input("⚠️ Pénalties Concédées (B)", value=0, key="penalties_concedees_B_input"),  
+        "fautes_par_match_B": st.number_input("🚩 Fautes par Match (B)", value=0.0, key="fautes_par_match_B_input"),  
         "motivation_B": st.number_input("💪 Motivation (B)", value=0, key="motivation_B_input"),  
         "buts_marques_B": st.number_input("⚽ Buts Marqués par Match (B)", value=0.0, key="buts_marques_B_input"),  
         "tirs_par_match_B": st.number_input("🎯 Tirs par Match (B)", value=0.0, key="tirs_par_match_B_input"),  
         "possession_moyenne_B": st.number_input("⏳ Possession (%) (B)", value=0.0, key="possession_moyenne_B_input"),  
         "corners_par_match_B": st.number_input("🔄 Corners par Match (B)", value=0.0, key="corners_par_match_B_input"),  
-        "interceptions_B": st.number_input("🛑 Interceptions par Match (B)", value=0.0, key="interceptions_B_input"),  
-        "historique_victoires_B": st.number_input("🏆 Victoires Historiques (B)", value=0.0, key="historique_victoires_B_input"),  
         "forme_recente_B_victoires": st.number_input("✅ Victoires (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_victoires_input"),  
         "forme_recente_B_nuls": st.number_input("➖ Nuls (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_nuls_input"),  
         "forme_recente_B_defaites": st.number_input("❌ Défaites (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_defaites_input"),  
+        "historique_victoires_B": st.number_input("🏆 Victoires Historiques (B)", value=0, key="historique_victoires_B_input"),  
+        "historique_nuls": st.number_input("➖ Nuls Historiques", value=0, key="historique_nuls_input"),  
     })  
 
     st.subheader("🎰 Cotes du Match")  
     st.session_state.data.update({  
-        "cote_victoire_X": st.number_input("💰 Cote Victoire Équipe A", value=1.0, key="cote_victoire_X_input"),  
-        "cote_nul": st.number_input("💰 Cote Match Nul", value=1.0, key="cote_nul_input"),  
-        "cote_victoire_Z": st.number_input("💰 Cote Victoire Équipe B", value=1.0, key="cote_victoire_Z_input"),  
+        "cote_victoire_X": st.number_input("💰 Cote Victoire Équipe A", value=0.0, key="cote_victoire_X_input"),  
+        "cote_nul": st.number_input("💰 Cote Match Nul", value=0.0, key="cote_nul_input"),  
+        "cote_victoire_Z": st.number_input("💰 Cote Victoire Équipe B", value=0.0, key="cote_victoire_Z_input"),  
+        "bankroll": st.number_input("💰 Bankroll", value=0.0, key="bankroll_input"),  
     })  
 
     submitted = st.form_submit_button("💾 Enregistrer les Données")  
@@ -85,21 +104,37 @@ if st.button("🔮 Lancer les Prédictions"):
             [  
                 safe_float(st.session_state.data["score_rating_A"]),  
                 safe_float(st.session_state.data["score_rating_B"]),  
-                safe_float(st.session_state.data["possession_moyenne_A"]),  
-                safe_float(st.session_state.data["possession_moyenne_B"]),  
-                safe_int(st.session_state.data["motivation_A"]),  
-                safe_int(st.session_state.data["motivation_B"]),  
-                safe_float(st.session_state.data["tirs_par_match_A"]),  
-                safe_float(st.session_state.data["tirs_par_match_B"]),  
-                safe_float(st.session_state.data["corners_par_match_A"]),  
-                safe_float(st.session_state.data["corners_par_match_B"]),  
+                safe_float(st.session_state.data["tirs_cadres_par_match_A"]),  
+                safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
+                safe_int(st.session_state.data["grandes_chances_A"]),  
+                safe_int(st.session_state.data["grandes_chances_B"]),  
+                safe_float(st.session_state.data["passes_reussies_par_match_A"]),  
+                safe_float(st.session_state.data["passes_reussies_par_match_B"]),  
+                safe_float(st.session_state.data["centres_reussies_par_match_A"]),  
+                safe_float(st.session_state.data["centres_reussies_par_match_B"]),  
+                safe_float(st.session_state.data["dribbles_reussis_par_match_A"]),  
+                safe_float(st.session_state.data["dribbles_reussis_par_match_B"]),  
+                safe_float(st.session_state.data["buts_attendus_concedes_A"]),  
+                safe_float(st.session_state.data["buts_attendus_concedes_B"]),  
                 safe_float(st.session_state.data["interceptions_A"]),  
                 safe_float(st.session_state.data["interceptions_B"]),  
-                safe_float(st.session_state.data["historique_victoires_A"]),  
-                safe_float(st.session_state.data["historique_victoires_B"]),  
-                safe_float(st.session_state.data["historique_nuls"]),  
+                safe_float(st.session_state.data["tacles_reussis_par_match_A"]),  
+                safe_float(st.session_state.data["tacles_reussis_par_match_B"]),  
+                safe_int(st.session_state.data["penalties_concedees_A"]),  
+                safe_int(st.session_state.data["penalties_concedees_B"]),  
+                safe_float(st.session_state.data["fautes_par_match_A"]),  
+                safe_float(st.session_state.data["fautes_par_match_B"]),  
+                safe_int(st.session_state.data["motivation_A"]),  
+                safe_int(st.session_state.data["motivation_B"]),  
+                safe_float(st.session_state.data["possession_moyenne_A"]),  
+                safe_float(st.session_state.data["possession_moyenne_B"]),  
+                safe_float(st.session_state.data["corners_par_match_A"]),  
+                safe_float(st.session_state.data["corners_par_match_B"]),  
                 score_forme_A,  
                 score_forme_B,  
+                safe_int(st.session_state.data["historique_victoires_A"]),  
+                safe_int(st.session_state.data["historique_victoires_B"]),  
+                safe_int(st.session_state.data["historique_nuls"]),  
             ]  
         ])  
 
@@ -167,50 +202,4 @@ if st.button("🔮 Lancer les Prédictions"):
             # Affichage des probabilités dans un tableau  
             st.table({  
                 "Nombre de Buts": [0, 1, 2, 3, 4],  
-                "Équipe A (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_A"]],  
-                "Équipe B (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_B"]],  
-            })  
-
-        # Comparaison des probabilités prédites avec les probabilités implicites  
-        st.subheader("🔍 Comparaison des Probabilités")  
-        proba_implicite_A = cote_to_probabilite_implicite(st.session_state.data["cote_victoire_X"])  
-        proba_implicite_nul = cote_to_probabilite_implicite(st.session_state.data["cote_nul"])  
-        proba_implicite_B = cote_to_probabilite_implicite(st.session_state.data["cote_victoire_Z"])  
-
-        # Calcul des probabilités prédites (simplifié pour l'exemple)  
-        proba_predite_A = prediction_poisson["proba_buts_A"][1]  # Probabilité de 1 but pour l'équipe A  
-        proba_predite_B = prediction_poisson["proba_buts_B"][1]  # Probabilité de 1 but pour l'équipe B  
-        proba_predite_nul = 1 - (proba_predite_A + proba_predite_B)  
-
-        # Affichage des comparaisons  
-        st.write("### Probabilités Prédites vs Implicites")  
-        st.write(f"**Équipe A** : Prédite = {proba_predite_A:.2f}% | Implicite = {proba_implicite_A:.2f}%")  
-        st.write(f"**Match Nul** : Prédite = {proba_predite_nul:.2f}% | Implicite = {proba_implicite_nul:.2f}%")  
-        st.write(f"**Équipe B** : Prédite = {proba_predite_B:.2f}% | Implicite = {proba_implicite_B:.2f}%")  
-
-        # Détection des value bets  
-        st.subheader("💎 Value Bets")  
-        value_bet_A = proba_predite_A > proba_implicite_A  
-        value_bet_nul = proba_predite_nul > proba_implicite_nul  
-        value_bet_B = proba_predite_B > proba_implicite_B  
-
-        # Affichage des value bets avec des couleurs  
-        if value_bet_A:  
-            st.success("✅ Value Bet détectée pour l'Équipe A !")  
-        else:  
-            st.error("❌ Pas de Value Bet pour l'Équipe A.")  
-
-        if value_bet_nul:  
-            st.success("✅ Value Bet détectée pour le Match Nul !")  
-        else:  
-            st.error("❌ Pas de Value Bet pour le Match Nul.")  
-
-        if value_bet_B:  
-            st.success("✅ Value Bet détectée pour l'Équipe B !")  
-        else:  
-            st.error("❌ Pas de Value Bet pour l'Équipe B.")  
-
-    except Exception as e:  
-        st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
-else:  
-    st.warning("⚠️ Les prédictions ne sont pas encore disponibles ou une erreur s'est produite. Veuillez lancer les prédictions d'abord.")
+                "Équipe A (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts
