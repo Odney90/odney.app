@@ -139,7 +139,7 @@ with tab3:
 
     # Préparation des données  
     X = pd.DataFrame([st.session_state.data])  
-    y = np.random.choice(["A", "B", "Nul"], size=1)  # Données fictives pour l'exemple  
+    y = np.random.choice([0, 1, 2], size=1)  # Utilisation de valeurs numériques pour y  
 
     # Méthode 1 : Random Forest  
     model_rf = RandomForestClassifier()  
@@ -147,9 +147,13 @@ with tab3:
     prediction_rf = model_rf.predict(X)[0]  
 
     # Méthode 2 : Régression Logistique  
-    model_lr = LogisticRegression()  
-    model_lr.fit(X, y)  
-    prediction_lr = model_lr.predict(X)[0]  
+    try:  
+        model_lr = LogisticRegression()  
+        model_lr.fit(X, y)  
+        prediction_lr = model_lr.predict(X)[0]  
+    except ValueError as e:  
+        st.error(f"Erreur lors de l'entraînement de la régression logistique : {e}")  
+        prediction_lr = "Erreur"  
 
     # Méthode 3 : K-Nearest Neighbors (KNN)  
     model_knn = KNeighborsClassifier()  
