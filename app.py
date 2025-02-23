@@ -221,13 +221,13 @@ if st.button("🔮 Lancer les Prédictions"):
 
         # Affichage des prédictions  
         col1, col2, col3 = st.columns(3)  
-
+        
 with col1:  
     st.markdown("**Régression Logistique**")  
     if prediction_lr != "Erreur":  
         st.success(f"Victoire de l'Équipe A" if prediction_lr == 1 else "Victoire de l'Équipe B")  
     else:  
-        st.error("Erreur")  
+        st.error("Erreur") 
 
 with col2:  
     st.markdown("**Random Forest**")  
