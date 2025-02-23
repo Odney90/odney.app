@@ -441,7 +441,7 @@ def preparer_donnees_random_forest(data):
     ])  
     return X_rf
     
-   # Configuration Streamlit  
+# Configuration Streamlit  
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
 st.title("🏆 Système de Prédiction de Matchs de Football")  
 
@@ -449,197 +449,187 @@ st.title("🏆 Système de Prédiction de Matchs de Football")
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
 
-# Formulaire de saisie dans le premier onglet  
+# Formulaire de saisie  
 with st.sidebar:  
     st.subheader("📊 Saisie des Données du Match")  
     
-    # Début du formulaire  
-    with st.form(key="match_form"):  
-        col1, col2 = st.columns(2)  
+    col1, col2 = st.columns(2)  
+    
+    with col1:  
+        st.markdown("**Équipe A**")  
+        st.session_state.data.update({  
+            "score_rating_A": st.number_input("⭐ Score Rating", value=70, key="rating_A"),  
+            "buts_par_match_A": st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A"),  
+            "buts_concedes_par_match_A": st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A"),  
+            "possession_moyenne_A": st.number_input("🎯 Possession Moyenne", value=55, key="possession_A"),  
+            "expected_but_A": st.number_input("📊 Expected Goals (xG)", value=1.8, key="xG_A"),  
+            "expected_concedes_A": st.number_input("📉 Expected Goals Against (xGA)", value=1.2, key="xGA_A"),  
+            "tirs_cadres_A": st.number_input("🎯 Tirs Cadrés", value=120, key="tirs_A"),  
+            "grandes_chances_A": st.number_input("🔥 Grandes Chances", value=25, key="chances_A"),  
+            "passes_reussies_A": st.number_input("🔄 Passes Réussies", value=400, key="passes_A"),  
+            "corners_A": st.number_input("🔄 Corners", value=60, key="corners_A"),  
+            "interceptions_A": st.number_input("🛡️ Interceptions", value=50, key="interceptions_A"),  
+            "tacles_reussis_A": st.number_input("🛡️ Tacles Réussis", value=40, key="tacles_A"),  
+            "fautes_A": st.number_input("⚠️ Fautes", value=15, key="fautes_A"),  
+            "cartons_jaunes_A": st.number_input("🟨 Cartons Jaunes", value=5, key="jaunes_A"),  
+            "cartons_rouges_A": st.number_input("🟥 Cartons Rouges", value=1, key="rouges_A"),  
+            "joueurs_cles_absents_A": st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_A"),  
+            "motivation_A": st.number_input("💪 Motivation", value=3, key="motivation_A"),  
+            "clean_sheets_gardien_A": st.number_input("🧤 Clean Sheets Gardien", value=2, key="clean_sheets_A"),  
+            "ratio_tirs_arretes_A": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.75, key="ratio_tirs_A"),  
+            "victoires_domicile_A": st.number_input("🏠 Victoires Domicile", value=60, key="victoires_A"),  
+            "passes_longues_A": st.number_input("🎯 Passes Longues", value=50, key="passes_longues_A"),  
+            "dribbles_reussis_A": st.number_input("🔥 Dribbles Réussis", value=10, key="dribbles_A"),  
+            "ratio_tirs_cadres_A": st.number_input("🎯 Ratio Tirs Cadrés", value=0.4, key="ratio_tirs_cadres_A"),  
+            "grandes_chances_manquees_A": st.number_input("🔥 Grandes Chances Manquées", value=5, key="chances_manquees_A"),  
+            "fautes_zones_dangereuses_A": st.number_input("⚠️ Fautes Zones Dangereuses", value=3, key="fautes_zones_A"),  
+            "buts_corners_A": st.number_input("⚽ Buts Corners", value=2, key="buts_corners_A"),  
+            "jours_repos_A": st.number_input("⏳ Jours de Repos", value=4, key="repos_A"),  
+            "matchs_30_jours_A": st.number_input("📅 Matchs (30 jours)", value=8, key="matchs_A")  
+        })  
+
+    with col2:  
+        st.markdown("**Équipe B**")  
+        st.session_state.data.update({  
+            "score_rating_B": st.number_input("⭐ Score Rating", value=65, key="rating_B"),  
+            "buts_par_match_B": st.number_input("⚽ Buts Marqués", value=1.0, key="buts_B"),  
+            "buts_concedes_par_match_B": st.number_input("🥅 Buts Concédés", value=1.5, key="concedes_B"),  
+            "possession_moyenne_B": st.number_input("🎯 Possession Moyenne", value=45, key="possession_B"),  
+            "expected_but_B": st.number_input("📊 Expected Goals (xG)", value=1.2, key="xG_B"),  
+            "expected_concedes_B": st.number_input("📉 Expected Goals Against (xGA)", value=1.8, key="xGA_B"),  
+            "tirs_cadres_B": st.number_input("🎯 Tirs Cadrés", value=100, key="tirs_B"),  
+            "grandes_chances_B": st.number_input("🔥 Grandes Chances", value=20, key="chances_B"),  
+            "passes_reussies_B": st.number_input("🔄 Passes Réussies", value=350, key="passes_B"),  
+            "corners_B": st.number_input("🔄 Corners", value=50, key="corners_B"),  
+            "interceptions_B": st.number_input("🛡️ Interceptions", value=40, key="interceptions_B"),  
+            "tacles_reussis_B": st.number_input("🛡️ Tacles Réussis", value=35, key="tacles_B"),  
+            "fautes_B": st.number_input("⚠️ Fautes", value=20, key="fautes_B"),  
+            "cartons_jaunes_B": st.number_input("🟨 Cartons Jaunes", value=6, key="jaunes_B"),  
+            "cartons_rouges_B": st.number_input("🟥 Cartons Rouges", value=2, key="rouges_B"),  
+            "joueurs_cles_absents_B": st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_B"),  
+            "motivation_B": st.number_input("💪 Motivation", value=3, key="motivation_B"),  
+            "clean_sheets_gardien_B": st.number_input("🧤 Clean Sheets Gardien", value=1, key="clean_sheets_B"),  
+            "ratio_tirs_arretes_B": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.65, key="ratio_tirs_B"),  
+            "victoires_exterieur_B": st.number_input("🏠 Victoires Extérieur", value=40, key="victoires_B"),  
+            "passes_longues_B": st.number_input("🎯 Passes Longues", value=40, key="passes_longues_B"),  
+            "dribbles_reussis_B": st.number_input("🔥 Dribbles Réussis", value=8, key="dribbles_B"),  
+            "ratio_tirs_cadres_B": st.number_input("🎯 Ratio Tirs Cadrés", value=0.35, key="ratio_tirs_cadres_B"),  
+            "grandes_chances_manquees_B": st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B"),  
+            "fautes_zones_dangereuses_B": st.number_input("⚠️ Fautes Zones Dangereuses", value=4, key="fautes_zones_B"),  
+            "buts_corners_B": st.number_input("⚽ Buts Corners", value=1, key="buts_corners_B"),  
+            "jours_repos_B": st.number_input("⏳ Jours de Repos", value=3, key="repos_B"),  
+            "matchs_30_jours_B": st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
+        })  
+
+    submitted = st.button("🔍 Analyser le Match")  
+
+# Affichage des résultats  
+if submitted:  
+    try:  
+        # Génération de données historiques  
+        donnees_historiques = generer_donnees_historiques_defaut()  
         
-        with col1:  
-            st.markdown("**Équipe A**")  
-            st.session_state.data.update({  
-                "score_rating_A": st.number_input("⭐ Score Rating", value=70, key="rating_A"),  
-                "buts_par_match_A": st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A"),  
-                "buts_concedes_par_match_A": st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A"),  
-                "possession_moyenne_A": st.number_input("🎯 Possession Moyenne", value=55, key="possession_A"),  
-                "expected_but_A": st.number_input("📊 Expected Goals (xG)", value=1.8, key="xG_A"),  
-                "expected_concedes_A": st.number_input("📉 Expected Goals Against (xGA)", value=1.2, key="xGA_A"),  
-                "tirs_cadres_A": st.number_input("🎯 Tirs Cadrés", value=120, key="tirs_A"),  
-                "grandes_chances_A": st.number_input("🔥 Grandes Chances", value=25, key="chances_A"),  
-                "passes_reussies_A": st.number_input("🔄 Passes Réussies", value=400, key="passes_A"),  
-                "corners_A": st.number_input("🔄 Corners", value=60, key="corners_A"),  
-                "interceptions_A": st.number_input("🛡️ Interceptions", value=50, key="interceptions_A"),  
-                "tacles_reussis_A": st.number_input("🛡️ Tacles Réussis", value=40, key="tacles_A"),  
-                "fautes_A": st.number_input("⚠️ Fautes", value=15, key="fautes_A"),  
-                "cartons_jaunes_A": st.number_input("🟨 Cartons Jaunes", value=5, key="jaunes_A"),  
-                "cartons_rouges_A": st.number_input("🟥 Cartons Rouges", value=1, key="rouges_A"),  
-                "joueurs_cles_absents_A": st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_A"),  
-                "motivation_A": st.number_input("💪 Motivation", value=3, key="motivation_A"),  
-                "clean_sheets_gardien_A": st.number_input("🧤 Clean Sheets Gardien", value=2, key="clean_sheets_A"),  
-                "ratio_tirs_arretes_A": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.75, key="ratio_tirs_A"),  
-                "victoires_domicile_A": st.number_input("🏠 Victoires Domicile", value=60, key="victoires_A"),  
-                "passes_longues_A": st.number_input("🎯 Passes Longues", value=50, key="passes_longues_A"),  
-                "dribbles_reussis_A": st.number_input("🔥 Dribbles Réussis", value=10, key="dribbles_A"),  
-                "ratio_tirs_cadres_A": st.number_input("🎯 Ratio Tirs Cadrés", value=0.4, key="ratio_tirs_cadres_A"),  
-                "grandes_chances_manquees_A": st.number_input("🔥 Grandes Chances Manquées", value=5, key="chances_manquees_A"),  
-                "fautes_zones_dangereuses_A": st.number_input("⚠️ Fautes Zones Dangereuses", value=3, key="fautes_zones_A"),  
-                "buts_corners_A": st.number_input("⚽ Buts Corners", value=2, key="buts_corners_A"),  
-                "jours_repos_A": st.number_input("⏳ Jours de Repos", value=4, key="repos_A"),  
-                "matchs_30_jours_A": st.number_input("📅 Matchs (30 jours)", value=8, key="matchs_A")  
-            })  
-
-        with col2:  
-            st.markdown("**Équipe B**")  
-            st.session_state.data.update({  
-                "score_rating_B": st.number_input("⭐ Score Rating", value=65, key="rating_B"),  
-                "buts_par_match_B": st.number_input("⚽ Buts Marqués", value=1.0, key="buts_B"),  
-                "buts_concedes_par_match_B": st.number_input("🥅 Buts Concédés", value=1.5, key="concedes_B"),  
-                "possession_moyenne_B": st.number_input("🎯 Possession Moyenne", value=45, key="possession_B"),  
-                "expected_but_B": st.number_input("📊 Expected Goals (xG)", value=1.2, key="xG_B"),  
-                "expected_concedes_B": st.number_input("📉 Expected Goals Against (xGA)", value=1.8, key="xGA_B"),  
-                "tirs_cadres_B": st.number_input("🎯 Tirs Cadrés", value=100, key="tirs_B"),  
-                "grandes_chances_B": st.number_input("🔥 Grandes Chances", value=20, key="chances_B"),  
-                "passes_reussies_B": st.number_input("🔄 Passes Réussies", value=350, key="passes_B"),  
-                "corners_B": st.number_input("🔄 Corners", value=50, key="corners_B"),  
-                "interceptions_B": st.number_input("🛡️ Interceptions", value=40, key="interceptions_B"),  
-                "tacles_reussis_B": st.number_input("🛡️ Tacles Réussis", value=35, key="tacles_B"),  
-                "fautes_B": st.number_input("⚠️ Fautes", value=20, key="fautes_B"),  
-                "cartons_jaunes_B": st.number_input("🟨 Cartons Jaunes", value=6, key="jaunes_B"),  
-                "cartons_rouges_B": st.number_input("🟥 Cartons Rouges", value=2, key="rouges_B"),  
-                "joueurs_cles_absents_B": st.number_input("🚑 Joueurs Clés Absents", value=0, key="absents_B"),  
-                "motivation_B": st.number_input("💪 Motivation", value=3, key="motivation_B"),  
-                "clean_sheets_gardien_B": st.number_input("🧤 Clean Sheets Gardien", value=1, key="clean_sheets_B"),  
-                "ratio_tirs_arretes_B": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.65, key="ratio_tirs_B"),  
-                "victoires_exterieur_B": st.number_input("🏠 Victoires Extérieur", value=40, key="victoires_B"),  
-                "passes_longues_B": st.number_input("🎯 Passes Longues", value=40, key="passes_longues_B"),  
-                "dribbles_reussis_B": st.number_input("🔥 Dribbles Réussis", value=8, key="dribbles_B"),  
-                "ratio_tirs_cadres_B": st.number_input("🎯 Ratio Tirs Cadrés", value=0.35, key="ratio_tirs_cadres_B"),  
-                "grandes_chances_manquees_B": st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B"),  
-                "fautes_zones_dangereuses_B": st.number_input("⚠️ Fautes Zones Dangereuses", value=4, key="fautes_zones_B"),  
-                "buts_corners_B": st.number_input("⚽ Buts Corners", value=1, key="buts_corners_B"),  
-                "jours_repos_B": st.number_input("⏳ Jours de Repos", value=3, key="repos_B"),  
-                "matchs_30_jours_B": st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
-            })  
-
-        # Bouton de soumission du formulaire  
-        submitted = st.form_submit_button("🔍 Analyser le Match")  
-
-# Onglets pour la saisie et les résultats  
-tab1, tab2 = st.tabs(["📊 Saisie des Données", "🔮 Résultats de Prédiction"])  
-
-with tab1:  
-    st.subheader("📊 Saisie des Données du Match")  
-    st.write("Utilisez le formulaire dans la barre latérale pour saisir les données des équipes.")  
-
-with tab2:  
-    if submitted:  
-        try:  
-            # Génération de données historiques  
-            donnees_historiques = generer_donnees_historiques_defaut()  
+        # Préparation des données  
+        X_train, y_train = preparer_donnees_entrainement(donnees_historiques)  
+        
+        # Préparation des données du match actuel  
+        X_lr = preparer_donnees_regression_logistique(st.session_state.data)  
+        X_rf = preparer_donnees_random_forest(st.session_state.data)  
+        
+        # Modèles  
+        modeles = {  
+            "Régression Logistique": LogisticRegression(max_iter=1000),  
+            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
+        }  
+        
+        # Calcul des lambda pour Poisson  
+        lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
+        lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
+        
+        # Résultats Poisson  
+        resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
+        
+        # Affichage des résultats  
+        st.subheader("🔮 Résultats de Prédiction")  
+        
+        col_poisson, col_modeles = st.columns(2)  
+        
+        with col_poisson:  
+            st.markdown("**📊 Probabilités de Poisson**")  
+            for resultat, proba in resultats_poisson.items():  
+                st.metric(resultat, f"{proba:.2%}")  
             
-            # Préparation des données  
-            X_train, y_train = preparer_donnees_entrainement(donnees_historiques)  
+            # Prédiction des buts par équipe  
+            st.markdown("**⚽ Prédiction des Buts par Équipe**")  
+            st.write(f"Équipe A : {lambda_A:.2f} buts attendus")  
+            st.write(f"Équipe B : {lambda_B:.2f} buts attendus")  
+        
+        with col_modeles:  
+            st.markdown("**🤖 Performance des Modèles**")  
             
-            # Préparation des données du match actuel  
-            X_lr = preparer_donnees_regression_logistique(st.session_state.data)  
-            X_rf = preparer_donnees_random_forest(st.session_state.data)  
-            
-            # Modèles  
-            modeles = {  
-                "Régression Logistique": LogisticRegression(max_iter=1000),  
-                "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
-            }  
-            
-            # Calcul des lambda pour Poisson  
-            lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
-            lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
-            
-            # Résultats Poisson  
-            resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
-            
-            # Affichage des résultats  
-            st.subheader("🔮 Résultats de Prédiction")  
-            
-            col_poisson, col_modeles = st.columns(2)  
-            
-            with col_poisson:  
-                st.markdown("**📊 Probabilités de Poisson**")  
-                for resultat, proba in resultats_poisson.items():  
-                    st.metric(resultat, f"{proba:.2%}")  
+            resultats_modeles = {}  
+            for nom, modele in modeles.items():  
+                # Validation croisée stratifiée  
+                resultats_cv = validation_croisee_stratifiee(  
+                    X_train,   
+                    y_train,   
+                    modele  
+                )  
                 
-                # Prédiction des buts par équipe  
-                st.markdown("**⚽ Prédiction des Buts par Équipe**")  
-                st.write(f"Équipe A : {lambda_A:.2f} buts attendus")  
-                st.write(f"Équipe B : {lambda_B:.2f} buts attendus")  
-            
-            with col_modeles:  
-                st.markdown("**🤖 Performance des Modèles**")  
+                # Stockage des résultats  
+                resultats_modeles[nom] = resultats_cv  
                 
-                resultats_modeles = {}  
-                for nom, modele in modeles.items():  
-                    # Validation croisée stratifiée  
-                    resultats_cv = validation_croisee_stratifiee(  
-                        X_train,   
-                        y_train,   
-                        modele  
-                    )  
-                    
-                    # Stockage des résultats  
-                    resultats_modeles[nom] = resultats_cv  
-                    
-                    # Affichage des métriques de validation croisée  
-                    st.markdown(f"**{nom}**")  
-                    for metrique, valeur in resultats_cv.items():  
-                        st.write(f"{metrique.capitalize()} : {valeur:.2%}")  
-                    
-                    # Entraînement final et prédiction  
-                    modele.fit(X_train, y_train)  
-                    proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
-                    
-                    st.write(f"Probabilité Victoire A: {proba[1]:.2%}")  
-                    st.write(f"Probabilité Victoire B: {proba[0]:.2%}")  
-                    st.write(f"Probabilité Match Nul: {proba[2]:.2%}")  
-            
-            # Analyse finale  
-            probabilite_victoire_A = (  
-                resultats_poisson['Victoire Équipe A'] +   
-                (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
-                (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
-            ) / 2  
-            
-            st.subheader("🏆 Résultat Final")  
-            st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
-            
-            # Visualisation des performances des modèles  
-            st.subheader("📈 Comparaison des Performances des Modèles")  
-            
-            # Préparation des données pour le graphique  
-            metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
-            
-            # Création du DataFrame  
-            df_performances = pd.DataFrame({  
-                nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
-                for nom in resultats_modeles.keys()  
-            }, index=metriques)  
-            
-            # Affichage du DataFrame  
-            st.dataframe(df_performances)  
-            
-            # Graphique de comparaison  
-            fig, ax = plt.subplots(figsize=(10, 6))  
-            df_performances.T.plot(kind='bar', ax=ax)  
-            plt.title("Comparaison des Performances des Modèles")  
-            plt.xlabel("Modèles")  
-            plt.ylabel("Score")  
-            plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
-            plt.tight_layout()  
-            st.pyplot(fig)  
-            
-        except Exception as e:  
-            st.error(f"Erreur lors de la prédiction : {e}")  
-            st.error(traceback.format_exc())  
+                # Affichage des métriques de validation croisée  
+                st.markdown(f"**{nom}**")  
+                for metrique, valeur in resultats_cv.items():  
+                    st.write(f"{metrique.capitalize()} : {valeur:.2%}")  
+                
+                # Entraînement final et prédiction  
+                modele.fit(X_train, y_train)  
+                proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
+                
+                st.write(f"Probabilité Victoire A: {proba[1]:.2%}")  
+                st.write(f"Probabilité Victoire B: {proba[0]:.2%}")  
+                st.write(f"Probabilité Match Nul: {proba[2]:.2%}")  
+        
+        # Analyse finale  
+        probabilite_victoire_A = (  
+            resultats_poisson['Victoire Équipe A'] +   
+            (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
+            (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
+        ) / 2  
+        
+        st.subheader("🏆 Résultat Final")  
+        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
+        
+        # Visualisation des performances des modèles  
+        st.subheader("📈 Comparaison des Performances des Modèles")  
+        
+        # Préparation des données pour le graphique  
+        metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
+        
+        # Création du DataFrame  
+        df_performances = pd.DataFrame({  
+            nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
+            for nom in resultats_modeles.keys()  
+        }, index=metriques)  
+        
+        # Affichage du DataFrame  
+        st.dataframe(df_performances)  
+        
+        # Graphique de comparaison  
+        fig, ax = plt.subplots(figsize=(10, 6))  
+        df_performances.T.plot(kind='bar', ax=ax)  
+        plt.title("Comparaison des Performances des Modèles")  
+        plt.xlabel("Modèles")  
+        plt.ylabel("Score")  
+        plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
+        plt.tight_layout()  
+        st.pyplot(fig)  
+        
+    except Exception as e:  
+        st.error(f"Erreur lors de la prédiction : {e}")  
+        st.error(traceback.format_exc())  
 
 # Pied de page informatif  
 st.markdown("""  
