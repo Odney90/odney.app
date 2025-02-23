@@ -131,7 +131,7 @@ if submitted:
             st.metric("Match Nul", f"{proba_predite_Nul:.2%}")  
 
         # Comparaison des probabilités  
-        st.write("##### Comparaison")  
+        st.write("##### Comparaison des Probabilités")  
         col_comparaison_A, col_comparaison_B, col_comparaison_Nul = st.columns(3)  
         with col_comparaison_A:  
             st.metric("Différence Victoire A", f"{(proba_predite_A - proba_implicite_A):.2%}")  
@@ -139,6 +139,29 @@ if submitted:
             st.metric("Différence Victoire B", f"{(proba_predite_B - proba_implicite_B):.2%}")  
         with col_comparaison_Nul:  
             st.metric("Différence Match Nul", f"{(proba_predite_Nul - proba_implicite_Nul):.2%}")  
+
+        # Calcul des cotes implicites  
+        cote_implicite_A = 1 / proba_implicite_A if proba_implicite_A > 0 else float('inf')  
+        cote_implicite_B = 1 / proba_implicite_B if proba_implicite_B > 0 else float('inf')  
+        cote_implicite_Nul = 1 / proba_implicite_Nul if proba_implicite_Nul > 0 else float('inf')  
+
+        # Calcul des cotes prédites  
+        cote_predite_A = 1 / proba_predite_A if proba_predite_A > 0 else float('inf')  
+        cote_predite_B = 1 / proba_predite_B if proba_predite_B > 0 else float('inf')  
+        cote_predite_Nul = 1 / proba_predite_Nul if proba_predite_Nul > 0 else float('inf')  
+
+        # Affichage des cotes  
+        st.write("##### Cotes Implicites et Prédites")  
+        col_cotes_A, col_cotes_B, col_cotes_Nul = st.columns(3)  
+        with col_cotes_A:  
+            st.metric("Cote Implicite A", f"{cote_implicite_A:.2f}")  
+            st.metric("Cote Prédite A", f"{cote_predite_A:.2f}")  
+        with col_cotes_B:  
+            st.metric("Cote Implicite B", f"{cote_implicite_B:.2f}")  
+            st.metric("Cote Prédite B", f"{cote_predite_B:.2f}")  
+        with col_cotes_Nul:  
+            st.metric("Cote Implicite Nul", f"{cote_implicite_Nul:.2f}")  
+            st.metric("Cote Prédite Nul", f"{cote_predite_Nul:.2f}")  
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
@@ -148,8 +171,4 @@ if submitted:
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
 - **📊 Prédiction des Buts (Poisson)** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
-- **🤖 Performance des Modèles** : Modèle linéaire simple qui prédit les résultats basés sur les caractéristiques des équipes.  
-- **📈 Comparaison des Performances des Modèles** : Les métriques affichées permettent de comparer l'efficacité des modèles.  
-- **🔄 Analyse des Cotes Implicites** : Analyse les cotes fournies pour calculer les probabilités implicites et les compare avec les probabilités prédites par le modèle.  
-⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
+- **🤖 Performance des Modèles** : Mod
