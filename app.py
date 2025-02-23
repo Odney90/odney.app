@@ -7,6 +7,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_curve, auc  
 import matplotlib.pyplot as plt  
+import plotly.express as px  
+import altair as alt  
+from docx import Document  
+import io  
 
 # Configuration de la page  
 st.set_page_config(page_title="⚽ Analyse de Match de Football", page_icon="⚽", layout="wide")  
@@ -14,10 +18,20 @@ st.set_page_config(page_title="⚽ Analyse de Match de Football", page_icon="⚽
 # Initialisation de st.session_state  
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
+if 'historique' not in st.session_state:  
+    st.session_state.historique = []  
 
 # Fonction pour convertir une cote en probabilité implicite  
 def cote_en_probabilite(cote):  
     return 1 / cote  
+
+# Fonction pour générer un rapport DOC  
+def generer_rapport(predictions):  
+    doc = Document()  
+    doc.add_heading("Rapport de Prédiction", level=1)  
+    for prediction in predictions:  
+        doc.add_paragraph(f"Équipe A: {prediction['proba_A']:.2%}, Équipe B: {prediction['proba_B']:.2%}, Match Nul: {prediction['proba_Nul']:.2%}")  
+    return doc  
 
 # Formulaire de collecte des données  
 with st.form("data_form"):  
@@ -71,6 +85,11 @@ with st.form("data_form"):
     with col9:  
         st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
 
+    # Curseurs pour ajuster les poids des critères  
+    st.markdown("#### ⚖️ Ajustez les Poids des Critères")  
+    poids_xG_A = st.slider("Poids pour xG Équipe A", 0.0, 2.0, 1.0)  
+    poids_xG_B = st.slider("Poids pour xG Équipe B", 0.0, 2.0, 1.0)  
+
     # Bouton de soumission du formulaire  
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
@@ -119,14 +138,14 @@ if submitted:
 
         # Modèle Poisson  
         lambda_A = (  
-            st.session_state.data['expected_but_A'] +  
+            st.session_state.data['expected_but_A'] * poids_xG_A +  
             st.session_state.data['buts_par_match_A'] +  
             st.session_state.data['tirs_cadres_A'] * 0.1 +  
             st.session_state.data['grandes_chances_A'] * 0.2  
         )  
 
         lambda_B = (  
-            st.session_state.data['expected_but_B'] +  
+            st.session_state.data['expected_but_B'] * poids_xG_B +  
             st.session_state.data['buts_par_match_B'] +  
             st.session_state.data['tirs_cadres_B'] * 0.1 +  
             st.session_state.data['grandes_chances_B'] * 0.2  
@@ -177,11 +196,20 @@ if submitted:
         cote_predite_B = 1 / proba_B  
         cote_predite_Nul = 1 / proba_Nul  
 
-        # Convertisseur de cote implicite en probabilité  
-        st.subheader("📊 Convertisseur de Cote Implicite en Probabilité")  
-        cote_input = st.number_input("Entrez une cote pour convertir en probabilité implicite", value=2.0, format="%.2f")  
-        probabilite_implicite = cote_en_probabilite(cote_input)  
-        st.metric("Probabilité Implicite", f"{probabilite_implicite:.2%}")  
+        # Stockage des prédictions dans l'historique  
+        st.session_state.historique.append({  
+            'proba_A': proba_A,  
+            'proba_B': proba_B,  
+            'proba_Nul': proba_Nul,  
+        })  
+
+        # Génération du rapport DOC  
+        if st.button("📄 Télécharger le Rapport"):  
+            doc = generer_rapport(st.session_state.historique)  
+            buffer = io.BytesIO()  
+            doc.save(buffer)  
+            buffer.seek(0)  
+            st.download_button("Télécharger le rapport", buffer, "rapport_predictions.docx")  
 
         # Tableau synthétique des résultats  
         st.subheader("📊 Tableau Synthétique des Résultats")  
@@ -212,7 +240,6 @@ if submitted:
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
-        st.error(traceback.format_exc())  
 
 # Pied de page informatif  
 st.markdown("""  
