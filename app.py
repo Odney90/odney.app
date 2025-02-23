@@ -13,12 +13,12 @@ if "data" not in st.session_state:
     st.session_state.data = {  
         # Critères d'attaque  
         "tirs_cadres_par_match_A": 0.45,  
-        "grandes_chances_A": 25,  
+        "grandes_chances_A": 25,  # Assurez-vous que c'est un entier  
         "passes_reussies_par_match_A": 15.0,  
         "centres_reussies_par_match_A": 5.5,  
         "dribbles_reussis_par_match_A": 15.0,  
         "tirs_cadres_par_match_B": 0.35,  
-        "grandes_chances_B": 20,  
+        "grandes_chances_B": 20,  # Assurez-vous que c'est un entier  
         "passes_reussies_par_match_B": 12.0,  
         "centres_reussies_par_match_B": 4.8,  
         "dribbles_reussis_par_match_B": 13.9,  
@@ -43,6 +43,20 @@ if "data" not in st.session_state:
         "bankroll": 1000.0,  
     }  
 
+# Onglet 1 : Statistiques  
+with tab1:  
+    st.header("📊 Statistiques des Équipes")  
+    col_a, col_b = st.columns(2)  
+
+    # Statistiques de l'Équipe A  
+    with col_a:  
+        st.subheader("Équipe A")  
+        st.session_state.data["grandes_chances_A"] = st.slider(  
+            "Grandes Chances (A)",  
+            min_value=0,  
+            max_value=50,  
+            value=int(st.session_state.data["grandes_chances_A"]),  # Convertir en entier  
+        )
 # Création des onglets  
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(  
     ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise", "📝 Formulaire et Prédiction"]  
