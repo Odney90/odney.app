@@ -206,4 +206,19 @@ with tab3:
 # Onglet 4 : Cotes et Value Bet  
 with tab4:  
     st.header("🎰 Cotes et Value Bet")  
-    st.write("Cette section analyse les cote
+    st.write("Cette section analyse les cotes et les opportunités de value bet.")  
+    st.session_state.data["cote_victoire_X"] = st.number_input(  
+        "Cote Victoire Équipe A",  
+        value=st.session_state.data["cote_victoire_X"],  
+        key="cote_victoire_X_input"  
+    )  
+    st.session_state.data["cote_nul"] = st.number_input(  
+        "Cote Match Nul",  
+        value=st.session_state.data["cote_nul"],  
+        key="cote_nul_input"  
+    )  
+    st.session_state.data["cote_victoire_Z"] = st.number_input(  
+        "Cote Victoire Équipe B",  
+        value=st.session_state.data["cote_victoire_Z"],  
+        key="cote_victoire_Z_input"  
+    )
