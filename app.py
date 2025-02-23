@@ -224,7 +224,7 @@ if submitted:
         Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
         Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
         """)  
-                     except Exception as e:  
+    except Exception as e:  
             st.error(f"Erreur lors de la prédiction : {e}")
         
                 # Affichage des poids des critères  
