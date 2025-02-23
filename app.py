@@ -360,4 +360,6 @@ st.markdown("""
   - Random Forest : Modèle plus complexe, moins sensible au bruit  
 - **Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction  
 
+⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
+""")
 ⚠️ *Ces prédictions sont
