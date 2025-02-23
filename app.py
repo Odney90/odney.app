@@ -381,16 +381,16 @@ with tab4:
     cote_victoire_Z = st.number_input("Cote Victoire Z", value=safe_float(st.session_state.data["cote_victoire_Z"]))  
 
     # Calcul de la marge bookmaker  
-    marge_bookmaker = (1 / cote_victoire_A) + (1 / cote_nul) + (1 / cote_victoire_B) - 1  
+    marge_bookmaker = (1 / cote_victoire_X) + (1 / cote_nul) + (1 / cote_victoire_Z) - 1  
     st.write(f"📉 **Marge Bookmaker** : {marge_bookmaker:.2%}")  
 
     # Calcul des cotes réelles  
-    cote_reelle_victoire_A = cote_victoire_A / (1 + marge_bookmaker)  
+    cote_reelle_victoire_X = cote_victoire_A / (1 + marge_bookmaker)  
     cote_reelle_nul = cote_nul / (1 + marge_bookmaker)  
-    cote_reelle_victoire_B = cote_victoire_B / (1 + marge_bookmaker)  
-    st.write(f"📊 **Cote Réelle Victoire A** : {cote_reelle_victoire_A:.2f}")  
+    cote_reelle_victoire_Z = cote_victoire_X / (1 + marge_bookmaker)  
+    st.write(f"📊 **Cote Réelle Victoire A** : {cote_reelle_victoire_X:.2f}")  
     st.write(f"📊 **Cote Réelle Nul** : {cote_reelle_nul:.2f}")  
-    st.write(f"📊 **Cote Réelle Victoire B** : {cote_reelle_victoire_B:.2f}")  
+    st.write(f"📊 **Cote Réelle Victoire B** : {cote_reelle_victoire_Z:.2f}")  
 
     st.subheader("Calculateur de Paris Combiné")  
     cote_equipe_1 = st.number_input("Cote Équipe 1", value=1.5)  
