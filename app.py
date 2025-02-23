@@ -17,11 +17,12 @@ def mise_kelly(probabilite, cote, bankroll):
     if cote <= 1:  
         return 0  
     return (probabilite * (cote - 1) - (1 - probabilite)) / (cote - 1) * bankroll  
-
 # Initialisation de st.session_state.data  
 if "data" not in st.session_state:  
     st.session_state.data = {  
-        "score_rating_A": 0.0,  # Initialisation de la clé manquante  
+        "grandes_chances_A": 0,  # Initialisation de la clé manquante  
+        "grandes_chances_B": 0,  
+        "score_rating_A": 0.0,  
         "score_rating_B": 0.0,  
         "possession_moyenne_A": 0.0,  
         "possession_moyenne_B": 0.0,  
@@ -44,14 +45,14 @@ if "data" not in st.session_state:
     }  
 
 # Fonction pour vérifier et obtenir une valeur  
-def safe_float(value):  
+def safe_int(value):  
     try:  
-        return float(value)  
+        return int(value)  
     except (TypeError, ValueError):  
-        return 0.0  # Retourne 0.0 si la valeur est invalide  
+        return 0  # Retourne 0 si la valeur est invalide  
 
-# Utilisation de safe_float pour éviter les erreurs  
-score_rating_A = safe_float(st.session_state.data["score_rating_A"])
+# Utilisation de safe_int pour éviter les erreurs  
+grandes_chances_A = safe_int(st.session_state.data["grandes_chances_A"])
 
 # Création des onglets  
 tab1, tab2, tab3, tab4 = st.tabs(  
