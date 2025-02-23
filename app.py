@@ -159,8 +159,13 @@ if st.button("🔮 Lancer les Prédictions"):
             st.write(f"⚽ Buts Prédits - Équipe A : {prediction_poisson['buts_predits_A']}")  
             st.write(f"⚽ Buts Prédits - Équipe B : {prediction_poisson['buts_predits_B']}")  
             st.write("📊 Probabilité de Buts (en %) :")  
-            st.write(f"Équipe A : {prediction_poisson['proba_buts_A']}")  
-            st.write(f"Équipe B : {prediction_poisson['proba_buts_B']}")  
+
+            # Affichage des probabilités dans un tableau  
+            st.table({  
+                "Nombre de Buts": [0, 1, 2, 3, 4],  
+                "Équipe A (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_A"]],  
+                "Équipe B (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_B"]],  
+            })  
 
     except Exception as e:  
         st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
