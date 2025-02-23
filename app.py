@@ -95,8 +95,13 @@ with st.form("data_form_v1"):  # Nom modifié ici
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9.0, format="%.2f", key="matchs_B")  
 
     # Bouton de soumission du formulaire  
+	
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
+# Section d'analyse et de prédiction (séparée du formulaire)  
+if submitted:  
+    # Ajoutez ici votre logique d'analyse et de prédiction  
+    st.write("Analyse en cours...")  
 # Section d'analyse et de prédiction (séparée du formulaire)  
 if submitted:  
     # Ajoutez ici votre logique d'analyse et de prédiction  
