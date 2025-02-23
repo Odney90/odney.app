@@ -356,4 +356,9 @@ st.markdown("""
 
 - **Probabilités de Poisson** : Basées sur les statistiques historiques et les caractéristiques des équipes  
 - **Modèles de Machine Learning** :   
-  - Régression Logistique : Modèle
+  - Régression Logistique : Modèle linéaire simple  
+  - Random Forest : Modèle plus complexe, moins sensible au bruit  
+- **Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction  
+
+⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
+""")
