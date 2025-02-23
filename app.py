@@ -46,6 +46,16 @@ with st.form("data_form"):
         st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100.0, format="%.2f", key="tirs_B")  
         st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20.0, format="%.2f", key="chances_B")  
 
+    # Cotes des bookmakers  
+    st.markdown("#### 📊 Cotes des Bookmakers")  
+    col5, col6, col7 = st.columns(3)  
+    with col5:  
+        st.session_state.data['cote_bookmaker_A'] = st.number_input("Cote Victoire A", value=2.0, format="%.2f", key="cote_A")  
+    with col6:  
+        st.session_state.data['cote_bookmaker_B'] = st.number_input("Cote Victoire B", value=3.0, format="%.2f", key="cote_B")  
+    with col7:  
+        st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
+
     # Bouton de soumission du formulaire  
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
@@ -130,38 +140,47 @@ if submitted:
         rf_scores = cross_val_score(rf_clf, df, y, cv=skf, scoring='accuracy')  
         rf_mean_score = np.mean(rf_scores)  
 
-        # Affichage des résultats des modèles  
-        st.subheader("📈 Résultats des Modèles de Prédiction")  
-        st.write(f"**Logistic Regression Accuracy**: {log_reg_mean_score:.2%}")  
-        st.write(f"**Random Forest Classifier Accuracy**: {rf_mean_score:.2%}")  
-
         # Comparaison des probabilités de victoire  
         proba_A = np.mean(buts_A) / (np.mean(buts_A) + np.mean(buts_B))  
         proba_B = np.mean(buts_B) / (np.mean(buts_A) + np.mean(buts_B))  
         proba_Nul = 1 - (proba_A + proba_B)  
 
-        # Cotes implicites  
-        cote_implicite_A = 1 / proba_A  
-        cote_implicite_B = 1 / proba_B  
-        cote_implicite_Nul = 1 / proba_Nul  
-
         # Cotes prédites  
-        cote_predite_A = 1 / (log_reg_mean_score * proba_A)  
-        cote_predite_B = 1 / (log_reg_mean_score * proba_B)  
-        cote_predite_Nul = 1 / (log_reg_mean_score * proba_Nul)  
+        cote_predite_A = 1 / proba_A  
+        cote_predite_B = 1 / proba_B  
+        cote_predite_Nul = 1 / proba_Nul  
+
+        # Value Bet  
+        def value_bet(cote_predite, cote_bookmaker):  
+            return cote_predite < cote_bookmaker  
+
+        value_bet_A = value_bet(cote_predite_A, st.session_state.data['cote_bookmaker_A'])  
+        value_bet_B = value_bet(cote_predite_B, st.session_state.data['cote_bookmaker_B'])  
+        value_bet_Nul = value_bet(cote_predite_Nul, st.session_state.data['cote_bookmaker_Nul'])  
 
         # Comparateur de cotes  
-        st.subheader("📊 Comparateur de Cotes")  
+        st.subheader("📊 Comparateur de Cotes et Value Bet")  
         col_cotes_A, col_cotes_B, col_cotes_Nul = st.columns(3)  
         with col_cotes_A:  
-            st.metric("Cote Implicite A", f"{cote_implicite_A:.2f}")  
             st.metric("Cote Prédite A", f"{cote_predite_A:.2f}")  
+            st.metric("Cote Bookmaker A", f"{st.session_state.data['cote_bookmaker_A']:.2f}")  
+            st.write(f"**Value Bet**: {'✅' if value_bet_A else '❌'}")  
         with col_cotes_B:  
-            st.metric("Cote Implicite B", f"{cote_implicite_B:.2f}")  
             st.metric("Cote Prédite B", f"{cote_predite_B:.2f}")  
+            st.metric("Cote Bookmaker B", f"{st.session_state.data['cote_bookmaker_B']:.2f}")  
+            st.write(f"**Value Bet**: {'✅' if value_bet_B else '❌'}")  
         with col_cotes_Nul:  
-            st.metric("Cote Implicite Nul", f"{cote_implicite_Nul:.2f}")  
             st.metric("Cote Prédite Nul", f"{cote_predite_Nul:.2f}")  
+            st.metric("Cote Bookmaker Nul", f"{st.session_state.data['cote_bookmaker_Nul']:.2f}")  
+            st.write(f"**Value Bet**: {'✅' if value_bet_Nul else '❌'}")  
+
+        # Explication des résultats  
+        st.markdown("""  
+        ### 📝 Explication des Résultats  
+        Les prédictions sont basées sur les statistiques fournies et les modèles utilisés (Poisson, Régression Logistique et Forêt Aléatoire).   
+        Les **cotes prédites** sont calculées à partir des probabilités estimées, tandis que les **cotes des bookmakers** reflètent les cotes du marché.   
+        Un **Value Bet** (✅) est identifié lorsque la cote prédite est inférieure à la cote du bookmaker, indiquant un pari potentiellement rentable.  
+        """)  
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
@@ -172,6 +191,6 @@ st.markdown("""
 ### 🤔 Comment Interpréter ces Résultats ?  
 - **📊 Prédiction des Buts (Poisson)** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
 - **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
-- **📈 Comparateur de Cotes** : Les cotes implicites et prédites sont comparées pour chaque résultat possible (Victoire A, Victoire B, Match Nul).  
+- **📈 Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
 """)
