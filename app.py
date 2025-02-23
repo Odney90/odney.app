@@ -86,16 +86,6 @@ with st.form("data_form"):
     with col9:  
         st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
 
-    # Curseurs de personnalisation  
-    st.markdown("#### 🎚️ Personnalisation des Critères")  
-    col10, col11 = st.columns(2)  
-    with col10:  
-        st.session_state.data['poids_buts'] = st.slider("Poids des Buts", 0.0, 1.0, 0.5, key="poids_buts")  
-        st.session_state.data['poids_possession'] = st.slider("Poids de la Possession", 0.0, 1.0, 0.3, key="poids_possession")  
-    with col11:  
-        st.session_state.data['poids_absences'] = st.slider("Poids des Absences", 0.0, 1.0, 0.2, key="poids_absences")  
-        st.session_state.data['poids_forme'] = st.slider("Poids de la Forme Récente", 0.0, 1.0, 0.4, key="poids_forme")  
-
     # Bouton de soumission du formulaire  
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
