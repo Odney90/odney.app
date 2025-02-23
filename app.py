@@ -283,8 +283,7 @@ if submitted:
                                  barmode='group', title='Comparaison des Probabilités Prédites et Implicites',  
                                  labels={'value': 'Probabilité', 'variable': 'Type de Probabilité'})  
         st.plotly_chart(fig_comparaison)  
-
-    except Exception as e:  
+   except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
 
 # Pied de page informatif  
