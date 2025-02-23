@@ -18,61 +18,40 @@ def mise_kelly(probabilite, cote, bankroll):
         return 0  
     return (probabilite * (cote - 1) - (1 - probabilite)) / (cote - 1) * bankroll  
 
-# Initialisation des données dans st.session_state  
+# Initialisation de st.session_state.data  
 if "data" not in st.session_state:  
     st.session_state.data = {  
-        # Critères d'attaque  
-        "tirs_cadres_par_match_A": 0.45,  
-        "grandes_chances_A": 25,  
-        "passes_reussies_par_match_A": 15.0,  
-        "centres_reussies_par_match_A": 5.5,  
-        "dribbles_reussis_par_match_A": 15.0,  
-        "tirs_cadres_par_match_B": 0.35,  
-        "grandes_chances_B": 20,  
-        "passes_reussies_par_match_B": 12.0,  
-        "centres_reussies_par_match_B": 4.8,  
-        "dribbles_reussis_par_match_B": 13.9,  
-        # Critères de défense  
-        "buts_attendus_concedes_A": 1.5,  
-        "interceptions_A": 45.0,  
-        "tacles_reussis_par_match_A": 40.0,  
-        "penalties_concedees_A": 3,  
-        "fautes_par_match_A": 18.0,  
-        "buts_attendus_concedes_B": 1.8,  
-        "interceptions_B": 40.0,  
-        "tacles_reussis_par_match_B": 35.0,  
-        "penalties_concedees_B": 5,  
-        "fautes_par_match_B": 20.0,  
-        # Face-à-face  
-        "face_a_face_A": 3,  
-        "face_a_face_B": 2,  
-        # Motivation  
-        "motivation_A": 8,  
-        "motivation_B": 7,  
-        # Cotes et bankroll  
-        "cote_victoire_X": 2.0,  
-        "cote_nul": 3.0,  
-        "cote_victoire_Z": 4.0,  
-        "bankroll": 1000.0,  
-        # Nouveaux critères pour Poisson  
-        "buts_marques_A": 1.8,  
-        "buts_marques_B": 1.5,  
-        "buts_concedes_A": 1.2,  
-        "buts_concedes_B": 1.5,  
-        "tirs_par_match_A": 12.5,  
-        "tirs_par_match_B": 11.0,  
-        "possession_moyenne_A": 55.0,  # Clé ajoutée  
-        "possession_moyenne_B": 48.0,  # Clé ajoutée  
-        "corners_par_match_A": 5.5,  
-        "corners_par_match_B": 4.8,  
-        # Forme récente des équipes (victoires, nuls, défaites sur les 5 derniers matchs)  
-        "forme_recente_A_victoires": 3,  
-        "forme_recente_A_nuls": 1,  
-        "forme_recente_A_defaites": 1,  
-        "forme_recente_B_victoires": 2,  
-        "forme_recente_B_nuls": 2,  
-        "forme_recente_B_defaites": 1,  
+        "score_rating_A": 0.0,  # Initialisation de la clé manquante  
+        "score_rating_B": 0.0,  
+        "possession_moyenne_A": 0.0,  
+        "possession_moyenne_B": 0.0,  
+        "motivation_A": 0.0,  
+        "motivation_B": 0.0,  
+        "tirs_cadres_par_match_A": 0.0,  
+        "tirs_cadres_par_match_B": 0.0,  
+        "interceptions_A": 0.0,  
+        "interceptions_B": 0.0,  
+        "forme_recente_A_victoires": 0,  
+        "forme_recente_A_nuls": 0,  
+        "forme_recente_A_defaites": 0,  
+        "forme_recente_B_victoires": 0,  
+        "forme_recente_B_nuls": 0,  
+        "forme_recente_B_defaites": 0,  
+        "cote_victoire_X": 1.0,  
+        "cote_nul": 1.0,  
+        "cote_victoire_Z": 1.0,  
+        "bankroll": 100.0,  
     }  
+
+# Fonction pour vérifier et obtenir une valeur  
+def safe_float(value):  
+    try:  
+        return float(value)  
+    except (TypeError, ValueError):  
+        return 0.0  # Retourne 0.0 si la valeur est invalide  
+
+# Utilisation de safe_float pour éviter les erreurs  
+score_rating_A = safe_float(st.session_state.data["score_rating_A"])
 
 # Création des onglets  
 tab1, tab2, tab3, tab4 = st.tabs(  
