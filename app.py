@@ -477,7 +477,7 @@ with st.form("Données du Match"):
             "clean_sheets_gardien_A": st.number_input("🧤 Clean Sheets Gardien", value=2, key="clean_sheets_A"),  
             "ratio_tirs_arretes_A": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.75, key="ratio_tirs_A"),  
             "victoires_domicile_A": st.number_input("🏠 Victoires Domicile", value=60, key="victoires_A"),  
-            "passes_longues_A": st.number_input("🎯 Passes Longues", value=50, key="passes_longues_A"),  
+            "passes_longues_A": st.number_input("🎯 Passes Longes", value=50, key="passes_longues_A"),  
             "dribbles_reussis_A": st.number_input("🔥 Dribbles Réussis", value=10, key="dribbles_A"),  
             "ratio_tirs_cadres_A": st.number_input("🎯 Ratio Tirs Cadrés", value=0.4, key="ratio_tirs_cadres_A"),  
             "grandes_chances_manquees_A": st.number_input("🔥 Grandes Chances Manquées", value=5, key="chances_manquees_A"),  
@@ -510,7 +510,7 @@ with st.form("Données du Match"):
             "clean_sheets_gardien_B": st.number_input("🧤 Clean Sheets Gardien", value=1, key="clean_sheets_B"),  
             "ratio_tirs_arretes_B": st.number_input("🧤 Ratio Tirs Arrêtés", value=0.65, key="ratio_tirs_B"),  
             "victoires_exterieur_B": st.number_input("🏠 Victoires Extérieur", value=40, key="victoires_B"),  
-            "passes_longues_B": st.number_input("🎯 Passes Longues", value=40, key="passes_longues_B"),  
+            "passes_longues_B": st.number_input("🎯 Passes Longes", value=40, key="passes_longues_B"),  
             "dribbles_reussis_B": st.number_input("🔥 Dribbles Réussis", value=8, key="dribbles_B"),  
             "ratio_tirs_cadres_B": st.number_input("🎯 Ratio Tirs Cadrés", value=0.35, key="ratio_tirs_cadres_B"),  
             "grandes_chances_manquees_B": st.number_input("🔥 Grandes Chances Manquées", value=6, key="chances_manquees_B"),  
@@ -523,7 +523,7 @@ with st.form("Données du Match"):
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
 # Section d'analyse et de prédiction  
-if st.button("🏆 Prédire le Résultat"):  
+if submitted:  
     try:  
         # Génération de données historiques  
         donnees_historiques = generer_donnees_historiques_defaut()  
@@ -548,43 +548,65 @@ if st.button("🏆 Prédire le Résultat"):
         # Résultats Poisson  
         resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
         
-        # Résultats  
+        # Affichage des résultats  
         st.subheader("🔮 Résultats de Prédiction")  
         
-        col_poisson, col_modeles = st.columns(2)  
+        # Prédiction des buts par équipe avec Poisson  
+        st.markdown("### 📊 Prédiction des Buts par Équipe (Modèle de Poisson)")  
+        col_buts_A, col_buts_B = st.columns(2)  
+        with col_buts_A:  
+            st.metric("⚽ Buts Attendus (Équipe A)", f"{lambda_A:.2f}")  
+        with col_buts_B:  
+            st.metric("⚽ Buts Attendus (Équipe B)", f"{lambda_B:.2f}")  
         
-        with col_poisson:  
-            st.markdown("**📊 Probabilités de Poisson**")  
-            for resultat, proba in resultats_poisson.items():  
-                st.metric(resultat, f"{proba:.2%}")  
+        # Probabilités de Poisson  
+        st.markdown("### 📊 Probabilités de Poisson")  
+        col_poisson_A, col_poisson_B, col_poisson_nul = st.columns(3)  
+        with col_poisson_A:  
+            st.metric("🏆 Victoire Équipe A", f"{resultats_poisson['Victoire Équipe A']:.2%}")  
+        with col_poisson_B:  
+            st.metric("🏆 Victoire Équipe B", f"{resultats_poisson['Victoire Équipe B']:.2%}")  
+        with col_poisson_nul:  
+            st.metric("🤝 Match Nul", f"{resultats_poisson['Match Nul']:.2%}")  
         
-        with col_modeles:  
-            st.markdown("**🤖 Performance des Modèles**")  
+        # Résultats des autres modèles  
+        st.markdown("### 🤖 Performance des Modèles")  
+        resultats_modeles = {}  
+        for nom, modele in modeles.items():  
+            # Validation croisée stratifiée  
+            resultats_cv = validation_croisee_stratifiee(  
+                X_train,   
+                y_train,   
+                modele  
+            )  
             
-            resultats_modeles = {}  
-            for nom, modele in modeles.items():  
-                # Validation croisée stratifiée  
-                resultats_cv = validation_croisee_stratifiee(  
-                    X_train,   
-                    y_train,   
-                    modele  
-                )  
-                
-                # Stockage des résultats  
-                resultats_modeles[nom] = resultats_cv  
-                
-                # Affichage des métriques de validation croisée  
-                st.markdown(f"**{nom}**")  
-                for metrique, valeur in resultats_cv.items():  
-                    st.write(f"{metrique.capitalize()} : {valeur:.2%}")  
-                
-                # Entraînement final et prédiction  
-                modele.fit(X_train, y_train)  
-                proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
-                
-                st.write(f"Probabilité Victoire A: {proba[1]:.2%}")  
-                st.write(f"Probabilité Victoire B: {proba[0]:.2%}")  
-                st.write(f"Probabilité Match Nul: {proba[2]:.2%}")  
+            # Stockage des résultats  
+            resultats_modeles[nom] = resultats_cv  
+            
+            # Affichage des métriques de validation croisée  
+            st.markdown(f"#### {nom}")  
+            col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
+            with col_accuracy:  
+                st.metric("🎯 Accuracy", f"{resultats_cv['accuracy']:.2%}")  
+            with col_precision:  
+                st.metric("🎯 Precision", f"{resultats_cv['precision']:.2%}")  
+            with col_recall:  
+                st.metric("🎯 Recall", f"{resultats_cv['recall']:.2%}")  
+            with col_f1:  
+                st.metric("🎯 F1-Score", f"{resultats_cv['f1_score']:.2%}")  
+            
+            # Prédiction finale  
+            modele.fit(X_train, y_train)  
+            proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
+            
+            st.markdown("**📊 Prédictions**")  
+            col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
+            with col_victoire_A:  
+                st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
+            with col_victoire_B:  
+                st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
+            with col_nul:  
+                st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
         
         # Analyse finale  
         probabilite_victoire_A = (  
@@ -629,11 +651,12 @@ if st.button("🏆 Prédire le Résultat"):
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
 
-- **Probabilités de Poisson** : Basées sur les statistiques historiques et les caractéristiques des équipes  
-- **Modèles de Machine Learning** :   
-  - Régression Logistique : Modèle linéaire simple  
-  - Random Forest : Modèle plus complexe, moins sensible au bruit  
-- **Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction  
+- **📊 Prédiction des Buts (Poisson)** : Basée sur les statistiques historiques et les caractéristiques des équipes.  
+- **🤖 Performance des Modèles** :   
+  - **Régression Logistique** : Modèle linéaire simple.  
+  - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
+- **📈 K-Fold Cross-Validation** : Cette méthode permet d'évaluer la performance des modèles en divisant les données en plusieurs sous-ensembles (folds). Chaque fold est utilisé comme ensemble de test, tandis que les autres servent à l'entraînement. Cela garantit une estimation plus robuste de la performance.  
+- **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
 """)
