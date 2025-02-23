@@ -142,9 +142,13 @@ with tab3:
     y = np.random.choice([0, 1, 2], size=1)  # Utilisation de valeurs numériques pour y  
 
     # Méthode 1 : Random Forest  
-    model_rf = RandomForestClassifier()  
-    model_rf.fit(X, y)  
-    prediction_rf = model_rf.predict(X)[0]  
+    try:  
+        model_rf = RandomForestClassifier()  
+        model_rf.fit(X, y)  
+        prediction_rf = model_rf.predict(X)[0]  
+    except ValueError as e:  
+        st.error(f"Erreur lors de l'entraînement de Random Forest : {e}")  
+        prediction_rf = "Erreur"  
 
     # Méthode 2 : Régression Logistique  
     try:  
@@ -156,9 +160,13 @@ with tab3:
         prediction_lr = "Erreur"  
 
     # Méthode 3 : K-Nearest Neighbors (KNN)  
-    model_knn = KNeighborsClassifier()  
-    model_knn.fit(X, y)  
-    prediction_knn = model_knn.predict(X)[0]  
+    try:  
+        model_knn = KNeighborsClassifier()  
+        model_knn.fit(X, y)  
+        prediction_knn = model_knn.predict(X)[0]  
+    except ValueError as e:  
+        st.error(f"Erreur lors de l'entraînement de KNN : {e}")  
+        prediction_knn = "Erreur"  
 
     # Méthode 4 : Distribution de Poisson  
     buts_attendus_A = st.session_state.data["buts_attendus_concedes_B"]  
