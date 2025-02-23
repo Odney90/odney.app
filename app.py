@@ -288,63 +288,90 @@ with tab3:
                 "en fonction de plusieurs critères, tels que le score de rating, la possession, la motivation, et la forme récente."  
             )  
             st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
+ 
+         # Préparation des caractéristiques pour les équipes A et B  (exclut les données des onglets 4 et 5 et)  
+    features_A = [  
+        st.session_state.data["tirs_cadres_par_match_A"],  
+        st.session_state.data["grandes_chances_A"],  
+        st.session_state.data["grandes_chances_manquées_A"],  
+        st.session_state.data["passes_reussies_A"],  
+        st.session_state.data["passes_reussies_par_match_A"],  
+        st.session_state.data["passes_longues_par_match_A"],  
+        st.session_state.data["centres_réussies_par_match_A"],  
+        st.session_state.data["penelaties_obtenues_A"],  
+        st.session_state.data["balle_toucher_dans_la_surface_adverse_A"],  
+        st.session_state.data["corners_A"],  
+        st.session_state.data["Buts_attendus_concedes_A"],  
+        st.session_state.data["interceptions_A"],  
+        st.session_state.data["tacles_reussis_par_match_A"],  
+        st.session_state.data["dégagements_par_match_A"],  
+        st.session_state.data["penalities_concedees_A"],  
+        st.session_state.data["tirs_arretes_par_match_A"],  
+        st.session_state.data["fautes_par_match_A"],  
+        st.session_state.data["cartons_jaunes_A"],  
+        st.session_state.data["cartons_rouges_A"],  
+        st.session_state.data["dribbles_reussis_par_match_A"],  
+        st.session_state.data["nombre_de_joueurs_cles_absents_A"],  
+        st.session_state.data["victoires_exterieur_A"],  
+        st.session_state.data["jours_repos_A"],  
+        st.session_state.data["matchs-sur_30_jours_A"],  
+        st.session_state.data["motivation_A"],  
+    ]  
 
-            # Random Forest (exclut les données des onglets 4 et 5 et # Cotes)  
-            X_rf = np.array([  
-                [  
-                    safe_float(st.session_state.data[key])  
-                    for key in st.session_state.data  
-                    if (key.endswith("_A") or key.endswith("_B")) and isinstance(st.session_state.data[key], (int, float))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                ],  
-                [  
-                    safe_float(st.session_state.data[key])  
-                    for key in st.session_state.data  
-                    if (key.endswith("_B") or key.endswith("_A")) and isinstance(st.session_state.data[key], (int, float))  
-                    and not key.startswith("cote_") and not key.startswith("bankroll")  
-                ]  
-            ])  
-            y_rf = np.array([1, 0])  # Deux classes : 1 pour Équipe A, 0 pour Équipe B  
-            model_rf = RandomForestClassifier()  
-            model_rf.fit(X_rf, y_rf)  
-            prediction_rf = model_rf.predict(X_rf)  
+    features_B = [  
+        st.session_state.data["tirs_cadres_par_match_B"],  
+        st.session_state.data["grandes_chances_B"],  
+        st.session_state.data["grandes_chances_manquées_B"],  
+        st.session_state.data["passes_reussies_B"],  
+        st.session_state.data["passes_reussies_par_match_B"],  
+        st.session_state.data["passes_longues_par_match_B"],  
+        st.session_state.data["centres_réussies_par_match_B"],  
+        st.session_state.data["penelaties_obtenues_B"],  
+        st.session_state.data["balle_toucher_dans_la_surface_adverse_B"],  
+        st.session_state.data["corners_B"],  
+        st.session_state.data["Buts_attendus_concedes_B"],  
+        st.session_state.data["interceptions_B"],  
+        st.session_state.data["tacles_reussis_par_match_B"],  
+        st.session_state.data["dégagements_par_match_B"],  
+        st.session_state.data["penalities_concedees_B"],  
+        st.session_state.data["tirs_arretes_par_match_B"],  
+        st.session_state.data["fautes_par_match_B"],  
+        st.session_state.data["cartons_jaunes_B"],  
+        st.session_state.data["cartons_rouges_B"],  
+        st.session_state.data["dribbles_reussis_par_match_B"],  
+        st.session_state.data["nombre_de_joueurs_cles_absents_B"],  
+        st.session_state.data["victoires_exterieur_B"],  
+        st.session_state.data["jours_repos_B"],  
+        st.session_state.data["matchs-sur_30_jours_B"],  
+        st.session_state.data["motivation_B"],  
+    ]  
 
-            # Explication Random Forest  
-            st.subheader("🌲 Prédiction avec Random Forest")  
-            st.write(  
-                "Le Random Forest est un modèle d'apprentissage automatique qui utilise plusieurs arbres de décision pour prédire le résultat. "  
-                "Il est robuste et prend en compte de nombreuses variables pour améliorer la précision."  
-            )  
-            st.write(f"📊 **Résultat** : {'Équipe A' if prediction_rf[0] == 1 else 'Équipe B'}")  
+    # Données d'entraînement fictives (à remplacer par vos données réelles)  
+    X_train = np.array([features_A, features_B])  # Caractéristiques des équipes A et B  
+    y_train = np.array([1, 0])  # 1 pour Équipe A, 0 pour Équipe B  
 
-            # Prédiction des Paris Double Chance  
-            st.subheader("🎰 Prédiction des Paris Double Chance")  
-            st.write(  
-                "Les paris Double Chance permettent de couvrir deux des trois résultats possibles : "  
-                "1X (Équipe A gagne ou match nul), 12 (Équipe A gagne ou Équipe B gagne), X2 (Match nul ou Équipe B gagne)."  
-            )  
+    # Entraînement du modèle Random Forest  
+    model_rf = RandomForestClassifier()  
+    model_rf.fit(X_train, y_train)  
 
-            # Calcul des probabilités Double Chance  
-            prob_victoire_A = prediction_lr[0]  # Probabilité de victoire de l'Équipe A  
-            prob_victoire_B = 1 - prediction_lr[0]  # Probabilité de victoire de l'Équipe B  
-            prob_nul = prob_1_1  # Probabilité de match nul (basée sur Poisson)  
+    # Prédiction pour les équipes A et B  
+    prediction_A = model_rf.predict([features_A])  
+    prediction_B = model_rf.predict([features_B])  
 
-            # Probabilités Double Chance  
-            prob_1X = prob_victoire_A + prob_nul  
-            prob_12 = prob_victoire_A + prob_victoire_B  
-            prob_X2 = prob_nul + prob_victoire_B  
+    # Affichage du gagnant prédit  
+    if prediction_A == 1 and prediction_B == 0:  
+        st.write("📊 **Gagnant Prédit** : Équipe A")  
+    elif prediction_A == 0 and prediction_B == 1:  
+        st.write("📊 **Gagnant Prédit** : Équipe B")  
+    else:  
+        st.write("📊 **Gagnant Prédit** : Match Nul")  
 
-            st.write(f"📊 **Probabilité 1X (Équipe A gagne ou match nul)** : {prob_1X:.2%}")  
-            st.write(f"📊 **Probabilité 12 (Équipe A gagne ou Équipe B gagne)** : {prob_12:.2%}")  
-            st.write(f"📊 **Probabilité X2 (Match nul ou Équipe B gagne)** : {prob_X2:.2%}")  
+    # Probabilités de prédiction  
+    probabilities_A = model_rf.predict_proba([features_A])  
+    probabilities_B = model_rf.predict_proba([features_B])  
+    st.write(f"📊 **Probabilité de victoire de l'Équipe A** : {probabilities_A[0][1]:.2%}")  
+    st.write(f"📊 **Probabilité de victoire de l'Équipe B** : {probabilities_B[0][0]:.2%}")  
 
-            # Graphique des probabilités  
-            st.subheader("📉 Graphique des Probabilités")  
-            fig, ax = plt.subplots()  
-            ax.bar(["1X", "12", "X2"], [prob_1X, prob_12, prob_X2])  
-            ax.set_ylabel("Probabilité")  
-            ax.set_title("Probabilités des Paris Double Chance")  
-            st.pyplot(fig)  
 
             # Téléchargement des données organisées par équipe  
             st.subheader("📥 Téléchargement des Données des Équipes")  
