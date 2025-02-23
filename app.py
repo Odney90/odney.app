@@ -53,6 +53,13 @@ with st.form("Données des Équipes"):
         "forme_recente_B_defaites": st.number_input("❌ Défaites (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_defaites_input"),  
     })  
 
+    st.subheader("🎰 Cotes du Match")  
+    st.session_state.data.update({  
+        "cote_victoire_X": st.number_input("💰 Cote Victoire Équipe A", value=1.0, key="cote_victoire_X_input"),  
+        "cote_nul": st.number_input("💰 Cote Match Nul", value=1.0, key="cote_nul_input"),  
+        "cote_victoire_Z": st.number_input("💰 Cote Victoire Équipe B", value=1.0, key="cote_victoire_Z_input"),  
+    })  
+
     submitted = st.form_submit_button("💾 Enregistrer les Données")  
 
 # Bouton pour lancer les prédictions  
