@@ -155,7 +155,7 @@ if submitted:
 
             # Prédiction finale  
             modele.fit(X, y)  
-            proba = modele.predict_proba(X)[0]  
+            proba = modele.predict_proba(X)[0]  # Mise à jour de proba  
 
             # Affichage des prédictions  
             st.markdown("**📊 Prédictions**")  
@@ -175,25 +175,28 @@ if submitted:
                 'f1_score': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='f1_macro'))  
             }  
 
-        # Analyse finale  
-        probabilite_victoire_A = (  
-            (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
-        )  
+        # Vérification que proba est défini avant de l'utiliser  
+        if proba is not None:  
+            # Analyse finale  
+            probabilite_victoire_A = (  
+                (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
+            )  
 
-        # Affichage amélioré des résultats finaux  
-        st.subheader("🏆 Résultat Final")  
-        col_resultat_A, col_resultat_B, col_resultat_Nul = st.columns(3)  
-        with col_resultat_A:  
-            st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}", delta=f"{(probabilite_victoire_A - 0.5):.2%}")  
-        with col_resultat_B:  
-            st.metric("Probabilité de Victoire de l'Équipe B", f"{(1 - probabilite_victoire_A):.2%}", delta=f"{(0.5 - probabilite_victoire_A):.2%}")  
-        with col_resultat_Nul:  
-            st.metric("Probabilité de Match Nul", f"{(1 - (probabilite_victoire_A + (1 - probabilite_victoire_A))):.2%}")  
+            # Affichage amélioré des résultats finaux  
+            st.subheader("🏆 Résultat Final")  
+            col_resultat_A, col_resultat_B, col_resultat_Nul = st.columns(3)  
+            with col_resultat_A:  
+                st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}", delta=f"{(probabilite_victoire_A - 0.5):.2%}")  
+            with col_resultat_B:  
+                st.metric("Probabilité de Victoire de l'Équipe B", f"{(1 - probabilite_victoire_A):.2%}", delta=f"{(0.5 - probabilite_victoire_A):.2%}")  
+            with col_resultat_Nul:  
+                st.metric("Probabilité de Match Nul", f"{(1 - (probabilite_victoire_A + (1 - probabilite_victoire_A))):.2%}")  
+        else:  
+            st.error("Erreur : Les probabilités n'ont pas pu être calculées.")  
 
     except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")
-	    
-	st.error(traceback.format_exc())
+        st.error(f"Erreur lors de la prédiction : {e}")  
+        st.error(traceback.format_exc())  # Assurez-vous que cette ligne est correctement indentée  
 
 # Pied de page informatif  
 st.markdown("""  
