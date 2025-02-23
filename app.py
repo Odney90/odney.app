@@ -448,6 +448,35 @@ st.title("🏆 Système de Prédiction de Matchs de Football")
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
 
+# Fonctions utilitaires  
+def calculer_lambda_attendus(data, equipe):  
+    """Calcule les buts attendus (lambda) pour une équipe."""  
+    return data[f"expected_but_{equipe}"]  
+
+def predire_resultat_match_poisson(lambda_A, lambda_B):  
+    """Prédit les probabilités de résultat avec le modèle de Poisson."""  
+    proba_A = poisson.pmf(np.arange(0, 10), lambda_A)  
+    proba_B = poisson.pmf(np.arange(0, 10), lambda_B)  
+    
+    # Calcul des probabilités de victoire, défaite et match nul  
+    victoire_A = np.sum(np.tril(proba_A.reshape(-1, 1) * proba_B, -1))  
+    victoire_B = np.sum(np.triu(proba_A.reshape(-1, 1) * proba_B, 1))  
+    match_nul = np.sum(np.diag(proba_A.reshape(-1, 1) * proba_B))  
+    
+    return {  
+        "Victoire Équipe A": victoire_A,  
+        "Victoire Équipe B": victoire_B,  
+        "Match Nul": match_nul  
+    }  
+
+def calculer_cotes_implicites(proba):  
+    """Calcule les cotes implicites à partir des probabilités."""  
+    return {k: round(1 / v, 2) for k, v in proba.items()}  
+
+def detecter_value(cote_implicite, cote_predite):  
+    """Détecte si une value existe."""  
+    return cote_predite > cote_implicite  
+
 # Formulaire de saisie  
 with st.form("Données du Match"):  
     st.subheader("📊 Saisie des Données du Match")  
@@ -525,22 +554,6 @@ with st.form("Données du Match"):
 # Section d'analyse et de prédiction  
 if submitted:  
     try:  
-        # Génération de données historiques  
-        donnees_historiques = generer_donnees_historiques_defaut()  
-        
-        # Préparation des données  
-        X_train, y_train = preparer_donnees_entrainement(donnees_historiques)  
-        
-        # Préparation des données du match actuel  
-        X_lr = preparer_donnees_regression_logistique(st.session_state.data)  
-        X_rf = preparer_donnees_random_forest(st.session_state.data)  
-        
-        # Modèles  
-        modeles = {  
-            "Régression Logistique": LogisticRegression(max_iter=1000),  
-            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
-        }  
-        
         # Calcul des lambda pour Poisson  
         lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
         lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
@@ -569,94 +582,24 @@ if submitted:
         with col_poisson_nul:  
             st.metric("🤝 Match Nul", f"{resultats_poisson['Match Nul']:.2%}")  
         
-        # Résultats des autres modèles  
-        st.markdown("### 🤖 Performance des Modèles")  
-        resultats_modeles = {}  
-        for nom, modele in modeles.items():  
-            # Validation croisée stratifiée  
-            resultats_cv = validation_croisee_stratifiee(  
-                X_train,   
-                y_train,   
-                modele  
-            )  
-            
-            # Stockage des résultats  
-            resultats_modeles[nom] = resultats_cv  
-            
-            # Affichage des métriques de validation croisée  
-            st.markdown(f"#### {nom}")  
-            col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
-            with col_accuracy:  
-                st.metric("🎯 Accuracy", f"{resultats_cv['accuracy']:.2%}")  
-            with col_precision:  
-                st.metric("🎯 Precision", f"{resultats_cv['precision']:.2%}")  
-            with col_recall:  
-                st.metric("🎯 Recall", f"{resultats_cv['recall']:.2%}")  
-            with col_f1:  
-                st.metric("🎯 F1-Score", f"{resultats_cv['f1_score']:.2%}")  
-            
-            # Prédiction finale  
-            modele.fit(X_train, y_train)  
-            proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
-            
-            st.markdown("**📊 Prédictions**")  
-            col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
-            with col_victoire_A:  
-                st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
-            with col_victoire_B:  
-                st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
-            with col_nul:  
-                st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
+        # Comparaison des cotes  
+        st.markdown("### 📈 Comparaison des Cotes Implicites vs Cotes Prédites")  
+        cotes_implicites = {"Victoire Équipe A": 2.20, "Victoire Équipe B": 3.33, "Match Nul": 4.00}  
+        cotes_predites = calculer_cotes_implicites(resultats_poisson)  
         
-        # Analyse finale  
-        probabilite_victoire_A = (  
-            resultats_poisson['Victoire Équipe A'] +   
-            (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
-            (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
-        ) / 2  
-        
-        st.subheader("🏆 Résultat Final")  
-        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
-        
-        # Visualisation des performances des modèles  
-        st.subheader("📈 Comparaison des Performances des Modèles")  
-        
-        # Préparation des données pour le graphique  
-        metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
-        
-        # Création du DataFrame  
-        df_performances = pd.DataFrame({  
-            nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
-            for nom in resultats_modeles.keys()  
-        }, index=metriques)  
-        
-        # Affichage du DataFrame  
-        st.dataframe(df_performances)  
-        
-        # Graphique de comparaison  
-        fig, ax = plt.subplots(figsize=(10, 6))  
-        df_performances.T.plot(kind='bar', ax=ax)  
-        plt.title("Comparaison des Performances des Modèles")  
-        plt.xlabel("Modèles")  
-        plt.ylabel("Score")  
-        plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
-        plt.tight_layout()  
-        st.pyplot(fig)  
+        col_cote_A, col_cote_B, col_cote_nul = st.columns(3)  
+        with col_cote_A:  
+            st.metric("🏆 Cote Implicite (Victoire A)", cotes_implicites["Victoire Équipe A"])  
+            st.metric("🏆 Cote Prédite (Victoire A)", cotes_predites["Victoire Équipe A"])  
+            st.write("**Value ?**", "✅ Oui" if detecter_value(cotes_implicites["Victoire Équipe A"], cotes_predites["Victoire Équipe A"]) else "❌ Non")  
+        with col_cote_B:  
+            st.metric("🏆 Cote Implicite (Victoire B)", cotes_implicites["Victoire Équipe B"])  
+            st.metric("🏆 Cote Prédite (Victoire B)", cotes_predites["Victoire Équipe B"])  
+            st.write("**Value ?**", "✅ Oui" if detecter_value(cotes_implicites["Victoire Équipe B"], cotes_predites["Victoire Équipe B"]) else "❌ Non")  
+        with col_cote_nul:  
+            st.metric("🤝 Cote Implicite (Match Nul)", cotes_implicites["Match Nul"])  
+            st.metric("🤝 Cote Prédite (Match Nul)", cotes_predites["Match Nul"])  
+            st.write("**Value ?**", "✅ Oui" if detecter_value(cotes_implicites["Match Nul"], cotes_predites["Match Nul"]) else "❌ Non")  
         
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
-        st.error(traceback.format_exc())  
-
-# Pied de page informatif  
-st.markdown("""  
-### 🤔 Comment Interpréter ces Résultats ?  
-
-- **📊 Prédiction des Buts (Poisson)** : Basée sur les statistiques historiques et les caractéristiques des équipes.  
-- **🤖 Performance des Modèles** :   
-  - **Régression Logistique** : Modèle linéaire simple.  
-  - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
-- **📈 K-Fold Cross-Validation** : Cette méthode permet d'évaluer la performance des modèles en divisant les données en plusieurs sous-ensembles (folds). Chaque fold est utilisé comme ensemble de test, tandis que les autres servent à l'entraînement. Cela garantit une estimation plus robuste de la performance.  
-- **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
-
-⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
