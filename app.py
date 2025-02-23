@@ -219,7 +219,11 @@ with tab3:
             avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
             avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"]) 
             avg_goals_A = safe_float(st.session_state.data["buts_concedes_par_match_A"])
-            avg_goals_A = safe_float(st.session_state.data["buts_concedes_par_match_B"])
+            avg_goals_B = safe_float(st.session_state.data["buts_concedes_par_match_B"])
+            avg_goals_A = safe_float(st.session_state.data["balle_toucher_dans_la_surface_adverse_A"])
+            avg_goals_B = safe_float(st.session_state.data["balle_toucher_dans_la_surface_adverse_B"])
+            avg_goals_A = safe_float(st.session_state.data["Buts_attendus_A"])
+            avg_goals_B = safe_float(st.session_state.data["Buts_attendus_B"])
                                      
             if avg_goals_A <= 0 or avg_goals_B <= 0:  
                 raise ValueError("Les moyennes de buts doivent être positives.")  
@@ -249,7 +253,9 @@ with tab3:
                     safe_float(st.session_state.data["tirs_cadres_A"]),  
                     safe_float(st.session_state.data["tirs_cadres_B"]),  
                     safe_float(st.session_state.data["interceptions_A"]),  
-                    safe_float(st.session_state.data["interceptions_B"]),  
+                    safe_float(st.session_state.data["interceptions_B"]),
+                    safe_float(st.session_state.data["Buts_attendus_A"]),
+                    safe_float(st.session_state.data["Buts_attendus_B"]),
                     score_forme_A,  # Intégration de la forme récente  
                     score_forme_B,  # Intégration de la forme récente  
                 ],  
@@ -263,7 +269,9 @@ with tab3:
                     safe_float(st.session_state.data["tirs_cadres_B"]),  
                     safe_float(st.session_state.data["tirs_cadres_A"]),  
                     safe_float(st.session_state.data["interceptions_B"]),  
-                    safe_float(st.session_state.data["interceptions_A"]),  
+                    safe_float(st.session_state.data["interceptions_A"]),
+                    safe_float(st.session_state.data["balle_toucher_dans_la_surface_adverse_A"]),
+                    safe_float(st.session_state.data["balle_toucher_dans_la_surface_adverse_B"]),
                     score_forme_B,  # Intégration de la forme récente  
                     score_forme_A,  # Intégration de la forme récente  
                 ]  
