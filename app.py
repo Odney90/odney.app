@@ -2,11 +2,10 @@ import streamlit as st
 import numpy as np  
 from scipy.stats import poisson  
 
-# Fonction pour calculer la Mise Kelly  
-def mise_kelly(probabilite, cote, bankroll):  
-    if cote <= 1:  
-        return 0  
-    return (probabilite * (cote - 1) - (1 - probabilite)) / (cote - 1) * bankroll  
+# Création des onglets  
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(  
+    ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise", "📝 Formulaire et Prédiction"]  
+)  
 
 # Initialisation des données dans st.session_state  
 if "data" not in st.session_state:  
@@ -57,26 +56,6 @@ with tab1:
             max_value=50,  
             value=int(st.session_state.data["grandes_chances_A"]),  # Convertir en entier  
         )
-# Création des onglets  
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(  
-    ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise", "📝 Formulaire et Prédiction"]  
-)  
-
-# Onglet 1 : Statistiques  
-with tab1:  
-    st.header("📊 Statistiques des Équipes")  
-    col_a, col_b = st.columns(2)  
-
-    # Statistiques de l'Équipe A  
-    with col_a:  
-        st.subheader("Équipe A")  
-        st.session_state.data["grandes_chances_A"] = st.slider(  
-            "Grandes Chances (A)",  
-            min_value=0,  
-            max_value=50,  
-            value=int(st.session_state.data["grandes_chances_A"]),  # Convertir en entier  
-        )  
-
     # Statistiques de l'Équipe A  
     with col_a:  
         st.subheader("Équipe A")  
