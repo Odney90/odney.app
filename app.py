@@ -30,7 +30,7 @@ def highlight_data(data, key):
         return f"<span style='font-size: 16px;'>{data}</span>"  
 
 # Formulaire de collecte des données  
-with st.form("data_form"):  
+with st.form("data_form_v1"):  # Nom modifié ici  
     st.markdown("### Équipe A")  
     col1, col2 = st.columns(2)  
     with col1:  
@@ -93,9 +93,14 @@ with st.form("data_form"):
         st.session_state.data['buts_corners_B'] = st.number_input("⚽ Buts Corners", value=1.0, format="%.2f", key="buts_corners_B")  
         st.session_state.data['jours_repos_B'] = st.number_input("⏳ Jours de Repos", value=3.0, format="%.2f", key="repos_B")  
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9.0, format="%.2f", key="matchs_B")  
-  # Bouton de soumission du formulaire  
+
+    # Bouton de soumission du formulaire  
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
+# Section d'analyse et de prédiction (séparée du formulaire)  
+if submitted:  
+    # Ajoutez ici votre logique d'analyse et de prédiction  
+    st.write("Analyse en cours...")
 # Section d'analyse et de prédiction (séparée du formulaire)  
 if submitted:  
     # Ajoutez ici votre logique d'analyse et de prédiction  
