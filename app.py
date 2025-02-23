@@ -198,11 +198,14 @@ with tab2:
 # Onglet 3 : Prédictions  
 with tab3:  
     st.header("🔮 Prédictions")  
-    if st.button("Prédire le résultat"):  
+    if st.button("Prédire le résultat"):  "buts_concedes_par_match"
         try:  
             # Prédiction des Buts avec Poisson  
             avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
-            avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"])  
+            avg_goals_B = safe_float(st.session_state.data["buts_par_match_B"]) 
+            avg_goals_A = safe_float(st.session_state.data["buts_concedes_par_match_A"])
+            avg_goals_A = safe_float(st.session_state.data["buts_concedes_par_match_B"])
+                                     
             if avg_goals_A <= 0 or avg_goals_B <= 0:  
                 raise ValueError("Les moyennes de buts doivent être positives.")  
             prob_0_0 = poisson.pmf(0, avg_goals_A) * poisson.pmf(0, avg_goals_B)  
