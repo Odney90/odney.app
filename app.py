@@ -288,7 +288,7 @@ if submitted:
 st.markdown("""  
 ### Comment Interpréter ces Résultats ?  
                     
-- **Prédiction des Buts (Poisson)** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
+- **Prédiction des Buts Poisson** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
 - **Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
 - **Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
