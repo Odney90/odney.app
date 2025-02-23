@@ -69,16 +69,15 @@ with tabs[0]:
         st.markdown("#### 🆕 Nouveaux Critères")  
         col5, col6 = st.columns(2)  
         with col5:  
-            st.session_state.data['absences_A'] = st.number_input("🚑 Absences (Équipe A)", value=2, key="absences_A")  
-            st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=7.5, format="%.2f", key="forme_A")  
+            st.session_state.data['victoires_A'] = st.number_input("🏆 Victoires (Équipe A)", value=3, key="victoires_A")  
+            st.session_state.data['nuls_A'] = st.number_input("🤝 Nuls (Équipe A)", value=1, key="nuls_A")  
+            st.session_state.data['defaites_A'] = st.number_input("❌ Défaites (Équipe A)", value=1, key="defaites_A")  
+            st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=3.0, format="%.2f", key="forme_A")  # Moyenne des 5 derniers matchs  
         with col6:  
-            st.session_state.data['absences_B'] = st.number_input("🚑 Absences (Équipe B)", value=3, key="absences_B")  
-            st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=6.0, format="%.2f", key="forme_B")  
-
-        # Critères de face-à-face  
-        st.markdown("#### 📊 Statistiques de Face-à-Face")  
-        st.session_state.data['buts_A_face_a_face'] = st.number_input("⚽ Buts Équipe A (Face-à-Face)", value=2.0, format="%.2f", key="buts_A_face")  
-        st.session_state.data['buts_B_face_a_face'] = st.number_input("⚽ Buts Équipe B (Face-à-Face)", value=1.5, format="%.2f", key="buts_B_face")  
+            st.session_state.data['victoires_B'] = st.number_input("🏆 Victoires (Équipe B)", value=2, key="victoires_B")  
+            st.session_state.data['nuls_B'] = st.number_input("🤝 Nuls (Équipe B)", value=2, key="nuls_B")  
+            st.session_state.data['defaites_B'] = st.number_input("❌ Défaites (Équipe B)", value=1, key="defaites_B")  
+            st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=2.0, format="%.2f", key="forme_B")  # Moyenne des 5 derniers matchs  
 
         # Cotes des bookmakers  
         st.markdown("#### 📊 Cotes des Bookmakers")  
@@ -110,9 +109,10 @@ with tabs[0]:
                 'expected_concedes_A': np.random.normal(st.session_state.data['expected_concedes_A'], 0.5, n_samples),  
                 'tirs_cadres_A': np.random.normal(st.session_state.data['tirs_cadres_A'], 10, n_samples),  
                 'grandes_chances_A': np.random.normal(st.session_state.data['grandes_chances_A'], 5, n_samples),  
-                'absences_A': np.random.normal(st.session_state.data['absences_A'], 1, n_samples),  
+                'victoires_A': np.random.normal(st.session_state.data['victoires_A'], 1, n_samples),  
+                'nuls_A': np.random.normal(st.session_state.data['nuls_A'], 1, n_samples),  
+                'defaites_A': np.random.normal(st.session_state.data['defaites_A'], 1, n_samples),  
                 'forme_recente_A': np.random.normal(st.session_state.data['forme_recente_A'], 1, n_samples),  
-                'buts_A_face_a_face': np.random.normal(st.session_state.data['buts_A_face_a_face'], 0.5, n_samples),  
             }  
 
             # Données synthétiques pour l'équipe B  
@@ -125,9 +125,10 @@ with tabs[0]:
                 'expected_concedes_B': np.random.normal(st.session_state.data['expected_concedes_B'], 0.5, n_samples),  
                 'tirs_cadres_B': np.random.normal(st.session_state.data['tirs_cadres_B'], 10, n_samples),  
                 'grandes_chances_B': np.random.normal(st.session_state.data['grandes_chances_B'], 5, n_samples),  
-                'absences_B': np.random.normal(st.session_state.data['absences_B'], 1, n_samples),  
+                'victoires_B': np.random.normal(st.session_state.data['victoires_B'], 1, n_samples),  
+                'nuls_B': np.random.normal(st.session_state.data['nuls_B'], 1, n_samples),  
+                'defaites_B': np.random.normal(st.session_state.data['defaites_B'], 1, n_samples),  
                 'forme_recente_B': np.random.normal(st.session_state.data['forme_recente_B'], 1, n_samples),  
-                'buts_B_face_a_face': np.random.normal(st.session_state.data['buts_B_face_a_face'], 0.5, n_samples),  
             }  
 
             # Création du DataFrame synthétique  
@@ -144,7 +145,7 @@ with tabs[0]:
                 st.session_state.data['buts_par_match_A'] +  
                 st.session_state.data['tirs_cadres_A'] * 0.1 +  
                 st.session_state.data['grandes_chances_A'] * 0.2 +  
-                st.session_state.data['buts_A_face_a_face'] * 0.3  # Ajout des buts face-à-face  
+                (st.session_state.data['victoires_A'] * 0.3) - (st.session_state.data['defaites_B'] * 0.2)  # Impact des victoires et défaites  
             )  
 
             lambda_B = (  
@@ -152,7 +153,7 @@ with tabs[0]:
                 st.session_state.data['buts_par_match_B'] +  
                 st.session_state.data['tirs_cadres_B'] * 0.1 +  
                 st.session_state.data['grandes_chances_B'] * 0.2 +  
-                st.session_state.data['buts_B_face_a_face'] * 0.3  # Ajout des buts face-à-face  
+                (st.session_state.data['victoires_B'] * 0.3) - (st.session_state.data['defaites_A'] * 0.2)  # Impact des victoires et défaites  
             )  
 
             # Prédiction des buts avec Poisson  
@@ -248,17 +249,18 @@ with tabs[0]:
 
             # Affichage des poids des critères  
             st.subheader("📊 Poids des Critères du Modèle Random Forest")  
-            if st.session_state.poids_criteres:  # Vérification si les poids existent  
+            if st.session_state.poids_criteres:
+                                # Vérification si les poids existent  
                 poids_df = pd.DataFrame({  
                     'Critères': [  
                         'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
                         'Expected Goals A', 'Expected Goals Against A', 'Tirs Cadrés A', 'Grandes Chances A',  
-                        'Absences A', 'Forme Récente A', 'Buts Face-à-Face A',   
+                        'Victoires A', 'Nuls A', 'Défaites A', 'Forme Récente A',  
                         'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
                         'Possession Moyenne B', 'Expected Goals B',   
                         'Expected Goals Against B', 'Tirs Cadrés B',   
-                        'Grandes Chances B', 'Absences B',   
-                        'Forme Récente B', 'Buts Face-à-Face B'  
+                        'Grandes Chances B', 'Victoires B', 'Nuls B', 'Défaites B',   
+                        'Forme Récente B'  
                     ],  
                     'Poids': st.session_state.poids_criteres  
                 })  
