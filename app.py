@@ -149,7 +149,7 @@ if submitted:
             st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_B, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
 
         # Modèles de classification avec validation croisée  
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
+        skf = StratifiedKFold(n_splits=2, shuffle=True, random_state=42)  
 
         # Logistic Regression  
         log_reg = LogisticRegression()  
