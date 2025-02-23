@@ -68,9 +68,9 @@ with st.form("data_form"):
 # Section d'analyse et de prédiction  
 if submitted:  
     try:  
-        # Génération des données fictives  
-        X = np.array(list(st.session_state.data.values())).reshape(1, -1)  
-        y = np.random.randint(0, 3, 1)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
+        # Génération des données fictives (100 échantillons)  
+        X = np.random.rand(100, len(st.session_state.data))  # 100 échantillons, nombre de caractéristiques = nombre de données  
+        y = np.random.randint(0, 3, 100)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
 
         # Modèles  
         modeles = {  
