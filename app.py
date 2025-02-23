@@ -106,7 +106,7 @@ def generer_donnees_historiques_defaut(nombre_matchs=50):
             'joueurs_blesses_A': np.random.randint(0, 5),  
             'joueurs_blesses_B': np.random.randint(0, 5),  
             
-            'resultat': np.random.choice([0, 0.5, 1])  # 0: défaite, 0.5: nul, 1: victoire  
+            'resultat': np.random.choice([0, 1, 2])  # 0: défaite, 1: victoire, 2: nul  
         }  
         donnees.append(match)  
     return donnees  
@@ -138,13 +138,8 @@ def preparer_donnees_entrainement(donnees_historiques):
         
         X.append(features)  
         
-        resultat = donnee.get('resultat', 0.5)  
-        if resultat == 1:  
-            y.append(1)  # Victoire de l'équipe A  
-        elif resultat == 0:  
-            y.append(0)  # Victoire de l'équipe B  
-        else:  
-            y.append(0.5)  # Match nul  
+        resultat = donnee.get('resultat', 2)  
+        y.append(resultat)  # 0: défaite, 1: victoire, 2: nul  
     
     return np.array(X), np.array(y)  
 
@@ -310,6 +305,7 @@ if st.button("🏆 Prédire le Résultat"):
                 
                 st.write(f"Probabilité Victoire A: {proba[1]:.2%}")  
                 st.write(f"Probabilité Victoire B: {proba[0]:.2%}")  
+                st.write(f"Probabilité Match Nul: {proba[2]:.2%}")  
         
         # Analyse finale  
         probabilite_victoire_A = (  
@@ -361,5 +357,4 @@ st.markdown("""
 - **Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
-
+""")  
