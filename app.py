@@ -92,7 +92,7 @@ with st.form(key='match_form'):
 
 # Analyse des résultats  
 if submitted:  
-       try:  
+    try:  
         # Création d'un DataFrame pour les données  
         data = {  
             'score_rating': [st.session_state.data['score_rating_A'], st.session_state.data['score_rating_B']],  
