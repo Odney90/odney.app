@@ -58,6 +58,13 @@ if "data" not in st.session_state:
         "possession_B": 48.0,  
         "corners_par_match_A": 5.5,  
         "corners_par_match_B": 4.8,  
+        # Forme récente des équipes (victoires, nuls, défaites sur les 5 derniers matchs)  
+        "forme_recente_A_victoires": 3,  
+        "forme_recente_A_nuls": 1,  
+        "forme_recente_A_defaites": 1,  
+        "forme_recente_B_victoires": 2,  
+        "forme_recente_B_nuls": 2,  
+        "forme_recente_B_defaites": 1,  
     }  
 
 # Création des onglets  
@@ -168,6 +175,26 @@ with tab1:
                 key="corners_par_match_A_input",  
                 step=0.01  
             )  
+            # Forme récente de l'Équipe A  
+            st.subheader("Forme Récente (Équipe A)")  
+            st.session_state.data["forme_recente_A_victoires"] = st.number_input(  
+                "Victoires (A) sur les 5 derniers matchs",  
+                value=st.session_state.data["forme_recente_A_victoires"],  
+                key="forme_recente_A_victoires_input",  
+                step=1  
+            )  
+            st.session_state.data["forme_recente_A_nuls"] = st.number_input(  
+                "Nuls (A) sur les 5 derniers matchs",  
+                value=st.session_state.data["forme_recente_A_nuls"],  
+                key="forme_recente_A_nuls_input",  
+                step=1  
+            )  
+            st.session_state.data["forme_recente_A_defaites"] = st.number_input(  
+                "Défaites (A) sur les 5 derniers matchs",  
+                value=st.session_state.data["forme_recente_A_defaites"],  
+                key="forme_recente_A_defaites_input",  
+                step=1  
+            )  
 
         # Équipe B  
         with col2:  
@@ -263,6 +290,26 @@ with tab1:
                 key="corners_par_match_B_input",  
                 step=0.01  
             )  
+            # Forme récente de l'Équipe B  
+            st.subheader("Forme Récente (Équipe B)")  
+            st.session_state.data["forme_recente_B_victoires"] = st.number_input(  
+                "Victoires (B) sur les 5 derniers matchs",  
+                value=st.session_state.data["forme_recente_B_victoires"],  
+                key="forme_recente_B_victoires_input",  
+                step=1  
+            )  
+            st.session_state.data["forme_recente_B_nuls"] = st.number_input(  
+                "Nuls (B) sur les 5 derniers matchs",  
+                value=st.session_state.data["forme_recente_B_nuls"],  
+                key="forme_recente_B_nuls_input",  
+                step=1  
+            )  
+            st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
+                "Défaites (B) sur les 5 derniers matchs",  
+                value=st.session_state.data["forme_recente_B_defaites"],  
+                key="forme_recente_B_defaites_input",  
+                step=1  
+            )  
 
         # Face-à-face  
         st.subheader("Face-à-Face")  
@@ -287,7 +334,7 @@ with tab2:
     st.header("🔮 Prédictions")  
     st.write("Cette section prédit le gagnant entre l'Équipe A et l'Équipe B en utilisant plusieurs méthodes de prédiction.")  
 
-    # Préparation des données pour Random Forest  
+    # Préparation des données pour Random Forest et Régression Logistique  
     X = pd.DataFrame([st.session_state.data])  
     y = np.random.choice([0, 1, 2], size=1)  # Utilisation de valeurs numériques pour y  
 
@@ -302,64 +349,39 @@ with tab2:
         prediction_rf = "Erreur"  
         probabilite_rf = 0  
 
-    # Méthode 2 : Distribution de Poisson  
-    # Calcul des buts attendus avec Poisson  
-    buts_attendus_A = (st.session_state.data["buts_marques_A"] + st.session_state.data["buts_concedes_B"]) / 2  
-    buts_attendus_B = (st.session_state.data["buts_marques_B"] + st.session_state.data["buts_concedes_A"]) / 2  
+    # Méthode 2 : Régression Logistique  
+    try:  
+        model_lr = LogisticRegression()  
+        model_lr.fit(X, y)  
+        prediction_lr = model_lr.predict(X)[0]  
+        probabilite_lr = model_lr.predict_proba(X)[0][prediction_lr] * 100  
+    except ValueError as e:  
+        st.error(f"Erreur lors de l'entraînement de la Régression Logistique : {e}")  
+        prediction_lr = "Erreur"  
+        probabilite_lr = 0  
 
+    # Méthode 3 : Distribution de Poisson  
+    # Calcul des buts
     # Simulation des buts avec Poisson  
-    buts_A = poisson.rvs(buts_attendus_A, size=1000)  
-    buts_B = poisson.rvs(buts_attendus_B, size=1000)  
-    victoire_A = np.mean(buts_A > buts_B)  
-    victoire_B = np.mean(buts_B > buts_A)  
-    match_nul = np.mean(buts_A == buts_B)  
+buts_A = poisson.rvs(buts_attendus_A, size=1000)  
+buts_B = poisson.rvs(buts_attendus_B, size=1000)  
+victoire_A = np.mean(buts_A > buts_B)  
+victoire_B = np.mean(buts_B > buts_A)  
+match_nul = np.mean(buts_A == buts_B)  
 
-    # Affichage des résultats  
-    st.write("📊 **Résultats des Différentes Méthodes de Prédiction**")  
-    col1, col2, col3 = st.columns(3)  
-    with col1:  
-        st.metric("Random Forest", f"{prediction_rf} ({probabilite_rf:.2f}%)")  
-    with col2:  
-        st.metric("Probabilité de victoire de l'Équipe A", f"{victoire_A:.2%}")  
-    with col3:  
-        st.metric("Probabilité de victoire de l'Équipe B", f"{victoire_B:.2%}")  
+# Affichage des résultats  
+st.write("📊 **Résultats des Différentes Méthodes de Prédiction**")  
+col1, col2, col3 = st.columns(3)  
+with col1:  
+    st.metric("Random Forest", f"{prediction_rf} ({probabilite_rf:.2f}%)")  
+with col2:  
+    st.metric("Régression Logistique", f"{prediction_lr} ({probabilite_lr:.2f}%)")  
+with col3:  
+    st.metric("Probabilité de victoire de l'Équipe A", f"{victoire_A:.2%}")  
 
-    st.write("📊 **Prédiction des Buts avec Poisson**")  
-    col4, col5 = st.columns(2)  
-    with col4:  
-        st.metric("Buts prédits pour l'Équipe A", f"{int(np.mean(buts_A))}", f"{np.mean(buts_A):.2%}")  
-    with col5:  
-        st.metric("Buts prédits pour l'Équipe B", f"{int(np.mean(buts_B))}", f"{np.mean(buts_B):.2%}")  
-
-# Onglet 3 : Cotes et Value Bet  
-with tab3:  
-    st.header("🎰 Cotes et Value Bet")  
-    st.write("Cette section analyse les cotes et les opportunités de value bet.")  
-    st.session_state.data["cote_victoire_X"] = st.number_input(  
-        "Cote Victoire Équipe A",  
-        value=st.session_state.data["cote_victoire_X"],  
-        key="cote_victoire_X_input",  
-        step=0.01  
-    )  
-    st.session_state.data["cote_nul"] = st.number_input(  
-        "Cote Match Nul",  
-        value=st.session_state.data["cote_nul"],  
-        key="cote_nul_input",  
-        step=0.01  
-    )  
-    st.session_state.data["cote_victoire_Z"] = st.number_input(  
-        "Cote Victoire Équipe B",  
-        value=st.session_state.data["cote_victoire_Z"],  
-        key="cote_victoire_Z_input",  
-        step=0.01  
-    )  
-
-# Onglet 4 : Système de Mise  
-with tab4:  
-    st.header("💰 Système de Mise")  
-    st.write("Cette section permet de configurer et de gérer le système de mise.")  
-    st.session_state.data["bankroll"] = st.number_input(  
-        "Bankroll",  
-        value=st.session_state.data["bankroll"],  
-        key="bankroll_input",  
-        step=0.01
+st.write("📊 **Prédiction des Buts avec Poisson**")  
+col4, col5 = st.columns(2)  
+with col4:  
+    st.metric("Buts prédits pour l'Équipe A", f"{int(np.mean(buts_A))}", f"{np.mean(buts_A):.2%}")  
+with col5:  
+    st.metric("Buts prédits pour l'Équipe B", f"{int(np.mean(buts_B))}", f"{np.mean(buts_B):.2%}")
