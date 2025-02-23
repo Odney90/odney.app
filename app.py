@@ -245,10 +245,3 @@ if st.button("🔮 Lancer les Prédictions"):
         st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
 else:  
     st.warning("⚠️ Les prédictions ne sont pas encore disponibles ou une erreur s'est produite. Veuillez lancer les prédictions d'abord.")  
-Comment Utiliser les Données Fictives
-Lancez les prédictions : Cliquez sur le bouton "🔮 Lancer les Prédictions" pour exécuter le code avec les valeurs fictives.
-Remplacez les valeurs fictives : Une fois que vous avez accès à vos propres données, remplacez les valeurs fictives (1.5 et 1.2) par vos valeurs réelles dans le formulaire.
-Résultat
-Avec les données fictives, le modèle de Poisson fonctionnera correctement, et vous pourrez voir les prédictions sans erreur. Vous pourrez ensuite remplacer ces valeurs par vos propres données pour des prédictions personnalisées.
-
-Si vous avez d'autres questions ou besoin d'aide, n'hésitez pas à demander ! 😊
