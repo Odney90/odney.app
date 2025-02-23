@@ -88,12 +88,12 @@ with st.form("data_form"):
 if submitted:  
     try:  
         # Préparation des données pour Poisson  
-        lambda_A = st.session_state.data['buts_par_match_A']  # Taux de buts de l'équipe A  
-        lambda_B = st.session_state.data['buts_par_match_B']  # Taux de buts de l'équipe B  
+        lambda_A = st.session_state.data['expected_but_A']  # Taux de buts de l'équipe A (xG)  
+        lambda_B = st.session_state.data['expected_but_B']  # Taux de buts de l'équipe B (xG)  
 
         # Prédiction des buts avec Poisson  
-        buts_A = poisson.rvs(mu=lambda_A, size=100)  # 100 simulations pour l'équipe A  
-        buts_B = poisson.rvs(mu=lambda_B, size=100)  # 100 simulations pour l'équipe B  
+        buts_A = poisson.rvs(mu=lambda_A, size=1000)  # 1000 simulations pour l'équipe A  
+        buts_B = poisson.rvs(mu=lambda_B, size=1000)  # 1000 simulations pour l'équipe B  
 
         # Résultats Poisson  
         st.subheader("📊 Prédiction des Buts (Poisson)")  
@@ -105,7 +105,7 @@ if submitted:
 
         # Préparation des données pour Régression Logistique et Random Forest  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
-        y = np.random.randint(0, 3, 100)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
+        y = np.random.randint(0, 3, 1000)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
 
         # Modèles  
         modeles = {  
@@ -190,7 +190,7 @@ if submitted:
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
 
-- **📊 Prédiction des Buts (Poisson)** : Basée sur les statistiques historiques et les caractéristiques des équipes.  
+- **📊 Prédiction des Buts (Poisson)** : Basée sur les Expected Goals (xG) des équipes.  
 - **🤖 Performance des Modèles** :   
   - **Régression Logistique** : Modèle linéaire simple.  
   - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
