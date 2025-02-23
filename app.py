@@ -32,50 +32,9 @@ def calculer_score_forme_avance(victoires, nuls, defaites,
                                  poids_defaite=-2):  
     return (victoires * poids_victoire +   
             nuls * poids_nul +   
-            defaites * poids_defaite)
-    # Configuration de la page Streamlit  
-st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
-st.title("📊 Prédictions de Matchs de Football")  
+            defaites * poids_defaite)  
 
-# Formulaire pour les données des équipes  
-with st.form("Données des Équipes"):  
-    # Initialisation du dictionnaire de données  
-    if 'data' not in st.session_state:  
-        st.session_state.data = {}  
-
-    # Données existantes de l'Équipe A  
-    st.subheader("⚽ Données de l'Équipe A")  
-    st.session_state.data.update({  
-        # Données existantes...  
-        "buts_marques_A": st.number_input("⚽ Buts Marqués par Match (A)", value=1.5, key="buts_marques_A_input"),  
-        # ... autres champs existants  
-    })  
-
-    # Nouvelles colonnes à ajouter  
-    st.session_state.data.update({  
-        # Données de Classement et Performance Globale  
-        "classement_championnat_A": st.number_input("🏆 Classement Championnat (A)", value=5, key="classement_championnat_A_input"),  
-        "classement_championnat_B": st.number_input("🏆 Classement Championnat (B)", value=10, key="classement_championnat_B_input"),  
-        
-        # Performance en Déplacement/Domicile  
-        "performance_domicile_A": st.number_input("🏠 Performance Domicile (A)", value=75.0, key="performance_domicile_A_input"),  
-        "performance_exterieur_A": st.number_input("✈️ Performance Extérieur (A)", value=60.0, key="performance_exterieur_A_input"),  
-        "performance_domicile_B": st.number_input("🏠 Performance Domicile (B)", value=65.0, key="performance_domicile_B_input"),  
-        "performance_exterieur_B": st.number_input("✈️ Performance Extérieur (B)", value=55.0, key="performance_exterieur_B_input"),  
-        
-        # Données de Blessures et Disponibilité  
-        "joueurs_blesses_A": st.number_input("🩺 Nombre de Joueurs Blessés (A)", value=2, key="joueurs_blesses_A_input"),  
-        "joueurs_blesses_B": st.number_input("🩺 Nombre de Joueurs Blessés (B)", value=3, key="joueurs_blesses_B_input"),  
-        
-        # Historique des Confrontations Directes  
-        "victoires_confrontations_directes_A": st.number_input("🤝 Victoires Confrontations Directes (A)", value=3, key="victoires_confrontations_directes_A_input"),  
-        "victoires_confrontations_directes_B": st.number_input("🤝 Victoires Confrontations Directes (B)", value=2, key="victoires_confrontations_directes_B_input"),  
-    })  
-
-    # Bouton de soumission du formulaire  
-    submitted = st.form_submit_button("💾 Enregistrer les Données")
-    
-   def validation_croisee_personnalisee(X, y, modele, n_splits=5):  
+def validation_croisee_personnalisee(X, y, modele, n_splits=5):  
     from sklearn.model_selection import StratifiedKFold  
     from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score  
     
@@ -100,52 +59,53 @@ with st.form("Données des Équipes"):
         resultats['recall'].append(recall_score(y_test, y_pred, average='weighted'))  
         resultats['f1_score'].append(f1_score(y_test, y_pred, average='weighted'))  
     
-    return {k: np.mean(v) for k, v in resultats.items()}
+    return {k: np.mean(v) for k, v in resultats.items()}  
+
 def preparer_donnees_regression_logistique(data):  
     score_forme_A = calculer_score_forme_avance(  
-        data["forme_recente_A_victoires"],  
-        data["forme_recente_A_nuls"],  
-        data["forme_recente_A_defaites"]  
+        data.get("forme_recente_A_victoires", 0),  
+        data.get("forme_recente_A_nuls", 0),  
+        data.get("forme_recente_A_defaites", 0)  
     )  
     score_forme_B = calculer_score_forme_avance(  
-        data["forme_recente_B_victoires"],  
-        data["forme_recente_B_nuls"],  
-        data["forme_recente_B_defaites"]  
+        data.get("forme_recente_B_victoires", 0),  
+        data.get("forme_recente_B_nuls", 0),  
+        data.get("forme_recente_B_defaites", 0)  
     )  
 
     X_lr = np.array([  
         [  
             # Performance Globale et Classement  
-            safe_float(data["score_rating_A"]),  
-            safe_float(data["classement_championnat_A"]),  
-            safe_float(data["score_rating_B"]),  
-            safe_float(data["classement_championnat_B"]),  
+            safe_float(data.get("score_rating_A", 0)),  
+            safe_float(data.get("classement_championnat_A", 0)),  
+            safe_float(data.get("score_rating_B", 0)),  
+            safe_float(data.get("classement_championnat_B", 0)),  
             
             # Performance Offensive  
-            safe_float(data["buts_marques_A"]),  
-            safe_float(data["tirs_cadres_par_match_A"]),  
-            safe_float(data["buts_marques_B"]),  
-            safe_float(data["tirs_cadres_par_match_B"]),  
+            safe_float(data.get("buts_marques_A", 0)),  
+            safe_float(data.get("tirs_cadres_par_match_A", 0)),  
+            safe_float(data.get("buts_marques_B", 0)),  
+            safe_float(data.get("tirs_cadres_par_match_B", 0)),  
             
             # Performance Domicile/Extérieur  
-            safe_float(data["performance_domicile_A"]),  
-            safe_float(data["performance_exterieur_A"]),  
-            safe_float(data["performance_domicile_B"]),  
-            safe_float(data["performance_exterieur_B"]),  
+            safe_float(data.get("performance_domicile_A", 0)),  
+            safe_float(data.get("performance_exterieur_A", 0)),  
+            safe_float(data.get("performance_domicile_B", 0)),  
+            safe_float(data.get("performance_exterieur_B", 0)),  
             
             # Forme et Motivation  
             score_forme_A,  
-            safe_float(data["motivation_A"]),  
+            safe_float(data.get("motivation_A", 0)),  
             score_forme_B,  
-            safe_float(data["motivation_B"]),  
+            safe_float(data.get("motivation_B", 0)),  
             
             # Confrontations Directes  
-            safe_float(data["victoires_confrontations_directes_A"]),  
-            safe_float(data["victoires_confrontations_directes_B"]),  
+            safe_float(data.get("victoires_confrontations_directes_A", 0)),  
+            safe_float(data.get("victoires_confrontations_directes_B", 0)),  
             
             # Impact des Blessures  
-            safe_float(data["joueurs_blesses_A"]),  
-            safe_float(data["joueurs_blesses_B"])  
+            safe_float(data.get("joueurs_blesses_A", 0)),  
+            safe_float(data.get("joueurs_blesses_B", 0))  
         ]  
     ])  
     return X_lr  
@@ -154,44 +114,80 @@ def preparer_donnees_random_forest(data):
     X_rf = np.array([  
         [  
             # Performance Défensive  
-            safe_float(data["buts_attendus_concedes_A"]),  
-            safe_float(data["interceptions_A"]),  
-            safe_float(data["tacles_reussis_par_match_A"]),  
-            safe_float(data["buts_attendus_concedes_B"]),  
-            safe_float(data["interceptions_B"]),  
-            safe_float(data["tacles_reussis_par_match_B"]),  
+            safe_float(data.get("buts_attendus_concedes_A", 0)),  
+            safe_float(data.get("interceptions_A", 0)),  
+            safe_float(data.get("tacles_reussis_par_match_A", 0)),  
+            safe_float(data.get("buts_attendus_concedes_B", 0)),  
+            safe_float(data.get("interceptions_B", 0)),  
+            safe_float(data.get("tacles_reussis_par_match_B", 0)),  
             
             # Statistiques de Jeu Avancées  
-            safe_float(data["centres_reussies_par_match_A"]),  
-            safe_float(data["corners_par_match_A"]),  
-            safe_float(data["centres_reussies_par_match_B"]),  
-            safe_float(data["corners_par_match_B"]),  
+            safe_float(data.get("centres_reussies_par_match_A", 0)),  
+            safe_float(data.get("corners_par_match_A", 0)),  
+            safe_float(data.get("centres_reussies_par_match_B", 0)),  
+            safe_float(data.get("corners_par_match_B", 0)),  
             
             # Discipline  
-            safe_float(data["penalties_concedees_A"]),  
-            safe_float(data["fautes_par_match_A"]),  
-            safe_float(data["penalties_concedees_B"]),  
-            safe_float(data["fautes_par_match_B"]),  
+            safe_float(data.get("penalties_concedees_A", 0)),  
+            safe_float(data.get("fautes_par_match_A", 0)),  
+            safe_float(data.get("penalties_concedees_B", 0)),  
+            safe_float(data.get("fautes_par_match_B", 0)),  
             
             # Performance Globale  
-            safe_float(data["classement_championnat_A"]),  
-            safe_float(data["classement_championnat_B"]),  
+            safe_float(data.get("classement_championnat_A", 0)),  
+            safe_float(data.get("classement_championnat_B", 0)),  
             
             # Créativité et Dynamisme  
-            safe_float(data["passes_reussies_par_match_A"]),  
-            safe_float(data["dribbles_reussis_par_match_A"]),  
-            safe_float(data["passes_reussies_par_match_B"]),  
-            safe_float(data["dribbles_reussis_par_match_B"]),  
+            safe_float(data.get("passes_reussies_par_match_A", 0)),  
+            safe_float(data.get("dribbles_reussis_par_match_A", 0)),  
+            safe_float(data.get("passes_reussies_par_match_B", 0)),  
+            safe_float(data.get("dribbles_reussis_par_match_B", 0)),  
             
             # Données de Blessures et Confrontations  
-            safe_float(data["joueurs_blesses_A"]),  
-            safe_float(data["joueurs_blesses_B"]),  
-            safe_float(data["victoires_confrontations_directes_A"]),  
-            safe_float(data["victoires_confrontations_directes_B"])  
+            safe_float(data.get("joueurs_blesses_A", 0)),  
+            safe_float(data.get("joueurs_blesses_B", 0)),  
+            safe_float(data.get("victoires_confrontations_directes_A", 0)),  
+            safe_float(data.get("victoires_confrontations_directes_B", 0))  
         ]  
     ])  
-    return X_rf
-    # Bouton pour lancer les prédictions  
+    return X_rf  
+
+# Configuration de la page Streamlit  
+st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
+st.title("📊 Prédictions de Matchs de Football")  
+
+# Initialisation du dictionnaire de données  
+if 'data' not in st.session_state:  
+    st.session_state.data = {}  
+
+# Formulaire pour les données des équipes  
+with st.form("Données des Équipes"):  
+    # Données existantes de l'Équipe A  
+    st.subheader("⚽ Données de l'Équipe A")  
+    
+    # Ajout des champs de saisie  
+    st.session_state.data.update({  
+        "buts_marques_A": st.number_input("⚽ Buts Marqués par Match (A)", value=1.5, key="buts_marques_A_input"),  
+        # Ajoutez ici vos autres champs existants  
+        
+        # Nouvelles colonnes  
+        "classement_championnat_A": st.number_input("🏆 Classement Championnat (A)", value=5, key="classement_championnat_A_input"),  
+        "classement_championnat_B": st.number_input("🏆 Classement Championnat (B)", value=10, key="classement_championnat_B_input"),  
+        
+        "performance_domicile_A": st.number_input("🏠 Performance Domicile (A)", value=75.0, key="performance_domicile_A_input"),  
+        "performance_exterieur_A": st.number_input("✈️ Performance Extérieur (A)", value=60.0, key="performance_exterieur_A_input"),  
+        
+        "joueurs_blesses_A": st.number_input("🩺 Nombre de Joueurs Blessés (A)", value=2, key="joueurs_blesses_A_input"),  
+        "joueurs_blesses_B": st.number_input("🩺 Nombre de Joueurs Blessés (B)", value=3, key="joueurs_blesses_B_input"),  
+        
+        "victoires_confrontations_directes_A": st.number_input("🤝 Victoires Confrontations Directes (A)", value=3, key="victoires_confrontations_directes_A_input"),  
+        "victoires_confrontations_directes_B": st.number_input("🤝 Victoires Confrontations Directes (B)", value=2, key="victoires_confrontations_directes_B_input"),  
+    })  
+
+    # Bouton de soumission du formulaire  
+    submitted = st.form_submit_button("💾 Enregistrer les Données")  
+
+# Bouton pour lancer les prédictions  
 if st.button("🔮 Lancer les Prédictions"):  
     try:  
         # Préparation des données  
@@ -228,8 +224,5 @@ if st.button("🔮 Lancer les Prédictions"):
             for metrique, valeur in resultats_rf.items():  
                 st.write(f"{metrique.capitalize()} : {valeur:.2%}")  
         
-        # Reste de votre code de prédiction...  
-
     except Exception as e:  
         st.error(f"Erreur lors de la préparation des modèles : {e}")
-        
