@@ -462,7 +462,7 @@ with st.form("Données du Match"):
     
     with col1:  
         st.markdown("**Équipe A**")  
-        st.session_state.data.update({  
+        st.session_state.data = {  
             "score_rating_A": st.number_input("⭐ Score Rating", value=70, key="rating_A"),  
             "buts_par_match_A": st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A"),  
             "buts_concedes_par_match_A": st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A"),  
@@ -491,7 +491,7 @@ with st.form("Données du Match"):
             "buts_corners_A": st.number_input("⚽ Buts Corners", value=2, key="buts_corners_A"),  
             "jours_repos_A": st.number_input("⏳ Jours de Repos", value=4, key="repos_A"),  
             "matchs_30_jours_A": st.number_input("📅 Matchs (30 jours)", value=8, key="matchs_A")  
-        })  
+        }  
     
     with col2:  
         st.markdown("**Équipe B**")  
@@ -579,10 +579,8 @@ if submitted:
         
         # Analyse finale  
         probabilite_victoire_A = (  
-            resultats_poisson['Victoire Équipe A'] +   
-            (modeles["Régression Logistique"].predict_proba(X_test)[0][1] * 0.5) +   
-            (modeles["Random Forest"].predict_proba(X_test)[0][1] * 0.5)  
-        ) / 2  
+            (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
+        )  
         
         st.subheader("🏆 Résultat Final")  
         st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
@@ -628,4 +626,4 @@ st.markdown("""
 - **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
+""")  
