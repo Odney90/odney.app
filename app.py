@@ -128,6 +128,23 @@ if submitted:
             st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
             st.metric("⚽ Buts Prévus (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
 
+        # Convertisseur de score  
+        st.subheader("🔄 Analyse des Cotes Implicites")  
+        cote_A = st.number_input("Cote de Victoire Équipe A", value=2.0, key="cote_A")  
+        cote_B = st.number_input("Cote de Victoire Équipe B", value=2.5, key="cote_B")  
+        cote_Nul = st.number_input("Cote de Match Nul", value=3.0, key="cote_Nul")  
+
+        # Calcul des probabilités implicites  
+        proba_implicite_A = 1 / cote_A  
+        proba_implicite_B = 1 / cote_B  
+        proba_implicite_Nul = 1 / cote_Nul  
+
+        # Normalisation des probabilités implicites pour qu'elles somment à 1  
+        total_proba_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
+        proba_implicite_A /= total_proba_implicite  
+        proba_implicite_B /= total_proba_implicite  
+        proba_implicite_Nul /= total_proba_implicite  
+
         # Préparation des données pour Régression Logistique et Random Forest  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
         X = np.repeat(X, 1000, axis=0)  # Répéter les données pour correspondre à la taille de y  
@@ -157,15 +174,19 @@ if submitted:
             modele.fit(X, y)  
             proba = modele.predict_proba(X)[0]  # Mise à jour de proba  
 
-            # Affichage des prédictions  
-            st.markdown("**📊 Prédictions**")  
-            col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
-            with col_victoire_A:  
-                st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
-            with col_victoire_B:  
-                st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
-            with col_nul:  
-                st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
+            # Vérification de la taille de proba  
+            if len(proba) >= 3:  # Assurez-vous qu'il y a au moins 3 classes  
+                # Affichage des prédictions  
+                st.markdown("**📊 Prédictions**")  
+                col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
+                with col_victoire_A:  
+                    st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
+                with col_victoire_B:  
+                    st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
+                with col_nul:  
+                    st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
+            else:  
+                st.error(f"Erreur : La prédiction n'a pas retourné le bon nombre de classes pour {nom}.")  
 
             # Stockage des résultats pour comparaison  
             resultats_modeles[nom] = {  
@@ -176,79 +197,46 @@ if submitted:
             }  
 
         # Vérification que proba est défini avant de l'utiliser  
-        if proba is not None:  
-            # Analyse finale  
-            probabilite_victoire_A = (  
-                (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
-            )  
+        if proba is not None and len(proba) >= 3:  
+            # Récupération des probabilités prédites par le modèle  
+            proba_predite_A = proba[1]  # Victoire A  
+            proba_predite_B = proba[0]  # Victoire B  
+            proba_predite_Nul = proba[2]  # Match Nul  
 
-            # Affichage amélioré des résultats finaux  
-            st.subheader("🏆 Résultat Final")  
-            col_resultat_A, col_resultat_B, col_resultat_Nul = st.columns(3)  
-            with col_resultat_A:  
-                st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}", delta=f"{(probabilite_victoire_A - 0.5):.2%}")  
-            with col_resultat_B:  
-                st.metric("Probabilité de Victoire de l'Équipe B", f"{(1 - probabilite_victoire_A):.2%}", delta=f"{(0.5 - probabilite_victoire_A):.2%}")  
-            with col_resultat_Nul:  
-                st.metric("Probabilité de Match Nul", f"{(1 - (probabilite_victoire_A + (1 - probabilite_victoire_A))):.2%}")  
+            # Affichage des résultats  
+            st.write("##### Probabilités Implicites (Cotes)")  
+            col_implicite_A, col_implicite_B, col_implicite_Nul = st.columns(3)  
+            with col_implicite_A:  
+                st.metric("Victoire A", f"{proba_implicite_A:.2%}")  
+            with col_implicite_B:  
+                st.metric("Victoire B", f"{proba_implicite_B:.2%}")  
+            with col_implicite_Nul:  
+                st.metric("Match Nul", f"{proba_implicite_Nul:.2%}")  
+
+            st.write("##### Probabilités Prédites (Modèle)")  
+            col_predite_A, col_predite_B, col_predite_Nul = st.columns(3)  
+            with col_predite_A:  
+                st.metric("Victoire A", f"{proba_predite_A:.2%}")  
+            with col_predite_B:  
+                st.metric("Victoire B", f"{proba_predite_B:.2%}")  
+            with col_predite_Nul:  
+                st.metric("Match Nul", f"{proba_predite_Nul:.2%}")  
+
+            # Comparaison des probabilités  
+            st.write("##### Comparaison")  
+            col_comparaison_A, col_comparaison_B, col_comparaison_Nul = st.columns(3)  
+            with col_comparaison_A:  
+                st.metric("Différence Victoire A", f"{(proba_predite_A - proba_implicite_A):.2%}")  
+            with col_comparaison_B:  
+                st.metric("Différence Victoire B", f"{(proba_predite_B - proba_implicite_B):.2%}")  
+            with col_comparaison_Nul:  
+                st.metric("Différence Match Nul", f"{(proba_predite_Nul - proba_implicite_Nul):.2%}")  
         else:  
             st.error("Erreur : Les probabilités n'ont pas pu être calculées.")  
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
-        st.error(traceback.format_exc())  # Assurez-vous que cette ligne est correctement indentée  
-
-# Convertisseur de score  
-st.subheader("🔄 Analyse des Cotes Implicites")  
-cote_A = st.number_input("Cote de Victoire Équipe A", value=2.0, key="cote_A")  
-cote_B = st.number_input("Cote de Victoire Équipe B", value=2.5, key="cote_B")  
-cote_Nul = st.number_input("Cote de Match Nul", value=3.0, key="cote_Nul")  
-
-# Calcul des probabilités implicites  
-proba_implicite_A = 1 / cote_A  
-proba_implicite_B = 1 / cote_B  
-proba_implicite_Nul = 1 / cote_Nul  
-
-# Normalisation des probabilités implicites pour qu'elles somment à 1  
-total_proba_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
-proba_implicite_A /= total_proba_implicite  
-proba_implicite_B /= total_proba_implicite  
-proba_implicite_Nul /= total_proba_implicite  
-
-# Récupération des probabilités prédites par le modèle  
-proba_predite_A = proba[1]  # Victoire A  
-proba_predite_B = proba[0]  # Victoire B  
-proba_predite_Nul = proba[2]  # Match Nul  
-
-# Affichage des résultats  
-st.write("##### Probabilités Implicites (Cotes)")  
-col_implicite_A, col_implicite_B, col_implicite_Nul = st.columns(3)  
-with col_implicite_A:  
-    st.metric("Victoire A", f"{proba_implicite_A:.2%}")  
-with col_implicite_B:  
-    st.metric("Victoire B", f"{proba_implicite_B:.2%}")  
-with col_implicite_Nul:  
-    st.metric("Match Nul", f"{proba_implicite_Nul:.2%}")  
-
-st.write("##### Probabilités Prédites (Modèle)")  
-col_predite_A, col_predite_B, col_predite_Nul = st.columns(3)  
-with col_predite_A:  
-    st.metric("Victoire A", f"{proba_predite_A:.2%}")  
-with col_predite_B:  
-    st.metric("Victoire B", f"{proba_predite_B:.2%}")  
-with col_predite_Nul:  
-    st.metric("Match Nul", f"{proba_predite_Nul:.2%}")  
-
-# Comparaison des probabilités  
-st.write("##### Comparaison")  
-col_comparaison_A, col_comparaison_B, col_comparaison_Nul = st.columns(3)  
-with col_comparaison_A:  
-    st.metric("Différence Victoire A", f"{(proba_predite_A - proba_implicite_A):.2%}")  
-with col_comparaison_B:  
-    st.metric("Différence Victoire B", f"{(proba_predite_B - proba_implicite_B):.2%}")  
-with col_comparaison_Nul:  
-    st.metric("Différence Match Nul", f"{(proba_predite_Nul - proba_implicite_Nul):.2%}")  
-
+        st.error(traceback.format_exc())  
 
 # Pied de page informatif  
 st.markdown("""  
