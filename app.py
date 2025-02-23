@@ -220,36 +220,46 @@ with tab3:
 
     # Affichage des résultats  
     st.write("📊 **Résultat du Random Forest**")  
-    st.write(f"Probabilité de victoire de l'Équipe A : {prob_victoire_rf_A:.2%}")  
-    st.write(f"Probabilité de victoire de l'Équipe B : {prob_victoire_rf_B:.2%}")  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        st.metric("Probabilité de victoire de l'Équipe A", f"{prob_victoire_rf_A:.2%}")  
+    with col2:  
+        st.metric("Probabilité de victoire de l'Équipe B", f"{prob_victoire_rf_B:.2%}")  
 
     st.write("📊 **Résultat de la Régression Logistique**")  
-    st.write(f"Probabilité de victoire de l'Équipe A : {prob_victoire_lr_A:.2%}")  
-    st.write(f"Probabilité de victoire de l'Équipe B : {prob_victoire_lr_B:.2%}")  
+    col3, col4 = st.columns(2)  
+    with col3:  
+        st.metric("Probabilité de victoire de l'Équipe A", f"{prob_victoire_lr_A:.2%}")  
+    with col4:  
+        st.metric("Probabilité de victoire de l'Équipe B", f"{prob_victoire_lr_B:.2%}")  
 
     st.write("📊 **Résultat de la Distribution de Poisson**")  
-    st.write(f"Probabilité de victoire de l'Équipe A : {victoire_A:.2%}")  
-    st.write(f"Probabilité de victoire de l'Équipe B : {victoire_B:.2%}")  
-    st.write(f"Probabilité de match nul : {match_nul:.2%}")  
+    col5, col6, col7 = st.columns(3)  
+    with col5:  
+        st.metric("Probabilité de victoire de l'Équipe A", f"{victoire_A:.2%}")  
+    with col6:  
+        st.metric("Probabilité de victoire de l'Équipe B", f"{victoire_B:.2%}")  
+    with col7:  
+        st.metric("Probabilité de match nul", f"{match_nul:.2%}")  
+
+    # Prédiction des buts en nombre entier avec leur pourcentage  
+    st.write("📊 **Prédiction des Buts avec Poisson**")  
+    col8, col9 = st.columns(2)  
+    with col8:  
+        st.metric("Buts prédits pour l'Équipe A", f"{int(np.mean(buts_A))}", f"{np.mean(buts_A):.2%}")  
+    with col9:  
+        st.metric("Buts prédits pour l'Équipe B", f"{int(np.mean(buts_B))}", f"{np.mean(buts_B):.2%}")  
 
     # Gagnant final (basé sur la combinaison de la régression logistique et de Poisson)  
+    st.write("🏆 **Gagnant Prédit (Régression Logistique + Poisson)**")  
     if victoire_A > victoire_B and victoire_A > match_nul:  
-        st.write("🏆 **Gagnant Prédit (Régression Logistique + Poisson)** : Équipe A")  
+        st.success("Équipe A")  
     elif victoire_B > victoire_A and victoire_B > match_nul:  
-        st.write("🏆 **Gagnant Prédit (Régression Logistique + Poisson)** : Équipe B")  
+        st.success("Équipe B")  
     else:  
-        st.write("🏆 **Gagnant Prédit (Régression Logistique + Poisson)** : Match Nul")  
+        st.success("Match Nul")  
 
 # Onglet 4 : Cotes et Value Bet  
 with tab4:  
     st.header("🎰 Cotes et Value Bet")  
-    st.write("Cette section analyse les cotes et les opportunités de value bet.")  
-    st.session_state.data["cote_victoire_X"] = st.number_input("Cote Victoire X", value=st.session_state.data["cote_victoire_X"])  
-    st.session_state.data["cote_nul"] = st.number_input("Cote Nul", value=st.session_state.data["cote_nul"])  
-    st.session_state.data["cote_victoire_Z"] = st.number_input("Cote Victoire Z", value=st.session_state.data["cote_victoire_Z"])  
-
-# Onglet 5 : Système de Mise  
-with tab5:  
-    st.header("💰 Système de Mise")  
-    st.write("Cette section permet de configurer et de gérer le système de mise.")  
-    st.session_state.data["bankroll"] = st.number_input("Bankroll", value=st.session_state.data["bankroll"])
+    st.write("Cette section analyse les cote
