@@ -290,7 +290,8 @@ with tab3:
             st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
  
        # Préparation des caractéristiques pour les équipes A et B  
-    features_A = [  
+    
+        features_A = [  
         st.session_state.data["tirs_cadres_par_match_A"],  
         st.session_state.data["grandes_chances_A"],  
         st.session_state.data["grandes_chances_manquées_A"],  
@@ -318,7 +319,7 @@ with tab3:
         st.session_state.data["motivation_A"],  
     ]  
 
-    features_B = [  
+        features_B = [  
         st.session_state.data["tirs_cadres_par_match_B"],  
         st.session_state.data["grandes_chances_B"],  
         st.session_state.data["grandes_chances_manquées_B"],  
