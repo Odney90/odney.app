@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd  
 from scipy.stats import poisson  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.linear_model import LogisticRegression  
 
 # Fonction pour la Mise Kelly  
 def mise_kelly(probabilite, cote, bankroll):  
@@ -39,6 +38,9 @@ if "data" not in st.session_state:
         # Face-à-face  
         "face_a_face_A": 3,  
         "face_a_face_B": 2,  
+        # Motivation  
+        "motivation_A": 8,  
+        "motivation_B": 7,  
         # Cotes et bankroll  
         "cote_victoire_X": 2.0,  
         "cote_nul": 3.0,  
@@ -47,8 +49,8 @@ if "data" not in st.session_state:
     }  
 
 # Création des onglets  
-tab1, tab2, tab3, tab4, tab5 = st.tabs(  
-    ["📊 Statistiques", "🌦️ Conditions et Motivation", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"]  
+tab1, tab2, tab3, tab4 = st.tabs(  
+    ["📊 Statistiques", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"]  
 )  
 
 # Onglet 1 : Statistiques  
@@ -66,27 +68,68 @@ with tab1:
             st.session_state.data["tirs_cadres_par_match_A"] = st.number_input(  
                 "Tirs Cadres par Match (A)",  
                 value=st.session_state.data["tirs_cadres_par_match_A"],  
-                key="tirs_cadres_A_input"  
+                key="tirs_cadres_A_input",  
+                step=0.01  
             )  
             st.session_state.data["grandes_chances_A"] = st.number_input(  
                 "Grandes Chances (A)",  
                 value=int(st.session_state.data["grandes_chances_A"]),  
-                key="grandes_chances_A_input"  
+                key="grandes_chances_A_input",  
+                step=1  
             )  
             st.session_state.data["passes_reussies_par_match_A"] = st.number_input(  
                 "Passes Réussies par Match (A)",  
                 value=st.session_state.data["passes_reussies_par_match_A"],  
-                key="passes_reussies_A_input"  
+                key="passes_reussies_A_input",  
+                step=0.01  
             )  
             st.session_state.data["centres_reussies_par_match_A"] = st.number_input(  
                 "Centres Réussies par Match (A)",  
                 value=st.session_state.data["centres_reussies_par_match_A"],  
-                key="centres_reussies_A_input"  
+                key="centres_reussies_A_input",  
+                step=0.01  
             )  
             st.session_state.data["dribbles_reussis_par_match_A"] = st.number_input(  
                 "Dribbles Réussis par Match (A)",  
                 value=st.session_state.data["dribbles_reussis_par_match_A"],  
-                key="dribbles_reussis_A_input"  
+                key="dribbles_reussis_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["buts_attendus_concedes_A"] = st.number_input(  
+                "Buts Attendus Concédés (A)",  
+                value=st.session_state.data["buts_attendus_concedes_A"],  
+                key="buts_attendus_concedes_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["interceptions_A"] = st.number_input(  
+                "Interceptions (A)",  
+                value=st.session_state.data["interceptions_A"],  
+                key="interceptions_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["tacles_reussis_par_match_A"] = st.number_input(  
+                "Tacles Réussis par Match (A)",  
+                value=st.session_state.data["tacles_reussis_par_match_A"],  
+                key="tacles_reussis_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["penalties_concedees_A"] = st.number_input(  
+                "Penalties Concédées (A)",  
+                value=int(st.session_state.data["penalties_concedees_A"]),  
+                key="penalties_concedees_A_input",  
+                step=1  
+            )  
+            st.session_state.data["fautes_par_match_A"] = st.number_input(  
+                "Fautes par Match (A)",  
+                value=st.session_state.data["fautes_par_match_A"],  
+                key="fautes_par_match_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["motivation_A"] = st.number_input(  
+                "Motivation (A)",  
+                value=int(st.session_state.data["motivation_A"]),  
+                key="motivation_A_input",  
+                step=1  
             )  
 
         # Équipe B  
@@ -95,52 +138,90 @@ with tab1:
             st.session_state.data["tirs_cadres_par_match_B"] = st.number_input(  
                 "Tirs Cadres par Match (B)",  
                 value=st.session_state.data["tirs_cadres_par_match_B"],  
-                key="tirs_cadres_B_input"  
+                key="tirs_cadres_B_input",  
+                step=0.01  
             )  
             st.session_state.data["grandes_chances_B"] = st.number_input(  
                 "Grandes Chances (B)",  
                 value=int(st.session_state.data["grandes_chances_B"]),  
-                key="grandes_chances_B_input"  
+                key="grandes_chances_B_input",  
+                step=1  
             )  
             st.session_state.data["passes_reussies_par_match_B"] = st.number_input(  
                 "Passes Réussies par Match (B)",  
                 value=st.session_state.data["passes_reussies_par_match_B"],  
-                key="passes_reussies_B_input"  
+                key="passes_reussies_B_input",  
+                step=0.01  
             )  
             st.session_state.data["centres_reussies_par_match_B"] = st.number_input(  
                 "Centres Réussies par Match (B)",  
                 value=st.session_state.data["centres_reussies_par_match_B"],  
-                key="centres_reussies_B_input"  
+                key="centres_reussies_B_input",  
+                step=0.01  
             )  
             st.session_state.data["dribbles_reussis_par_match_B"] = st.number_input(  
                 "Dribbles Réussis par Match (B)",  
                 value=st.session_state.data["dribbles_reussis_par_match_B"],  
-                key="dribbles_reussis_B_input"  
+                key="dribbles_reussis_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["buts_attendus_concedes_B"] = st.number_input(  
+                "Buts Attendus Concédés (B)",  
+                value=st.session_state.data["buts_attendus_concedes_B"],  
+                key="buts_attendus_concedes_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["interceptions_B"] = st.number_input(  
+                "Interceptions (B)",  
+                value=st.session_state.data["interceptions_B"],  
+                key="interceptions_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["tacles_reussis_par_match_B"] = st.number_input(  
+                "Tacles Réussis par Match (B)",  
+                value=st.session_state.data["tacles_reussis_par_match_B"],  
+                key="tacles_reussis_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["penalties_concedees_B"] = st.number_input(  
+                "Penalties Concédées (B)",  
+                value=int(st.session_state.data["penalties_concedees_B"]),  
+                key="penalties_concedees_B_input",  
+                step=1  
+            )  
+            st.session_state.data["fautes_par_match_B"] = st.number_input(  
+                "Fautes par Match (B)",  
+                value=st.session_state.data["fautes_par_match_B"],  
+                key="fautes_par_match_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["motivation_B"] = st.number_input(  
+                "Motivation (B)",  
+                value=int(st.session_state.data["motivation_B"]),  
+                key="motivation_B_input",  
+                step=1  
             )  
 
         # Face-à-face  
         st.subheader("Face-à-Face")  
         st.session_state.data["face_a_face_A"] = st.number_input(  
             "Victoires de l'Équipe A (Face-à-Face)",  
-            value=st.session_state.data["face_a_face_A"],  
-            key="face_a_face_A_input"  
+            value=int(st.session_state.data["face_a_face_A"]),  
+            key="face_a_face_A_input",  
+            step=1  
         )  
         st.session_state.data["face_a_face_B"] = st.number_input(  
             "Victoires de l'Équipe B (Face-à-Face)",  
-            value=st.session_state.data["face_a_face_B"],  
-            key="face_a_face_B_input"  
+            value=int(st.session_state.data["face_a_face_B"]),  
+            key="face_a_face_B_input",  
+            step=1  
         )  
 
         # Bouton de soumission  
         st.form_submit_button("Enregistrer les données")  
 
-# Onglet 2 : Conditions et Motivation  
+# Onglet 2 : Prédictions  
 with tab2:  
-    st.header("🌦️ Conditions et Motivation")  
-    st.write("Cette section permet d'analyser les conditions du match et la motivation des équipes.")  
-
-# Onglet 3 : Prédictions  
-with tab3:  
     st.header("🔮 Prédictions")  
     st.write("Cette section prédit le gagnant entre l'Équipe A et l'Équipe B en utilisant plusieurs méthodes de prédiction.")  
 
@@ -185,34 +266,38 @@ with tab3:
     with col5:  
         st.metric("Buts prédits pour l'Équipe B", f"{int(np.mean(buts_B))}", f"{np.mean(buts_B):.2%}")  
 
-# Onglet 4 : Cotes et Value Bet  
-with tab4:  
+# Onglet 3 : Cotes et Value Bet  
+with tab3:  
     st.header("🎰 Cotes et Value Bet")  
     st.write("Cette section analyse les cotes et les opportunités de value bet.")  
     st.session_state.data["cote_victoire_X"] = st.number_input(  
         "Cote Victoire Équipe A",  
         value=st.session_state.data["cote_victoire_X"],  
-        key="cote_victoire_X_input"  
+        key="cote_victoire_X_input",  
+        step=0.01  
     )  
     st.session_state.data["cote_nul"] = st.number_input(  
         "Cote Match Nul",  
         value=st.session_state.data["cote_nul"],  
-        key="cote_nul_input"  
+        key="cote_nul_input",  
+        step=0.01  
     )  
     st.session_state.data["cote_victoire_Z"] = st.number_input(  
         "Cote Victoire Équipe B",  
         value=st.session_state.data["cote_victoire_Z"],  
-        key="cote_victoire_Z_input"  
+        key="cote_victoire_Z_input",  
+        step=0.01  
     )  
 
-# Onglet 5 : Système de Mise  
-with tab5:  
+# Onglet 4 : Système de Mise  
+with tab4:  
     st.header("💰 Système de Mise")  
     st.write("Cette section permet de configurer et de gérer le système de mise.")  
     st.session_state.data["bankroll"] = st.number_input(  
         "Bankroll",  
         value=st.session_state.data["bankroll"],  
-        key="bankroll_input"  
+        key="bankroll_input",  
+        step=0.01  
     )  
 
     # Calcul de la Mise Kelly  
