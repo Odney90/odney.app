@@ -33,51 +33,61 @@ st.title("📊 Prédictions de Matchs de Football")
 with st.form("Données des Équipes"):  
     st.subheader("⚽ Données de l'Équipe A")  
     st.session_state.data = {  
-        "score_rating_A": st.number_input("📊 Score Rating (A)", value=0.0, key="score_rating_A_input"),  
-        "tirs_cadres_par_match_A": st.number_input("🎯 Tirs Cadrés par Match (A)", value=0.0, key="tirs_cadres_par_match_A_input"),  
-        "grandes_chances_A": st.number_input("🔥 Grandes Chances (A)", value=0, key="grandes_chances_A_input"),  
-        "passes_reussies_par_match_A": st.number_input("🎯 Passes Réussies par Match (A)", value=0.0, key="passes_reussies_par_match_A_input"),  
-        "centres_reussies_par_match_A": st.number_input("🔄 Centres Réussies par Match (A)", value=0.0, key="centres_reussies_par_match_A_input"),  
-        "dribbles_reussis_par_match_A": st.number_input("⚡ Dribbles Réussis par Match (A)", value=0.0, key="dribbles_reussis_par_match_A_input"),  
-        "buts_attendus_concedes_A": st.number_input("🚫 Buts Attendus Concédés (A)", value=0.0, key="buts_attendus_concedes_A_input"),  
-        "interceptions_A": st.number_input("🛑 Interceptions par Match (A)", value=0.0, key="interceptions_A_input"),  
-        "tacles_reussis_par_match_A": st.number_input("🛡️ Tacles Réussis par Match (A)", value=0.0, key="tacles_reussis_par_match_A_input"),  
-        "penalties_concedees_A": st.number_input("⚠️ Pénalties Concédées (A)", value=0, key="penalties_concedees_A_input"),  
-        "fautes_par_match_A": st.number_input("🚩 Fautes par Match (A)", value=0.0, key="fautes_par_match_A_input"),  
-        "motivation_A": st.number_input("💪 Motivation (A)", value=0, key="motivation_A_input"),  
-        "buts_marques_A": st.number_input("⚽ Buts Marqués par Match (A)", value=0.0, key="buts_marques_A_input"),  
-        "tirs_par_match_A": st.number_input("🎯 Tirs par Match (A)", value=0.0, key="tirs_par_match_A_input"),  
-        "possession_moyenne_A": st.number_input("⏳ Possession (%) (A)", value=0.0, key="possession_moyenne_A_input"),  
-        "corners_par_match_A": st.number_input("🔄 Corners par Match (A)", value=0.0, key="corners_par_match_A_input"),  
-        "forme_recente_A_victoires": st.number_input("✅ Victoires (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_victoires_input"),  
-        "forme_recente_A_nuls": st.number_input("➖ Nuls (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_nuls_input"),  
-        "forme_recente_A_defaites": st.number_input("❌ Défaites (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_defaites_input"),  
-        "historique_victoires_A": st.number_input("🏆 Victoires Historiques (A)", value=0, key="historique_victoires_A_input"),  
+        # Données attribuées au modèle de Poisson (Rouge)  
+        "buts_marques_A": st.number_input("⚽ Buts Marqués par Match (A)", value=0.0, key="buts_marques_A_input", help="Attribué au modèle de Poisson", style={"color": "red"}),  
+        "tirs_par_match_A": st.number_input("🎯 Tirs par Match (A)", value=0.0, key="tirs_par_match_A_input", help="Attribué au modèle de Poisson", style={"color": "red"}),  
+        "grandes_chances_A": st.number_input("🔥 Grandes Chances (A)", value=0, key="grandes_chances_A_input", help="Attribué au modèle de Poisson", style={"color": "red"}),  
+
+        # Données attribuées au modèle de régression logistique (Jaune)  
+        "score_rating_A": st.number_input("📊 Score Rating (A)", value=0.0, key="score_rating_A_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "passes_reussies_par_match_A": st.number_input("🎯 Passes Réussies par Match (A)", value=0.0, key="passes_reussies_par_match_A_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "dribbles_reussis_par_match_A": st.number_input("⚡ Dribbles Réussis par Match (A)", value=0.0, key="dribbles_reussis_par_match_A_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "possession_moyenne_A": st.number_input("⏳ Possession (%) (A)", value=0.0, key="possession_moyenne_A_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "motivation_A": st.number_input("💪 Motivation (A)", value=0, key="motivation_A_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+
+        # Données attribuées au modèle Random Forest (Noir foncé)  
+        "tirs_cadres_par_match_A": st.number_input("🎯 Tirs Cadrés par Match (A)", value=0.0, key="tirs_cadres_par_match_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "centres_reussies_par_match_A": st.number_input("🔄 Centres Réussies par Match (A)", value=0.0, key="centres_reussies_par_match_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "buts_attendus_concedes_A": st.number_input("🚫 Buts Attendus Concédés (A)", value=0.0, key="buts_attendus_concedes_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "interceptions_A": st.number_input("🛑 Interceptions par Match (A)", value=0.0, key="interceptions_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "tacles_reussis_par_match_A": st.number_input("🛡️ Tacles Réussis par Match (A)", value=0.0, key="tacles_reussis_par_match_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "penalties_concedees_A": st.number_input("⚠️ Pénalties Concédées (A)", value=0, key="penalties_concedees_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "fautes_par_match_A": st.number_input("🚩 Fautes par Match (A)", value=0.0, key="fautes_par_match_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "corners_par_match_A": st.number_input("🔄 Corners par Match (A)", value=0.0, key="corners_par_match_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "forme_recente_A_victoires": st.number_input("✅ Victoires (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_victoires_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "forme_recente_A_nuls": st.number_input("➖ Nuls (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_nuls_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "forme_recente_A_defaites": st.number_input("❌ Défaites (A) sur les 5 derniers matchs", value=0, key="forme_recente_A_defaites_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "historique_victoires_A": st.number_input("🏆 Victoires Historiques (A)", value=0, key="historique_victoires_A_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
     }  
 
     st.subheader("⚽ Données de l'Équipe B")  
     st.session_state.data.update({  
-        "score_rating_B": st.number_input("📊 Score Rating (B)", value=0.0, key="score_rating_B_input"),  
-        "tirs_cadres_par_match_B": st.number_input("🎯 Tirs Cadrés par Match (B)", value=0.0, key="tirs_cadres_par_match_B_input"),  
-        "grandes_chances_B": st.number_input("🔥 Grandes Chances (B)", value=0, key="grandes_chances_B_input"),  
-        "passes_reussies_par_match_B": st.number_input("🎯 Passes Réussies par Match (B)", value=0.0, key="passes_reussies_par_match_B_input"),  
-        "centres_reussies_par_match_B": st.number_input("🔄 Centres Réussies par Match (B)", value=0.0, key="centres_reussies_par_match_B_input"),  
-        "dribbles_reussis_par_match_B": st.number_input("⚡ Dribbles Réussis par Match (B)", value=0.0, key="dribbles_reussis_par_match_B_input"),  
-        "buts_attendus_concedes_B": st.number_input("🚫 Buts Attendus Concédés (B)", value=0.0, key="buts_attendus_concedes_B_input"),  
-        "interceptions_B": st.number_input("🛑 Interceptions par Match (B)", value=0.0, key="interceptions_B_input"),  
-        "tacles_reussis_par_match_B": st.number_input("🛡️ Tacles Réussis par Match (B)", value=0.0, key="tacles_reussis_par_match_B_input"),  
-        "penalties_concedees_B": st.number_input("⚠️ Pénalties Concédées (B)", value=0, key="penalties_concedees_B_input"),  
-        "fautes_par_match_B": st.number_input("🚩 Fautes par Match (B)", value=0.0, key="fautes_par_match_B_input"),  
-        "motivation_B": st.number_input("💪 Motivation (B)", value=0, key="motivation_B_input"),  
-        "buts_marques_B": st.number_input("⚽ Buts Marqués par Match (B)", value=0.0, key="buts_marques_B_input"),  
-        "tirs_par_match_B": st.number_input("🎯 Tirs par Match (B)", value=0.0, key="tirs_par_match_B_input"),  
-        "possession_moyenne_B": st.number_input("⏳ Possession (%) (B)", value=0.0, key="possession_moyenne_B_input"),  
-        "corners_par_match_B": st.number_input("🔄 Corners par Match (B)", value=0.0, key="corners_par_match_B_input"),  
-        "forme_recente_B_victoires": st.number_input("✅ Victoires (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_victoires_input"),  
-        "forme_recente_B_nuls": st.number_input("➖ Nuls (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_nuls_input"),  
-        "forme_recente_B_defaites": st.number_input("❌ Défaites (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_defaites_input"),  
-        "historique_victoires_B": st.number_input("🏆 Victoires Historiques (B)", value=0, key="historique_victoires_B_input"),  
-        "historique_nuls": st.number_input("➖ Nuls Historiques", value=0, key="historique_nuls_input"),  
+        # Données attribuées au modèle de Poisson (Rouge)  
+        "buts_marques_B": st.number_input("⚽ Buts Marqués par Match (B)", value=0.0, key="buts_marques_B_input", help="Attribué au modèle de Poisson", style={"color": "red"}),  
+        "tirs_par_match_B": st.number_input("🎯 Tirs par Match (B)", value=0.0, key="tirs_par_match_B_input", help="Attribué au modèle de Poisson", style={"color": "red"}),  
+        "grandes_chances_B": st.number_input("🔥 Grandes Chances (B)", value=0, key="grandes_chances_B_input", help="Attribué au modèle de Poisson", style={"color": "red"}),  
+
+        # Données attribuées au modèle de régression logistique (Jaune)  
+        "score_rating_B": st.number_input("📊 Score Rating (B)", value=0.0, key="score_rating_B_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "passes_reussies_par_match_B": st.number_input("🎯 Passes Réussies par Match (B)", value=0.0, key="passes_reussies_par_match_B_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "dribbles_reussis_par_match_B": st.number_input("⚡ Dribbles Réussis par Match (B)", value=0.0, key="dribbles_reussis_par_match_B_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "possession_moyenne_B": st.number_input("⏳ Possession (%) (B)", value=0.0, key="possession_moyenne_B_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+        "motivation_B": st.number_input("💪 Motivation (B)", value=0, key="motivation_B_input", help="Attribué au modèle de régression logistique", style={"color": "yellow"}),  
+
+        # Données attribuées au modèle Random Forest (Noir foncé)  
+        "tirs_cadres_par_match_B": st.number_input("🎯 Tirs Cadrés par Match (B)", value=0.0, key="tirs_cadres_par_match_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "centres_reussies_par_match_B": st.number_input("🔄 Centres Réussies par Match (B)", value=0.0, key="centres_reussies_par_match_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "buts_attendus_concedes_B": st.number_input("🚫 Buts Attendus Concédés (B)", value=0.0, key="buts_attendus_concedes_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "interceptions_B": st.number_input("🛑 Interceptions par Match (B)", value=0.0, key="interceptions_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "tacles_reussis_par_match_B": st.number_input("🛡️ Tacles Réussis par Match (B)", value=0.0, key="tacles_reussis_par_match_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "penalties_concedees_B": st.number_input("⚠️ Pénalties Concédées (B)", value=0, key="penalties_concedees_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "fautes_par_match_B": st.number_input("🚩 Fautes par Match (B)", value=0.0, key="fautes_par_match_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "corners_par_match_B": st.number_input("🔄 Corners par Match (B)", value=0.0, key="corners_par_match_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "forme_recente_B_victoires": st.number_input("✅ Victoires (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_victoires_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "forme_recente_B_nuls": st.number_input("➖ Nuls (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_nuls_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "forme_recente_B_defaites": st.number_input("❌ Défaites (B) sur les 5 derniers matchs", value=0, key="forme_recente_B_defaites_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "historique_victoires_B": st.number_input("🏆 Victoires Historiques (B)", value=0, key="historique_victoires_B_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
+        "historique_nuls": st.number_input("➖ Nuls Historiques", value=0, key="historique_nuls_input", help="Attribué au modèle Random Forest", style={"color": "black"}),  
     })  
 
     st.subheader("🎰 Cotes du Match")  
@@ -104,16 +114,23 @@ if st.button("🔮 Lancer les Prédictions"):
             [  
                 safe_float(st.session_state.data["score_rating_A"]),  
                 safe_float(st.session_state.data["score_rating_B"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_A"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
-                safe_int(st.session_state.data["grandes_chances_A"]),  
-                safe_int(st.session_state.data["grandes_chances_B"]),  
                 safe_float(st.session_state.data["passes_reussies_par_match_A"]),  
                 safe_float(st.session_state.data["passes_reussies_par_match_B"]),  
-                safe_float(st.session_state.data["centres_reussies_par_match_A"]),  
-                safe_float(st.session_state.data["centres_reussies_par_match_B"]),  
                 safe_float(st.session_state.data["dribbles_reussis_par_match_A"]),  
                 safe_float(st.session_state.data["dribbles_reussis_par_match_B"]),  
+                safe_float(st.session_state.data["possession_moyenne_A"]),  
+                safe_float(st.session_state.data["possession_moyenne_B"]),  
+                safe_int(st.session_state.data["motivation_A"]),  
+                safe_int(st.session_state.data["motivation_B"]),  
+            ]  
+        ])  
+
+        X_rf = np.array([  
+            [  
+                safe_float(st.session_state.data["tirs_cadres_par_match_A"]),  
+                safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
+                safe_float(st.session_state.data["centres_reussies_par_match_A"]),  
+                safe_float(st.session_state.data["centres_reussies_par_match_B"]),  
                 safe_float(st.session_state.data["buts_attendus_concedes_A"]),  
                 safe_float(st.session_state.data["buts_attendus_concedes_B"]),  
                 safe_float(st.session_state.data["interceptions_A"]),  
@@ -124,10 +141,6 @@ if st.button("🔮 Lancer les Prédictions"):
                 safe_int(st.session_state.data["penalties_concedees_B"]),  
                 safe_float(st.session_state.data["fautes_par_match_A"]),  
                 safe_float(st.session_state.data["fautes_par_match_B"]),  
-                safe_int(st.session_state.data["motivation_A"]),  
-                safe_int(st.session_state.data["motivation_B"]),  
-                safe_float(st.session_state.data["possession_moyenne_A"]),  
-                safe_float(st.session_state.data["possession_moyenne_B"]),  
                 safe_float(st.session_state.data["corners_par_match_A"]),  
                 safe_float(st.session_state.data["corners_par_match_B"]),  
                 score_forme_A,  
@@ -141,14 +154,14 @@ if st.button("🔮 Lancer les Prédictions"):
         # Modèle de Régression Logistique  
         try:  
             # Exemple de données d'entraînement (à remplacer par vos données réelles)  
-            X_train = np.array([  
-                [1.0, 2.0, 50.0, 50.0, 5, 5, 5.0, 5.0, 3.0, 3.0, 10.0, 10.0, 3.0, 2.0, 1.0, 10, 10],  
-                [2.0, 1.0, 60.0, 40.0, 4, 6, 6.0, 4.0, 4.0, 2.0, 8.0, 8.0, 2.0, 3.0, 1.0, 8, 12],  
+            X_train_lr = np.array([  
+                [1.0, 2.0, 50.0, 50.0, 5, 5, 5.0, 5.0, 3.0, 3.0],  
+                [2.0, 1.0, 60.0, 40.0, 4, 6, 6.0, 4.0, 4.0, 2.0],  
             ])  
-            y_train = np.array([1, 0])  # Exemple de labels (à remplacer par vos vraies étiquettes)  
+            y_train_lr = np.array([1, 0])  # Exemple de labels (à remplacer par vos vraies étiquettes)  
 
             model_lr = LogisticRegression()  
-            model_lr.fit(X_train, y_train)  # Entraînement du modèle  
+            model_lr.fit(X_train_lr, y_train_lr)  # Entraînement du modèle  
             prediction_lr = model_lr.predict(X_lr.reshape(1, -1))[0]  # Prédiction  
         except Exception as e:  
             prediction_lr = "Erreur"  
@@ -156,9 +169,16 @@ if st.button("🔮 Lancer les Prédictions"):
 
         # Modèle Random Forest  
         try:  
+            # Exemple de données d'entraînement (à remplacer par vos données réelles)  
+            X_train_rf = np.array([  
+                 [1.0, 2.0, 50.0, 50.0, 5, 5, 10, 10, 3.0, 3.0, 1, 1, 5.0, 5.0, 4.0, 4.0, 15, 10, 5, 5, 2],  
+                [2.0, 1.0, 60.0, 40.0, 4, 6, 8, 12, 4.0, 2.0, 2, 0, 6.0, 4.0, 3.0, 5.0, 12, 15, 4, 6, 3],  
+                  ])  
+            y_train_rf = np.array([1, 0])  # Exemple de labels (à remplacer par vos vraies étiquettes)  
+
             model_rf = RandomForestClassifier()  
-            model_rf.fit(X_train, y_train)  # Entraînement du modèle  
-            prediction_rf = model_rf.predict(X_lr.reshape(1, -1))[0]  # Prédiction  
+            model_rf.fit(X_train_rf, y_train_rf)  # Entraînement du modèle  
+            prediction_rf = model_rf.predict(X_rf.reshape(1, -1))[0]  # Prédiction  
         except Exception as e:  
             prediction_rf = "Erreur"  
             st.error(f"Erreur dans le modèle Random Forest : {e}")  
@@ -198,8 +218,8 @@ if st.button("🔮 Lancer les Prédictions"):
             st.write(f"⚽ Buts Prédits - Équipe A : {prediction_poisson['buts_predits_A']}")  
             st.write(f"⚽ Buts Prédits - Équipe B : {prediction_poisson['buts_predits_B']}")  
             st.write("📊 Probabilité de Buts (en %) :")  
-            
-         # Affichage des probabilités dans un tableau  
+
+            # Affichage des probabilités dans un tableau  
             st.table({  
                 "Nombre de Buts": [0, 1, 2, 3, 4],  
                 "Équipe A (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_A"]],  
@@ -262,4 +282,4 @@ if st.button("🔮 Lancer les Prédictions"):
     except Exception as e:  
         st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
 else:  
-    st.warning("⚠️ Les prédictions ne sont pas encore disponibles ou une erreur s'est produite. Veuillez lancer les prédictions d'abord.")
+    st.warning("⚠️ Les prédictions ne sont pas encore disponibles ou une erreur s'est produite. Veuillez lancer les prédictions d'abord.")  
