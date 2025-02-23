@@ -20,6 +20,8 @@ if 'data' not in st.session_state:
     st.session_state.data = {}  
 if 'historique' not in st.session_state:  
     st.session_state.historique = []  
+if 'poids_criteres' not in st.session_state:  
+    st.session_state.poids_criteres = {}  
 
 # Fonction pour convertir une cote en probabilité implicite  
 def cote_en_probabilite(cote):  
@@ -33,8 +35,11 @@ def generer_rapport(predictions):
         doc.add_paragraph(f"Équipe A: {prediction['proba_A']:.2%}, Équipe B: {prediction['proba_B']:.2%}, Match Nul: {prediction['proba_Nul']:.2%}")  
     return doc  
 
+# Onglets pour l'application  
+tab1, tab2 = st.tabs(["Analyse de Match", "Poids des Critères"])  
+
 # Formulaire de collecte des données  
-with st.form("data_form"):  
+with tab1:  
     st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
 
     # Équipe A  
@@ -178,6 +183,10 @@ if submitted:
         rf_scores = cross_val_score(rf_clf, df, y, cv=skf, scoring='accuracy')  
         rf_mean_score = np.mean(rf_scores)  
 
+        # Entraînement du modèle Random Forest pour obtenir les poids des critères  
+        rf_clf.fit(df, y)  
+        st.session_state.poids_criteres = rf_clf.feature_importances_  
+
         # Affichage des résultats des modèles  
         st.subheader("🤖 Performance des Modèles")  
         col_log_reg, col_rf = st.columns(2)  
@@ -238,8 +247,97 @@ if submitted:
         Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
         """)  
 
-    except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")  
+# Onglet pour afficher les poids des critères  
+with tab2:  
+    st.subheader("📊 Poids des Critères du Modèle Random Forest")  
+    if st.session_state.poids_criteres:  
+        poids_df = pd.DataFrame({  
+            'Critères': [  
+                'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
+                'Expected Goals A', 'Expected Goals Against A', 'Tirs Cadrés A', 'Grandes Chances A',  
+                'Absences A', 'Forme Récente A', 'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
+                'Possession Moyenne B', 'Expected Goals B', 'Expected Goals Against B', 'Tirs Cadrés B',  
+                'Grandes Chances B', 'Absences B', 'Forme Récente B'  
+            ],  
+            'Poids': st.session_state.poids_criteres  
+        })
+                # Affichage des poids des critères dans un tableau  
+        st.table(poids_df)  
+
+        # Visualisation des poids des critères avec Plotly  
+        fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
+                      labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
+        st.plotly_chart(fig)  
+
+        # Visualisation des poids des critères avec Altair  
+        alt_chart = alt.Chart(poids_df).mark_bar().encode(  
+            x=alt.X('Critères:N', sort='-y'),  
+            y='Poids:Q',  
+            color='Poids:Q'  
+        ).properties(  
+            title='Poids des Critères du Modèle Random Forest'  
+        )  
+        st.altair_chart(alt_chart, use_container_width=True)  
+
+# Section de face-à-face entre les équipes  
+st.markdown("### 🤝 Face-à-Face entre les Équipes")  
+st.markdown("#### Critères d'Attaque et de Défense")  
+
+# Collecte des données pour les critères d'attaque et de défense  
+for i in range(1, 16):  
+    col_attack_A, col_attack_B = st.columns(2)  
+    with col_attack_A:  
+        st.session_state.data[f'attaque_A_{i}'] = st.number_input(f"Attaque Critère {i} Équipe A", value=0.0, format="%.2f", key=f'attaque_A_{i}')  
+    with col_attack_B:  
+        st.session_state.data[f'attaque_B_{i}'] = st.number_input(f"Attaque Critère {i} Équipe B", value=0.0, format="%.2f", key=f'attaque_B_{i}')  
+
+for i in range(1, 16):  
+    col_defense_A, col_defense_B = st.columns(2)  
+    with col_defense_A:  
+        st.session_state.data[f'defense_A_{i}'] = st.number_input(f"Défense Critère {i} Équipe A", value=0.0, format="%.2f", key=f'defense_A_{i}')  
+    with col_defense_B:  
+        st.session_state.data[f'defense_B_{i}'] = st.number_input(f"Défense Critère {i} Équipe B", value=0.0, format="%.2f", key=f'defense_B_{i}')  
+
+# Bouton de soumission pour les critères d'attaque et de défense  
+if st.button("🔍 Analyser le Face-à-Face"):  
+    # Récupération des données d'attaque et de défense  
+    attaque_A = [st.session_state.data[f'attaque_A_{i}'] for i in range(1, 16)]  
+    attaque_B = [st.session_state.data[f'attaque_B_{i}'] for i in range(1, 16)]  
+    defense_A = [st.session_state.data[f'defense_A_{i}'] for i in range(1, 16)]  
+    defense_B = [st.session_state.data[f'defense_B_{i}'] for i in range(1, 16)]  
+
+    # Calcul des moyennes pour les critères d'attaque et de défense  
+    moyenne_attaque_A = np.mean(attaque_A)  
+    moyenne_attaque_B = np.mean(attaque_B)  
+    moyenne_defense_A = np.mean(defense_A)  
+    moyenne_defense_B = np.mean(defense_B)  
+
+    # Affichage des résultats du face-à-face  
+    st.subheader("📊 Résultats du Face-à-Face")  
+    st.metric("Moyenne Attaque Équipe A", f"{moyenne_attaque_A:.2f}")  
+    st.metric("Moyenne Attaque Équipe B", f"{moyenne_attaque_B:.2f}")  
+    st.metric("Moyenne Défense Équipe A", f"{moyenne_defense_A:.2f}")  
+    st.metric("Moyenne Défense Équipe B", f"{moyenne_defense_B:.2f}")  
+
+    # Visualisation des résultats du face-à-face avec Plotly  
+    df_face_a_face = pd.DataFrame({  
+        'Critères': ['Attaque Équipe A', 'Attaque Équipe B', 'Défense Équipe A', 'Défense Équipe B'],  
+        'Moyenne': [moyenne_attaque_A, moyenne_attaque_B, moyenne_defense_A, moyenne_defense_B]  
+    })  
+
+    fig_face_a_face = px.bar(df_face_a_face, x='Critères', y='Moyenne', title='Face-à-Face entre les Équipes',   
+                             labels={'Moyenne': 'Moyenne', 'Critères': 'Critères'}, color='Moyenne')  
+    st.plotly_chart(fig_face_a_face)  
+
+    # Visualisation des résultats du face-à-face avec Altair  
+    alt_face_a_face = alt.Chart(df_face_a_face).mark_bar().encode(  
+        x=alt.X('Critères:N', sort='-y'),  
+        y='Moyenne:Q',  
+        color='Moyenne:Q'  
+    ).properties(  
+        title='Face-à-Face entre les Équipes'  
+    )  
+    st.altair_chart(alt_face_a_face, use_container_width=True)  
 
 # Pied de page informatif  
 st.markdown("""  
