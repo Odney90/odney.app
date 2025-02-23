@@ -111,9 +111,9 @@ if "data" not in st.session_state:
         "forme_recente_A": ["V", "V", "V", "V", "V"],  # Données fictives pour l'Équipe A  
         "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B 
          # Cotes  
-        "cote_victoire_x": 2.0,  
+        "cote_victoire_X": 2.0,  
         "cote_nul": 3.0,  
-        "cote_victoire_z": 4.0,
+        "cote_victoire_Z": 4.0,
     
         # Bankroll  
         "bankroll": 1000.0,  
