@@ -225,8 +225,9 @@ if submitted:
         Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
         """)  
 
-    except Exception as e:  
-        st.error(f"Erre
+          except Exception as e:  
+            st.error(f"Erreur lors de la prédiction : {e}")
+        
                 # Affichage des poids des critères  
         st.subheader("📊 Poids des Critères du Modèle Random Forest")  
         if st.session_state.poids_criteres:  # Vérification si les poids existent  
