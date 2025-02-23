@@ -58,11 +58,11 @@ if "data" not in st.session_state:
         "passes_longues_A": 50.0,  
         "dribbles_reussis_A": 10.0,  
         "ratio_tirs_cadres_A": 0.4,  
-        "grandes_chances_manquees_A": 5.0,  
-        "fautes_zones_dangereuses_A": 3.0,  
+        "grandes_chances_manquees_A": 5.0,    
         "buts_corners_A": 2.0,  
         "jours_repos_A": 4.0,  
-        "matchs_30_jours_A": 8.0,  
+        "matchs_30_jours_A": 8.0, 
+        
         # Équipe B  
         "score_rating_B": 65.0,  
         "buts_par_match_B": 1.0,  
@@ -88,10 +88,10 @@ if "data" not in st.session_state:
         "dribbles_reussis_B": 8.0,  
         "ratio_tirs_cadres_B": 0.35,  
         "grandes_chances_manquees_B": 6.0,  
-        "fautes_zones_dangereuses_B": 4.0,  
-        "buts_corners_B": 1.0,  
+        "fautes_zones_dangereuses_B": 4.0,   
         "jours_repos_B": 3.0,  
         "matchs_30_jours_B": 9.0,  
+        
         # Conditions du Match  
         "conditions_match": "",  
         # Historique Face-à-Face  
@@ -264,7 +264,7 @@ with tab3:
             )  
             st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
 
-            # Random Forest (exclut les données des onglets 4 et 5)  
+            # Random Forest (exclut les données des onglets 4 et 5 et # Cotes)  
             X_rf = np.array([  
                 [  
                     safe_float(st.session_state.data[key])  
