@@ -140,7 +140,7 @@ if submitted:
         df = pd.concat([df_A, df_B], axis=1)  
 
         # Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
-        y = (df['buts_par_match_A'] > df['buts_par_match_B']).astype(int)  
+        y = (df['buts_par_match_A'] > df['buts_par_match_B'].astype(int))  
 
         # Modèle Poisson  
         lambda_A = (  
