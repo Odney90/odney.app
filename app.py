@@ -599,64 +599,46 @@ if submitted:
             modele.fit(X_train, y_train)  
             proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
             
-            st.markdown("**📊 Prédictions**")  
-            col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
-            with col_victoire_A:  
-                st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
-            with col_victoire_B:  
-                st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
-            with col_nul:  
-                st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
+        # Affichage des métriques simplifiées  
+st.markdown("### 🤖 Performance des Modèles")  
+resultats_modeles = {}  
+for nom, modele in modeles.items():  
+    # Validation croisée stratifiée  
+    resultats_cv = validation_croisee_stratifiee(  
+        X_train,   
+        y_train,   
+        modele  
+    )  
+    
+    # Stockage des résultats  
+    resultats_modeles[nom] = resultats_cv  
+    
+    # Affichage des métriques de validation croisée  
+    st.markdown(f"#### {nom}")  
+    col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
+    with col_accuracy:  
+        st.metric("🎯 Précision Globale", f"{resultats_cv['accuracy']:.2%}",   
+                 help="Pourcentage de prédictions correctes.")  
+    with col_precision:  
+        st.metric("🎯 Précision", f"{resultats_cv['precision']:.2%}",   
+                 help="Pourcentage de victoires prédites qui étaient correctes.")  
+    with col_recall:  
+        st.metric("🎯 Rappel", f"{resultats_cv['recall']:.2%}",   
+                 help="Pourcentage de victoires réelles correctement prédites.")  
+    with col_f1:  
+        st.metric("🎯 Score F1", f"{resultats_cv['f1_score']:.2%}",   
+                 help="Moyenne équilibrée entre la précision et le rappel.")  
+    
+    # Prédiction finale  
+    modele.fit(X_train, y_train)  
+    proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
+    
+    st.markdown("**📊 Prédictions**")  
+    col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
+    with col_victoire_A:  
+        st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
+    with col_victoire_B:  
+        st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
+    with col_nul:  
+        st.metric("🤝 Match Nul", f"{proba[2]:.2%}")
         
-        # Analyse finale  
-        probabilite_victoire_A = (  
-            resultats_poisson['Victoire Équipe A'] +   
-            (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
-            (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
-        ) / 2  
-        
-        st.subheader("🏆 Résultat Final")  
-        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
-        
-        # Visualisation des performances des modèles  
-        st.subheader("📈 Comparaison des Performances des Modèles")  
-        
-        # Préparation des données pour le graphique  
-        metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
-        
-        # Création du DataFrame  
-        df_performances = pd.DataFrame({  
-            nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
-            for nom in resultats_modeles.keys()  
-        }, index=metriques)  
-        
-        # Affichage du DataFrame  
-        st.dataframe(df_performances)  
-        
-        # Graphique de comparaison  
-        fig, ax = plt.subplots(figsize=(10, 6))  
-        df_performances.T.plot(kind='bar', ax=ax)  
-        plt.title("Comparaison des Performances des Modèles")  
-        plt.xlabel("Modèles")  
-        plt.ylabel("Score")  
-        plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
-        plt.tight_layout()  
-        st.pyplot(fig)  
-        
-    except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")  
-        st.error(traceback.format_exc())  
-
-# Pied de page informatif  
-st.markdown("""  
-### 🤔 Comment Interpréter ces Résultats ?  
-
-- **📊 Prédiction des Buts (Poisson)** : Basée sur les statistiques historiques et les caractéristiques des équipes.  
-- **🤖 Performance des Modèles** :   
-  - **Régression Logistique** : Modèle linéaire simple.  
-  - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
-- **📈 K-Fold Cross-Validation** : Cette méthode permet d'évaluer la performance des modèles en divisant les données en plusieurs sous-ensembles (folds). Chaque fold est utilisé comme ensemble de test, tandis que les autres servent à l'entraînement. Cela garantit une estimation plus robuste de la performance.  
-- **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
-
-⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
