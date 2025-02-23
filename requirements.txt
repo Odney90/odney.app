@@ -10,7 +10,7 @@ seaborn
 imblearn
 openpyxl
 python-docx
-LogisticRegression
+
 
 
 
