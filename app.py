@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_curve, auc  
 import plotly.express as px  
-import altair as alt  
+import matplotlib.pyplot as plt  
 import traceback  
 from docx import Document  
 
