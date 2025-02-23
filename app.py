@@ -198,7 +198,7 @@ with tab2:
 # Onglet 3 : Prédictions  
 with tab3:  
     st.header("🔮 Prédictions")  
-    if st.button("Prédire le résultat"):  "buts_concedes_par_match"
+    if st.button("Prédire le résultat"): 
         try:  
             # Prédiction des Buts avec Poisson  
             avg_goals_A = safe_float(st.session_state.data["buts_par_match_A"])  
