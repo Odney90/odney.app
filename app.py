@@ -17,6 +17,10 @@ def safe_float(value):
     except (ValueError, TypeError):  
         return 0.0  
 
+# Fonction pour convertir les cotes en probabilités implicites  
+def cote_to_probabilite_implicite(cote):  
+    return (1 / cote) * 100  
+
 # Initialisation des variables de prédiction  
 prediction_lr = None  
 prediction_rf = None  
@@ -167,37 +171,46 @@ if st.button("🔮 Lancer les Prédictions"):
                 "Équipe B (%)": [f"{p:.2f}%" for p in prediction_poisson["proba_buts_B"]],  
             })  
 
+        # Comparaison des probabilités prédites avec les probabilités implicites  
+        st.subheader("🔍 Comparaison des Probabilités")  
+        proba_implicite_A = cote_to_probabilite_implicite(st.session_state.data["cote_victoire_X"])  
+        proba_implicite_nul = cote_to_probabilite_implicite(st.session_state.data["cote_nul"])  
+        proba_implicite_B = cote_to_probabilite_implicite(st.session_state.data["cote_victoire_Z"])  
+
+        # Calcul des probabilités prédites (simplifié pour l'exemple)  
+        proba_predite_A = prediction_poisson["proba_buts_A"][1]  # Probabilité de 1 but pour l'équipe A  
+        proba_predite_B = prediction_poisson["proba_buts_B"][1]  # Probabilité de 1 but pour l'équipe B  
+        proba_predite_nul = 1 - (proba_predite_A + proba_predite_B)  
+
+        # Affichage des comparaisons  
+        st.write("### Probabilités Prédites vs Implicites")  
+        st.write(f"**Équipe A** : Prédite = {proba_predite_A:.2f}% | Implicite = {proba_implicite_A:.2f}%")  
+        st.write(f"**Match Nul** : Prédite = {proba_predite_nul:.2f}% | Implicite = {proba_implicite_nul:.2f}%")  
+        st.write(f"**Équipe B** : Prédite = {proba_predite_B:.2f}% | Implicite = {proba_implicite_B:.2f}%")  
+
+        # Détection des value bets  
+        st.subheader("💎 Value Bets")  
+        value_bet_A = proba_predite_A > proba_implicite_A  
+        value_bet_nul = proba_predite_nul > proba_implicite_nul  
+        value_bet_B = proba_predite_B > proba_implicite_B  
+
+        # Affichage des value bets avec des couleurs  
+        if value_bet_A:  
+            st.success("✅ Value Bet détectée pour l'Équipe A !")  
+        else:  
+            st.error("❌ Pas de Value Bet pour l'Équipe A.")  
+
+        if value_bet_nul:  
+            st.success("✅ Value Bet détectée pour le Match Nul !")  
+        else:  
+            st.error("❌ Pas de Value Bet pour le Match Nul.")  
+
+        if value_bet_B:  
+            st.success("✅ Value Bet détectée pour l'Équipe B !")  
+        else:  
+            st.error("❌ Pas de Value Bet pour l'Équipe B.")  
+
     except Exception as e:  
         st.error(f"Une erreur s'est produite lors de la préparation des données ou de l'exécution des modèles : {e}")  
-
-# Vérification des prédictions avant d'utiliser les variables  
-if prediction_lr is not None and prediction_poisson is not None and prediction_lr != "Erreur" and prediction_poisson != "Erreur":  
-    try:  
-        # Calcul des value bets  
-        proba_victoire_A = prediction_poisson["proba_buts_A"][1] / 100  # Probabilité de 1 but pour l'équipe A  
-        proba_victoire_B = prediction_poisson["proba_buts_B"][1] / 100  # Probabilité de 1 but pour l'équipe B  
-        proba_nul = 1 - (proba_victoire_A + proba_victoire_B)  
-
-        # Calcul des value bets  
-        value_bet_A = (proba_victoire_A * st.session_state.data["cote_victoire_X"]) - 1  
-        value_bet_nul = (proba_nul * st.session_state.data["cote_nul"]) - 1  
-        value_bet_B = (proba_victoire_B * st.session_state.data["cote_victoire_Z"]) - 1  
-
-        # Affichage des value bets  
-        st.subheader("💎 Value Bets")  
-        st.write(f"Value Bet Équipe A : {value_bet_A:.2f}")  
-        st.write(f"Value Bet Match Nul : {value_bet_nul:.2f}")  
-        st.write(f"Value Bet Équipe B : {value_bet_B:.2f}")  
-
-        # Recommandation de value bet  
-        if value_bet_A > 0:  
-            st.success("✅ Value Bet détectée pour l'Équipe A !")  
-        if value_bet_nul > 0:  
-            st.success("✅ Value Bet détectée pour le Match Nul !")  
-        if value_bet_B > 0:  
-            st.success("✅ Value Bet détectée pour l'Équipe B !")  
-
-    except Exception as e:  
-        st.error(f"Une erreur s'est produite lors du calcul des value bets : {e}")  
 else:  
     st.warning("⚠️ Les prédictions ne sont pas encore disponibles ou une erreur s'est produite. Veuillez lancer les prédictions d'abord.")
