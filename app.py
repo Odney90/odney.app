@@ -83,11 +83,8 @@ with st.form("data_form"):
         st.session_state.data['jours_repos_B'] = st.number_input("⏳ Jours de Repos", value=3, key="repos_B")  
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
 
-# Bouton d'analyse indépendant  
-if st.button("🔍 Analyser le Match"):  
-    submitted = True  
-else:  
-    submitted = False  
+    # Bouton de soumission du formulaire  
+    submitted = st.form_submit_button("🔍 Analyser le Match")  
 
 # Section d'analyse et de prédiction (séparée du formulaire)  
 if submitted:  
@@ -176,7 +173,8 @@ if submitted:
         )  
 
         st.subheader("🏆 Résultat Final")  
-        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
+        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")
+        'Équipe A', f"{probabilite_victoire_A:.2%}")  
 
         # Visualisation des performances des modèles  
         st.subheader("📈 Comparaison des Performances des Modèles")  
@@ -204,24 +202,55 @@ if submitted:
         st.pyplot(fig)  
 
         # Convertisseur de score  
-        st.subheader("🔄 Convertisseur de Score")  
-        score_implicite_A = st.number_input("⚽ Score Implicite Équipe A", value=1.5, key="score_implicite_A")  
-        score_implicite_B = st.number_input("⚽ Score Implicite Équipe B", value=1.2, key="score_implicite_B")  
+        st.subheader("🔄 Analyse des Cotes Implicites")  
+        cote_A = st.number_input("Cote de Victoire Équipe A", value=2.0, key="cote_A")  
+        cote_B = st.number_input("Cote de Victoire Équipe B", value=2.5, key="cote_B")  
+        cote_Nul = st.number_input("Cote de Match Nul", value=3.0, key="cote_Nul")  
 
-        # Calcul de la valeur de pari  
-        score_predite_A = np.mean(buts_A)  
-        score_predite_B = np.mean(buts_B)  
+        # Calcul des probabilités implicites  
+        proba_implicite_A = 1 / cote_A  
+        proba_implicite_B = 1 / cote_B  
+        proba_implicite_Nul = 1 / cote_Nul  
+
+        # Normalisation des probabilités implicites pour qu'elles somment à 1  
+        total_proba_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
+        proba_implicite_A /= total_proba_implicite  
+        proba_implicite_B /= total_proba_implicite  
+        proba_implicite_Nul /= total_proba_implicite  
+
+        # Récupération des probabilités prédites par le modèle  
+        proba_predite_A = proba[1]  # Victoire A  
+        proba_predite_B = proba[0]  # Victoire B  
+        proba_predite_Nul = proba[2]  # Match Nul  
 
         # Affichage des résultats  
-        st.markdown(f"**Score Prédit Équipe A** : {score_predite_A:.2f} (Implicite : {score_implicite_A})")  
-        st.markdown(f"**Score Prédit Équipe B** : {score_predite_B:.2f} (Implicite : {score_implicite_B})")  
+        st.write("##### Probabilités Implicites (Cotes)")  
+        col_implicite_A, col_implicite_B, col_implicite_Nul = st.columns(3)  
+        with col_implicite_A:  
+            st.metric("Victoire A", f"{proba_implicite_A:.2%}")  
+        with col_implicite_B:  
+            st.metric("Victoire B", f"{proba_implicite_B:.2%}")  
+        with col_implicite_Nul:  
+            st.metric("Match Nul", f"{proba_implicite_Nul:.2%}")  
 
-        # Calcul de la valeur de pari  
-        value_bet_A = (score_predite_A / score_implicite_A) - 1  
-        value_bet_B = (score_predite_B / score_implicite_B) - 1  
+        st.write("##### Probabilités Prédites (Modèle)")  
+        col_predite_A, col_predite_B, col_predite_Nul = st.columns(3)  
+        with col_predite_A:  
+            st.metric("Victoire A", f"{proba_predite_A:.2%}")  
+        with col_predite_B:  
+            st.metric("Victoire B", f"{proba_predite_B:.2%}")  
+        with col_predite_Nul:  
+            st.metric("Match Nul", f"{proba_predite_Nul:.2%}")  
 
-        st.markdown(f"**Valeur de Pari Équipe A** : {value_bet_A:.2f}")  
-        st.markdown(f"**Valeur de Pari Équipe B** : {value_bet_B:.2f}")  
+        # Comparaison des probabilités  
+        st.write("##### Comparaison")  
+        col_comparaison_A, col_comparaison_B, col_comparaison_Nul = st.columns(3)  
+        with col_comparaison_A:  
+            st.metric("Différence Victoire A", f"{(proba_predite_A - proba_implicite_A):.2%}")  
+        with col_comparaison_B:  
+            st.metric("Différence Victoire B", f"{(proba_predite_B - proba_implicite_B):.2%}")  
+        with col_comparaison_Nul:  
+            st.metric("Différence Match Nul", f"{(proba_predite_Nul - proba_implicite_Nul):.2%}")  
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
@@ -242,9 +271,9 @@ st.markdown("""
 - **📈 Comparaison des Performances des Modèles** :   
   - Les métriques affichées (précision, rappel, F1-score) permettent de comparer l'efficacité des modèles.  
 
-- **🔄 Convertisseur de Score** :   
-  - Compare le score prédit avec le score implicite pour évaluer la valeur de pari.  
-  - Une valeur de pari positive indique une opportunité potentielle de pari.  
+- **🔄 Analyse des Cotes Implicites** :  
+  - Analyse les cotes fournies pour calculer les probabilités implicites et les compare avec les probabilités prédites par le modèle.  
+  - Une différence positive suggère une possible value bet.  
 
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
 """)
