@@ -11,6 +11,12 @@ def safe_float(value):
     except (ValueError, TypeError):  
         return 0.0  
 
+# Fonction pour calculer la Mise Kelly  
+def mise_kelly(probabilite, cote, bankroll):  
+    if cote <= 1:  
+        return 0  
+    return (probabilite * (cote - 1) - (1 - probabilite)) / (cote - 1) * bankroll  
+
 # Initialisation des données dans st.session_state  
 if "data" not in st.session_state:  
     st.session_state.data = {  
@@ -262,4 +268,26 @@ with tab3:
 # Onglet 4 : Cotes et Value Bet  
 with tab4:  
     st.header("🎰 Cotes et Value Bet")  
-    st.write("Cette section analyse les cote
+    st.write("Cette section analyse les cotes et les opportunités de value bet.")  
+    st.session_state.data["cote_victoire_X"] = st.number_input("Cote Victoire X", value=st.session_state.data["cote_victoire_X"])  
+    st.session_state.data["cote_nul"] = st.number_input("Cote Nul", value=st.session_state.data["cote_nul"])  
+    st.session_state.data["cote_victoire_Z"] = st.number_input("Cote Victoire Z", value=st.session_state.data["cote_victoire_Z"])  
+
+# Onglet 5 : Système de Mise  
+with tab5:  
+    st.header("💰 Système de Mise")  
+    st.write("Cette section permet de configurer et de gérer le système de mise.")  
+    st.session_state.data["bankroll"] = st.number_input("Bankroll", value=st.session_state.data["bankroll"])  
+
+    # Calcul de la Mise Kelly  
+    st.write("📊 **Mise Kelly**")  
+    col10, col11, col12 = st.columns(3)  
+    with col10:  
+        mise_kelly_A = mise_kelly(victoire_A, st.session_state.data["cote_victoire_X"], st.session_state.data["bankroll"])  
+        st.metric("Mise Kelly pour l'Équipe A", f"{mise_kelly_A:.2f} €")  
+    with col11:  
+        mise_kelly_nul = mise_kelly(match_nul, st.session_state.data["cote_nul"], st.session_state.data["bankroll"])  
+        st.metric("Mise Kelly pour le Match Nul", f"{mise_kelly_nul:.2f} €")  
+    with col12:  
+        mise_kelly_B = mise_kelly(victoire_B, st.session_state.data["cote_victoire_Z"], st.session_state.data["bankroll"])  
+        st.metric("Mise Kelly pour l'Équipe B", f"{mise_kelly_B:.2f} €")
