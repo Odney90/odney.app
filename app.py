@@ -231,9 +231,8 @@ if submitted:
         st.error(f"Erreur lors de la prédiction : {e}")  
         st.error(traceback.format_exc())  
 
-# Pied de page informatif  
 st.markdown("""  
-### 🤔 Comment Interpréter ces Résultats ?  
-- **📊 Prédiction des Buts (Poisson)** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
-- **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
-- **📈 Comparateur de Cotes** :)
+### 💡 Qu'est-ce qu'un Value Bet ?  
+Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
+Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
+""")
