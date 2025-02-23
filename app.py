@@ -74,7 +74,11 @@ with st.form("Données des Équipes"):
 
     # Bouton de soumission du formulaire  
     submitted = st.form_submit_button("💾 Enregistrer les Données")
-    def validation_croisee_personnalisee(X, y, modele, n_splits=5):  
+    
+   def validation_croisee_personnalisee(X, y, modele, n_splits=5):  
+    from sklearn.model_selection import StratifiedKFold  
+    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score  
+    
     kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)  
     
     resultats = {  
@@ -96,8 +100,7 @@ with st.form("Données des Équipes"):
         resultats['recall'].append(recall_score(y_test, y_pred, average='weighted'))  
         resultats['f1_score'].append(f1_score(y_test, y_pred, average='weighted'))  
     
-    return {k: np.mean(v) for k, v in resultats.items()}  
-
+    return {k: np.mean(v) for k, v in resultats.items()}
 def preparer_donnees_regression_logistique(data):  
     score_forme_A = calculer_score_forme_avance(  
         data["forme_recente_A_victoires"],  
