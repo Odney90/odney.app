@@ -360,28 +360,60 @@ with tab2:
         prediction_lr = "Erreur"  
         probabilite_lr = 0  
 
-    # Méthode 3 : Distribution de Poisson  
-    # Calcul des buts
-    # Simulation des buts avec Poisson  
-buts_A = poisson.rvs(buts_attendus_A, size=1000)  
-buts_B = poisson.rvs(buts_attendus_B, size=1000)  
-victoire_A = np.mean(buts_A > buts_B)  
-victoire_B = np.mean(buts_B > buts_A)  
-match_nul = np.mean(buts_A == buts_B)  
+       # Simulation des buts avec Poisson  
+    buts_A = poisson.rvs(buts_attendus_A, size=1000)  
+    buts_B = poisson.rvs(buts_attendus_B, size=1000)  
+    victoire_A = np.mean(buts_A > buts_B)  
+    victoire_B = np.mean(buts_B > buts_A)  
+    match_nul = np.mean(buts_A == buts_B)  
 
-# Affichage des résultats  
-st.write("📊 **Résultats des Différentes Méthodes de Prédiction**")  
-col1, col2, col3 = st.columns(3)  
-with col1:  
-    st.metric("Random Forest", f"{prediction_rf} ({probabilite_rf:.2f}%)")  
-with col2:  
-    st.metric("Régression Logistique", f"{prediction_lr} ({probabilite_lr:.2f}%)")  
-with col3:  
-    st.metric("Probabilité de victoire de l'Équipe A", f"{victoire_A:.2%}")  
+    # Affichage des résultats  
+    st.write("📊 **Résultats des Différentes Méthodes de Prédiction**")  
+    col1, col2, col3 = st.columns(3)  
+    with col1:  
+        st.metric("Random Forest", f"{prediction_rf} ({probabilite_rf:.2f}%)")  
+    with col2:  
+        st.metric("Régression Logistique", f"{prediction_lr} ({probabilite_lr:.2f}%)")  
+    with col3:  
+        st.metric("Probabilité de victoire de l'Équipe A", f"{victoire_A:.2%}")  
 
-st.write("📊 **Prédiction des Buts avec Poisson**")  
-col4, col5 = st.columns(2)  
-with col4:  
-    st.metric("Buts prédits pour l'Équipe A", f"{int(np.mean(buts_A))}", f"{np.mean(buts_A):.2%}")  
-with col5:  
-    st.metric("Buts prédits pour l'Équipe B", f"{int(np.mean(buts_B))}", f"{np.mean(buts_B):.2%}")
+    st.write("📊 **Prédiction des Buts avec Poisson**")  
+    col4, col5 = st.columns(2)  
+    with col4:  
+        st.metric("Buts prédits pour l'Équipe A", f"{int(np.mean(buts_A))}", f"{np.mean(buts_A):.2%}")  
+    with col5:  
+        st.metric("Buts prédits pour l'Équipe B", f"{int(np.mean(buts_B))}", f"{np.mean(buts_B):.2%}")  
+
+# Onglet 3 : Cotes et Value Bet  
+with tab3:  
+    st.header("🎰 Cotes et Value Bet")  
+    st.write("Cette section analyse les cotes et les opportunités de value bet.")  
+    st.session_state.data["cote_victoire_X"] = st.number_input(  
+        "Cote Victoire Équipe A",  
+        value=st.session_state.data["cote_victoire_X"],  
+        key="cote_victoire_X_input",  
+        step=0.01  
+    )  
+    st.session_state.data["cote_nul"] = st.number_input(  
+        "Cote Match Nul",  
+        value=st.session_state.data["cote_nul"],  
+        key="cote_nul_input",  
+        step=0.01  
+    )  
+    st.session_state.data["cote_victoire_Z"] = st.number_input(  
+        "Cote Victoire Équipe B",  
+        value=st.session_state.data["cote_victoire_Z"],  
+        key="cote_victoire_Z_input",  
+        step=0.01  
+    )  
+
+# Onglet 4 : Système de Mise  
+with tab4:  
+    st.header("💰 Système de Mise")  
+    st.write("Cette section permet de configurer et de gérer le système de mise.")  
+    st.session_state.data["bankroll"] = st.number_input(  
+        "Bankroll",  
+        value=st.session_state.data["bankroll"],  
+        key="bankroll_input",  
+        step=0.01  
+    )
