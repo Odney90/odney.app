@@ -7,7 +7,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.preprocessing import StandardScaler  
 from scipy.stats import poisson  
-import traceback
+import traceback  
+
 # Initialisation de st.session_state  
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
@@ -62,9 +63,10 @@ with st.form("data_form"):
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
 
     # Bouton de soumission  
-    submitted = st.form_submit_button("🔍 Analyser le Match")
-    
- if submitted:  
+    submitted = st.form_submit_button("🔍 Analyser le Match")  
+
+# Section d'analyse et de prédiction  
+if submitted:  
     try:  
         # Génération des données fictives  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  
@@ -147,9 +149,9 @@ with st.form("data_form"):
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
-        st.error(traceback.format_exc())
-        
-        # Pied de page informatif  
+        st.error(traceback.format_exc())  
+
+# Pied de page informatif  
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
 
