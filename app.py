@@ -440,7 +440,6 @@ def preparer_donnees_random_forest(data):
         ]  
     ])  
     return X_rf
-    
 # Configuration Streamlit  
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
 st.title("🏆 Système de Prédiction de Matchs de Football")  
@@ -450,7 +449,7 @@ if 'data' not in st.session_state:
     st.session_state.data = {}  
 
 # Formulaire de saisie  
-with st.sidebar:  
+with st.form("Données du Match"):  
     st.subheader("📊 Saisie des Données du Match")  
     
     col1, col2 = st.columns(2)  
@@ -521,10 +520,10 @@ with st.sidebar:
             "matchs_30_jours_B": st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
         })  
 
-    submitted = st.button("🔍 Analyser le Match")  
+    submitted = st.form_submit_button("🔍 Analyser le Match")  
 
-# Affichage des résultats  
-if submitted:  
+# Section d'analyse et de prédiction  
+if st.button("🏆 Prédire le Résultat"):  
     try:  
         # Génération de données historiques  
         donnees_historiques = generer_donnees_historiques_defaut()  
@@ -549,7 +548,7 @@ if submitted:
         # Résultats Poisson  
         resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
         
-        # Affichage des résultats  
+        # Résultats  
         st.subheader("🔮 Résultats de Prédiction")  
         
         col_poisson, col_modeles = st.columns(2)  
@@ -558,11 +557,6 @@ if submitted:
             st.markdown("**📊 Probabilités de Poisson**")  
             for resultat, proba in resultats_poisson.items():  
                 st.metric(resultat, f"{proba:.2%}")  
-            
-            # Prédiction des buts par équipe  
-            st.markdown("**⚽ Prédiction des Buts par Équipe**")  
-            st.write(f"Équipe A : {lambda_A:.2f} buts attendus")  
-            st.write(f"Équipe B : {lambda_B:.2f} buts attendus")  
         
         with col_modeles:  
             st.markdown("**🤖 Performance des Modèles**")  
