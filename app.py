@@ -342,25 +342,6 @@ with tab1:
                 key="forme_recente_B_defaites_input",  
                 step=1  
             )  
-            st.subheader("📊 Historique des Confrontations")  
-            st.session_state.data["historique_victoires_A"] = st.number_input(  
-                "✅ Victoires Équipe A contre Équipe B",  
-                value=safe_int(st.session_state.data.get("historique_victoires_A", 0)),  
-                key="historique_victoires_A_input",  
-                step=1  
-            )  
-            st.session_state.data["historique_victoires_B"] = st.number_input(  
-                "✅ Victoires Équipe B contre Équipe A",  
-                value=safe_int(st.session_state.data.get("historique_victoires_B", 0)),  
-                key="historique_victoires_B_input",  
-                step=1  
-            )  
-            st.session_state.data["historique_nuls"] = st.number_input(  
-                "➖ Nuls entre Équipe A et Équipe B",  
-                value=safe_int(st.session_state.data.get("historique_nuls", 0)),  
-                key="historique_nuls_input",  
-                step=1  
-            )  
             submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
 
             if submitted_B:  
@@ -369,7 +350,6 @@ with tab1:
 # Onglet 2 : Prédictions  
 with tab2:  
     st.header("🔮 Prédictions du Match")  
-
     # Calcul du score de forme récente  
     score_forme_A = (st.session_state.data["forme_recente_A_victoires"] * 3 +  
                      st.session_state.data["forme_recente_A_nuls"] * 1 +  
