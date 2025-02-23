@@ -6,10 +6,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_curve, auc  
-import plotly.express as px  
 import matplotlib.pyplot as plt  
-import traceback  
-from docx import Document  
 
 # Configuration de la page  
 st.set_page_config(page_title="⚽ Analyse de Match de Football", page_icon="⚽", layout="wide")  
@@ -17,22 +14,10 @@ st.set_page_config(page_title="⚽ Analyse de Match de Football", page_icon="⚽
 # Initialisation de st.session_state  
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
-if 'historique' not in st.session_state:  
-    st.session_state.historique = []  
 
 # Fonction pour convertir une cote en probabilité implicite  
 def cote_en_probabilite(cote):  
     return 1 / cote  
-
-# Fonction pour générer un rapport DOC  
-def generer_rapport(prediction, poids_criteres):  
-    doc = Document()  
-    doc.add_heading("Rapport de Prédiction", level=1)  
-    doc.add_paragraph(f"Prédiction : {prediction}")  
-    doc.add_heading("Poids des Critères", level=2)  
-    for critere, poids in poids_criteres.items():  
-        doc.add_paragraph(f"{critere} : {poids:.2f}")  
-    return doc  
 
 # Formulaire de collecte des données  
 with st.form("data_form"):  
@@ -130,7 +115,7 @@ if submitted:
         df = pd.concat([df_A, df_B], axis=1)  
 
         # Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
-        y = (df['buts_par_match_A'] > df['buts_par_match_B'].astype(int))  
+        y = (df['buts_par_match_A'] > df['buts_par_match_B']).astype(int)  
 
         # Modèle Poisson  
         lambda_A = (  
@@ -173,6 +158,14 @@ if submitted:
         rf_clf = RandomForestClassifier()  
         rf_scores = cross_val_score(rf_clf, df, y, cv=skf, scoring='accuracy')  
         rf_mean_score = np.mean(rf_scores)  
+
+        # Affichage des résultats des modèles  
+        st.subheader("🤖 Performance des Modèles")  
+        col_log_reg, col_rf = st.columns(2)  
+        with col_log_reg:  
+            st.metric("📈 Régression Logistique (Précision)", f"{log_reg_mean_score:.2%}")  
+        with col_rf:  
+            st.metric("🌲 Forêt Aléatoire (Précision)", f"{rf_mean_score:.2%}")  
 
         # Comparaison des probabilités de victoire  
         proba_A = np.mean(buts_A) / (np.mean(buts_A) + np.mean(buts_B))  
