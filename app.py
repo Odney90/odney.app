@@ -83,8 +83,11 @@ with st.form("data_form"):
         st.session_state.data['jours_repos_B'] = st.number_input("⏳ Jours de Repos", value=3, key="repos_B")  
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
 
-    # Bouton de soumission dans le formulaire  
-    submitted = st.form_submit_button("🔍 Analyser le Match")  
+# Bouton d'analyse indépendant  
+if st.button("🔍 Analyser le Match"):  
+    submitted = True  
+else:  
+    submitted = False  
 
 # Section d'analyse et de prédiction (séparée du formulaire)  
 if submitted:  
@@ -198,6 +201,26 @@ if submitted:
         plt.tight_layout()  
         st.pyplot(fig)  
 
+        # Convertisseur de score  
+        st.subheader("🔄 Convertisseur de Score")  
+        score_implicite_A = st.number_input("⚽ Score Implicite Équipe A", value=1.5, key="score_implicite_A")  
+        score_implicite_B = st.number_input("⚽ Score Implicite Équipe B", value=1.2, key="score_implicite_B")  
+
+        # Calcul de la valeur de pari  
+        score_predite_A = np.mean(buts_A)  
+        score_predite_B = np.mean(buts_B)  
+
+        # Affichage des résultats  
+        st.markdown(f"**Score Prédit Équipe A** : {score_predite_A:.2f} (Implicite : {score_implicite_A})")  
+        st.markdown(f"**Score Prédit Équipe B** : {score_predite_B:.2f} (Implicite : {score_implicite_B})")  
+
+        # Calcul de la valeur de pari  
+        value_bet_A = (score_predite_A / score_implicite_A) - 1  
+        value_bet_B = (score_predite_B / score_implicite_B) - 1  
+
+        st.markdown(f"**Valeur de Pari Équipe A** : {value_bet_A:.2f}")  
+        st.markdown(f"**Valeur de Pari Équipe B** : {value_bet_B:.2f}")  
+
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
         st.error(traceback.format_exc())  
@@ -206,12 +229,4 @@ if submitted:
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
 
-- **📊 Prédiction des Buts (Poisson)** : Basée sur les Expected Goals (xG) des équipes.  
-- **🤖 Performance des Modèles** :   
-  - **Régression Logistique** : Modèle linéaire simple.  
-  - **Random Forest** : Modèle plus complexe, moins sensible au bruit.  
-- **📈 K-Fold Cross-Validation** : Cette méthode permet d'évaluer la performance des modèles en divisant les données en plusieurs sous-ensembles (folds). Chaque fold est utilisé comme ensemble de test, tandis que les autres servent à l'entraînement. Cela garantit une estimation plus robuste de la performance.  
-- **🏆 Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction.  
-
-⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
+- **📊 Prédiction des Buts (Poisson)**
