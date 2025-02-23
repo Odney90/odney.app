@@ -75,6 +75,11 @@ with tabs[0]:
             st.session_state.data['absences_B'] = st.number_input("🚑 Absences (Équipe B)", value=3, key="absences_B")  
             st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=6.0, format="%.2f", key="forme_B")  
 
+        # Critères de face-à-face  
+        st.markdown("#### 📊 Statistiques de Face-à-Face")  
+        st.session_state.data['buts_A_face_a_face'] = st.number_input("⚽ Buts Équipe A (Face-à-Face)", value=2.0, format="%.2f", key="buts_A_face")  
+        st.session_state.data['buts_B_face_a_face'] = st.number_input("⚽ Buts Équipe B (Face-à-Face)", value=1.5, format="%.2f", key="buts_B_face")  
+
         # Cotes des bookmakers  
         st.markdown("#### 📊 Cotes des Bookmakers")  
         col7, col8, col9 = st.columns(3)  
@@ -107,6 +112,7 @@ with tabs[0]:
                 'grandes_chances_A': np.random.normal(st.session_state.data['grandes_chances_A'], 5, n_samples),  
                 'absences_A': np.random.normal(st.session_state.data['absences_A'], 1, n_samples),  
                 'forme_recente_A': np.random.normal(st.session_state.data['forme_recente_A'], 1, n_samples),  
+                'buts_A_face_a_face': np.random.normal(st.session_state.data['buts_A_face_a_face'], 0.5, n_samples),  
             }  
 
             # Données synthétiques pour l'équipe B  
@@ -121,6 +127,7 @@ with tabs[0]:
                 'grandes_chances_B': np.random.normal(st.session_state.data['grandes_chances_B'], 5, n_samples),  
                 'absences_B': np.random.normal(st.session_state.data['absences_B'], 1, n_samples),  
                 'forme_recente_B': np.random.normal(st.session_state.data['forme_recente_B'], 1, n_samples),  
+                'buts_B_face_a_face': np.random.normal(st.session_state.data['buts_B_face_a_face'], 0.5, n_samples),  
             }  
 
             # Création du DataFrame synthétique  
@@ -136,14 +143,16 @@ with tabs[0]:
                 st.session_state.data['expected_but_A'] +  
                 st.session_state.data['buts_par_match_A'] +  
                 st.session_state.data['tirs_cadres_A'] * 0.1 +  
-                st.session_state.data['grandes_chances_A'] * 0.2  
+                st.session_state.data['grandes_chances_A'] * 0.2 +  
+                st.session_state.data['buts_A_face_a_face'] * 0.3  # Ajout des buts face-à-face  
             )  
 
             lambda_B = (  
                 st.session_state.data['expected_but_B'] +  
                 st.session_state.data['buts_par_match_B'] +  
                 st.session_state.data['tirs_cadres_B'] * 0.1 +  
-                st.session_state.data['grandes_chances_B'] * 0.2  
+                st.session_state.data['grandes_chances_B'] * 0.2 +  
+                st.session_state.data['buts_B_face_a_face'] * 0.3  # Ajout des buts face-à-face  
             )  
 
             # Prédiction des buts avec Poisson  
@@ -244,9 +253,12 @@ with tabs[0]:
                     'Critères': [  
                         'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
                         'Expected Goals A', 'Expected Goals Against A', 'Tirs Cadrés A', 'Grandes Chances A',  
-                        'Absences A', 'Forme Récente A', 'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
-                        'Possession Moyenne B', 'Expected Goals B', 'Expected Goals Against B', 'Tirs Cadrés B',  
-                        'Grandes Chances B', 'Absences B', 'Forme Récente B'  
+                        'Absences A', 'Forme Récente A', 'Buts Face-à-Face A',   
+                        'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
+                        'Possession Moyenne B', 'Expected Goals B',   
+                        'Expected Goals Against B', 'Tirs Cadrés B',   
+                        'Grandes Chances B', 'Absences B',   
+                        'Forme Récente B', 'Buts Face-à-Face B'  
                     ],  
                     'Poids': st.session_state.poids_criteres  
                 })  
@@ -271,6 +283,28 @@ with tabs[0]:
 
             else:  
                 st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")  
+
+            # Comparaison des probabilités prédites et implicites  
+            st.subheader("📊 Comparaison des Probabilités Prédites et Implicites")  
+            proba_implicite_A = 1 / st.session_state.data['cote_bookmaker_A']  
+            proba_implicite_B = 1 / st.session_state.data['cote_bookmaker_B']  
+            proba_implicite_Nul = 1 / st.session_state.data['cote_bookmaker_Nul']  
+
+            # Normalisation des probabilités implicites  
+            total_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
+            proba_implicite_A /= total_implicite  
+            proba_implicite_B /= total_implicite  
+            proba_implicite_Nul /= total_implicite  
+
+            # Création d'un DataFrame pour la comparaison  
+            df_comparaison = pd.DataFrame({  
+                'Équipe': ['Équipe A', 'Équipe B', 'Match Nul'],  
+                'Probabilité Prédite': [proba_A, proba_B, proba_Nul],  
+                'Probabilité Implicite': [proba_implicite_A, proba_implicite_B, proba_implicite_Nul]  
+            })  
+
+            # Affichage du tableau de comparaison  
+            st.table(df_comparaison)  
 
         except Exception as e:  
             st.error(f"Erreur lors de la prédiction : {e}")  
