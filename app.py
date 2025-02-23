@@ -227,6 +227,7 @@ if submitted:
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")
+
 # Pied de page informatif  
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
@@ -234,7 +235,7 @@ st.markdown("""
 - **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
 - **📈 Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")  
+""") 
 
 # Fin de l'application  
 if __name__ == "__main__":  
