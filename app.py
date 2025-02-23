@@ -192,7 +192,7 @@ if submitted:
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")
-	st.error(traceback.format_exc())  
+	st.error(traceback.format_exc)
 
 # Pied de page informatif  
 st.markdown("""  
