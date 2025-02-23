@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd  
 from scipy.stats import poisson  
 from sklearn.ensemble import RandomForestClassifier  
+from sklearn.linear_model import LogisticRegression  
 
 # Fonction pour la Mise Kelly  
 def mise_kelly(probabilite, cote, bankroll):  
@@ -46,6 +47,17 @@ if "data" not in st.session_state:
         "cote_nul": 3.0,  
         "cote_victoire_Z": 4.0,  
         "bankroll": 1000.0,  
+        # Nouveaux critères pour Poisson  
+        "buts_marques_A": 1.8,  
+        "buts_marques_B": 1.5,  
+        "buts_concedes_A": 1.2,  
+        "buts_concedes_B": 1.5,  
+        "tirs_par_match_A": 12.5,  
+        "tirs_par_match_B": 11.0,  
+        "possession_A": 55.0,  
+        "possession_B": 48.0,  
+        "corners_par_match_A": 5.5,  
+        "corners_par_match_B": 4.8,  
     }  
 
 # Création des onglets  
@@ -127,9 +139,34 @@ with tab1:
             )  
             st.session_state.data["motivation_A"] = st.number_input(  
                 "Motivation (A)",  
-                value=int(st.session_state.data["motivation_A"]),  # Conversion en entier  
+                value=int(st.session_state.data["motivation_A"]),  
                 key="motivation_A_input",  
-                step=1  # S'assurer que l'utilisateur ne peut saisir que des entiers  
+                step=1  
+            )  
+            # Nouveaux critères pour Poisson  
+            st.session_state.data["buts_marques_A"] = st.number_input(  
+                "Buts Marqués par Match (A)",  
+                value=st.session_state.data["buts_marques_A"],  
+                key="buts_marques_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["tirs_par_match_A"] = st.number_input(  
+                "Tirs par Match (A)",  
+                value=st.session_state.data["tirs_par_match_A"],  
+                key="tirs_par_match_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["possession_A"] = st.number_input(  
+                "Possession (%) (A)",  
+                value=st.session_state.data["possession_A"],  
+                key="possession_A_input",  
+                step=0.01  
+            )  
+            st.session_state.data["corners_par_match_A"] = st.number_input(  
+                "Corners par Match (A)",  
+                value=st.session_state.data["corners_par_match_A"],  
+                key="corners_par_match_A_input",  
+                step=0.01  
             )  
 
         # Équipe B  
@@ -197,9 +234,34 @@ with tab1:
             )  
             st.session_state.data["motivation_B"] = st.number_input(  
                 "Motivation (B)",  
-                value=int(st.session_state.data["motivation_B"]),  # Conversion en entier  
+                value=int(st.session_state.data["motivation_B"]),  
                 key="motivation_B_input",  
-                step=1  # S'assurer que l'utilisateur ne peut saisir que des entiers  
+                step=1  
+            )  
+            # Nouveaux critères pour Poisson  
+            st.session_state.data["buts_marques_B"] = st.number_input(  
+                "Buts Marqués par Match (B)",  
+                value=st.session_state.data["buts_marques_B"],  
+                key="buts_marques_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["tirs_par_match_B"] = st.number_input(  
+                "Tirs par Match (B)",  
+                value=st.session_state.data["tirs_par_match_B"],  
+                key="tirs_par_match_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["possession_B"] = st.number_input(  
+                "Possession (%) (B)",  
+                value=st.session_state.data["possession_B"],  
+                key="possession_B_input",  
+                step=0.01  
+            )  
+            st.session_state.data["corners_par_match_B"] = st.number_input(  
+                "Corners par Match (B)",  
+                value=st.session_state.data["corners_par_match_B"],  
+                key="corners_par_match_B_input",  
+                step=0.01  
             )  
 
         # Face-à-face  
@@ -218,7 +280,7 @@ with tab1:
         )  
 
         # Bouton de soumission  
-        st.form_submit_button("Enregistrer les données")
+        st.form_submit_button("Enregistrer les données")  
 
 # Onglet 2 : Prédictions  
 with tab2:  
@@ -241,8 +303,11 @@ with tab2:
         probabilite_rf = 0  
 
     # Méthode 2 : Distribution de Poisson  
-    buts_attendus_A = st.session_state.data["buts_attendus_concedes_B"]  
-    buts_attendus_B = st.session_state.data["buts_attendus_concedes_A"]  
+    # Calcul des buts attendus avec Poisson  
+    buts_attendus_A = (st.session_state.data["buts_marques_A"] + st.session_state.data["buts_concedes_B"]) / 2  
+    buts_attendus_B = (st.session_state.data["buts_marques_B"] + st.session_state.data["buts_concedes_A"]) / 2  
+
+    # Simulation des buts avec Poisson  
     buts_A = poisson.rvs(buts_attendus_A, size=1000)  
     buts_B = poisson.rvs(buts_attendus_B, size=1000)  
     victoire_A = np.mean(buts_A > buts_B)  
@@ -297,18 +362,4 @@ with tab4:
         "Bankroll",  
         value=st.session_state.data["bankroll"],  
         key="bankroll_input",  
-        step=0.01  
-    )  
-
-    # Calcul de la Mise Kelly  
-    st.write("📊 **Mise Kelly**")  
-    col6, col7, col8 = st.columns(3)  
-    with col6:  
-        mise_kelly_A = mise_kelly(victoire_A, st.session_state.data["cote_victoire_X"], st.session_state.data["bankroll"])  
-        st.metric("Mise Kelly pour l'Équipe A", f"{mise_kelly_A:.2f} €")  
-    with col7:  
-        mise_kelly_nul = mise_kelly(match_nul, st.session_state.data["cote_nul"], st.session_state.data["bankroll"])  
-        st.metric("Mise Kelly pour le Match Nul", f"{mise_kelly_nul:.2f} €")  
-    with col8:  
-        mise_kelly_B = mise_kelly(victoire_B, st.session_state.data["cote_victoire_Z"], st.session_state.data["bankroll"])  
-        st.metric("Mise Kelly pour l'Équipe B", f"{mise_kelly_B:.2f} €")
+        step=0.01
