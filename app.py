@@ -81,10 +81,10 @@ with st.form("data_form"):
         st.session_state.data['jours_repos_B'] = st.number_input("⏳ Jours de Repos", value=3, key="repos_B")  
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
 
-    # Bouton de soumission en bas du formulaire  
+    # Bouton de soumission dans le formulaire  
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
-# Section d'analyse et de prédiction  
+# Section d'analyse et de prédiction (séparée du formulaire)  
 if submitted:  
     try:  
         # Préparation des données pour Poisson  
