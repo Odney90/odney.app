@@ -127,9 +127,9 @@ with tab1:
             )  
             st.session_state.data["motivation_A"] = st.number_input(  
                 "Motivation (A)",  
-                value=int(st.session_state.data["motivation_A"]),  
+                value=int(st.session_state.data["motivation_A"]),  # Conversion en entier  
                 key="motivation_A_input",  
-                step=1  
+                step=1  # S'assurer que l'utilisateur ne peut saisir que des entiers  
             )  
 
         # Équipe B  
@@ -197,9 +197,9 @@ with tab1:
             )  
             st.session_state.data["motivation_B"] = st.number_input(  
                 "Motivation (B)",  
-                value=int(st.session_state.data["motivation_B"]),  
+                value=int(st.session_state.data["motivation_B"]),  # Conversion en entier  
                 key="motivation_B_input",  
-                step=1  
+                step=1  # S'assurer que l'utilisateur ne peut saisir que des entiers  
             )  
 
         # Face-à-face  
@@ -218,7 +218,7 @@ with tab1:
         )  
 
         # Bouton de soumission  
-        st.form_submit_button("Enregistrer les données")  
+        st.form_submit_button("Enregistrer les données")
 
 # Onglet 2 : Prédictions  
 with tab2:  
