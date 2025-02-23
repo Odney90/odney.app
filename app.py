@@ -102,7 +102,14 @@ if "data" not in st.session_state:
         "matchs-sur_30_jours_B": 9, 
         "motivation_B": 3,  
        
-      
+        # Cotes  
+        "cote_victoire_X": 2.0,  
+        "cote_nul": 3.0,  
+        "cote_victoire_Z": 4.0,
+    
+        # Bankroll  
+        "bankroll": 1000.0,  
+        
         # Conditions du Match  
         "conditions_match": "",  
         # Historique Face-à-Face  
@@ -110,13 +117,7 @@ if "data" not in st.session_state:
         # Forme Récente  
         "forme_recente_A": ["V", "V", "V", "V", "V"],  # Données fictives pour l'Équipe A  
         "forme_recente_B": ["D", "N", "V", "D", "V"],  # Données fictives pour l'Équipe B 
-         # Cotes  
-        "cote_victoire_X": 2.0,  
-        "cote_nul": 3.0,  
-        "cote_victoire_Z": 4.0,
-    
-        # Bankroll  
-        "bankroll": 1000.0,  
+       
         
     }  
 
