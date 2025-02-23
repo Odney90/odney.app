@@ -263,13 +263,12 @@ def preparer_donnees_regression_logistique(data):
             "score_rating_A": 70, "buts_par_match_A": 1.5, "buts_concedes_par_match_A": 1.0,  
             "possession_moyenne_A": 55, "expected_but_A": 1.8, "expected_concedes_A": 1.2,  
             "tirs_cadres_A": 120, "grandes_chances_A": 25, "passes_reussies_A": 400,  
-            "corners_A": 60, "interceptions_A": 50, "tacles_reussis_A": 40, "fautes_A": 15, "cartons_jaunes_A": 5,  
-            "cartons_rouges_A": 1, "joueurs_cles_absents_A": 0, "motivation_A": 3,  
-            "clean_sheets_gardien_A": 2, "ratio_tirs_arretes_A": 0.75,  
-            "victoires_domicile_A": 60, "passes_longues_A": 50, "dribbles_reussis_A": 10,  
-            "ratio_tirs_cadres_A": 0.4, "grandes_chances_manquees_A": 5,  
-            "fautes_zones_dangereuses_A": 3, "buts_corners_A": 2, "jours_repos_A": 4,  
-            "matchs_30_jours_A": 8,  
+            "corners_A": 60, "interceptions_A": 50, "tacles_reussis_A": 40, "fautes_A": 15,  
+            "cartons_jaunes_A": 5, "cartons_rouges_A": 1, "joueurs_cles_absents_A": 0,  
+            "motivation_A": 3, "clean_sheets_gardien_A": 2,"ratio_tirs_arretes_A": 0.75, 
+            "victoires_domicile_A": 60, "passes_longues_A": 50,"dribbles_reussis_A": 10,
+            "ratio_tirs_cadres_A": 0.4, "grandes_chances_manquees_A": 5,"fautes_zones_dangereuses_A": 3, 
+            "buts_corners_A": 2, "jours_repos_A": 4, "matchs_30_jours_A": 8,  
             
             # Équipe B  
             "score_rating_B": 65, "buts_par_match_B": 1.0, "buts_concedes_par_match_B": 1.5,  
@@ -279,9 +278,9 @@ def preparer_donnees_regression_logistique(data):
             "cartons_jaunes_B": 6, "cartons_rouges_B": 2, "joueurs_cles_absents_B": 0,  
             "motivation_B": 3, "clean_sheets_gardien_B": 1, "ratio_tirs_arretes_B": 0.65,  
             "victoires_exterieur_B": 40, "passes_longues_B": 40, "dribbles_reussis_B": 8,  
-            "ratio_tirs_cadres_B": 0.35, "grandes_chances_manquees_B": 6,  
-            "fautes_zones_dangereuses_B": 4, "buts_corners_B": 1, "jours_repos_B": 3,  
-            "matchs_30_jours_B": 9  
+            "ratio_tirs_cadres_B": 0.35, "grandes_chances_manquees_B": 6,"fautes_zones_dangereuses_B": 4,
+            "buts_corners_B": 1, "jours_repos_B": 3,"matchs_30_jours_B": 9,  
+            
         }  
     
     X_lr = np.array([  
@@ -449,8 +448,8 @@ st.title("🏆 Système de Prédiction de Matchs de Football")
 if 'data' not in st.session_state:  
     st.session_state.data = {}  
 
-# Formulaire de saisie  
-with st.form("Données du Match"):  
+# Formulaire de saisie dans le premier onglet  
+with st.sidebar:  
     st.subheader("📊 Saisie des Données du Match")  
     
     col1, col2 = st.columns(2)  
@@ -523,108 +522,120 @@ with st.form("Données du Match"):
 
     submitted = st.form_submit_button("🔍 Analyser le Match")  
 
-# Section d'analyse et de prédiction  
-if st.button("🏆 Prédire le Résultat"):  
-    try:  
-        # Génération de données historiques  
-        donnees_historiques = generer_donnees_historiques_defaut()  
-        
-        # Préparation des données  
-        X_train, y_train = preparer_donnees_entrainement(donnees_historiques)  
-        
-        # Préparation des données du match actuel  
-        X_lr = preparer_donnees_regression_logistique(st.session_state.data)  
-        X_rf = preparer_donnees_random_forest(st.session_state.data)  
-        
-        # Modèles  
-        modeles = {  
-            "Régression Logistique": LogisticRegression(max_iter=1000),  
-            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
-        }  
-        
-        # Calcul des lambda pour Poisson  
-        lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
-        lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
-        
-        # Résultats Poisson  
-        resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
-        
-        # Résultats  
-        st.subheader("🔮 Résultats de Prédiction")  
-        
-        col_poisson, col_modeles = st.columns(2)  
-        
-        with col_poisson:  
-            st.markdown("**📊 Probabilités de Poisson**")  
-            for resultat, proba in resultats_poisson.items():  
-                st.metric(resultat, f"{proba:.2%}")  
-        
-        with col_modeles:  
-            st.markdown("**🤖 Performance des Modèles**")  
+# Onglets pour la saisie et les résultats  
+tab1, tab2 = st.tabs(["📊 Saisie des Données", "🔮 Résultats de Prédiction"])  
+
+with tab1:  
+    st.subheader("📊 Saisie des Données du Match")  
+    st.write("Utilisez le formulaire dans la barre latérale pour saisir les données des équipes.")  
+
+with tab2:  
+    if st.button("🏆 Prédire le Résultat"):  
+        try:  
+            # Génération de données historiques  
+            donnees_historiques = generer_donnees_historiques_defaut()  
             
-            resultats_modeles = {}  
-            for nom, modele in modeles.items():  
-                # Validation croisée stratifiée  
-                resultats_cv = validation_croisee_stratifiee(  
-                    X_train,   
-                    y_train,   
-                    modele  
-                )  
+            # Préparation des données  
+            X_train, y_train = preparer_donnees_entrainement(donnees_historiques)  
+            
+            # Préparation des données du match actuel  
+            X_lr = preparer_donnees_regression_logistique(st.session_state.data)  
+            X_rf = preparer_donnees_random_forest(st.session_state.data)  
+            
+            # Modèles  
+            modeles = {  
+                "Régression Logistique": LogisticRegression(max_iter=1000),  
+                "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
+            }  
+            
+            # Calcul des lambda pour Poisson  
+            lambda_A = calculer_lambda_attendus(st.session_state.data, 'A')  
+            lambda_B = calculer_lambda_attendus(st.session_state.data, 'B')  
+            
+            # Résultats Poisson  
+            resultats_poisson = predire_resultat_match_poisson(lambda_A, lambda_B)  
+            
+            # Affichage des résultats  
+            st.subheader("🔮 Résultats de Prédiction")  
+            
+            col_poisson, col_modeles = st.columns(2)  
+            
+            with col_poisson:  
+                st.markdown("**📊 Probabilités de Poisson**")  
+                for resultat, proba in resultats_poisson.items():  
+                    st.metric(resultat, f"{proba:.2%}")  
                 
-                # Stockage des résultats  
-                resultats_modeles[nom] = resultats_cv  
+                # Prédiction des buts par équipe  
+                st.markdown("**⚽ Prédiction des Buts par Équipe**")  
+                st.write(f"Équipe A : {lambda_A:.2f} buts attendus")  
+                st.write(f"Équipe B : {lambda_B:.2f} buts attendus")  
+            
+            with col_modeles:  
+                st.markdown("**🤖 Performance des Modèles**")  
                 
-                # Affichage des métriques de validation croisée  
-                st.markdown(f"**{nom}**")  
-                for metrique, valeur in resultats_cv.items():  
-                    st.write(f"{metrique.capitalize()} : {valeur:.2%}")  
-                
-                # Entraînement final et prédiction  
-                modele.fit(X_train, y_train)  
-                proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
-                
-                st.write(f"Probabilité Victoire A: {proba[1]:.2%}")  
-                st.write(f"Probabilité Victoire B: {proba[0]:.2%}")  
-                st.write(f"Probabilité Match Nul: {proba[2]:.2%}")  
-        
-        # Analyse finale  
-        probabilite_victoire_A = (  
-            resultats_poisson['Victoire Équipe A'] +   
-            (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
-            (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
-        ) / 2  
-        
-        st.subheader("🏆 Résultat Final")  
-        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
-        
-        # Visualisation des performances des modèles  
-        st.subheader("📈 Comparaison des Performances des Modèles")  
-        
-        # Préparation des données pour le graphique  
-        metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
-        
-        # Création du DataFrame  
-        df_performances = pd.DataFrame({  
-            nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
-            for nom in resultats_modeles.keys()  
-        }, index=metriques)  
-        
-        # Affichage du DataFrame  
-        st.dataframe(df_performances)  
-        
-        # Graphique de comparaison  
-        fig, ax = plt.subplots(figsize=(10, 6))  
-        df_performances.T.plot(kind='bar', ax=ax)  
-        plt.title("Comparaison des Performances des Modèles")  
-        plt.xlabel("Modèles")  
-        plt.ylabel("Score")  
-        plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
-        plt.tight_layout()  
-        st.pyplot(fig)  
-        
-    except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")  
-        st.error(traceback.format_exc())  
+                resultats_modeles = {}  
+                for nom, modele in modeles.items():  
+                    # Validation croisée stratifiée  
+                    resultats_cv = validation_croisee_stratifiee(  
+                        X_train,   
+                        y_train,   
+                        modele  
+                    )  
+                    
+                    # Stockage des résultats  
+                    resultats_modeles[nom] = resultats_cv  
+                    
+                    # Affichage des métriques de validation croisée  
+                    st.markdown(f"**{nom}**")  
+                    for metrique, valeur in resultats_cv.items():  
+                        st.write(f"{metrique.capitalize()} : {valeur:.2%}")  
+                    
+                    # Entraînement final et prédiction  
+                    modele.fit(X_train, y_train)  
+                    proba = modele.predict_proba(X_lr if nom == "Régression Logistique" else X_rf)[0]  
+                    
+                    st.write(f"Probabilité Victoire A: {proba[1]:.2%}")  
+                    st.write(f"Probabilité Victoire B: {proba[0]:.2%}")  
+                    st.write(f"Probabilité Match Nul: {proba[2]:.2%}")  
+            
+            # Analyse finale  
+            probabilite_victoire_A = (  
+                resultats_poisson['Victoire Équipe A'] +   
+                (modeles["Régression Logistique"].predict_proba(X_lr)[0][1] * 0.5) +   
+                (modeles["Random Forest"].predict_proba(X_rf)[0][1] * 0.5)  
+            ) / 2  
+            
+            st.subheader("🏆 Résultat Final")  
+            st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}")  
+            
+            # Visualisation des performances des modèles  
+            st.subheader("📈 Comparaison des Performances des Modèles")  
+            
+            # Préparation des données pour le graphique  
+            metriques = ['accuracy', 'precision', 'recall', 'f1_score']  
+            
+            # Création du DataFrame  
+            df_performances = pd.DataFrame({  
+                nom: [resultats_modeles[nom][metrique] for metrique in metriques]  
+                for nom in resultats_modeles.keys()  
+            }, index=metriques)  
+            
+            # Affichage du DataFrame  
+            st.dataframe(df_performances)  
+            
+            # Graphique de comparaison  
+            fig, ax = plt.subplots(figsize=(10, 6))  
+            df_performances.T.plot(kind='bar', ax=ax)  
+            plt.title("Comparaison des Performances des Modèles")  
+            plt.xlabel("Modèles")  
+            plt.ylabel("Score")  
+            plt.legend(title="Métriques", bbox_to_anchor=(1.05, 1), loc='upper left')  
+            plt.tight_layout()  
+            st.pyplot(fig)  
+            
+        except Exception as e:  
+            st.error(f"Erreur lors de la prédiction : {e}")  
+            st.error(traceback.format_exc())  
 
 # Pied de page informatif  
 st.markdown("""  
