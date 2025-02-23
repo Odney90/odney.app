@@ -123,7 +123,7 @@ if submitted:
             st.session_state.data['buts_par_match_A'] +  
             st.session_state.data['tirs_cadres_A'] * 0.1 +  
             st.session_state.data['grandes_chances_A'] * 0.2 +  
-            (st.session_state.data['victoires_domicile_A'] * 0.3) - (st.session_state.data['defaites_B'] * 0.2)  # Impact des victoires et défaites  
+            (st.session_state.data['victoires_domicile_A'] * 0.3) - (st.session_state.data['joueurs_absents_B'] * 0.2)  # Impact des victoires et joueurs absents  
         )  
 
         lambda_B = (  
@@ -131,7 +131,7 @@ if submitted:
             st.session_state.data['buts_par_match_B'] +  
             st.session_state.data['tirs_cadres_B'] * 0.1 +  
             st.session_state.data['grandes_chances_B'] * 0.2 +  
-            (st.session_state.data['victoires_domicile_B'] * 0.3) - (st.session_state.data['defaites_A'] * 0.2)  # Impact des victoires et défaites  
+            (st.session_state.data['victoires_domicile_B'] * 0.3) - (st.session_state.data['joueurs_absents_A'] * 0.2)  # Impact des victoires et joueurs absents  
         )  
 
         # Prédiction des buts avec Poisson  
@@ -219,11 +219,14 @@ if submitted:
         st.table(df_resultats)  
 
         # Message rappel sur le Value Bet  
-        
         st.markdown("""  
         ### 💡 Qu'est-ce qu'un Value Bet ?  
         Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
-        Cela indique que le bookmaker sous-estime la probabilité de cet événement
+        Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
+        """)  
+
+    except Exception as e:  
+        st.error(f"Erre
                 # Affichage des poids des critères  
         st.subheader("📊 Poids des Critères du Modèle Random Forest")  
         if st.session_state.poids_criteres:  # Vérification si les poids existent  
@@ -283,14 +286,13 @@ if submitted:
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
-        # -*- coding: utf-8 -*-  
 
 # Pied de page informatif  
 st.markdown("""  
-### Comment Interpréter ces Résultats ?  
-- **Prédiction des Buts Poisson** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
-- **Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
-- **Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
+### 🤔 Comment Interpréter ces Résultats ?  
+- **📊 Prédiction des Buts (Poisson)** : Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
+- **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
+- **📈 Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
 """)  
 
