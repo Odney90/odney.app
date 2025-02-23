@@ -8,6 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 import plotly.express as px  
 from docx import Document  
 import io  
+import altair as alt  
 
 # Configuration de la page  
 st.set_page_config(page_title="⚽ Analyse de Match de Football", page_icon="⚽", layout="wide")  
@@ -29,10 +30,10 @@ def generer_rapport(predictions):
     return doc  
 
 # Onglet pour l'application  
-tab1 = st.tab("Analyse de Match")  
+tabs = st.tabs(["Analyse de Match"])  
 
 # Saisie des Données  
-with tab1:  
+with tabs[0]:  
     st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
     
     with st.form(key='match_form'):  
