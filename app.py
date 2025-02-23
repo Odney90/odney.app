@@ -163,7 +163,6 @@ if st.button("🔮 Lancer les Prédictions"):
 
             model_lr = LogisticRegression()  
             model_lr.fit(X_train_lr, y_train_lr)  # Entraînement du modèle  
-            prediction_lr = model_lr.predict(X_lr
             prediction_lr = model_lr.predict(X_lr.reshape(1, -1))[0]  # Prédiction  
         except Exception as e:  
             prediction_lr = "Erreur"  
