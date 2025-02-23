@@ -282,6 +282,7 @@ if submitted:
 
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
+        
 # -*- coding: utf-8 -*-  
 
 # Pied de page informatif  
