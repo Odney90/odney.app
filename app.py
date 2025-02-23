@@ -198,6 +198,58 @@ if submitted:
         st.error(f"Erreur lors de la prédiction : {e}")  
         st.error(traceback.format_exc())  # Assurez-vous que cette ligne est correctement indentée  
 
+# Convertisseur de score  
+st.subheader("🔄 Analyse des Cotes Implicites")  
+cote_A = st.number_input("Cote de Victoire Équipe A", value=2.0, key="cote_A")  
+cote_B = st.number_input("Cote de Victoire Équipe B", value=2.5, key="cote_B")  
+cote_Nul = st.number_input("Cote de Match Nul", value=3.0, key="cote_Nul")  
+
+# Calcul des probabilités implicites  
+proba_implicite_A = 1 / cote_A  
+proba_implicite_B = 1 / cote_B  
+proba_implicite_Nul = 1 / cote_Nul  
+
+# Normalisation des probabilités implicites pour qu'elles somment à 1  
+total_proba_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
+proba_implicite_A /= total_proba_implicite  
+proba_implicite_B /= total_proba_implicite  
+proba_implicite_Nul /= total_proba_implicite  
+
+# Récupération des probabilités prédites par le modèle  
+proba_predite_A = proba[1]  # Victoire A  
+proba_predite_B = proba[0]  # Victoire B  
+proba_predite_Nul = proba[2]  # Match Nul  
+
+# Affichage des résultats  
+st.write("##### Probabilités Implicites (Cotes)")  
+col_implicite_A, col_implicite_B, col_implicite_Nul = st.columns(3)  
+with col_implicite_A:  
+    st.metric("Victoire A", f"{proba_implicite_A:.2%}")  
+with col_implicite_B:  
+    st.metric("Victoire B", f"{proba_implicite_B:.2%}")  
+with col_implicite_Nul:  
+    st.metric("Match Nul", f"{proba_implicite_Nul:.2%}")  
+
+st.write("##### Probabilités Prédites (Modèle)")  
+col_predite_A, col_predite_B, col_predite_Nul = st.columns(3)  
+with col_predite_A:  
+    st.metric("Victoire A", f"{proba_predite_A:.2%}")  
+with col_predite_B:  
+    st.metric("Victoire B", f"{proba_predite_B:.2%}")  
+with col_predite_Nul:  
+    st.metric("Match Nul", f"{proba_predite_Nul:.2%}")  
+
+# Comparaison des probabilités  
+st.write("##### Comparaison")  
+col_comparaison_A, col_comparaison_B, col_comparaison_Nul = st.columns(3)  
+with col_comparaison_A:  
+    st.metric("Différence Victoire A", f"{(proba_predite_A - proba_implicite_A):.2%}")  
+with col_comparaison_B:  
+    st.metric("Différence Victoire B", f"{(proba_predite_B - proba_implicite_B):.2%}")  
+with col_comparaison_Nul:  
+    st.metric("Différence Match Nul", f"{(proba_predite_Nul - proba_implicite_Nul):.2%}")  
+
+
 # Pied de page informatif  
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
