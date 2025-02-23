@@ -375,9 +375,9 @@ with tab3:
 with tab4:  
     st.header("🎰 Cotes et Value Bet")  
     st.subheader("Convertisseur de Cotes Implicites")  
-    cote_victoire_A = st.number_input("Cote Victoire X", value=safe_float(st.session_state.data["cote_victoire_X"]))  
+    cote_victoire_X= st.number_input("Cote Victoire X", value=safe_float(st.session_state.data["cote_victoire_X"]))  
     cote_nul = st.number_input("Cote Nul", value=safe_float(st.session_state.data["cote_nul"]))  
-    cote_victoire_B = st.number_input("Cote Victoire Z", value=safe_float(st.session_state.data["cote_victoire_Z"]))  
+    cote_victoire_Z = st.number_input("Cote Victoire Z", value=safe_float(st.session_state.data["cote_victoire_Z"]))  
 
     # Calcul de la marge bookmaker  
     marge_bookmaker = (1 / cote_victoire_A) + (1 / cote_nul) + (1 / cote_victoire_B) - 1  
