@@ -98,106 +98,107 @@ with st.form("data_form"):
     submitted = st.form_submit_button("🔍 Analyser le Match")
     # Section d'analyse et de prédiction (séparée du formulaire)  
 if submitted:  
-    try:  
-        # Préparation des données pour Poisson  
-        lambda_A = (  
-            st.session_state.data['expected_but_A']  # xG  
-            + st.session_state.data['buts_par_match_A']  # Buts marqués  
-            + st.session_state.data['tirs_cadres_A'] * 0.1  # Tirs cadrés (pondération)  
-            + st.session_state.data['grandes_chances_A'] * 0.2  # Grandes chances (pondération)  
-            + st.session_state.data['corners_A'] * 0.05  # Corners (pondération)  
-        ) / 3  # Normalisation  
+   try:  
+    # Préparation des données pour Poisson  
+    lambda_A = (  
+        st.session_state.data['expected_but_A']  # xG  
+        + st.session_state.data['buts_par_match_A']  # Buts marqués  
+        + st.session_state.data['tirs_cadres_A'] * 0.1  # Tirs cadrés (pondération)  
+        + st.session_state.data['grandes_chances_A'] * 0.2  # Grandes chances (pondération)  
+        + st.session_state.data['corners_A'] * 0.05  # Corners (pondération)  
+    ) / 3  # Normalisation  
 
-        lambda_B = (  
-            st.session_state.data['expected_but_B']  # xG  
-            + st.session_state.data['buts_par_match_B']  # Buts marqués  
-            + st.session_state.data['tirs_cadres_B'] * 0.1  # Tirs cadrés (pondération)  
-            + st.session_state.data['grandes_chances_B'] * 0.2  # Grandes chances (pondération)  
-            + st.session_state.data['corners_B'] * 0.05  # Corners (pondération)  
-        ) / 3  # Normalisation  
+    lambda_B = (  
+        st.session_state.data['expected_but_B']  # xG  
+        + st.session_state.data['buts_par_match_B']  # Buts marqués  
+        + st.session_state.data['tirs_cadres_B'] * 0.1  # Tirs cadrés (pondération)  
+        + st.session_state.data['grandes_chances_B'] * 0.2  # Grandes chances (pondération)  
+        + st.session_state.data['corners_B'] * 0.05  # Corners (pondération)  
+    ) / 3  # Normalisation  
 
-        # Prédiction des buts avec Poisson  
-        buts_A = poisson.rvs(mu=lambda_A, size=1000)  # 1000 simulations pour l'équipe A  
-        buts_B = poisson.rvs(mu=lambda_B, size=1000)  # 1000 simulations pour l'équipe B  
+    # Prédiction des buts avec Poisson  
+    buts_A = poisson.rvs(mu=lambda_A, size=1000)  # 1000 simulations pour l'équipe A  
+    buts_B = poisson.rvs(mu=lambda_B, size=1000)  # 1000 simulations pour l'équipe B  
 
-        # Résultats Poisson  
-        st.subheader("📊 Prédiction des Buts (Poisson)")  
-        col_poisson_A, col_poisson_B = st.columns(2)  
-        with col_poisson_A:  
-            st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
-            st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
-        with col_poisson_B:  
-            st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
-            st.metric("⚽ Buts Prédits (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
+    # Résultats Poisson  
+    st.subheader("📊 Prédiction des Buts (Poisson)")  
+    col_poisson_A, col_poisson_B = st.columns(2)  
+    with col_poisson_A:  
+        st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
+        st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
+    with col_poisson_B:  
+        st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
+        st.metric("⚽ Buts Prévus (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
 
-        # Préparation des données pour Régression Logistique et Random Forest  
-        X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
-        X = np.repeat(X, 1000, axis=0)  # Répéter les données pour correspondre à la taille de y  
-        y = np.random.randint(0, 3, 1000)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
+    # Préparation des données pour Régression Logistique et Random Forest  
+    X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
+    X = np.repeat(X, 1000, axis=0)  # Répéter les données pour correspondre à la taille de y  
+    y = np.random.randint(0, 3, 1000)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
 
-        # Modèles  
-        modeles = {  
-            "Régression Logistique": LogisticRegression(max_iter=1000),  
-            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
-        }  
-# Initialisation de proba avant la boucle  
-proba = None  
-
-# Validation croisée et prédictions  
-st.markdown("### 🤖 Performance des Modèles")  
-resultats_modeles = {}  
-for nom, modele in modeles.items():  
-    # Validation croisée stratifiée  
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
-    scores = cross_val_score(modele, X, y, cv=cv, scoring='accuracy')  
-
-    # Affichage des métriques de validation croisée  
-    st.markdown(f"#### {nom}")  
-    col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
-    with col_accuracy:  
-        st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
-
-    # Prédiction finale  
-    modele.fit(X, y)  
-    proba = modele.predict_proba(X)[0]  # Mise à jour de proba  
-
-    # Affichage des prédictions  
-    st.markdown("**📊 Prédictions**")  
-    col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
-    with col_victoire_A:  
-        st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
-    with col_victoire_B:  
-        st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
-    with col_nul:  
-        st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
-
-    # Stockage des résultats pour comparaison  
-    resultats_modeles[nom] = {  
-        'accuracy': np.mean(scores),  
-        'precision': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='precision_macro')),  
-        'recall': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='recall_macro')),  
-        'f1_score': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='f1_macro'))  
+    # Modèles  
+    modeles = {  
+        "Régression Logistique": LogisticRegression(max_iter=1000),  
+        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)  
     }  
 
-# Vérification que proba est défini avant de l'utiliser  
-if proba is not None:  
-    # Analyse finale  
-    probabilite_victoire_A = (  
-        (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
-    )  
+    # Validation croisée et prédictions  
+    st.markdown("### 🤖 Performance des Modèles")  
+    resultats_modeles = {}  
+    for nom, modele in modeles.items():  
+        # Validation croisée stratifiée  
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
+        scores = cross_val_score(modele, X, y, cv=cv, scoring='accuracy')  
 
-    # Affichage amélioré des résultats finaux  
-    st.subheader("🏆 Résultat Final")  
-    col_resultat_A, col_resultat_B, col_resultat_Nul = st.columns(3)  
-    with col_resultat_A:  
-        st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}", delta=f"{(probabilite_victoire_A - 0.5):.2%}")  
-    with col_resultat_B:  
-        st.metric("Probabilité de Victoire de l'Équipe B", f"{(1 - probabilite_victoire_A):.2%}", delta=f"{(0.5 - probabilite_victoire_A):.2%}")  
-    with col_resultat_Nul:  
-        st.metric("Probabilité de Match Nul", f"{(1 - (probabilite_victoire_A + (1 - probabilite_victoire_A))):.2%}")  
-else:  
-    st.error("Erreur : Les probabilités n'ont pas pu être calculées.")
-        st.error(traceback.format_exc()) 
+        # Affichage des métriques de validation croisée  
+        st.markdown(f"#### {nom}")  
+        col_accuracy, col_precision, col_recall, col_f1 = st.columns(4)  
+        with col_accuracy:  
+            st.metric("🎯 Précision Globale", f"{np.mean(scores):.2%}")  
+
+        # Prédiction finale  
+        modele.fit(X, y)  
+        proba = modele.predict_proba(X)[0]  # Mise à jour de proba  
+
+        # Affichage des prédictions  
+        st.markdown("**📊 Prédictions**")  
+        col_victoire_A, col_victoire_B, col_nul = st.columns(3)  
+        with col_victoire_A:  
+            st.metric("🏆 Victoire A", f"{proba[1]:.2%}")  
+        with col_victoire_B:  
+            st.metric("🏆 Victoire B", f"{proba[0]:.2%}")  
+        with col_nul:  
+            st.metric("🤝 Match Nul", f"{proba[2]:.2%}")  
+
+        # Stockage des résultats pour comparaison  
+        resultats_modeles[nom] = {  
+            'accuracy': np.mean(scores),  
+            'precision': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='precision_macro')),  
+            'recall': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='recall_macro')),  
+            'f1_score': np.mean(cross_val_score(modele, X, y, cv=cv, scoring='f1_macro'))  
+        }  
+
+    # Vérification que proba est défini avant de l'utiliser  
+    if proba is not None:  
+        # Analyse finale  
+        probabilite_victoire_A = (  
+            (resultats_modeles["Régression Logistique"]["accuracy"] + resultats_modeles["Random Forest"]["accuracy"]) / 2  
+        )  
+
+        # Affichage amélioré des résultats finaux  
+        st.subheader("🏆 Résultat Final")  
+        col_resultat_A, col_resultat_B, col_resultat_Nul = st.columns(3)  
+        with col_resultat_A:  
+            st.metric("Probabilité de Victoire de l'Équipe A", f"{probabilite_victoire_A:.2%}", delta=f"{(probabilite_victoire_A - 0.5):.2%}")  
+        with col_resultat_B:  
+            st.metric("Probabilité de Victoire de l'Équipe B", f"{(1 - probabilite_victoire_A):.2%}", delta=f"{(0.5 - probabilite_victoire_A):.2%}")  
+        with col_resultat_Nul:  
+            st.metric("Probabilité de Match Nul", f"{(1 - (probabilite_victoire_A + (1 - probabilite_victoire_A))):.2%}")  
+    else:  
+        st.error("Erreur : Les probabilités n'ont pas pu être calculées.")  
+
+except Exception as e:  
+    st.error(f"Erreur lors de la prédiction : {e}")  
+    st.error(traceback.format_exc())
         
 # Convertisseur de score  
 st.subheader("🔄 Analyse des Cotes Implicites")  
