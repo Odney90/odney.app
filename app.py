@@ -228,8 +228,8 @@ if submitted:
             st.error(f"Erreur lors de la prédiction : {e}")
         
            # Affichage des poids des critères  
-        st.subheader("📊 Poids des Critères du Modèle Random Forest")  
-        if st.session_state.poids_criteres:  # Vérification si les poids existent  
+    st.subheader("📊 Poids des Critères du Modèle Random Forest")  
+    if st.session_state.poids_criteres:  # Vérification si les poids existent  
             poids_df = pd.DataFrame({  
                 'Critères': df.columns,  
                 'Poids': st.session_state.poids_criteres  
@@ -253,8 +253,8 @@ if submitted:
             )  
             st.altair_chart(alt_chart, use_container_width=True)  
 
-        else:  
-            st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")
+    else:  
+        st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")
 
         # Comparaison des probabilités prédites et implicites  
         st.subheader("📊 Comparaison des Probabilités Prédites et Implicites")  
