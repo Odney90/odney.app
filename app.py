@@ -32,7 +32,7 @@ with st.form("data_form"):
     st.markdown("### Équipe A")  
     col1, col2 = st.columns(2)  
     with col1:  
-        st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70, key="rating_A")  
+        st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70.6, key="rating_A")  
         st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, key="buts_A")  
         st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, key="concedes_A")  
         st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55, key="possession_A")  
@@ -63,7 +63,7 @@ with st.form("data_form"):
 
     with col2:  
         st.markdown("### Équipe B")  
-        st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65, key="rating_B")  
+        st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65.7, key="rating_B")  
         st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, key="buts_B")  
         st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, key="concedes_B")  
         st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45, key="possession_B")  
