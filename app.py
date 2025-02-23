@@ -289,7 +289,7 @@ with tab3:
             )  
             st.write(f"📊 **Résultat** : {'Équipe A' if prediction_lr[0] == 1 else 'Équipe B'}")  
  
-         # Préparation des caractéristiques pour les équipes A et B  (exclut les données des onglets 4 et 5 et)  
+       # Préparation des caractéristiques pour les équipes A et B  
     features_A = [  
         st.session_state.data["tirs_cadres_par_match_A"],  
         st.session_state.data["grandes_chances_A"],  
@@ -371,6 +371,7 @@ with tab3:
     probabilities_B = model_rf.predict_proba([features_B])  
     st.write(f"📊 **Probabilité de victoire de l'Équipe A** : {probabilities_A[0][1]:.2%}")  
     st.write(f"📊 **Probabilité de victoire de l'Équipe B** : {probabilities_B[0][0]:.2%}")  
+
 
 
             # Téléchargement des données organisées par équipe  
