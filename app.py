@@ -439,18 +439,7 @@ def preparer_donnees_random_forest(data):
             safe_float(data.get("matchs_30_jours_B", 9))  
         ]  
     ])  
-    return X_rf
-import streamlit as st  
-import numpy as np  
-import pandas as pd  
-import matplotlib.pyplot as plt  
-from sklearn.linear_model import LogisticRegression  
-from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score  
-from scipy.stats import poisson  
-import math  
-import traceback  
-
+    return X_rf  
 # Configuration Streamlit  
 st.set_page_config(page_title="Prédictions de Matchs", page_icon="⚽")  
 st.title("🏆 Système de Prédiction de Matchs de Football")  
