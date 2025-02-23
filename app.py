@@ -5,7 +5,6 @@ from scipy.stats import poisson
 from sklearn.model_selection import StratifiedKFold, cross_val_score  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_curve, auc  
 import plotly.express as px  
 import altair as alt  
 from docx import Document  
@@ -22,10 +21,6 @@ if 'historique' not in st.session_state:
 if 'poids_criteres' not in st.session_state:  
     st.session_state.poids_criteres = {}  
 
-# Fonction pour convertir une cote en probabilité implicite  
-def cote_en_probabilite(cote):  
-    return 1 / cote  
-
 # Fonction pour générer un rapport DOC  
 def generer_rapport(predictions):  
     doc = Document()  
@@ -40,62 +35,63 @@ tab1, tab2 = st.tabs(["Analyse de Match", "Poids des Critères"])
 # Formulaire de collecte des données  
 with tab1:  
     st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
+    
+    with st.form(key='match_form'):  
+        # Équipe A  
+        st.markdown("#### Équipe A")  
+        col1, col2 = st.columns(2)  
+        with col1:  
+            st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70.6, format="%.2f", key="rating_A")  
+            st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, format="%.2f", key="buts_A")  
+            st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, format="%.2f", key="concedes_A")  
+            st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55.0, format="%.2f", key="possession_A")  
+        with col2:  
+            st.session_state.data['expected_but_A'] = st.number_input("📊 Expected Goals (xG)", value=1.5, format="%.2f", key="xG_A")  
+            st.session_state.data['expected_concedes_A'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, format="%.2f", key="xGA_A")  
+            st.session_state.data['tirs_cadres_A'] = st.number_input("🎯 Tirs Cadrés", value=120.0, format="%.2f", key="tirs_A")  
+            st.session_state.data['grandes_chances_A'] = st.number_input("🔥 Grandes Chances", value=25.0, format="%.2f", key="chances_A")  
 
-    # Équipe A  
-    st.markdown("#### Équipe A")  
-    col1, col2 = st.columns(2)  
-    with col1:  
-        st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70.6, format="%.2f", key="rating_A")  
-        st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, format="%.2f", key="buts_A")  
-        st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, format="%.2f", key="concedes_A")  
-        st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55.0, format="%.2f", key="possession_A")  
-    with col2:  
-        st.session_state.data['expected_but_A'] = st.number_input("📊 Expected Goals (xG)", value=1.5, format="%.2f", key="xG_A")  
-        st.session_state.data['expected_concedes_A'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, format="%.2f", key="xGA_A")  
-        st.session_state.data['tirs_cadres_A'] = st.number_input("🎯 Tirs Cadrés", value=120.0, format="%.2f", key="tirs_A")  
-        st.session_state.data['grandes_chances_A'] = st.number_input("🔥 Grandes Chances", value=25.0, format="%.2f", key="chances_A")  
+        # Équipe B  
+        st.markdown("#### Équipe B")  
+        col3, col4 = st.columns(2)  
+        with col3:  
+            st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65.7, format="%.2f", key="rating_B")  
+            st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, format="%.2f", key="buts_B")  
+            st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, format="%.2f", key="concedes_B")  
+            st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45.0, format="%.2f", key="possession_B")  
+        with col4:  
+            st.session_state.data['expected_but_B'] = st.number_input("📊 Expected Goals (xG)", value=1.2, format="%.2f", key="xG_B")  
+            st.session_state.data['expected_concedes_B'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, format="%.2f", key="xGA_B")  
+            st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100.0, format="%.2f", key="tirs_B")  
+            st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20.0, format="%.2f", key="chances_B")  
 
-    # Équipe B  
-    st.markdown("#### Équipe B")  
-    col3, col4 = st.columns(2)  
-    with col3:  
-        st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65.7, format="%.2f", key="rating_B")  
-        st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, format="%.2f", key="buts_B")  
-        st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, format="%.2f", key="concedes_B")  
-        st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45.0, format="%.2f", key="possession_B")  
-    with col4:  
-        st.session_state.data['expected_but_B'] = st.number_input("📊 Expected Goals (xG)", value=1.2, format="%.2f", key="xG_B")  
-        st.session_state.data['expected_concedes_B'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, format="%.2f", key="xGA_B")  
-        st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100.0, format="%.2f", key="tirs_B")  
-        st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20.0, format="%.2f", key="chances_B")  
+        # Nouveaux critères  
+        st.markdown("#### 🆕 Nouveaux Critères")  
+        col5, col6 = st.columns(2)  
+        with col5:  
+            st.session_state.data['absences_A'] = st.number_input("🚑 Absences (Équipe A)", value=2, key="absences_A")  
+            st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=7.5, format="%.2f", key="forme_A")  
+        with col6:  
+            st.session_state.data['absences_B'] = st.number_input("🚑 Absences (Équipe B)", value=3, key="absences_B")  
+            st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=6.0, format="%.2f", key="forme_B")  
 
-    # Nouveaux critères  
-    st.markdown("#### 🆕 Nouveaux Critères")  
-    col5, col6 = st.columns(2)  
-    with col5:  
-        st.session_state.data['absences_A'] = st.number_input("🚑 Absences (Équipe A)", value=2, key="absences_A")  
-        st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=7.5, format="%.2f", key="forme_A")  
-    with col6:  
-        st.session_state.data['absences_B'] = st.number_input("🚑 Absences (Équipe B)", value=3, key="absences_B")  
-        st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=6.0, format="%.2f", key="forme_B")  
+        # Cotes des bookmakers  
+        st.markdown("#### 📊 Cotes des Bookmakers")  
+        col7, col8, col9 = st.columns(3)  
+        with col7:  
+            st.session_state.data['cote_bookmaker_A'] = st.number_input("Cote Victoire A", value=2.0, format="%.2f", key="cote_A")  
+        with col8:  
+            st.session_state.data['cote_bookmaker_B'] = st.number_input("Cote Victoire B", value=3.0, format="%.2f", key="cote_B")  
+        with col9:  
+            st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
 
-    # Cotes des bookmakers  
-    st.markdown("#### 📊 Cotes des Bookmakers")  
-    col7, col8, col9 = st.columns(3)  
-    with col7:  
-        st.session_state.data['cote_bookmaker_A'] = st.number_input("Cote Victoire A", value=2.0, format="%.2f", key="cote_A")  
-    with col8:  
-        st.session_state.data['cote_bookmaker_B'] = st.number_input("Cote Victoire B", value=3.0, format="%.2f", key="cote_B")  
-    with col9:  
-        st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
+        # Curseurs pour ajuster les poids des critères  
+        st.markdown("#### ⚖️ Ajustez les Poids des Critères")  
+        poids_xG_A = st.slider("Poids pour xG Équipe A", 0.0, 2.0, 1.0)  
+        poids_xG_B = st.slider("Poids pour xG Équipe B", 0.0, 2.0, 1.0)  
 
-    # Curseurs pour ajuster les poids des critères  
-    st.markdown("#### ⚖️ Ajustez les Poids des Critères")  
-    poids_xG_A = st.slider("Poids pour xG Équipe A", 0.0, 2.0, 1.0)  
-    poids_xG_B = st.slider("Poids pour xG Équipe B", 0.0, 2.0, 1.0)  
-
-    # Bouton de soumission du formulaire  
-    submitted = st.form_submit_button("🔍 Analyser le Match")  
+        # Bouton de soumission du formulaire  
+        submitted = st.form_submit_button("🔍 Analyser le Match")  
 
 # Section d'analyse et de prédiction  
 if submitted:  
@@ -271,7 +267,7 @@ with tab2:
         fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
                       labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
         st.plotly_chart(fig)
- # Visualisation des poids des critères avec Altair  
+                # Visualisation des poids des critères avec Altair  
         alt_chart = alt.Chart(poids_df).mark_bar().encode(  
             x=alt.X('Critères:N', sort='-y'),  
             y='Poids:Q',  
@@ -348,4 +344,4 @@ st.markdown("""
 - **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
 - **📈 Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")  
+""")
