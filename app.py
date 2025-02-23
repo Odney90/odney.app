@@ -92,7 +92,7 @@ with st.form(key='match_form'):
 
 # Analyse des résultats  
 if submitted:  
-    try:  
+       try:  
         # Création d'un DataFrame pour les données  
         data = {  
             'score_rating': [st.session_state.data['score_rating_A'], st.session_state.data['score_rating_B']],  
@@ -224,68 +224,9 @@ if submitted:
         Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
         Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
         """)  
+
     except Exception as e:  
-            st.error(f"Erreur lors de la prédiction : {e}")
-        
-           # Affichage des poids des critères  
-    st.subheader("📊 Poids des Critères du Modèle Random Forest")  
-    if st.session_state.poids_criteres:  # Vérification si les poids existent  
-            poids_df = pd.DataFrame({  
-                'Critères': df.columns,  
-                'Poids': st.session_state.poids_criteres  
-            })  
-
-            # Affichage des poids des critères dans un tableau  
-            st.table(poids_df)  
-
-            # Visualisation des poids des critères avec Plotly  
-            fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
-                          labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
-            st.plotly_chart(fig)  
-
-            # Visualisation des poids des critères avec Altair  
-            alt_chart = alt.Chart(poids_df).mark_bar().encode(  
-                x=alt.X('Critères:N', sort='-y'),  
-                y='Poids:Q',  
-                color='Poids:Q'  
-            ).properties(  
-                title='Poids des Critères du Modèle Random Forest'  
-            )  
-            st.altair_chart(alt_chart, use_container_width=True)  
-
-    else:  
-        st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")
-
-        # Comparaison des probabilités prédites et implicites  
-        st.subheader("📊 Comparaison des Probabilités Prédites et Implicites")  
-        proba_implicite_A = 1 / st.session_state.data['cote_bookmaker_A']  
-        proba_implicite_B = 1 / st.session_state.data['cote_bookmaker_B']  
-        proba_implicite_Nul = 1 / st.session_state.data['cote_bookmaker_Nul']  
-
-        # Normalisation des probabilités implicites  
-        total_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
-        proba_implicite_A /= total_implicite  
-        proba_implicite_B /= total_implicite  
-        proba_implicite_Nul /= total_implicite  
-
-        # Création d'un DataFrame pour la comparaison  
-        df_comparaison = pd.DataFrame({  
-            'Équipe': ['Équipe A', 'Équipe B', 'Match Nul'],  
-            'Probabilité Prédite': [proba_A, proba_B, proba_Nul],  
-            'Probabilité Implicite': [proba_implicite_A, proba_implicite_B, proba_implicite_Nul]  
-        })  
-
-        # Affichage du tableau de comparaison  
-        st.table(df_comparaison)  
-
-        # Visualisation des probabilités avec un graphique à barres  
-        fig_comparaison = px.bar(df_comparaison, x='Équipe', y=['Probabilité Prédite', 'Probabilité Implicite'],  
-                                 barmode='group', title='Comparaison des Probabilités Prédites et Implicites',  
-                                 labels={'value': 'Probabilité', 'variable': 'Type de Probabilité'})  
-        st.plotly_chart(fig_comparaison)  
-   except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")  
-
+        st.error(f"Erreur lors de la prédiction : {e}")
 # Pied de page informatif  
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
