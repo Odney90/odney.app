@@ -118,8 +118,10 @@ if submitted:
         col_poisson_A, col_poisson_B = st.columns(2)  
         with col_poisson_A:  
             st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
+            st.metric("⚽ Buts Prévus (Équipe A)", f"{np.percentile(buts_A, 75):.2f} (75e percentile)")  
         with col_poisson_B:  
             st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
+            st.metric("⚽ Buts Prévus (Équipe B)", f"{np.percentile(buts_B, 75):.2f} (75e percentile)")  
 
         # Préparation des données pour Régression Logistique et Random Forest  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
@@ -229,4 +231,20 @@ if submitted:
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
 
-- **📊 Prédiction des Buts (Poisson)**
+- **📊 Prédiction des Buts (Poisson)** :   
+  - Les buts moyens prévus pour chaque équipe sont calculés à partir des statistiques d'entrée.  
+  - Le 75e percentile des buts prédit permet d'évaluer le potentiel maximum de chaque équipe.  
+
+- **🤖 Performance des Modèles** :   
+  - **Régression Logistique** : Modèle linéaire simple qui prédit les résultats basés sur les caractéristiques des équipes.  
+  - **Random Forest** : Modèle plus complexe qui utilise plusieurs arbres de décision pour améliorer la précision des prédictions.  
+
+- **📈 Comparaison des Performances des Modèles** :   
+  - Les métriques affichées (précision, rappel, F1-score) permettent de comparer l'efficacité des modèles.  
+
+- **🔄 Convertisseur de Score** :   
+  - Compare le score prédit avec le score implicite pour évaluer la valeur de pari.  
+  - Une valeur de pari positive indique une opportunité potentielle de pari.  
+
+⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
+""")
