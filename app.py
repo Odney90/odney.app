@@ -63,6 +63,7 @@ with st.form("data_form"):
 
     # Bouton de soumission  
     submitted = st.form_submit_button("🔍 Analyser le Match")
+    
  if submitted:  
     try:  
         # Génération des données fictives  
@@ -147,6 +148,7 @@ with st.form("data_form"):
     except Exception as e:  
         st.error(f"Erreur lors de la prédiction : {e}")  
         st.error(traceback.format_exc())
+        
         # Pied de page informatif  
 st.markdown("""  
 ### 🤔 Comment Interpréter ces Résultats ?  
