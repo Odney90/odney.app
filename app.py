@@ -82,7 +82,7 @@ with st.form("data_form"):
         st.session_state.data['matchs_30_jours_B'] = st.number_input("📅 Matchs (30 jours)", value=9, key="matchs_B")  
 
     # Bouton de soumission en bas du formulaire  
-    st.form_submit_button("🔍 Analyser le Match")  
+    submitted = st.form_submit_button("🔍 Analyser le Match")  
 
 # Section d'analyse et de prédiction  
 if submitted:  
@@ -105,6 +105,7 @@ if submitted:
 
         # Préparation des données pour Régression Logistique et Random Forest  
         X = np.array(list(st.session_state.data.values())).reshape(1, -1)  # Toutes les données des équipes  
+        X = np.repeat(X, 1000, axis=0)  # Répéter les données pour correspondre à la taille de y  
         y = np.random.randint(0, 3, 1000)  # 3 classes : 0 (défaite), 1 (victoire A), 2 (match nul)  
 
         # Modèles  
