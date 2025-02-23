@@ -71,7 +71,7 @@ if 'data' not in st.session_state:
 st.set_page_config(page_title="Prédiction de Matchs", layout="wide", page_icon="⚽")  
 
 # Création des onglets  
-tab1, tab2, tab3, tab4 = st.tabs(["Données des Équipes", "Prédictions", "Cotes et Value Bet", "Système de Mise"])  
+tab1, tab2, tab3 = st.tabs(["Données des Équipes", "Cotes et Value Bet", "Système de Mise"])  
 
 # Onglet 1 : Données des Équipes  
 with tab1:  
@@ -347,21 +347,15 @@ with tab1:
             if submitted_B:  
                 st.success("Données de l'Équipe B enregistrées avec succès !")  
 
-# Onglet 2 : Prédictions  
-with tab2:  
-    st.header("🔮 Prédictions du Match")  
+    # Bouton pour lancer les prédictions  
+    if st.button("🔮 Lancer les Prédictions"):  
+        # Calcul du score de forme récente  
+        score_forme_A = (st.session_state.data["forme_recente_A_victoires"] * 3 +  
+                         st.session_state.data["forme_recente_A_nuls"] * 1)  
+        score_forme_B = (st.session_state.data["forme_recente_B_victoires"] * 3 +  
+                         st.session_state.data["forme_recente_B_nuls"] * 1)  
 
-    # Calcul du score de forme récente  
-    score_forme_A = (st.session_state.data["forme_recente_A_victoires"] * 3 +  
-                     st.session_state.data["forme_recente_A_nuls"] * 1 +  
-                     st.session_state.data["forme_recente_A_defaites"] * 0)  
-    score_forme_B = (st.session_state.data["forme_recente_B_victoires"] * 3 +  
-                     st.session_state.data["forme_recente_B_nuls"] * 1 +  
-                     st.session_state.data["forme_recente_B_defaites"] * 0)  
-
-    # Méthode 1 : Régression Logistique  
-    try:  
-        # Préparation des données pour la régression logistique  
+        # Préparation des données pour les modèles  
         X_lr = np.array([  
             [  
                 safe_float(st.session_state.data["score_rating_A"]),  
@@ -381,45 +375,47 @@ with tab2:
                 safe_float(st.session_state.data["historique_nuls"])  
             ]  
         ])  
-        
+
         # Modèle de Régression Logistique  
-        model_lr = LogisticRegression()  
-        model_lr.fit(X_lr, [1])  # Dummy fit for structure  
-        prediction_lr = model_lr.predict(X_lr)[0]  
+        try:  
+            model_lr = LogisticRegression()  
+            # Exemple d'entraînement avec des données fictives (à remplacer par vos données réelles)  
+            model_lr.fit(X_lr, [1])  # Remplacez [1] par vos vraies étiquettes  
+            prediction_lr = model_lr.predict(X_lr)[0]  
+        except Exception as e:  
+            prediction_lr = "Erreur"  
+            st.error(f"Erreur dans le modèle de régression logistique : {e}")  
 
-    except Exception as e:  
-        prediction_lr = "Erreur"  
+        # Modèle Random Forest  
+        try:  
+            model_rf = RandomForestClassifier()  
+            # Exemple d'entraînement avec des données fictives (à remplacer par vos données réelles)  
+            model_rf.fit(X_lr, [1])  # Remplacez [1] par vos vraies étiquettes  
+            prediction_rf = model_rf.predict(X_lr)[0]  
+        except Exception as e:  
+            prediction_rf = "Erreur"  
+            st.error(f"Erreur dans le modèle Random Forest : {e}")  
 
-    # Méthode 2 : Random Forest  
-    try:  
-        model_rf = RandomForestClassifier()  
-        model_rf.fit(X_lr, [1])  # Dummy fit for structure  
-        prediction_rf = model_rf.predict(X_lr)[0]  
+        # Modèle de Poisson  
+        try:  
+            lambda_A = safe_float(st.session_state.data["buts_marques_A"])  
+            lambda_B = safe_float(st.session_state.data["buts_marques_B"])  
+            prediction_poisson = [poisson.rvs(lambda_A), poisson.rvs(lambda_B)]  
+        except Exception as e:  
+            prediction_poisson = "Erreur"  
+            st.error(f"Erreur dans le modèle de Poisson : {e}")  
 
-    except Exception as e:  
-        prediction_rf = "Erreur"  
+        # Affichage des prédictions  
+        st.subheader("📈 Résultats des Prédictions")  
+        if prediction_lr != "Erreur":  
+            st.write(f"Régression Logistique : Équipe A {prediction_lr} - Équipe B {1 - prediction_lr}")  
+        if prediction_rf != "Erreur":  
+            st.write(f"Random Forest : Équipe A {prediction_rf} - Équipe B {1 - prediction_rf}")  
+        if prediction_poisson != "Erreur":  
+            st.write(f"Modèle de Poisson : Équipe A {prediction_poisson[0]} - Équipe B {prediction_poisson[1]}")  
 
-    # Méthode 3 : Modèle de Poisson  
-    try:  
-        # Calcul des buts attendus  
-        lambda_A = (st.session_state.data["buts_marques_A"] + score_forme_A) / 2  
-        lambda_B = (st.session_state.data["buts_marques_B"] + score_forme_B) / 2  
-
-        # Prédiction des buts  
-        proba_A = poisson.pmf(range(6), lambda_A)  
-        proba_B = poisson.pmf(range(6), lambda_B)  
-
-        prediction_poisson = (np.argmax(proba_A), np.argmax(proba_B))  # Nombre de buts prédit  
-    except Exception as e:  
-        prediction_poisson = "Erreur"  
-
-    # Affichage des résultats  
-    st.subheader("📈 Résultats des Prédictions")  
-    st.write(f"Régression Logistique : {prediction_lr}")  
-    st.write(f"Random Forest : {prediction_rf}")  
-    st.write(f"Modèle de Poisson : Équipe A {prediction_poisson[0]} - Équipe B {prediction_poisson[1]}")
-	# Onglet 3 : Cotes et Value Bet  
-with tab3:  
+# Onglet 2 : Cotes et Value Bet  
+with tab2:  
     st.header("💰 Cotes et Value Bet")  
 
     # Formulaire pour les cotes  
@@ -468,9 +464,10 @@ with tab3:
         if value_bet_nul > 0:  
             st.success("✅ Value Bet détectée pour le Match Nul !")  
         if value_bet_B > 0:  
-            st.success("✅ Value Bet détectée pour l'Équipe B !")
-		# Onglet 4 : Système de Mise  
-with tab4:  
+            st.success("✅ Value Bet détectée pour l'Équipe B !")  
+
+# Onglet 3 : Système de Mise  
+with tab3:  
     st.header("💰 Système de Mise")  
     st.write("Cette section calcule la mise optimale selon la méthode de Kelly.")  
 
