@@ -28,10 +28,10 @@ def generer_rapport(predictions):
         doc.add_paragraph(f"Équipe A: {prediction['proba_A']:.2%}, Équipe B: {prediction['proba_B']:.2%}, Match Nul: {prediction['proba_Nul']:.2%}")  
     return doc  
 
-# Onglets pour l'application  
-tab1, tab2, tab3 = st.tabs(["Saisie des Données", "Analyse des Résultats", "Poids des Critères"])  
+# Onglet pour l'application  
+tab1 = st.tab("Analyse de Match")  
 
-# Onglet 1 : Saisie des Données  
+# Saisie des Données  
 with tab1:  
     st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
     
@@ -84,16 +84,10 @@ with tab1:
         with col9:  
             st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
 
-        # Curseurs pour ajuster les poids des critères  
-        st.markdown("#### ⚖️ Ajustez les Poids des Critères")  
-        poids_xG_A = st.slider("Poids pour xG Équipe A", 0.0, 2.0, 1.0)  
-        poids_xG_B = st.slider("Poids pour xG Équipe B", 0.0, 2.0, 1.0)  
-
         # Bouton de soumission du formulaire  
         submitted = st.form_submit_button("🔍 Analyser le Match")  
 
-# Onglet 2 : Analyse des Résultats  
-with tab2:  
+    # Analyse des résultats  
     if submitted:  
         try:  
             # Génération de données synthétiques pour la validation croisée  
@@ -138,14 +132,14 @@ with tab2:
 
             # Modèle Poisson  
             lambda_A = (  
-                st.session_state.data['expected_but_A'] * poids_xG_A +  
+                st.session_state.data['expected_but_A'] +  
                 st.session_state.data['buts_par_match_A'] +  
                 st.session_state.data['tirs_cadres_A'] * 0.1 +  
                 st.session_state.data['grandes_chances_A'] * 0.2  
             )  
 
             lambda_B = (  
-                st.session_state.data['expected_but_B'] * poids_xG_B +  
+                st.session_state.data['expected_but_B'] +  
                 st.session_state.data['buts_par_match_B'] +  
                 st.session_state.data['tirs_cadres_B'] * 0.1 +  
                 st.session_state.data['grandes_chances_B'] * 0.2  
@@ -242,51 +236,43 @@ with tab2:
             Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
             """)  
 
+            # Affichage des poids des critères  
+            st.subheader("📊 Poids des Critères du Modèle Random Forest")  
+            if st.session_state.poids_criteres:  # Vérification si les poids existent  
+                poids_df = pd.DataFrame({  
+                    'Critères': [  
+                        'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
+                        'Expected Goals A', 'Expected Goals Against A', 'Tirs Cadrés A', 'Grandes Chances A',  
+                        'Absences A', 'Forme Récente A', 'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
+                        'Possession Moyenne B', 'Expected Goals B', 'Expected Goals Against B', 'Tirs Cadrés B',  
+                        'Grandes Chances B', 'Absences B', 'Forme Récente B'  
+                    ],  
+                    'Poids': st.session_state.poids_criteres  
+                })  
+
+                # Affichage des poids des critères dans un tableau  
+                st.table(poids_df)  
+
+                # Visualisation des poids des critères avec Plotly  
+                fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
+                              labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
+                st.plotly_chart(fig)  
+
+                # Visualisation des poids des critères avec Altair  
+                alt_chart = alt.Chart(poids_df).mark_bar().encode(  
+                    x=alt.X('Critères:N', sort='-y'),  
+                    y='Poids:Q',  
+                    color='Poids:Q'  
+                ).properties(  
+                    title='Poids des Critères du Modèle Random Forest'  
+                )  
+                st.altair_chart(alt_chart, use_container_width=True)  
+
+            else:  
+                st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")  
+
         except Exception as e:  
             st.error(f"Erreur lors de la prédiction : {e}")  
-
-# Onglet 3 : Poids des Critères  
-with tab3:  
-    st.subheader("📊 Poids des Critères du Modèle Random Forest")  
-    if st.session_state.poids_criteres:  # Vérification si les poids existent  
-        poids_df = pd.DataFrame({  
-            'Critères': [  
-                'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
-                'Expected Goals A', 'Expected Goals Against A', 'Tirs Cadrés A', 'Grandes Chances A',  
-                'Absences A', 'Forme Récente A', 'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
-                'Possession Moyenne B', 'Expected Goals B', 'Expected Goals Against B', 'Tirs Cadrés B',  
-                'Grandes Chances B', 'Absences B', 'Forme Récente B'  
-            ],  
-            'Poids': st.session_state.poids_criteres  
-        })  
-
-        # Affichage des poids des critères dans un tableau  
-        st.table(poids_df)  
-
-        # Visualisation des poids des critères avec Plotly  
-        fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
-                      labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
-        st.plotly_chart(fig)
-                # Affichage des poids des critères dans un tableau  
-        st.table(poids_df)  
-
-        # Visualisation des poids des critères avec Plotly  
-        fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
-                      labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
-        st.plotly_chart(fig)  
-
-        # Visualisation des poids des critères avec Altair  
-        alt_chart = alt.Chart(poids_df).mark_bar().encode(  
-            x=alt.X('Critères:N', sort='-y'),  
-            y='Poids:Q',  
-            color='Poids:Q'  
-        ).properties(  
-            title='Poids des Critères du Modèle Random Forest'  
-        )  
-        st.altair_chart(alt_chart, use_container_width=True)  
-
-    else:  
-        st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")  
 
 # Pied de page informatif  
 st.markdown("""  
@@ -295,4 +281,8 @@ st.markdown("""
 - **🤖 Performance des Modèles** : Les précisions des modèles de régression logistique et de forêt aléatoire sont affichées.  
 - **📈 Comparateur de Cotes** : Les cotes prédites et les cotes des bookmakers sont comparées pour identifier les **Value Bets**.  
 ⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")
+""")  
+
+# Fin de l'application  
+if __name__ == "__main__":  
+    st.write("Merci d'utiliser l'application d'analyse de match de football !")
