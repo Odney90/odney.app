@@ -61,11 +61,14 @@ if 'data' not in st.session_state:
         "cote_victoire_X": 0.0,  
         "cote_nul": 0.0,  
         "cote_victoire_Z": 0.0,  
-        "bankroll": 0.0  
+        "bankroll": 0.0,  
+        "historique_victoires_A": 0,  
+        "historique_victoires_B": 0,  
+        "historique_nuls": 0  
     }  
 
 # Configuration de la page  
-st.set_page_config(page_title="Prédiction de Matchs", layout="wide")  
+st.set_page_config(page_title="Prédiction de Matchs", layout="wide", page_icon="⚽")  
 
 # Création des onglets  
 tab1, tab2, tab3, tab4 = st.tabs(["Données des Équipes", "Prédictions", "Cotes et Value Bet", "Système de Mise"])  
@@ -196,6 +199,25 @@ with tab1:
                 key="forme_recente_A_defaites_input",  
                 step=1  
             )  
+            st.subheader("📊 Historique des Confrontations")  
+            st.session_state.data["historique_victoires_A"] = st.number_input(  
+                "✅ Victoires Équipe A contre Équipe B",  
+                value=safe_int(st.session_state.data.get("historique_victoires_A", 0)),  
+                key="historique_victoires_A_input",  
+                step=1  
+            )  
+            st.session_state.data["historique_victoires_B"] = st.number_input(  
+                "✅ Victoires Équipe B contre Équipe A",  
+                value=safe_int(st.session_state.data.get("historique_victoires_B", 0)),  
+                key="historique_victoires_B_input",  
+                step=1  
+            )  
+            st.session_state.data["historique_nuls"] = st.number_input(  
+                "➖ Nuls entre Équipe A et Équipe B",  
+                value=safe_int(st.session_state.data.get("historique_nuls", 0)),  
+                key="historique_nuls_input",  
+                step=1  
+            )  
             submitted_A = st.form_submit_button("💾 Enregistrer les données Équipe A")  
 
             if submitted_A:  
@@ -320,6 +342,25 @@ with tab1:
                 key="forme_recente_B_defaites_input",  
                 step=1  
             )  
+            st.subheader("📊 Historique des Confrontations")  
+            st.session_state.data["historique_victoires_A"] = st.number_input(  
+                "✅ Victoires Équipe A contre Équipe B",  
+                value=safe_int(st.session_state.data.get("historique_victoires_A", 0)),  
+                key="historique_victoires_A_input",  
+                step=1  
+            )  
+            st.session_state.data["historique_victoires_B"] = st.number_input(  
+                "✅ Victoires Équipe B contre Équipe A",  
+                value=safe_int(st.session_state.data.get("historique_victoires_B", 0)),  
+                key="historique_victoires_B_input",  
+                step=1  
+            )  
+            st.session_state.data["historique_nuls"] = st.number_input(  
+                "➖ Nuls entre Équipe A et Équipe B",  
+                value=safe_int(st.session_state.data.get("historique_nuls", 0)),  
+                key="historique_nuls_input",  
+                step=1  
+            )  
             submitted_B = st.form_submit_button("💾 Enregistrer les données Équipe B")  
 
             if submitted_B:  
@@ -351,159 +392,54 @@ with tab2:
                 safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
                 safe_float(st.session_state.data["interceptions_A"]),  
                 safe_float(st.session_state.data["interceptions_B"]),  
-                score_forme_A,  # Intégration de la forme récente
-                score_forme_B   # Intégration de la forme récente  
-            ],  
-            [  
-                safe_float(st.session_state.data["score_rating_B"]),  
-                safe_float(st.session_state.data["score_rating_A"]),  
-                safe_float(st.session_state.data["possession_moyenne_B"]),  
-                safe_float(st.session_state.data["possession_moyenne_A"]),  
-                safe_int(st.session_state.data["motivation_B"]),  
-                safe_int(st.session_state.data["motivation_A"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_A"]),  
-                safe_float(st.session_state.data["interceptions_B"]),  
-                safe_float(st.session_state.data["interceptions_A"]),  
-                score_forme_B,  # Intégration de la forme récente  
-                score_forme_A   # Intégration de la forme récente  
+                score_forme_A,  
+                score_forme_B,  
+                safe_float(st.session_state.data["historique_victoires_A"]),  
+                safe_float(st.session_state.data["historique_victoires_B"]),  
+                safe_float(st.session_state.data["historique_nuls"])  
             ]  
         ])  
-
-        y_lr = np.array([0, 1])  # 0 pour l'Équipe A, 1 pour l'Équipe B  
-
-        model_lr = LogisticRegression(random_state=42)  
-        model_lr.fit(X_lr, y_lr)  
-
+        
+        # Modèle de Régression Logistique  
+        model_lr = LogisticRegression()  
+        model_lr.fit(X_lr, [1])  # Dummy fit for structure  
         prediction_lr = model_lr.predict(X_lr)[0]  
-        probabilite_lr = model_lr.predict_proba(X_lr)[0][prediction_lr] * 100  
-    except ValueError as e:  
-        st.error(f"Erreur lors de l'entraînement de la Régression Logistique : {e}")  
-        prediction_lr = "Erreur"  
-        probabilite_lr = 0  
-    except Exception as e:  
-        st.error(f"Erreur inattendue lors de la prédiction : {e}")  
-        prediction_lr = "Erreur"  
-        probabilite_lr = 0  
 
-    st.subheader("📈 Régression Logistique")  
-    st.write(f"Prédiction : {'Équipe A' if prediction_lr == 0 else 'Équipe B'}")  
-    st.write(f"Probabilité : {probabilite_lr:.2f}%")  
+    except Exception as e:  
+        prediction_lr = "Erreur"  
 
     # Méthode 2 : Random Forest  
     try:  
-        # Préparation des données  
-        X_rf = np.array([  
-            [  
-                safe_float(st.session_state.data["score_rating_A"]),  
-                safe_float(st.session_state.data["score_rating_B"]),  
-                safe_float(st.session_state.data["possession_moyenne_A"]),  
-                safe_float(st.session_state.data["possession_moyenne_B"]),  
-                safe_int(st.session_state.data["motivation_A"]),  
-                safe_int(st.session_state.data["motivation_B"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_A"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
-                safe_float(st.session_state.data["interceptions_A"]),  
-                safe_float(st.session_state.data["interceptions_B"]),  
-                score_forme_A,  # Intégration de la forme récente  
-                score_forme_B   # Intégration de la forme récente  
-            ],  
-            [  
-                safe_float(st.session_state.data["score_rating_B"]),  
-                safe_float(st.session_state.data["score_rating_A"]),  
-                safe_float(st.session_state.data["possession_moyenne_B"]),  
-                safe_float(st.session_state.data["possession_moyenne_A"]),  
-                safe_int(st.session_state.data["motivation_B"]),  
-                safe_int(st.session_state.data["motivation_A"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_B"]),  
-                safe_float(st.session_state.data["tirs_cadres_par_match_A"]),  
-                safe_float(st.session_state.data["interceptions_B"]),  
-                safe_float(st.session_state.data["interceptions_A"]),  
-                score_forme_B,  # Intégration de la forme récente  
-                score_forme_A   # Intégration de la forme récente  
-            ]  
-        ])  
+        model_rf = RandomForestClassifier()  
+        model_rf.fit(X_lr, [1])  # Dummy fit for structure  
+        prediction_rf = model_rf.predict(X_lr)[0]  
 
-        # Étiquettes pour Random Forest  
-        y_rf = np.array([0, 1])  # 0 pour l'Équipe A, 1 pour l'Équipe B  
-
-        # Entraînement du modèle  
-        model_rf = RandomForestClassifier(n_estimators=100, random_state=42)  # 100 arbres  
-        model_rf.fit(X_rf, y_rf)  
-
-        # Prédiction  
-        prediction_rf = model_rf.predict(X_rf)[0]  
-        probabilite_rf = model_rf.predict_proba(X_rf)[0][prediction_rf] * 100  
-    except ValueError as e:  
-        st.error(f"Erreur lors de l'entraînement de Random Forest : {e}")  
-        prediction_rf = "Erreur"  
-        probabilite_rf = 0  
     except Exception as e:  
-        st.error(f"Erreur inattendue lors de la prédiction : {e}")  
         prediction_rf = "Erreur"  
-        probabilite_rf = 0  
-
-    # Affichage des résultats de Random Forest  
-    st.subheader("🌳 Random Forest")  
-    st.write(f"Prédiction : {'Équipe A' if prediction_rf == 0 else 'Équipe B'}")  
-    st.write(f"Probabilité : {probabilite_rf:.2f}%")  
 
     # Méthode 3 : Modèle de Poisson  
     try:  
-        # Paramètres  
-        avg_goals_A = safe_float(st.session_state.data["buts_marques_A"])  
-        avg_goals_B = safe_float(st.session_state.data["buts_marques_B"])  
-        avg_conceded_A = safe_float(st.session_state.data["buts_attendus_concedes_A"])  
-        avg_conceded_B = safe_float(st.session_state.data["buts_attendus_concedes_B"])  
-
         # Calcul des buts attendus  
-        lambda_A = avg_goals_A * avg_conceded_B  
-        lambda_B = avg_goals_B * avg_conceded_A  
+        lambda_A = (st.session_state.data["buts_marques_A"] + score_forme_A) / 2  
+        lambda_B = (st.session_state.data["buts_marques_B"] + score_forme_B) / 2  
 
-        # Probabilité de chaque résultat  
-        proba_A = sum(poisson.pmf(k, lambda_A) for k in range(1, 5))  # Victoire de A (1-4 buts)  
-        proba_B = sum(poisson.pmf(k, lambda_B) for k in range(1, 5))  # Victoire de B (1-4 buts)  
-        proba_nul = poisson.pmf(0, lambda_A) * poisson.pmf(0, lambda_B)  # Match nul (0-0)  
+        # Prédiction des buts  
+        proba_A = poisson.pmf(range(6), lambda_A)  
+        proba_B = poisson.pmf(range(6), lambda_B)  
 
-        # Normalisation des probabilités  
-        total_proba = proba_A + proba_B + proba_nul  
-        proba_A /= total_proba  
-        proba_B /= total_proba  
-        proba_nul /= total_proba  
-
-        # Prédiction basée sur la probabilité la plus élevée  
-        if proba_A > proba_B and proba_A > proba_nul:  
-            prediction_poisson = 0  # Équipe A  
-            probabilite_poisson = proba_A * 100  
-        elif proba_B > proba_A and proba_B > proba_nul:  
-            prediction_poisson = 1  # Équipe B  
-            probabilite_poisson = proba_B * 100  
-        else:  
-            prediction_poisson = 2  # Match Nul  
-            probabilite_poisson = proba_nul * 100  
-    except ValueError as e:  
-        st.error(f"Erreur lors du calcul du Modèle de Poisson : {e}")  
-        prediction_poisson = "Erreur"  
-        probabilite_poisson = 0  
+        prediction_poisson = (np.argmax(proba_A), np.argmax(proba_B))  # Nombre de buts prédit  
     except Exception as e:  
-        st.error(f"Erreur inattendue lors de la prédiction : {e}")  
         prediction_poisson = "Erreur"  
-        probabilite_poisson = 0  
 
-    # Affichage des résultats du Modèle de Poisson  
-    st.subheader("🐟 Modèle de Poisson")  
-    if prediction_poisson == 0:  
-        st.write(f"Prédiction : Victoire de l'Équipe A")  
-    elif prediction_poisson == 1:  
-        st.write(f"Prédiction : Victoire de l'Équipe B")  
-    else:  
-        st.write(f"Prédiction : Match Nul")  
-    st.write(f"Probabilité : {probabilite_poisson:.2f}%")  
+    # Affichage des résultats  
+    st.subheader("📈 Résultats des Prédictions")  
+    st.write(f"Régression Logistique : {prediction_lr}")  
+    st.write(f"Random Forest : {prediction_rf}")  
+    st.write(f"Modèle de Poisson : Équipe A {prediction_poisson[0]} - Équipe B {prediction_poisson[1]}")  
 
 # Onglet 3 : Cotes et Value Bet  
 with tab3:  
-    st.header("🎰 Cotes et Value Bet")  
-    st.write("Cette section calcule les cotes et identifie les value bets.")  
+    st.header("💰 Cotes et Value Bet")  
 
     # Formulaire pour les cotes  
     with st.form("Cotes et Value Bet"):  
@@ -530,9 +466,9 @@ with tab3:
     # Calcul des value bets  
     if prediction_lr != "Erreur" and prediction_poisson != "Erreur":  
         # Probabilités prédites  
-        proba_victoire_A = probabilite_lr / 100  
-        proba_nul = (probabilite_poisson / 100) if prediction_poisson == 2 else 0.33  # Valeur par défaut si non calculée  
-        proba_victoire_B = probabilite_poisson / 100 if prediction_poisson == 1 else (1 - proba_victoire_A - proba_nul)  
+        proba_victoire_A = prediction_poisson[0] / (prediction_poisson[0] + prediction_poisson[1])  
+        proba_nul = 1 - (proba_victoire_A + (prediction_poisson[1] / (prediction_poisson[0] + prediction_poisson[1])))  
+        proba_victoire_B = prediction_poisson[1] / (prediction_poisson[0] + prediction_poisson[1])  
 
         # Calcul des value bets  
         value_bet_A = (proba_victoire_A * st.session_state.data["cote_victoire_X"]) - 1  
@@ -577,9 +513,9 @@ with tab4:
     # Calcul de la mise Kelly  
     if prediction_lr != "Erreur" and prediction_poisson != "Erreur":  
         # Probabilités  
-        proba_victoire_A = probabilite_lr / 100  
-        proba_nul = (probabilite_poisson / 100) if prediction_poisson == 2 else 0.33  # Valeur par défaut si non calculée  
-        proba_victoire_B = probabilite_poisson / 100 if prediction_poisson == 1 else (1 - proba_victoire_A - proba_nul)  
+        proba_victoire_A = prediction_poisson[0] / (prediction_poisson[0] + prediction_poisson[1])  
+        proba_nul = 1 - (proba_victoire_A + (prediction_poisson[1] / (prediction_poisson[0] + prediction_poisson[1])))  
+        proba_victoire_B = prediction_poisson[1] / (prediction_poisson[0] + prediction_poisson[1])  
 
         # Calcul des mises  
         mise_A = mise_kelly(proba_victoire_A, st.session_state.data["cote_victoire_X"], st.session_state.data["bankroll"])  
