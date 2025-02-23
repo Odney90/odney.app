@@ -336,7 +336,7 @@ with tab1:
                 key="forme_recente_B_nuls_input",  
                 step=1  
             )  
-            st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
+                st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
                 "❌ Défaites (B) sur les 5 derniers matchs",  
                 value=safe_int(st.session_state.data.get("forme_recente_B_defaites", 0)),  
                 key="forme_recente_B_defaites_input",  
@@ -350,6 +350,7 @@ with tab1:
 # Onglet 2 : Prédictions  
 with tab2:  
     st.header("🔮 Prédictions du Match")  
+
     # Calcul du score de forme récente  
     score_forme_A = (st.session_state.data["forme_recente_A_victoires"] * 3 +  
                      st.session_state.data["forme_recente_A_nuls"] * 1 +  
@@ -360,6 +361,7 @@ with tab2:
 
     # Méthode 1 : Régression Logistique  
     try:  
+        # Préparation des données pour la régression logistique  
         X_lr = np.array([  
             [  
                 safe_float(st.session_state.data["score_rating_A"]),  
