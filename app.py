@@ -9,7 +9,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score  
 from scipy.stats import poisson  
 from sklearn.base import clone  
-import math  # Import manquant ajouté  
+import math  
 
 # Fonctions utilitaires  
 def safe_float(value, default=0.0):  
@@ -182,6 +182,7 @@ def preparer_donnees_random_forest(data):
             'score_rating_A': 1500, 'score_rating_B': 1500,  
             'buts_marques_A': 1.5, 'buts_marques_B': 1.5,  
             'tirs_cadres_par_match_A': 5, 'tirs_cadres_par_match_B': 5,  
+            'performance_domicile_A': 50, 'performance_domicile_B': 50,  
             'joueurs_blesses_A': 2, 'joueurs_blesses_B': 2  
         }  
     
@@ -198,6 +199,9 @@ def preparer_donnees_random_forest(data):
             
             safe_float(data.get("tirs_cadres_par_match_A", 5)),  
             safe_float(data.get("tirs_cadres_par_match_B", 5)),  
+            
+            safe_float(data.get("performance_domicile_A", 50)),  
+            safe_float(data.get("performance_domicile_B", 50)),  
             
             safe_float(data.get("joueurs_blesses_A", 2)),  
             safe_float(data.get("joueurs_blesses_B", 2))  
@@ -352,9 +356,4 @@ st.markdown("""
 
 - **Probabilités de Poisson** : Basées sur les statistiques historiques et les caractéristiques des équipes  
 - **Modèles de Machine Learning** :   
-  - Régression Logistique : Modèle linéaire simple  
-  - Random Forest : Modèle plus complexe, moins sensible au bruit  
-- **Résultat Final** : Moyenne pondérée des différentes méthodes de prédiction  
-
-⚠️ *Ces prédictions sont des estimations statistiques et ne garantissent pas le résultat réel.*  
-""")  
+  - Régression Logistique : Modèle
