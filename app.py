@@ -29,285 +29,255 @@ def generer_rapport(predictions):
         doc.add_paragraph(f"Équipe A: {prediction['proba_A']:.2%}, Équipe B: {prediction['proba_B']:.2%}, Match Nul: {prediction['proba_Nul']:.2%}")  
     return doc  
 
-# Onglet pour l'application  
-tabs = st.tabs(["Analyse de Match"])  
-
 # Saisie des Données  
-with tabs[0]:  
-    st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
-    
-    with st.form(key='match_form'):  
-        # Équipe A  
-        st.markdown("#### Équipe A")  
-        col1, col2 = st.columns(2)  
-        with col1:  
-            st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70.6, format="%.2f", key="rating_A")  
-            st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, format="%.2f", key="buts_A")  
-            st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, format="%.2f", key="concedes_A")  
-            st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55.0, format="%.2f", key="possession_A")  
-        with col2:  
-            st.session_state.data['expected_but_A'] = st.number_input("📊 Expected Goals (xG)", value=1.5, format="%.2f", key="xG_A")  
-            st.session_state.data['expected_concedes_A'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, format="%.2f", key="xGA_A")  
-            st.session_state.data['tirs_cadres_A'] = st.number_input("🎯 Tirs Cadrés", value=120.0, format="%.2f", key="tirs_A")  
-            st.session_state.data['grandes_chances_A'] = st.number_input("🔥 Grandes Chances", value=25.0, format="%.2f", key="chances_A")  
+st.markdown("### 🏁 Entrez les Statistiques des Équipes")  
 
-        # Équipe B  
-        st.markdown("#### Équipe B")  
-        col3, col4 = st.columns(2)  
-        with col3:  
-            st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65.7, format="%.2f", key="rating_B")  
-            st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, format="%.2f", key="buts_B")  
-            st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, format="%.2f", key="concedes_B")  
-            st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45.0, format="%.2f", key="possession_B")  
-        with col4:  
-            st.session_state.data['expected_but_B'] = st.number_input("📊 Expected Goals (xG)", value=1.2, format="%.2f", key="xG_B")  
-            st.session_state.data['expected_concedes_B'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, format="%.2f", key="xGA_B")  
-            st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100.0, format="%.2f", key="tirs_B")  
-            st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20.0, format="%.2f", key="chances_B")  
+with st.form(key='match_form'):  
+    # Équipe A  
+    st.markdown("#### Équipe A")  
+    col1, col2 = st.columns(2)  
+    with col1:  
+        st.session_state.data['score_rating_A'] = st.number_input("⭐ Score Rating", value=70.6, format="%.2f", key="rating_A")  
+        st.session_state.data['buts_par_match_A'] = st.number_input("⚽ Buts Marqués", value=1.5, format="%.2f", key="buts_A")  
+        st.session_state.data['buts_concedes_par_match_A'] = st.number_input("🥅 Buts Concédés", value=1.0, format="%.2f", key="concedes_A")  
+        st.session_state.data['possession_moyenne_A'] = st.number_input("🎯 Possession Moyenne", value=55.0, format="%.2f", key="possession_A")  
+    with col2:  
+        st.session_state.data['expected_but_A'] = st.number_input("📊 Expected Goals (xG)", value=1.5, format="%.2f", key="xG_A")  
+        st.session_state.data['expected_concedes_A'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.2, format="%.2f", key="xGA_A")  
+        st.session_state.data['tirs_cadres_A'] = st.number_input("🎯 Tirs Cadrés", value=120.0, format="%.2f", key="tirs_A")  
+        st.session_state.data['grandes_chances_A'] = st.number_input("🔥 Grandes Chances", value=25.0, format="%.2f", key="chances_A")  
 
-        # Nouveaux critères  
-        st.markdown("#### 🆕 Nouveaux Critères")  
-        col5, col6 = st.columns(2)  
-        with col5:  
-            st.session_state.data['victoires_A'] = st.number_input("🏆 Victoires (Équipe A)", value=3, key="victoires_A")  
-            st.session_state.data['nuls_A'] = st.number_input("🤝 Nuls (Équipe A)", value=1, key="nuls_A")  
-            st.session_state.data['defaites_A'] = st.number_input("❌ Défaites (Équipe A)", value=1, key="defaites_A")  
-            st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=3.0, format="%.2f", key="forme_A")  # Moyenne des 5 derniers matchs  
-        with col6:  
-            st.session_state.data['victoires_B'] = st.number_input("🏆 Victoires (Équipe B)", value=2, key="victoires_B")  
-            st.session_state.data['nuls_B'] = st.number_input("🤝 Nuls (Équipe B)", value=2, key="nuls_B")  
-            st.session_state.data['defaites_B'] = st.number_input("❌ Défaites (Équipe B)", value=1, key="defaites_B")  
-            st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=2.0, format="%.2f", key="forme_B")  # Moyenne des 5 derniers matchs  
+    # Équipe B  
+    st.markdown("#### Équipe B")  
+    col3, col4 = st.columns(2)  
+    with col3:  
+        st.session_state.data['score_rating_B'] = st.number_input("⭐ Score Rating", value=65.7, format="%.2f", key="rating_B")  
+        st.session_state.data['buts_par_match_B'] = st.number_input("⚽ Buts Marqués", value=1.0, format="%.2f", key="buts_B")  
+        st.session_state.data['buts_concedes_par_match_B'] = st.number_input("🥅 Buts Concédés", value=1.5, format="%.2f", key="concedes_B")  
+        st.session_state.data['possession_moyenne_B'] = st.number_input("🎯 Possession Moyenne", value=45.0, format="%.2f", key="possession_B")  
+    with col4:  
+        st.session_state.data['expected_but_B'] = st.number_input("📊 Expected Goals (xG)", value=1.2, format="%.2f", key="xG_B")  
+        st.session_state.data['expected_concedes_B'] = st.number_input("📉 Expected Goals Against (xGA)", value=1.8, format="%.2f", key="xGA_B")  
+        st.session_state.data['tirs_cadres_B'] = st.number_input("🎯 Tirs Cadrés", value=100.0, format="%.2f", key="tirs_B")  
+        st.session_state.data['grandes_chances_B'] = st.number_input("🔥 Grandes Chances", value=20.0, format="%.2f", key="chances_B")  
 
-        # Cotes des bookmakers  
-        st.markdown("#### 📊 Cotes des Bookmakers")  
-        col7, col8, col9 = st.columns(3)  
-        with col7:  
-            st.session_state.data['cote_bookmaker_A'] = st.number_input("Cote Victoire A", value=2.0, format="%.2f", key="cote_A")  
-        with col8:  
-            st.session_state.data['cote_bookmaker_B'] = st.number_input("Cote Victoire B", value=3.0, format="%.2f", key="cote_B")  
-        with col9:  
-            st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
+    # Nouveaux critères  
+    st.markdown("#### 🆕 Nouveaux Critères")  
+    col5, col6 = st.columns(2)  
+    with col5:  
+        st.session_state.data['victoires_A'] = st.number_input("🏆 Victoires (Équipe A)", value=3, key="victoires_A")  
+        st.session_state.data['nuls_A'] = st.number_input("🤝 Nuls (Équipe A)", value=1, key="nuls_A")  
+        st.session_state.data['defaites_A'] = st.number_input("❌ Défaites (Équipe A)", value=1, key="defaites_A")  
+        st.session_state.data['forme_recente_A'] = st.number_input("📈 Forme Récente (Équipe A)", value=3.0, format="%.2f", key="forme_A")  # Moyenne des 5 derniers matchs  
+    with col6:  
+        st.session_state.data['victoires_B'] = st.number_input("🏆 Victoires (Équipe B)", value=2, key="victoires_B")  
+        st.session_state.data['nuls_B'] = st.number_input("🤝 Nuls (Équipe B)", value=2, key="nuls_B")  
+        st.session_state.data['defaites_B'] = st.number_input("❌ Défaites (Équipe B)", value=1, key="defaites_B")  
+        st.session_state.data['forme_recente_B'] = st.number_input("📈 Forme Récente (Équipe B)", value=2.0, format="%.2f", key="forme_B")  # Moyenne des 5 derniers matchs  
 
-        # Bouton de soumission du formulaire  
-        submitted = st.form_submit_button("🔍 Analyser le Match")  
+    # Cotes des bookmakers  
+    st.markdown("#### 📊 Cotes des Bookmakers")  
+    col7, col8, col9 = st.columns(3)  
+    with col7:  
+        st.session_state.data['cote_bookmaker_A'] = st.number_input("Cote Victoire A", value=2.0, format="%.2f", key="cote_A")  
+    with col8:  
+        st.session_state.data['cote_bookmaker_B'] = st.number_input("Cote Victoire B", value=3.0, format="%.2f", key="cote_B")  
+    with col9:  
+        st.session_state.data['cote_bookmaker_Nul'] = st.number_input("Cote Match Nul", value=3.5, format="%.2f", key="cote_Nul")  
 
-    # Analyse des résultats  
-    if submitted:  
-        try:  
-            # Génération de données synthétiques pour la validation croisée  
-            n_samples = 100  # Nombre d'échantillons synthétiques  
-            np.random.seed(42)  
+    # Bouton de soumission du formulaire  
+    submitted = st.form_submit_button("🔍 Analyser le Match")  
 
-            # Données synthétiques pour l'équipe A  
-            data_A = {  
-                'score_rating_A': np.random.normal(st.session_state.data['score_rating_A'], 5, n_samples),  
-                'buts_par_match_A': np.random.normal(st.session_state.data['buts_par_match_A'], 0.5, n_samples),  
-                'buts_concedes_par_match_A': np.random.normal(st.session_state.data['buts_concedes_par_match_A'], 0.5, n_samples),  
-                'possession_moyenne_A': np.random.normal(st.session_state.data['possession_moyenne_A'], 5, n_samples),  
-                'expected_but_A': np.random.normal(st.session_state.data['expected_but_A'], 0.5, n_samples),  
-                'expected_concedes_A': np.random.normal(st.session_state.data['expected_concedes_A'], 0.5, n_samples),  
-                'tirs_cadres_A': np.random.normal(st.session_state.data['tirs_cadres_A'], 10, n_samples),  
-                'grandes_chances_A': np.random.normal(st.session_state.data['grandes_chances_A'], 5, n_samples),  
-                'victoires_A': np.random.normal(st.session_state.data['victoires_A'], 1, n_samples),  
-                'nuls_A': np.random.normal(st.session_state.data['nuls_A'], 1, n_samples),  
-                'defaites_A': np.random.normal(st.session_state.data['defaites_A'], 1, n_samples),  
-                'forme_recente_A': np.random.normal(st.session_state.data['forme_recente_A'], 1, n_samples),  
-            }  
+# Analyse des résultats  
+if submitted:  
+    try:  
+        # Création d'un DataFrame pour les données  
+        data = {  
+            'score_rating': [st.session_state.data['score_rating_A'], st.session_state.data['score_rating_B']],  
+            'buts_par_match': [st.session_state.data['buts_par_match_A'], st.session_state.data['buts_par_match_B']],  
+            'buts_concedes_par_match': [st.session_state.data['buts_concedes_par_match_A'], st.session_state.data['buts_concedes_par_match_B']],  
+            'possession_moyenne': [st.session_state.data['possession_moyenne_A'], st.session_state.data['possession_moyenne_B']],  
+            'expected_but': [st.session_state.data['expected_but_A'], st.session_state.data['expected_but_B']],  
+            'expected_concedes': [st.session_state.data['expected_concedes_A'], st.session_state.data['expected_concedes_B']],  
+            'tirs_cadres': [st.session_state.data['tirs_cadres_A'], st.session_state.data['tirs_cadres_B']],  
+            'grandes_chances': [st.session_state.data['grandes_chances_A'], st.session_state.data['grandes_chances_B']],  
+            'victoires': [st.session_state.data['victoires_A'], st.session_state.data['victoires_B']],  
+            'nuls': [st.session_state.data['nuls_A'], st.session_state.data['nuls_B']],  
+            'defaites': [st.session_state.data['defaites_A'], st.session_state.data['defaites_B']],  
+            'forme_recente': [st.session_state.data['forme_recente_A'], st.session_state.data['forme_recente_B']],  
+        }  
+        df = pd.DataFrame(data, index=['Équipe A', 'Équipe B'])  
 
-            # Données synthétiques pour l'équipe B  
-            data_B = {  
-                'score_rating_B': np.random.normal(st.session_state.data['score_rating_B'], 5, n_samples),  
-                'buts_par_match_B': np.random.normal(st.session_state.data['buts_par_match_B'], 0.5, n_samples),  
-                'buts_concedes_par_match_B': np.random.normal(st.session_state.data['buts_concedes_par_match_B'], 0.5, n_samples),  
-                'possession_moyenne_B': np.random.normal(st.session_state.data['possession_moyenne_B'], 5, n_samples),  
-                'expected_but_B': np.random.normal(st.session_state.data['expected_but_B'], 0.5, n_samples),  
-                'expected_concedes_B': np.random.normal(st.session_state.data['expected_concedes_B'], 0.5, n_samples),  
-                'tirs_cadres_B': np.random.normal(st.session_state.data['tirs_cadres_B'], 10, n_samples),  
-                'grandes_chances_B': np.random.normal(st.session_state.data['grandes_chances_B'], 5, n_samples),  
-                'victoires_B': np.random.normal(st.session_state.data['victoires_B'], 1, n_samples),  
-                'nuls_B': np.random.normal(st.session_state.data['nuls_B'], 1, n_samples),  
-                'defaites_B': np.random.normal(st.session_state.data['defaites_B'], 1, n_samples),  
-                'forme_recente_B': np.random.normal(st.session_state.data['forme_recente_B'], 1, n_samples),  
-            }  
+        # Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
+        y = np.array([1, 0])  # Équipe A gagne par défaut  
 
-            # Création du DataFrame synthétique  
-            df_A = pd.DataFrame(data_A)  
-            df_B = pd.DataFrame(data_B)  
-            df = pd.concat([df_A, df_B], axis=1)  
+        # Modèle Poisson  
+        lambda_A = (  
+            st.session_state.data['expected_but_A'] +  
+            st.session_state.data['buts_par_match_A'] +  
+            st.session_state.data['tirs_cadres_A'] * 0.1 +  
+            st.session_state.data['grandes_chances_A'] * 0.2 +  
+            (st.session_state.data['victoires_A'] * 0.3) - (st.session_state.data['defaites_B'] * 0.2)  # Impact des victoires et défaites  
+        )  
 
-            # Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
-            y = (df['buts_par_match_A'] > df['buts_par_match_B']).astype(int)  
+        lambda_B = (  
+            st.session_state.data['expected_but_B'] +  
+            st.session_state.data['buts_par_match_B'] +  
+            st.session_state.data['tirs_cadres_B'] * 0.1 +  
+            st.session_state.data['grandes_chances_B'] * 0.2 +  
+            (st.session_state.data['victoires_B'] * 0.3) - (st.session_state.data['defaites_A'] * 0.2)  # Impact des victoires et défaites  
+        )  
 
-            # Modèle Poisson  
-            lambda_A = (  
-                st.session_state.data['expected_but_A'] +  
-                st.session_state.data['buts_par_match_A'] +  
-                st.session_state.data['tirs_cadres_A'] * 0.1 +  
-                st.session_state.data['grandes_chances_A'] * 0.2 +  
-                (st.session_state.data['victoires_A'] * 0.3) - (st.session_state.data['defaites_B'] * 0.2)  # Impact des victoires et défaites  
-            )  
+        # Prédiction des buts avec Poisson  
+        buts_A = poisson.rvs(mu=lambda_A, size=1000)  
+        buts_B = poisson.rvs(mu=lambda_B, size=1000)  
 
-            lambda_B = (  
-                st.session_state.data['expected_but_B'] +  
-                st.session_state.data['buts_par_match_B'] +  
-                st.session_state.data['tirs_cadres_B'] * 0.1 +  
-                st.session_state.data['grandes_chances_B'] * 0.2 +  
-                (st.session_state.data['victoires_B'] * 0.3) - (st.session_state.data['defaites_A'] * 0.2)  # Impact des victoires et défaites  
-            )  
+        # Résultats Poisson  
+        st.subheader("📊 Prédiction des Buts (Poisson)")  
+        col_poisson_A, col_poisson_B = st.columns(2)  
+        with col_poisson_A:  
+            st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
+            st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_A, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
+        with col_poisson_B:  
+            st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
+            st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_B, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
 
-            # Prédiction des buts avec Poisson  
-            buts_A = poisson.rvs(mu=lambda_A, size=1000)  
-            buts_B = poisson.rvs(mu=lambda_B, size=1000)  
+        # Modèles de classification avec validation croisée  
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
 
-            # Résultats Poisson  
-            st.subheader("📊 Prédiction des Buts (Poisson)")  
-            col_poisson_A, col_poisson_B = st.columns(2)  
-            with col_poisson_A:  
-                st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
-                st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_A, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
-            with col_poisson_B:  
-                st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
-                st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_B, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
+        # Logistic Regression  
+        log_reg = LogisticRegression()  
+        log_reg_scores = cross_val_score(log_reg, df, y, cv=skf, scoring='accuracy')  
+        log_reg_mean_score = np.mean(log_reg_scores)  
 
-            # Modèles de classification avec validation croisée  
-            skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
+        # Random Forest Classifier  
+        rf_clf = RandomForestClassifier()  
+        rf_scores = cross_val_score(rf_clf, df, y, cv=skf, scoring='accuracy')  
+        rf_mean_score = np.mean(rf_scores)  
 
-            # Logistic Regression  
-            log_reg = LogisticRegression()  
-            log_reg_scores = cross_val_score(log_reg, df, y, cv=skf, scoring='accuracy')  
-            log_reg_mean_score = np.mean(log_reg_scores)  
+        # Entraînement du modèle Random Forest pour obtenir les poids des critères  
+        rf_clf.fit(df, y)  
+        st.session_state.poids_criteres = rf_clf.feature_importances_  
 
-            # Random Forest Classifier  
-            rf_clf = RandomForestClassifier()  
-            rf_scores = cross_val_score(rf_clf, df, y, cv=skf, scoring='accuracy')  
-            rf_mean_score = np.mean(rf_scores)  
+        # Affichage des résultats des modèles  
+        st.subheader("🤖 Performance des Modèles")  
+        col_log_reg, col_rf = st.columns(2)  
+        with col_log_reg:  
+            st.metric("📈 Régression Logistique (Précision)", f"{log_reg_mean_score:.2%}")  
+        with col_rf:  
+            st.metric("🌲 Forêt Aléatoire (Précision)", f"{rf_mean_score:.2%}")  
 
-            # Entraînement du modèle Random Forest pour obtenir les poids des critères  
-            rf_clf.fit(df, y)  
-            st.session_state.poids_criteres = rf_clf.feature_importances_  
+        # Comparaison des probabilités de victoire  
+        proba_A = np.mean(buts_A) / (np.mean(buts_A) + np.mean(buts_B))  
+        proba_B = np.mean(buts_B) / (np.mean(buts_A) + np.mean(buts_B))  
+        proba_Nul = 1 - (proba_A + proba_B)  
 
-            # Affichage des résultats des modèles  
-            st.subheader("🤖 Performance des Modèles")  
-            col_log_reg, col_rf = st.columns(2)  
-            with col_log_reg:  
-                st.metric("📈 Régression Logistique (Précision)", f"{log_reg_mean_score:.2%}")  
-            with col_rf:  
-                st.metric("🌲 Forêt Aléatoire (Précision)", f"{rf_mean_score:.2%}")  
+        # Cotes prédites  
+        cote_predite_A = 1 / proba_A  
+        cote_predite_B = 1 / proba_B  
+        cote_predite_Nul = 1 / proba_Nul  
 
-            # Comparaison des probabilités de victoire  
-            proba_A = np.mean(buts_A) / (np.mean(buts_A) + np.mean(buts_B))  
-            proba_B = np.mean(buts_B) / (np.mean(buts_A) + np.mean(buts_B))  
-            proba_Nul = 1 - (proba_A + proba_B)  
+        # Stockage des prédictions dans l'historique  
+        st.session_state.historique.append({  
+            'proba_A': proba_A,  
+            'proba_B': proba_B,  
+            'proba_Nul': proba_Nul,  
+        })  
 
-            # Cotes prédites  
-            cote_predite_A = 1 / proba_A  
-            cote_predite_B = 1 / proba_B  
-            cote_predite_Nul = 1 / proba_Nul  
+        # Génération du rapport DOC  
+        if st.button("📄 Télécharger le Rapport"):  
+            doc = generer_rapport(st.session_state.historique)  
+            buffer = io.BytesIO()  
+            doc.save(buffer)  
+            buffer.seek(0)  
+            st.download_button("Télécharger le rapport", buffer, "rapport_predictions.docx")  
 
-            # Stockage des prédictions dans l'historique  
-            st.session_state.historique.append({  
-                'proba_A': proba_A,  
-                'proba_B': proba_B,  
-                'proba_Nul': proba_Nul,  
+        # Tableau synthétique des résultats  
+        st.subheader("📊 Tableau Synthétique des Résultats")  
+        data = {  
+            "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
+            "Probabilité Prédite": [f"{proba_A:.2%}", f"{proba_B:.2%}", f"{proba_Nul:.2%}"],  
+            "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
+            "Cote Bookmaker": [  
+                f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
+                f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
+                f"{st.session_state.data['cote_bookmaker_Nul']:.2f}",  
+            ],  
+            "Value Bet": [  
+                "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
+                "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
+                "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
+            ],  
+        }  
+        df_resultats = pd.DataFrame(data)  
+        st.table(df_resultats)  
+
+        # Message rappel sur le Value Bet  
+        st.markdown("""  
+        ### 💡 Qu'est-ce qu'un Value Bet ?  
+        Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
+        Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
+        """)  
+
+        # Affichage des poids des critères  
+        st.subheader("📊 Poids des Critères du Modèle Random Forest")  
+        if st.session_state.poids_criteres:  # Vérification si les poids existent  
+            poids_df = pd.DataFrame({  
+                'Critères': df.columns,  
+                'Poids': st.session_state.poids_criteres  
             })  
 
-            # Génération du rapport DOC  
-            if st.button("📄 Télécharger le Rapport"):  
-                doc = generer_rapport(st.session_state.historique)  
-                buffer = io.BytesIO()  
-                doc.save(buffer)  
-                buffer.seek(0)  
-                st.download_button("Télécharger le rapport", buffer, "rapport_predictions.docx")
-                            # Tableau synthétique des résultats  
-            st.subheader("📊 Tableau Synthétique des Résultats")  
-            data = {  
-                "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
-                "Probabilité Prédite": [f"{proba_A:.2%}", f"{proba_B:.2%}", f"{proba_Nul:.2%}"],  
-                "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
-                "Cote Bookmaker": [  
-                    f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
-                    f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
-                    f"{st.session_state.data['cote_bookmaker_Nul']:.2f}",  
-                ],  
-                "Value Bet": [  
-                    "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
-                    "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
-                    "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
-                ],  
-            }  
-            df_resultats = pd.DataFrame(data)  
-            st.table(df_resultats)  
+            # Affichage des poids des critères dans un tableau  
+            st.table(poids_df)  
 
-            # Message rappel sur le Value Bet  
-            st.markdown("""  
-            ### 💡 Qu'est-ce qu'un Value Bet ?  
-            Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
-            Cela indique que le bookmaker sous-estime la probabilité de cet événement, ce qui en fait une opportunité potentiellement rentable.  
-            """)  
+            # Visualisation des poids des critères avec Plotly  
+            fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
+                          labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
+            st.plotly_chart(fig)  
 
-            # Affichage des poids des critères  
-            st.subheader("📊 Poids des Critères du Modèle Random Forest")  
-            if st.session_state.poids_criteres:  # Vérification si les poids existent  
-                poids_df = pd.DataFrame({  
-                    'Critères': [  
-                        'Score Rating A', 'Buts Marqués A', 'Buts Concédés A', 'Possession Moyenne A',  
-                        'Expected Goals A', 'Expected Goals Against A', 'Tirs Cadrés A', 'Grandes Chances A',  
-                        'Victoires A', 'Nuls A', 'Défaites A', 'Forme Récente A',  
-                        'Score Rating B', 'Buts Marqués B', 'Buts Concédés B',  
-                        'Possession Moyenne B', 'Expected Goals B',   
-                        'Expected Goals Against B', 'Tirs Cadrés B',   
-                        'Grandes Chances B', 'Victoires B', 'Nuls B', 'Défaites B',   
-                        'Forme Récente B'  
-                    ],  
-                    'Poids': st.session_state.poids_criteres  
-                })  
+            # Visualisation des poids des critères avec Altair  
+            alt_chart = alt.Chart(poids_df).mark_bar().encode(  
+                x=alt.X('Critères:N', sort='-y'),  
+                y='Poids:Q',  
+                color='Poids:Q'  
+            ).properties(  
+                title='Poids des Critères du Modèle Random Forest'  
+            )  
+            st.altair_chart(alt_chart, use_container_width=True)  
 
-                # Affichage des poids des critères dans un tableau  
-                st.table(poids_df)  
+        else:  
+            st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")  
 
-                # Visualisation des poids des critères avec Plotly  
-                fig = px.bar(poids_df, x='Critères', y='Poids', title='Poids des Critères du Modèle Random Forest',   
-                              labels={'Poids': 'Poids', 'Critères': 'Critères'}, color='Poids')  
-                st.plotly_chart(fig)  
+                # Comparaison des probabilités prédites et implicites  
+        st.subheader("📊 Comparaison des Probabilités Prédites et Implicites")  
+        proba_implicite_A = 1 / st.session_state.data['cote_bookmaker_A']  
+        proba_implicite_B = 1 / st.session_state.data['cote_bookmaker_B']  
+        proba_implicite_Nul = 1 / st.session_state.data['cote_bookmaker_Nul']  
 
-                # Visualisation des poids des critères avec Altair  
-                alt_chart = alt.Chart(poids_df).mark_bar().encode(  
-                    x=alt.X('Critères:N', sort='-y'),  
-                    y='Poids:Q',  
-                    color='Poids:Q'  
-                ).properties(  
-                    title='Poids des Critères du Modèle Random Forest'  
-                )  
-                st.altair_chart(alt_chart, use_container_width=True)  
+        # Normalisation des probabilités implicites  
+        total_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
+        proba_implicite_A /= total_implicite  
+        proba_implicite_B /= total_implicite  
+        proba_implicite_Nul /= total_implicite  
 
-            else:  
-                st.warning("Aucun poids de critère disponible. Veuillez d'abord analyser un match.")  
+        # Création d'un DataFrame pour la comparaison  
+        df_comparaison = pd.DataFrame({  
+            'Équipe': ['Équipe A', 'Équipe B', 'Match Nul'],  
+            'Probabilité Prédite': [proba_A, proba_B, proba_Nul],  
+            'Probabilité Implicite': [proba_implicite_A, proba_implicite_B, proba_implicite_Nul]  
+        })  
 
-            # Comparaison des probabilités prédites et implicites  
-            st.subheader("📊 Comparaison des Probabilités Prédites et Implicites")  
-            proba_implicite_A = 1 / st.session_state.data['cote_bookmaker_A']  
-            proba_implicite_B = 1 / st.session_state.data['cote_bookmaker_B']  
-            proba_implicite_Nul = 1 / st.session_state.data['cote_bookmaker_Nul']  
+        # Affichage du tableau de comparaison  
+        st.table(df_comparaison)  
 
-            # Normalisation des probabilités implicites  
-            total_implicite = proba_implicite_A + proba_implicite_B + proba_implicite_Nul  
-            proba_implicite_A /= total_implicite  
-            proba_implicite_B /= total_implicite  
-            proba_implicite_Nul /= total_implicite  
+        # Visualisation des probabilités avec un graphique à barres  
+        fig_comparaison = px.bar(df_comparaison, x='Équipe', y=['Probabilité Prédite', 'Probabilité Implicite'],  
+                                 barmode='group', title='Comparaison des Probabilités Prédites et Implicites',  
+                                 labels={'value': 'Probabilité', 'variable': 'Type de Probabilité'})  
+        st.plotly_chart(fig_comparaison)  
 
-            # Création d'un DataFrame pour la comparaison  
-            df_comparaison = pd.DataFrame({  
-                'Équipe': ['Équipe A', 'Équipe B', 'Match Nul'],  
-                'Probabilité Prédite': [proba_A, proba_B, proba_Nul],  
-                'Probabilité Implicite': [proba_implicite_A, proba_implicite_B, proba_implicite_Nul]  
-            })  
-
-            # Affichage du tableau de comparaison  
-            st.table(df_comparaison)  
-
-        except Exception as e:  
-            st.error(f"Erreur lors de la prédiction : {e}")  
+    except Exception as e:  
+        st.error(f"Erreur lors de la prédiction : {e}")  
 
 # Pied de page informatif  
 st.markdown("""  
@@ -321,3 +291,4 @@ st.markdown("""
 # Fin de l'application  
 if __name__ == "__main__":  
     st.write("Merci d'utiliser l'application d'analyse de match de football !")
+        
