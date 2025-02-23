@@ -61,8 +61,8 @@ if "data" not in st.session_state:
         "buts_concedes_B": 1.5,  
         "tirs_par_match_A": 12.5,  
         "tirs_par_match_B": 11.0,  
-        "possession_moyenne_A": 55.0,  
-        "possession_moyenne_B": 48.0,  
+        "possession_moyenne_A": 55.0,  # Clé ajoutée  
+        "possession_moyenne_B": 48.0,  # Clé ajoutée  
         "corners_par_match_A": 5.5,  
         "corners_par_match_B": 4.8,  
         # Forme récente des équipes (victoires, nuls, défaites sur les 5 derniers matchs)  
@@ -74,267 +74,254 @@ if "data" not in st.session_state:
         "forme_recente_B_defaites": 1,  
     }  
 
-# Création des onglets  
-tab1, tab2, tab3, tab4 = st.tabs(  
-    ["📊 Statistiques", "🔮 Prédictions", "🎰 Cotes et Value Bet", "💰 Système de Mise"]  
-)  
+# Formulaire pour les Équipes A et B  
+with st.form("Statistiques des Équipes"):  
+    col1, col2 = st.columns(2)  
 
-# Onglet 1 : Statistiques  
-with tab1:  
-    st.header("📊 Statistiques des Équipes")  
-    st.write("Veuillez saisir les données pour chaque critère.")  
-
-    # Formulaire pour les Équipes A et B  
-    with st.form("Statistiques des Équipes"):  
-        col1, col2 = st.columns(2)  
-
-        # Équipe A  
-        with col1:  
-            st.subheader("🏆 Équipe A")  
-            st.session_state.data["tirs_cadres_par_match_A"] = st.number_input(  
-                "🎯 Tirs Cadres par Match (A)",  
-                value=st.session_state.data["tirs_cadres_par_match_A"],  
-                key="tirs_cadres_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["grandes_chances_A"] = st.number_input(  
-                "🔥 Grandes Chances (A)",  
-                value=int(st.session_state.data["grandes_chances_A"]),  
-                key="grandes_chances_A_input",  
-                step=1  
-            )  
-            st.session_state.data["passes_reussies_par_match_A"] = st.number_input(  
-                "🔄 Passes Réussies par Match (A)",  
-                value=st.session_state.data["passes_reussies_par_match_A"],  
-                key="passes_reussies_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["centres_reussies_par_match_A"] = st.number_input(  
-                "🎯 Centres Réussies par Match (A)",  
-                value=st.session_state.data["centres_reussies_par_match_A"],  
-                key="centres_reussies_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["dribbles_reussis_par_match_A"] = st.number_input(  
-                "🏃‍♂️ Dribbles Réussis par Match (A)",  
-                value=st.session_state.data["dribbles_reussis_par_match_A"],  
-                key="dribbles_reussis_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["buts_attendus_concedes_A"] = st.number_input(  
-                "🚫 Buts Attendus Concédés (A)",  
-                value=st.session_state.data["buts_attendus_concedes_A"],  
-                key="buts_attendus_concedes_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["interceptions_A"] = st.number_input(  
-                "🛑 Interceptions (A)",  
-                value=st.session_state.data["interceptions_A"],  
-                key="interceptions_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["tacles_reussis_par_match_A"] = st.number_input(  
-                "🦶 Tacles Réussis par Match (A)",  
-                value=st.session_state.data["tacles_reussis_par_match_A"],  
-                key="tacles_reussis_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["penalties_concedees_A"] = st.number_input(  
-                "⚠️ Penalties Concédées (A)",  
-                value=int(st.session_state.data["penalties_concedees_A"]),  
-                key="penalties_concedees_A_input",  
-                step=1  
-            )  
-            st.session_state.data["fautes_par_match_A"] = st.number_input(  
-                "🚩 Fautes par Match (A)",  
-                value=st.session_state.data["fautes_par_match_A"],  
-                key="fautes_par_match_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["motivation_A"] = st.number_input(  
-                "💪 Motivation (A)",  
-                value=int(st.session_state.data["motivation_A"]),  
-                key="motivation_A_input",  
-                step=1  
-            )  
-            # Nouveaux critères pour Poisson  
-            st.session_state.data["buts_marques_A"] = st.number_input(  
-                "⚽ Buts Marqués par Match (A)",  
-                value=st.session_state.data["buts_marques_A"],  
-                key="buts_marques_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["tirs_par_match_A"] = st.number_input(  
-                "🎯 Tirs par Match (A)",  
-                value=st.session_state.data["tirs_par_match_A"],  
-                key="tirs_par_match_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["possession_moyenne_A"] = st.number_input(  
-                "⏳ Possession (%) (A)",  
-                value=st.session_state.data["possession_moyenne_A"],  
-                key="possession_moyenne_A_input",  
-                step=0.01  
-            )  
-            st.session_state.data["corners_par_match_A"] = st.number_input(  
-                "🔄 Corners par Match (A)",  
-                value=st.session_state.data["corners_par_match_A"],  
-                key="corners_par_match_A_input",  
-                step=0.01  
-            )  
-            # Forme récente de l'Équipe A  
-            st.subheader("📅 Forme Récente (Équipe A)")  
-            st.session_state.data["forme_recente_A_victoires"] = st.number_input(  
-                "✅ Victoires (A) sur les 5 derniers matchs",  
-                value=st.session_state.data["forme_recente_A_victoires"],  
-                key="forme_recente_A_victoires_input",  
-                step=1  
-            )  
-            st.session_state.data["forme_recente_A_nuls"] = st.number_input(  
-                "➖ Nuls (A) sur les 5 derniers matchs",  
-                value=st.session_state.data["forme_recente_A_nuls"],  
-                key="forme_recente_A_nuls_input",  
-                step=1  
-            )  
-            st.session_state.data["forme_recente_A_defaites"] = st.number_input(  
-                "❌ Défaites (A) sur les 5 derniers matchs",  
-                value=st.session_state.data["forme_recente_A_defaites"],  
-                key="forme_recente_A_defaites_input",  
-                step=1  
-            )  
-
-        # Équipe B  
-        with col2:  
-            st.subheader("🏆 Équipe B")  
-            st.session_state.data["tirs_cadres_par_match_B"] = st.number_input(  
-                "🎯 Tirs Cadres par Match (B)",  
-                value=st.session_state.data["tirs_cadres_par_match_B"],  
-                key="tirs_cadres_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["grandes_chances_B"] = st.number_input(  
-                "🔥 Grandes Chances (B)",  
-                value=int(st.session_state.data["grandes_chances_B"]),  
-                key="grandes_chances_B_input",  
-                step=1  
-            )  
-            st.session_state.data["passes_reussies_par_match_B"] = st.number_input(  
-                "🔄 Passes Réussies par Match (B)",  
-                value=st.session_state.data["passes_reussies_par_match_B"],  
-                key="passes_reussies_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["centres_reussies_par_match_B"] = st.number_input(  
-                "🎯 Centres Réussies par Match (B)",  
-                value=st.session_state.data["centres_reussies_par_match_B"],  
-                key="centres_reussies_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["dribbles_reussis_par_match_B"] = st.number_input(  
-                "🏃‍♂️ Dribbles Réussis par Match (B)",  
-                value=st.session_state.data["dribbles_reussis_par_match_B"],  
-                key="dribbles_reussis_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["buts_attendus_concedes_B"] = st.number_input(  
-                "🚫 Buts Attendus Concédés (B)",  
-                value=st.session_state.data["buts_attendus_concedes_B"],  
-                key="buts_attendus_concedes_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["interceptions_B"] = st.number_input(  
-                "🛑 Interceptions (B)",  
-                value=st.session_state.data["interceptions_B"],  
-                key="interceptions_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["tacles_reussis_par_match_B"] = st.number_input(  
-                "🦶 Tacles Réussis par Match (B)",  
-                value=st.session_state.data["tacles_reussis_par_match_B"],  
-                key="tacles_reussis_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["penalties_concedees_B"] = st.number_input(  
-                "⚠️ Penalties Concédées (B)",  
-                value=int(st.session_state.data["penalties_concedees_B"]),  
-                key="penalties_concedees_B_input",  
-                step=1  
-            )  
-            st.session_state.data["fautes_par_match_B"] = st.number_input(  
-                "🚩 Fautes par Match (B)",  
-                value=st.session_state.data["fautes_par_match_B"],  
-                key="fautes_par_match_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["motivation_B"] = st.number_input(  
-                "💪 Motivation (B)",  
-                value=int(st.session_state.data["motivation_B"]),  
-                key="motivation_B_input",  
-                step=1  
-            )  
-            # Nouveaux critères pour Poisson  
-            st.session_state.data["buts_marques_B"] = st.number_input(  
-                "⚽ Buts Marqués par Match (B)",  
-                value=st.session_state.data["buts_marques_B"],  
-                key="buts_marques_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["tirs_par_match_B"] = st.number_input(  
-                "🎯 Tirs par Match (B)",  
-                value=st.session_state.data["tirs_par_match_B"],  
-                key="tirs_par_match_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["possession_moyenne_B"] = st.number_input(  
-                "⏳ Possession (%) (B)",  
-                value=st.session_state.data["possession_moyenne_B"],  
-                key="possession_moyenne_B_input",  
-                step=0.01  
-            )  
-            st.session_state.data["corners_par_match_B"] = st.number_input(  
-                "🔄 Corners par Match (B)",  
-                value=st.session_state.data["corners_par_match_B"],  
-                key="corners_par_match_B_input",  
-                step=0.01  
-            )  
-            # Forme récente de l'Équipe B  
-            st.subheader("📅 Forme Récente (Équipe B)")  
-            st.session_state.data["forme_recente_B_victoires"] = st.number_input(  
-                "✅ Victoires (B) sur les 5 derniers matchs",  
-                value=st.session_state.data["forme_recente_B_victoires"],  
-                key="forme_recente_B_victoires_input",  
-                step=1  
-            )  
-            st.session_state.data["forme_recente_B_nuls"] = st.number_input(  
-                "➖ Nuls (B) sur les 5 derniers matchs",  
-                value=st.session_state.data["forme_recente_B_nuls"],  
-                key="forme_recente_B_nuls_input",  
-                step=1  
-            )  
-            st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
-                "❌ Défaites (B) sur les 5 derniers matchs",  
-                value=st.session_state.data["forme_recente_B_defaites"],  
-                key="forme_recente_B_defaites_input",  
-                step=1  
-            )  
-
-        # Face-à-face  
-        st.subheader("🤝 Face-à-Face")  
-        st.session_state.data["face_a_face_A"] = st.number_input(  
-            "✅ Victoires de l'Équipe A (Face-à-Face)",  
-            value=int(st.session_state.data["face_a_face_A"]),  
-            key="face_a_face_A_input",  
+    # Équipe A  
+    with col1:  
+        st.subheader("🏆 Équipe A")  
+        st.session_state.data["tirs_cadres_par_match_A"] = st.number_input(  
+            "🎯 Tirs Cadres par Match (A)",  
+            value=st.session_state.data["tirs_cadres_par_match_A"],  
+            key="tirs_cadres_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["grandes_chances_A"] = st.number_input(  
+            "🔥 Grandes Chances (A)",  
+            value=int(st.session_state.data["grandes_chances_A"]),  
+            key="grandes_chances_A_input",  
             step=1  
         )  
-        st.session_state.data["face_a_face_B"] = st.number_input(  
-            "✅ Victoires de l'Équipe B (Face-à-Face)",  
-            value=int(st.session_state.data["face_a_face_B"]),  
-            key="face_a_face_B_input",  
+        st.session_state.data["passes_reussies_par_match_A"] = st.number_input(  
+            "🔄 Passes Réussies par Match (A)",  
+            value=st.session_state.data["passes_reussies_par_match_A"],  
+            key="passes_reussies_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["centres_reussies_par_match_A"] = st.number_input(  
+            "🎯 Centres Réussies par Match (A)",  
+            value=st.session_state.data["centres_reussies_par_match_A"],  
+            key="centres_reussies_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["dribbles_reussis_par_match_A"] = st.number_input(  
+            "🏃‍♂️ Dribbles Réussis par Match (A)",  
+            value=st.session_state.data["dribbles_reussis_par_match_A"],  
+            key="dribbles_reussis_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["buts_attendus_concedes_A"] = st.number_input(  
+            "🚫 Buts Attendus Concédés (A)",  
+            value=st.session_state.data["buts_attendus_concedes_A"],  
+            key="buts_attendus_concedes_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["interceptions_A"] = st.number_input(  
+            "🛑 Interceptions (A)",  
+            value=st.session_state.data["interceptions_A"],  
+            key="interceptions_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["tacles_reussis_par_match_A"] = st.number_input(  
+            "🦶 Tacles Réussis par Match (A)",  
+            value=st.session_state.data["tacles_reussis_par_match_A"],  
+            key="tacles_reussis_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["penalties_concedees_A"] = st.number_input(  
+            "⚠️ Penalties Concédées (A)",  
+            value=int(st.session_state.data["penalties_concedees_A"]),  
+            key="penalties_concedees_A_input",  
+            step=1  
+        )  
+        st.session_state.data["fautes_par_match_A"] = st.number_input(  
+            "🚩 Fautes par Match (A)",  
+            value=st.session_state.data["fautes_par_match_A"],  
+            key="fautes_par_match_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["motivation_A"] = st.number_input(  
+            "💪 Motivation (A)",  
+            value=int(st.session_state.data["motivation_A"]),  
+            key="motivation_A_input",  
+            step=1  
+        )  
+        st.session_state.data["buts_marques_A"] = st.number_input(  
+            "⚽ Buts Marqués par Match (A)",  
+            value=st.session_state.data["buts_marques_A"],  
+            key="buts_marques_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["tirs_par_match_A"] = st.number_input(  
+            "🎯 Tirs par Match (A)",  
+            value=st.session_state.data["tirs_par_match_A"],  
+            key="tirs_par_match_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["possession_moyenne_A"] = st.number_input(  
+            "⏳ Possession (%) (A)",  
+            value=st.session_state.data["possession_moyenne_A"],  
+            key="possession_moyenne_A_input",  
+            step=0.01  
+        )  
+        st.session_state.data["corners_par_match_A"] = st.number_input(  
+            "🔄 Corners par Match (A)",  
+            value=st.session_state.data["corners_par_match_A"],  
+            key="corners_par_match_A_input",  
+            step=0.01  
+        )  
+        st.subheader("📅 Forme Récente (Équipe A)")  
+        st.session_state.data["forme_recente_A_victoires"] = st.number_input(  
+            "✅ Victoires (A) sur les 5 derniers matchs",  
+            value=st.session_state.data["forme_recente_A_victoires"],  
+            key="forme_recente_A_victoires_input",  
+            step=1  
+        )  
+        st.session_state.data["forme_recente_A_nuls"] = st.number_input(  
+            "➖ Nuls (A) sur les 5 derniers matchs",  
+            value=st.session_state.data["forme_recente_A_nuls"],  
+            key="forme_recente_A_nuls_input",  
+            step=1  
+        )  
+        st.session_state.data["forme_recente_A_defaites"] = st.number_input(  
+            "❌ Défaites (A) sur les 5 derniers matchs",  
+            value=st.session_state.data["forme_recente_A_defaites"],  
+            key="forme_recente_A_defaites_input",  
             step=1  
         )  
 
-        # Bouton de soumission  
-        st.form_submit_button("💾 Enregistrer les données")  
+    # Équipe B  
+    with col2:  
+        st.subheader("🏆 Équipe B")  
+        st.session_state.data["tirs_cadres_par_match_B"] = st.number_input(  
+            "🎯 Tirs Cadres par Match (B)",  
+            value=st.session_state.data["tirs_cadres_par_match_B"],  
+            key="tirs_cadres_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["grandes_chances_B"] = st.number_input(  
+            "🔥 Grandes Chances (B)",  
+            value=int(st.session_state.data["grandes_chances_B"]),  
+            key="grandes_chances_B_input",  
+            step=1  
+        )  
+        st.session_state.data["passes_reussies_par_match_B"] = st.number_input(  
+            "🔄 Passes Réussies par Match (B)",  
+            value=st.session_state.data["passes_reussies_par_match_B"],  
+            key="passes_reussies_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["centres_reussies_par_match_B"] = st.number_input(  
+            "🎯 Centres Réussies par Match (B)",  
+            value=st.session_state.data["centres_reussies_par_match_B"],  
+            key="centres_reussies_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["dribbles_reussis_par_match_B"] = st.number_input(  
+            "🏃‍♂️ Dribbles Réussis par Match (B)",  
+            value=st.session_state.data["dribbles_reussis_par_match_B"],  
+            key="dribbles_reussis_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["buts_attendus_concedes_B"] = st.number_input(  
+            "🚫 Buts Attendus Concédés (B)",  
+            value=st.session_state.data["buts_attendus_concedes_B"],  
+            key="buts_attendus_concedes_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["interceptions_B"] = st.number_input(  
+            "🛑 Interceptions (B)",  
+            value=st.session_state.data["interceptions_B"],  
+            key="interceptions_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["tacles_reussis_par_match_B"] = st.number_input(  
+            "🦶 Tacles Réussis par Match (B)",  
+            value=st.session_state.data["tacles_reussis_par_match_B"],  
+            key="tacles_reussis_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["penalties_concedees_B"] = st.number_input(  
+            "⚠️ Penalties Concédées (B)",  
+            value=int(st.session_state.data["penalties_concedees_B"]),  
+            key="penalties_concedees_B_input",  
+            step=1  
+        )  
+        st.session_state.data["fautes_par_match_B"] = st.number_input(  
+            "🚩 Fautes par Match (B)",  
+            value=st.session_state.data["fautes_par_match_B"],  
+            key="fautes_par_match_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["motivation_B"] = st.number_input(  
+            "💪 Motivation (B)",  
+            value=int(st.session_state.data["motivation_B"]),  
+            key="motivation_B_input",  
+            step=1  
+        )  
+        st.session_state.data["buts_marques_B"] = st.number_input(  
+            "⚽ Buts Marqués par Match (B)",  
+            value=st.session_state.data["buts_marques_B"],  
+            key="buts_marques_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["tirs_par_match_B"] = st.number_input(  
+            "🎯 Tirs par Match (B)",  
+            value=st.session_state.data["tirs_par_match_B"],  
+            key="tirs_par_match_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["possession_moyenne_B"] = st.number_input(  
+            "⏳ Possession (%) (B)",  
+            value=st.session_state.data["possession_moyenne_B"],  
+            key="possession_moyenne_B_input",  
+            step=0.01  
+        )  
+        st.session_state.data["corners_par_match_B"] = st.number_input(  
+            "🔄 Corners par Match (B)",  
+            value=st.session_state.data["corners_par_match_B"],  
+            key="corners_par_match_B_input",  
+            step=0.01  
+        )  
+        st.subheader("📅 Forme Récente (Équipe B)")  
+        st.session_state.data["forme_recente_B_victoires"] = st.number_input(  
+            "✅ Victoires (B) sur les 5 derniers matchs",  
+            value=st.session_state.data["forme_recente_B_victoires"],  
+            key="forme_recente_B_victoires_input",  
+            step=1  
+        )  
+        st.session_state.data["forme_recente_B_nuls"] = st.number_input(  
+            "➖ Nuls (B) sur les 5 derniers matchs",  
+            value=st.session_state.data["forme_recente_B_nuls"],  
+            key="forme_recente_B_nuls_input",  
+            step=1  
+        )  
+        st.session_state.data["forme_recente_B_defaites"] = st.number_input(  
+            "❌ Défaites (B) sur les 5 derniers matchs",  
+            value=st.session_state.data["forme_recente_B_defaites"],  
+            key="forme_recente_B_defaites_input",  
+            step=1  
+        )  
+
+    # Face-à-face  
+    st.subheader("🤝 Face-à-Face")  
+    st.session_state.data["face_a_face_A"] = st.number_input(  
+        "✅ Victoires de l'Équipe A (Face-à-Face)",  
+        value=int(st.session_state.data["face_a_face_A"]),  
+        key="face_a_face_A_input",  
+        step=1  
+    )  
+    st.session_state.data["face_a_face_B"] = st.number_input(  
+        "✅ Victoires de l'Équipe B (Face-à-Face)",  
+        value=int(st.session_state.data["face_a_face_B"]),  
+        key="face_a_face_B_input",  
+        step=1  
+    )  
+
+    # Bouton de soumission  
+    if st.form_submit_button("💾 Enregistrer les données"):  
+        st.success("Données enregistrées avec succès !")
 
 # Onglet 2 : Prédictions  
 with tab2:  
