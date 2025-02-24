@@ -167,9 +167,10 @@ with st.form("formulaire_saisie"):
         value=float(st.session_state.data['impact_joueurs_cles_B']),   
         step=0.1  
     )  
+    st.session_state.data['taux_reussite_corners_B'] = st.number_input(  
         "Taux de Réussite des Corners (%) (Équipe B)",   
         value=float(st.session_state.data['taux_reussite_corners_B']),   
-        step=0.1  
+        step=0.1    
     )  
 
     # Nouveau champ pour le nombre de dégagements  
