@@ -7,20 +7,50 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression  
 import statsmodels.api as sm  
 from sklearn.model_selection import train_test_split, cross_val_score, KFold  
-from sklearn.metrics import accuracy_score, mean_squared_error  
+from sklearn.metrics import accuracy_score, mean_squared_error, classification_report, confusion_matrix  
 
 # --- CONFIG INTERFACE ---  
-st.set_page_config(page_title="Analyse Foot & Value Bets", layout="wide")  
+st.set_page_config(page_title="Analyse Foot & Value Bets", layout="wide", page_icon="⚽")  
 
-# Utilisation d'une icône pour le logo dans la barre latérale  
-st.sidebar.markdown("""  
-    <div style="text-align: center;">  
-        <span style="font-size: 48px;">🏆</span>  
-    </div>  
+# --- STYLE PERSONNALISÉ ---  
+st.markdown("""  
+    <style>  
+    .main {  
+        background-color: #f0f2f6;  
+        padding: 2rem;  
+    }  
+    .stButton>button {  
+        background-color: #4CAF50;  
+        color: white;  
+        border-radius: 5px;  
+        padding: 10px 20px;  
+        font-size: 16px;  
+    }  
+    .stButton>button:hover {  
+        background-color: #45a049;  
+    }  
+    .stHeader {  
+        color: #2c3e50;  
+        font-size: 2.5rem;  
+        font-weight: bold;  
+    }  
+    .stSubheader {  
+        color: #34495e;  
+        font-size: 1.8rem;  
+        font-weight: bold;  
+    }  
+    .stDataFrame {  
+        border-radius: 10px;  
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
+    }  
+    .stMetric {  
+        background-color: white;  
+        padding: 1rem;  
+        border-radius: 10px;  
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
+    }  
+    </style>  
 """, unsafe_allow_html=True)  
-
-st.sidebar.title("🏆 Navigation")  
-page = st.sidebar.radio("Menu", ["🏟️ Analyse des Équipes", "💰 Comparateur de Cotes", "📜 Historique des Prédictions"])  
 
 # --- PERSISTANCE DES DONNÉES ---  
 if "data" not in st.session_state:  
@@ -43,8 +73,8 @@ def enregistrer_historique(equipe_A, equipe_B, prediction):
     pd.DataFrame(st.session_state.historique).to_csv("historique_predictions.csv", index=False)  
 
 # --- ANALYSE DES ÉQUIPES ---  
-if page == "🏟️ Analyse des Équipes":  
-    st.title("Analyse des Équipes & Prédictions")  
+def page_analyse_equipes():  
+    st.title("🏟️ Analyse des Équipes & Prédictions")  
     
     # Utilisation d'icônes pour représenter les équipes  
     col1, col2 = st.columns(2)  
@@ -67,7 +97,7 @@ if page == "🏟️ Analyse des Équipes":
         equipe_B = st.text_input("Nom de l'équipe B", "Équipe 2", key="equipe_B")  
 
     # Option pour téléverser un fichier CSV ou saisir manuellement les données  
-    st.subheader("Entrez vos données")  
+    st.subheader("📊 Entrez vos données")  
     option_donnees = st.radio("Choisissez une option", ["Téléverser un fichier CSV", "Saisir manuellement les données"])  
 
     if option_donnees == "Téléverser un fichier CSV":  
@@ -108,62 +138,71 @@ if page == "🏟️ Analyse des Équipes":
             return ['background-color: yellow' if col.name in poisson_cols else '' for _ in col]  
         
         styled_data = data.style.apply(color_poisson)  
-        st.dataframe(styled_data)  
+        st.dataframe(styled_data, height=400)  
         
         # --- MODÉLISATION ---  
+        st.subheader("📈 Résultats des Modèles")  
+        
         X = data.drop(columns=['Buts marqués'])  
         y = data['Buts marqués']  
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
         
-        kf = KFold(n_splits=5, shuffle=True, random_state=42)  
-        
+        # Régression Logistique  
         log_reg = LogisticRegression(max_iter=1000)  
         log_reg.fit(X_train, y_train)  
-        acc_log = np.mean(cross_val_score(log_reg, X_train, y_train, cv=kf, scoring='accuracy'))  
+        y_pred_log = log_reg.predict(X_test)  
+        acc_log = accuracy_score(y_test, y_pred_log)  
+        report_log = classification_report(y_test, y_pred_log)  
+        conf_matrix_log = confusion_matrix(y_test, y_pred_log)  
         
+        # Random Forest  
         rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)  
         rf.fit(X_train, y_train)  
-        acc_rf = np.mean(cross_val_score(rf, X_train, y_train, cv=kf, scoring='accuracy'))  
+        y_pred_rf = rf.predict(X_test)  
+        acc_rf = accuracy_score(y_test, y_pred_rf)  
+        report_rf = classification_report(y_test, y_pred_rf)  
+        conf_matrix_rf = confusion_matrix(y_test, y_pred_rf)  
         
+        # Modèle de Poisson  
         poisson_model = sm.GLM(y_train, X_train, family=sm.families.Poisson()).fit()  
-        mse_poisson = mean_squared_error(y_test, poisson_model.predict(X_test))  
+        y_pred_poisson = poisson_model.predict(X_test)  
+        mse_poisson = mean_squared_error(y_test, y_pred_poisson)  
         
-        st.subheader("Résultats des Modèles")  
-        
-        # Utilisation d'icônes pour représenter les résultats des modèles  
+        # Affichage des résultats  
         col1, col2, col3 = st.columns(3)  
         with col1:  
-            st.markdown("""  
-                <div style="text-align: center;">  
-                    <span style="font-size: 48px;">📊</span>  
-                    <h4>Régression Logistique</h4>  
-                    <p>Accuracy : {:.2f}</p>  
-                </div>  
-            """.format(acc_log), unsafe_allow_html=True)  
+            st.metric("Régression Logistique", f"Accuracy : {acc_log:.2f}")  
+            st.write("Rapport de classification :")  
+            st.text(report_log)  
+            st.write("Matrice de confusion :")  
+            st.write(conf_matrix_log)  
         
         with col2:  
-            st.markdown("""  
-                <div style="text-align: center;">  
-                    <span style="font-size: 48px;">🌲</span>  
-                    <h4>Random Forest</h4>  
-                    <p>Accuracy : {:.2f}</p>  
-                </div>  
-            """.format(acc_rf), unsafe_allow_html=True)  
+            st.metric("Random Forest", f"Accuracy : {acc_rf:.2f}")  
+            st.write("Rapport de classification :")  
+            st.text(report_rf)  
+            st.write("Matrice de confusion :")  
+            st.write(conf_matrix_rf)  
         
         with col3:  
-            st.markdown("""  
-                <div style="text-align: center;">  
-                    <span style="font-size: 48px;">📉</span>  
-                    <h4>Modèle de Poisson</h4>  
-                    <p>MSE : {:.2f}</p>  
-                </div>  
-            """.format(mse_poisson), unsafe_allow_html=True)  
+            st.metric("Modèle de Poisson", f"MSE : {mse_poisson:.2f}")  
+            st.write("Prédictions :")  
+            st.write(y_pred_poisson)  
+        
+        # Graphiques  
+        st.subheader("📊 Visualisation des Performances")  
+        fig, ax = plt.subplots(1, 2, figsize=(15, 5))  
+        sns.heatmap(conf_matrix_log, annot=True, fmt="d", ax=ax[0])  
+        ax[0].set_title("Matrice de Confusion - Régression Logistique")  
+        sns.heatmap(conf_matrix_rf, annot=True, fmt="d", ax=ax[1])  
+        ax[1].set_title("Matrice de Confusion - Random Forest")  
+        st.pyplot(fig)  
         
         enregistrer_historique(equipe_A, equipe_B, {"Logistique": acc_log, "RandomForest": acc_rf, "Poisson": mse_poisson})  
 
 # --- COMPARATEUR DE COTES ---  
-if page == "💰 Comparateur de Cotes":  
-    st.title("Comparateur de Cotes & Value Bets")  
+def page_comparateur_cotes():  
+    st.title("💰 Comparateur de Cotes & Value Bets")  
     
     # Utilisation d'une icône pour représenter les cotes  
     st.markdown("""  
@@ -180,8 +219,8 @@ if page == "💰 Comparateur de Cotes":
     st.write(f"Value Bet détecté : {'✅ OUI' if value_bet else '❌ NON'}")  
 
 # --- HISTORIQUE DES PRÉDICTIONS ---  
-if page == "📜 Historique des Prédictions":  
-    st.title("Historique des Prédictions")  
+def page_historique_predictions():  
+    st.title("📜 Historique des Prédictions")  
     
     # Utilisation d'une icône pour représenter l'historique  
     st.markdown("""  
@@ -191,4 +230,19 @@ if page == "📜 Historique des Prédictions":
     """, unsafe_allow_html=True)  
     
     historique_df = pd.DataFrame(st.session_state.historique)  
-    st.dataframe(historique_df)
+    st.dataframe(historique_df, height=400)  
+
+# --- NAVIGATION ---  
+def main():  
+    st.sidebar.title("🏆 Navigation")  
+    page = st.sidebar.radio("Menu", ["🏟️ Analyse des Équipes", "💰 Comparateur de Cotes", "📜 Historique des Prédictions"])  
+    
+    if page == "🏟️ Analyse des Équipes":  
+        page_analyse_equipes()  
+    elif page == "💰 Comparateur de Cotes":  
+        page_comparateur_cotes()  
+    elif page == "📜 Historique des Prédictions":  
+        page_historique_predictions()  
+
+if __name__ == "__main__":  
+    main()
