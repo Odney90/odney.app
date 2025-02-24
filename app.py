@@ -1,4 +1,13 @@
 import streamlit as st  
+import pandas as pd  
+import numpy as np  
+from sklearn.linear_model import LinearRegression  
+from sklearn.ensemble import RandomForestRegressor  
+from sklearn.model_selection import KFold  
+from sklearn.metrics import mean_squared_error  
+from statsmodels.api import GLM  
+import matplotlib.pyplot as plt  
+import seaborn as sns  
 
 # Initialisation des données de session si elles n'existent pas  
 if 'data' not in st.session_state:  
@@ -69,143 +78,86 @@ if 'data' not in st.session_state:
         'forme_recente_B': 9,  
     }  
 
-# Formulaire flottant pour la saisie des données  
-with st.form("formulaire_saisie"):  
-    st.header("📊 Saisie des Données d'Analyse")  
+# Fonction pour entraîner un modèle de régression linéaire avec KFold  
+def train_linear_regression_with_kfold(X, y):  
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)  
+    mse_scores = []  
+    for train_index, test_index in kf.split(X):  
+        X_train, X_test = X[train_index], X[test_index]  
+        y_train, y_test = y[train_index], y[test_index]  
+        model = LinearRegression()  
+        model.fit(X_train, y_train)  
+        y_pred = model.predict(X_test)  
+        mse_scores.append(mean_squared_error(y_test, y_pred))  
+    return np.mean(mse_scores)  
+
+# Fonction pour entraîner un modèle de régression de Poisson  
+def train_poisson_regression(X, y):  
+    model = GLM(y, X, family=GLM.families.Poisson())  
+    results = model.fit()  
+    return results  
+
+# Fonction pour entraîner un modèle Random Forest  
+def train_random_forest(X, y):  
+    model = RandomForestRegressor(n_estimators=100, random_state=42)  
+    model.fit(X, y)  
+    return model  
+
+# Fonction pour afficher les résultats et les visuels  
+def display_results_and_visuals(data):  
+    st.header("📊 Résultats et Visuels Explicatifs")  
     
-    # Champs pour les données de l'équipe A  
-    st.subheader("Équipe A 🏆")  
-    st.session_state.data['score_rating_A'] = st.number_input("Score de Performance (Équipe A)", value=float(st.session_state.data['score_rating_A']), step=0.1)  
-    st.session_state.data['buts_par_match_A'] = st.number_input("Buts par Match (Équipe A)", value=float(st.session_state.data['buts_par_match_A']), step=0.1)  
-    st.session_state.data['buts_concedes_par_match_A'] = st.number_input("Buts Concedes par Match (Équipe A)", value=float(st.session_state.data['buts_concedes_par_match_A']), step=0.1)  
-    st.session_state.data['possession_moyenne_A'] = st.number_input("Possession Moyenne (%) (Équipe A)", value=float(st.session_state.data['possession_moyenne_A']), step=0.1)  
-    st.session_state.data['expected_but_A'] = st.number_input("Expected Goals (Équipe A)", value=float(st.session_state.data['expected_but_A']), step=0.1)  
-    st.session_state.data['tirs_cadres_A'] = st.number_input("Tirs Cadres (Équipe A)", value=int(st.session_state.data['tirs_cadres_A']), step=1)  
-    st.session_state.data['grandes_chances_A'] = st.number_input("Grandes Chances (Équipe A)", value=int(st.session_state.data['grandes_chances_A']), step=1)  
-    st.session_state.data['victoires_domicile_A'] = st.number_input("Victoires à Domicile (Équipe A)", value=int(st.session_state.data['victoires_domicile_A']), step=1)  
-    st.session_state.data['victoires_exterieur_A'] = st.number_input("Victoires à l'Extérieur (Équipe A)", value=int(st.session_state.data['victoires_exterieur_A']), step=1)  
-    st.session_state.data['joueurs_absents_A'] = st.number_input("Joueurs Absents (Équipe A)", value=int(st.session_state.data['joueurs_absents_A']), step=1)  
+    # Préparation des données  
+    X = np.array([data['buts_par_match_A'], data['possession_moyenne_A'], data['taux_reussite_passes_A']]).T  
+    y = np.array(data['score_rating_A'])  
+    
+    # KFold avec régression linéaire  
+    st.subheader("Validation Croisée (KFold) avec Régression Linéaire")  
+    mse = train_linear_regression_with_kfold(X, y)  
+    st.write(f"Erreur Quadratique Moyenne (MSE) : {mse:.2f}")  
+    
+    # Régression de Poisson  
+    st.subheader("Régression de Poisson")  
+    poisson_results = train_poisson_regression(X, y)  
+    st.write(poisson_results.summary())  
+    
+    # Random Forest  
+    st.subheader("Random Forest")  
+    rf_model = train_random_forest(X, y)  
+    y_pred = rf_model.predict(X)  
+    st.write(f"Score de Performance Prédit : {y_pred[0]:.2f}")  
+    
+    # Graphique explicatif  
+    st.subheader("Graphique Explicatif")  
+    fig, ax = plt.subplots()  
+    sns.regplot(x=X[:, 0], y=y, ax=ax)  
+    ax.set_xlabel("Buts par Match (Équipe A)")  
+    ax.set_ylabel("Score de Performance")  
+    st.pyplot(fig)  
 
-    # Nouveaux champs pour l'équipe A  
-    st.session_state.data['moyenne_age_joueurs_A'] = st.number_input("Moyenne d'Âge des Joueurs (Équipe A)", value=float(st.session_state.data['moyenne_age_joueurs_A']), step=0.1)  
-    st.session_state.data['experience_entraineur_A'] = st.number_input("Expérience de l'Entraîneur (Années)", value=int(st.session_state.data['experience_entraineur_A']), step=1)  
-    st.session_state.data['nombre_blessures_A'] = st.number_input("Nombre de Blessures (Équipe A)", value=int(st.session_state.data['nombre_blessures_A']), step=1)  
-    st.session_state.data['cartons_jaunes_A'] = st.number_input("Cartons Jaunes (Équipe A)", value=int(st.session_state.data['cartons_jaunes_A']), step=1)  
-    st.session_state.data['cartons_rouges_A'] = st.number_input("Cartons Rouges (Équipe A)", value=int(st.session_state.data['cartons_rouges_A']), step=1)  
-    st.session_state.data['taux_reussite_passes_A'] = st.number_input("Taux de Réussite des Passes (%) (Équipe A)", value=float(st.session_state.data['taux_reussite_passes_A']), step=0.1)  
-    st.session_state.data['taux_possession_A'] = st.number_input("Taux de Possession (%) (Équipe A)", value=float(st.session_state.data['taux_possession_A']), step=0.1)  
-    st.session_state.data['nombre_tirs_totaux_A'] = st.number_input("Nombre de Tirs Totaux (Équipe A)", value=int(st.session_state.data['nombre_tirs_totaux_A']), step=1)  
-    st.session_state.data['nombre_tirs_cadres_A'] = st.number_input("Nombre de Tirs Cadrés (Équipe A)", value=int(st.session_state.data['nombre_tirs_cadres_A']), step=1)  
+# Onglets pour l'application  
+tab1, tab2 = st.tabs(["📝 Saisie des Données", "📊 Résultats et Visuels"])  
 
-    # Ratios avec descriptions  
-    st.session_state.data['ratio_buts_tirs_A'] = st.number_input("Ratio Buts/Tirs (Équipe A)", value=float(st.session_state.data['ratio_buts_tirs_A']), step=0.01, help="Ratio des buts marqués par rapport au nombre total de tirs.")  
-    st.session_state.data['ratio_buts_encais_tirs_A'] = st.number_input("Ratio Buts Encaissés/Tirs (Équipe A)", value=float(st.session_state.data['ratio_buts_encais_tirs_A']), step=0.01, help="Ratio des buts encaissés par rapport au nombre total de tirs subis.")  
+with tab1:  
+    # Formulaire flottant pour la saisie des données  
+    with st.form("formulaire_saisie"):  
+        st.header("📊 Saisie des Données d'Analyse")  
+        
+        # Champs pour les données de l'équipe A  
+        st.subheader("Équipe A 🏆")  
+        st.session_state.data['score_rating_A'] = st.number_input("Score de Performance (Équipe A)", value=float(st.session_state.data['score_rating_A']), step=0.1)  
+        st.session_state.data['buts_par_match_A'] = st.number_input("Buts par Match (Équipe A)", value=float(st.session_state.data['buts_par_match_A']), step=0.1)  
+        st.session_state.data['possession_moyenne_A'] = st.number_input("Possession Moyenne (%) (Équipe A)", value=float(st.session_state.data['possession_moyenne_A']), step=0.1)  
+        st.session_state.data['taux_reussite_passes_A'] = st.number_input("Taux de Réussite des Passes (%) (Équipe A)", value=float(st.session_state.data['taux_reussite_passes_A']), step=0.1)  
+        
+        # Bouton pour soumettre le formulaire  
+        submitted = st.form_submit_button("✅ Soumettre les Données")  
+        if submitted:  
+            st.success("Données soumises avec succès! 🎉")  
 
-    st.session_state.data['performance_domicile_A'] = st.number_input("Performance à Domicile (Points) (Équipe A)", value=float(st.session_state.data['performance_domicile_A']), step=0.1)  
-    st.session_state.data['performance_exterieur_A'] = st.number_input("Performance à l'Extérieur (Points) (Équipe A)", value=float(st.session_state.data['performance_exterieur_A']), step=0.1)  
-    st.session_state.data['historique_confrontations_A_B'] = st.number_input("Historique Confrontations (Équipe A contre Équipe B)", value=int(st.session_state.data['historique_confrontations_A_B']), step=1)  
-    st.session_state.data['moyenne_buts_marques_A'] = st.number_input("Moyenne de Buts Marqués par Match (Équipe A)", value=float(st.session_state.data['moyenne_buts_marques_A']), step=0.1)  
-    st.session_state.data['moyenne_buts_encais_A'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe A)", value=float(st.session_state.data['moyenne_buts_encais_A']), step=0.1)  
-    st.session_state.data['impact_joueurs_cles_A'] = st.number_input("Impact des Joueurs Clés (Équipe A)", value=float(st.session_state.data['impact_joueurs_cles_A']), step=0.1)  
-    st.session_state.data['taux_reussite_corners_A'] = st.number_input("Taux de Réussite des Corners (%) (Équipe A)", value=float(st.session_state.data['taux_reussite_corners_A']), step=0.1)  
-
-    # Nouveau champ pour le nombre de dégagements  
-    st.session_state.data['nombre_degagements_A'] = st.number_input("Nombre de Dégagements (Équipe A)", value=int(st.session_state.data['nombre_degagements_A']), step=1)  
-
-    # Nouveau champ pour la tactique  
-    st.session_state.data['tactique_A'] = st.number_input("Tactique (Équipe A)", value=int(st.session_state.data['tactique_A']), min_value=1, max_value=10, help="Évaluez l'efficacité de la tactique sur une échelle de 1 à 10.")  
-
-    # Nouveaux champs pour la motivation et la forme récente  
-    st.session_state.data['motivation_A'] = st.number_input("Motivation (Équipe A)", value=int(st.session_state.data['motivation_A']), min_value=1, max_value=10)  
-    st.session_state.data['forme_recente_A'] = st.number_input("Forme Récente (Points sur 5 matchs) (Équipe A)", value=int(st.session_state.data['forme_recente_A']), step=1)  
-
-    # Champs pour les données de l'équipe B  
-    st.subheader("Équipe B 🥈")  
-    st.session_state.data['score_rating_B'] = st.number_input("Score de Performance (Équipe B)", value=float(st.session_state.data['score_rating_B']), step=0.1)  
-    st.session_state.data['buts_par_match_B'] = st.number_input("Buts par Match (Équipe B)", value=float(st.session_state.data['buts_par_match_B']), step=0.1)  
-    st.session_state.data['buts_concedes_par_match_B'] = st.number_input("Buts Concedes par Match (Équipe B)", value=float(st.session_state.data['buts_concedes_par_match_B']), step=0.1)  
-    st.session_state.data['possession_moyenne_B'] = st.number_input("Possession Moyenne (%) (Équipe B)", value=float(st.session_state.data['possession_moyenne_B']), step=0.1)  
-    st.session_state.data['expected_but_B'] = st.number_input("Expected Goals (Équipe B)", value=float(st.session_state.data['expected_but_B']), step=0.1)  
-    st.session_state.data['tirs_cadres_B'] = st.number_input("Tirs Cadres (Équipe B)", value=int(st.session_state.data['tirs_cadres_B']), step=1)  
-    st.session_state.data['grandes_chances_B'] = st.number_input("Grandes Chances (Équipe B)", value=int(st.session_state.data['grandes_chances_B']), step=1)  
-    st.session_state.data['victoires_domicile_B'] = st.number_input("Victoires à Domicile (Équipe B)", value=int(st.session_state.data['victoires_domicile_B']), step=1)  
-    st.session_state.data['victoires_exterieur_B'] = st.number_input("Victoires à l'Extérieur (Équipe B)", value=int(st.session_state.data['victoires_exterieur_B']), step=1)  
-    st.session_state.data['joueurs_absents_B'] = st.number_input("Joueurs Absents (Équipe B)", value=int(st.session_state.data['joueurs_absents_B']), step=1)  
-
-    # Nouveaux champs pour l'équipe B  
-    st.session_state.data['moyenne_age_joueurs_B'] = st.number_input("Moyenne d'Âge des Joueurs (Équipe B)", value=float(st.session_state.data['moyenne_age_joueurs_B']), step=0.1)  
-    st.session_state.data['experience_entraineur_B'] = st.number_input("Expérience de l'Entraîneur (Années)", value=int(st.session_state.data['experience_entraineur_B']), step=1)  
-    st.session_state.data['nombre_blessures_B'] = st.number_input("Nombre de Blessures (Équipe B)", value=int(st.session_state.data['nombre_blessures_B']), step=1)  
-    st.session_state.data['cartons_jaunes_B'] = st.number_input("Cartons Jaunes (Équipe B)", value=int(st.session_state.data['cartons_jaunes_B']), step=1)  
-    st.session_state.data['cartons_rouges_B'] = st.number_input("Cartons Rouges (Équipe B)", value=int(st.session_state.data['cartons_rouges_B']), step=1)  
-    st.session_state.data['taux_reussite_passes_B'] = st.number_input("Taux de Réussite des Passes (%) (Équipe B)", value=float(st.session_state.data['taux_reussite_passes_B']), step=0.1)  
-    st.session_state.data['taux_possession_B'] = st.number_input("Taux de Possession (%) (Équipe B)", value=float(st.session_state.data['taux_possession_B']), step=0.1)  
-    st.session_state.data['nombre_tirs_totaux_B'] = st.number_input("Nombre de Tirs Totaux (Équipe B)", value=int(st.session_state.data['nombre_tirs_totaux_B']), step=1)  
-    st.session_state.data['nombre_tirs_cadres_B'] = st.number_input("Nombre de Tirs Cadrés (Équipe B)", value=int(st.session_state.data['nombre_tirs_cadres_B']), step=1)  
-
-    # Ratios avec descriptions  
-    st.session_state.data['ratio_buts_tirs_B'] = st.number_input("Ratio Buts/Tirs (Équipe B)", value=float(st.session_state.data['ratio_buts_tirs_B']), step=0.01, help="Ratio des buts marqués par rapport au nombre total de tirs.")  
-    st.session_state.data['ratio_buts_encais_tirs_B'] = st.number_input("Ratio Buts Encaissés/Tirs (Équipe B)", value=float(st.session_state.data['ratio_buts_encais_tirs_B']), step=0.01, help="Ratio des buts encaissés par rapport au nombre total de tirs subis.")  
-
-    st.session_state.data['performance_domicile_B'] = st.number_input("Performance à Domicile (Points) (Équipe B)", value=float(st.session_state.data['performance_domicile_B']), step=0.1)  
-    st.session_state.data['performance_exterieur_B'] = st.number_input("Performance à l'Extérieur (Points) (Équipe B)", value=float(st.session_state.data['performance_exterieur_B']), step=0.1)  
-    st.session_state.data['historique_confrontations_B_A'] = st.number_input("Historique Confrontations (Équipe B contre Équipe A)", value=int(st.session_state.data['historique_confrontations_B_A']), step=1)  
-
-    # Champs pour les statistiques supplémentaires  
-    st.session_state.data['moyenne_buts_marques_B'] = st.number_input(  
-        "Moyenne de Buts Marqués par Match (Équipe B)",   
-        value=float(st.session_state.data['moyenne_buts_marques_B']),   
-        step=0.1  
-    )  
-    st.session_state.data['moyenne_buts_encais_B'] = st.number_input(  
-        "Moyenne de Buts Encaissés par Match (Équipe B)",   
-        value=float(st.session_state.data['moyenne_buts_encais_B']),   
-        step=0.1  
-    )  
-    st.session_state.data['impact_joueurs_cles_B'] = st.number_input(  
-        "Impact des Joueurs Clés (Équipe B)",   
-        value=float(st.session_state.data['impact_joueurs_cles_B']),   
-        step=0.1  
-    )  
-    st.session_state.data['taux_reussite_corners_B'] = st.number_input(  
-        "Taux de Réussite des Corners (%) (Équipe B)",   
-        value=float(st.session_state.data['taux_reussite_corners_B']),   
-        step=0.1    
-    )  
-
-    # Nouveau champ pour le nombre de dégagements  
-    st.session_state.data['nombre_degagements_B'] = st.number_input(  
-        "Nombre de Dégagements (Équipe B)",   
-        value=int(st.session_state.data['nombre_degagements_B']),   
-        step=1  
-    )  
-
-    # Nouveau champ pour la tactique  
-    st.session_state.data['tactique_B'] = st.number_input(  
-        "Tactique (Équipe B)",   
-        value=int(st.session_state.data['tactique_B']),   
-        min_value=1,   
-        max_value=10,   
-        help="Évaluez l'efficacité de la tactique sur une échelle de 1 à 10."  
-    )  
-
-    # Nouveaux champs pour la motivation et la forme récente  
-    st.session_state.data['motivation_B'] = st.number_input(  
-        "Motivation (Équipe B)",   
-        value=int(st.session_state.data['motivation_B']),   
-        min_value=1,   
-        max_value=10  
-    )  
-    st.session_state.data['forme_recente_B'] = st.number_input(  
-        "Forme Récente (Points sur 5 matchs) (Équipe B)",   
-        value=int(st.session_state.data['forme_recente_B']),   
-        step=1  
-    )  
-
-    # Bouton pour soumettre le formulaire  
-    submitted = st.form_submit_button("✅ Soumettre les Données")  
-    if submitted:  
-        st.success("Données soumises avec succès! 🎉")  
+with tab2:  
+    # Afficher les résultats et les visuels  
+    display_results_and_visuals(st.session_state.data)  
 
 # Fin de l'application  
 st.write("Merci d'utiliser l'outil d'analyse des équipes! ⚽️")
