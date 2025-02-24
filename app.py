@@ -6,7 +6,7 @@ import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.linear_model import LogisticRegression  
 import statsmodels.api as sm  
-from sklearn.model_selection import train_test_split, cross_val_score, KFold  
+from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score, mean_squared_error, classification_report, confusion_matrix  
 
 # --- CONFIG INTERFACE ---  
@@ -101,6 +101,8 @@ def page_analyse_equipes():
     option_donnees = st.radio("Choisissez une option", ["Téléverser un fichier CSV", "Saisir manuellement les données"])  
 
     if option_donnees == "Téléverser un fichier CSV":  
+        st.write("Téléversez un fichier CSV contenant les données des équipes.")  
+        st.write("Le fichier doit contenir les colonnes suivantes : Possession (%), Tirs, Tirs cadrés, Passes réussies (%), xG, xGA, Corners, Fautes, Cartons jaunes, Cartons rouges, Domicile, Forme (pts), Classement, Buts marqués, Buts encaissés.")  
         fichier_csv = st.file_uploader("Téléversez un fichier CSV", type=["csv"])  
         if fichier_csv is not None:  
             try:  
