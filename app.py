@@ -66,85 +66,100 @@ if page == "🏟️ Analyse des Équipes":
         """, unsafe_allow_html=True)  
         equipe_B = st.text_input("Nom de l'équipe B", "Équipe 2", key="equipe_B")  
 
-    if st.session_state.data is None:  
-        np.random.seed(42)  
-        st.session_state.data = pd.DataFrame({  
-            'Possession (%)': np.random.uniform(40, 70, 22),  
-            'Tirs': np.random.randint(5, 20, 22),  
-            'Tirs cadrés': np.random.randint(2, 10, 22),  
-            'Passes réussies (%)': np.random.uniform(60, 90, 22),  
-            'xG': np.random.uniform(0.5, 3.0, 22),  
-            'xGA': np.random.uniform(0.5, 3.0, 22),  
-            'Corners': np.random.randint(2, 10, 22),  
-            'Fautes': np.random.randint(5, 15, 22),  
-            'Cartons jaunes': np.random.randint(0, 5, 22),  
-            'Cartons rouges': np.random.randint(0, 2, 22),  
-            'Domicile': np.random.choice([0, 1], 22),  
-            'Forme (pts)': np.random.randint(3, 15, 22),  
-            'Classement': np.random.randint(1, 20, 22),  
-            'Buts marqués': np.random.randint(0, 4, 22),  
-            'Buts encaissés': np.random.randint(0, 4, 22)  
-        })  
-    data = st.session_state.data  
-    
-    # Coloration pour les variables spécifiques au modèle de Poisson  
-    poisson_cols = ['xG', 'xGA']  
-    def color_poisson(col):  
-        return ['background-color: yellow' if col.name in poisson_cols else '' for _ in col]  
-    
-    styled_data = data.style.apply(color_poisson)  
-    st.dataframe(styled_data)  
-    
-    # --- MODÉLISATION ---  
-    X = data.drop(columns=['Buts marqués'])  
-    y = data['Buts marqués']  
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-    
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)  
-    
-    log_reg = LogisticRegression(max_iter=1000)  
-    log_reg.fit(X_train, y_train)  
-    acc_log = np.mean(cross_val_score(log_reg, X_train, y_train, cv=kf, scoring='accuracy'))  
-    
-    rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)  
-    rf.fit(X_train, y_train)  
-    acc_rf = np.mean(cross_val_score(rf, X_train, y_train, cv=kf, scoring='accuracy'))  
-    
-    poisson_model = sm.GLM(y_train, X_train, family=sm.families.Poisson()).fit()  
-    mse_poisson = mean_squared_error(y_test, poisson_model.predict(X_test))  
-    
-    st.subheader("Résultats des Modèles")  
-    
-    # Utilisation d'icônes pour représenter les résultats des modèles  
-    col1, col2, col3 = st.columns(3)  
-    with col1:  
-        st.markdown("""  
-            <div style="text-align: center;">  
-                <span style="font-size: 48px;">📊</span>  
-                <h4>Régression Logistique</h4>  
-                <p>Accuracy : {:.2f}</p>  
-            </div>  
-        """.format(acc_log), unsafe_allow_html=True)  
-    
-    with col2:  
-        st.markdown("""  
-            <div style="text-align: center;">  
-                <span style="font-size: 48px;">🌲</span>  
-                <h4>Random Forest</h4>  
-                <p>Accuracy : {:.2f}</p>  
-            </div>  
-        """.format(acc_rf), unsafe_allow_html=True)  
-    
-    with col3:  
-        st.markdown("""  
-            <div style="text-align: center;">  
-                <span style="font-size: 48px;">📉</span>  
-                <h4>Modèle de Poisson</h4>  
-                <p>MSE : {:.2f}</p>  
-            </div>  
-        """.format(mse_poisson), unsafe_allow_html=True)  
-    
-    enregistrer_historique(equipe_A, equipe_B, {"Logistique": acc_log, "RandomForest": acc_rf, "Poisson": mse_poisson})  
+    # Option pour téléverser un fichier CSV ou saisir manuellement les données  
+    st.subheader("Entrez vos données")  
+    option_donnees = st.radio("Choisissez une option", ["Téléverser un fichier CSV", "Saisir manuellement les données"])  
+
+    if option_donnees == "Téléverser un fichier CSV":  
+        fichier_csv = st.file_uploader("Téléversez un fichier CSV", type=["csv"])  
+        if fichier_csv is not None:  
+            st.session_state.data = pd.read_csv(fichier_csv)  
+    else:  
+        # Saisie manuelle des données  
+        st.write("Entrez les données pour chaque équipe :")  
+        nombre_joueurs = st.number_input("Nombre de joueurs", min_value=1, max_value=30, value=22, step=1)  
+        
+        if st.button("Générer les données"):  
+            np.random.seed(42)  
+            st.session_state.data = pd.DataFrame({  
+                'Possession (%)': np.random.uniform(40, 70, nombre_joueurs),  
+                'Tirs': np.random.randint(5, 20, nombre_joueurs),  
+                'Tirs cadrés': np.random.randint(2, 10, nombre_joueurs),  
+                'Passes réussies (%)': np.random.uniform(60, 90, nombre_joueurs),  
+                'xG': np.random.uniform(0.5, 3.0, nombre_joueurs),  
+                'xGA': np.random.uniform(0.5, 3.0, nombre_joueurs),  
+                'Corners': np.random.randint(2, 10, nombre_joueurs),  
+                'Fautes': np.random.randint(5, 15, nombre_joueurs),  
+                'Cartons jaunes': np.random.randint(0, 5, nombre_joueurs),  
+                'Cartons rouges': np.random.randint(0, 2, nombre_joueurs),  
+                'Domicile': np.random.choice([0, 1], nombre_joueurs),  
+                'Forme (pts)': np.random.randint(3, 15, nombre_joueurs),  
+                'Classement': np.random.randint(1, 20, nombre_joueurs),  
+                'Buts marqués': np.random.randint(0, 4, nombre_joueurs),  
+                'Buts encaissés': np.random.randint(0, 4, nombre_joueurs)  
+            })  
+
+    if st.session_state.data is not None:  
+        data = st.session_state.data  
+        
+        # Coloration pour les variables spécifiques au modèle de Poisson  
+        poisson_cols = ['xG', 'xGA']  
+        def color_poisson(col):  
+            return ['background-color: yellow' if col.name in poisson_cols else '' for _ in col]  
+        
+        styled_data = data.style.apply(color_poisson)  
+        st.dataframe(styled_data)  
+        
+        # --- MODÉLISATION ---  
+        X = data.drop(columns=['Buts marqués'])  
+        y = data['Buts marqués']  
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+        
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)  
+        
+        log_reg = LogisticRegression(max_iter=1000)  
+        log_reg.fit(X_train, y_train)  
+        acc_log = np.mean(cross_val_score(log_reg, X_train, y_train, cv=kf, scoring='accuracy'))  
+        
+        rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)  
+        rf.fit(X_train, y_train)  
+        acc_rf = np.mean(cross_val_score(rf, X_train, y_train, cv=kf, scoring='accuracy'))  
+        
+        poisson_model = sm.GLM(y_train, X_train, family=sm.families.Poisson()).fit()  
+        mse_poisson = mean_squared_error(y_test, poisson_model.predict(X_test))  
+        
+        st.subheader("Résultats des Modèles")  
+        
+        # Utilisation d'icônes pour représenter les résultats des modèles  
+        col1, col2, col3 = st.columns(3)  
+        with col1:  
+            st.markdown("""  
+                <div style="text-align: center;">  
+                    <span style="font-size: 48px;">📊</span>  
+                    <h4>Régression Logistique</h4>  
+                    <p>Accuracy : {:.2f}</p>  
+                </div>  
+            """.format(acc_log), unsafe_allow_html=True)  
+        
+        with col2:  
+            st.markdown("""  
+                <div style="text-align: center;">  
+                    <span style="font-size: 48px;">🌲</span>  
+                    <h4>Random Forest</h4>  
+                    <p>Accuracy : {:.2f}</p>  
+                </div>  
+            """.format(acc_rf), unsafe_allow_html=True)  
+        
+        with col3:  
+            st.markdown("""  
+                <div style="text-align: center;">  
+                    <span style="font-size: 48px;">📉</span>  
+                    <h4>Modèle de Poisson</h4>  
+                    <p>MSE : {:.2f}</p>  
+                </div>  
+            """.format(mse_poisson), unsafe_allow_html=True)  
+        
+        enregistrer_historique(equipe_A, equipe_B, {"Logistique": acc_log, "RandomForest": acc_rf, "Poisson": mse_poisson})  
 
 # --- COMPARATEUR DE COTES ---  
 if page == "💰 Comparateur de Cotes":  
