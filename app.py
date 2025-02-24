@@ -226,7 +226,7 @@ else:
 
     st.altair_chart(chart, use_container_width=True)  
 
-          "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
+        "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
         "Cote Bookmaker": [  
             f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
             f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
