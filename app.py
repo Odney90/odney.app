@@ -125,8 +125,8 @@ def display_results_and_visuals(data):
     st.subheader("Données d'Entrée")  
     df = pd.DataFrame({  
         'Buts par Match': X[:, 0],  
-        'Possession Moyenne (%)': X[:, 1],  
-        'Taux de Réussite des Passes (%)': X[:, 2],  
+        'Possession Moyenne (%)': X[:, 1] if X.shape[1] > 1 else np.nan,  
+        'Taux de Réussite des Passes (%)': X[:, 2] if X.shape[1] > 2 else np.nan,  
         'Score de Performance': y  
     })  
     st.dataframe(df)  
