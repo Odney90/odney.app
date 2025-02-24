@@ -1,10 +1,4 @@
 import streamlit as st  
-import pandas as pd  
-import numpy as np  
-from sklearn.linear_model import LogisticRegression, PoissonRegressor  
-from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import KFold, cross_val_score  
-import altair as alt  
 
 # Initialisation des données de session si elles n'existent pas  
 if 'data' not in st.session_state:  
@@ -69,14 +63,10 @@ if 'data' not in st.session_state:
         'nombre_degagements_B': 12,  
         'tactique_A': 8,  
         'tactique_B': 7,  
-        'moyenne_temps_possession_A': 60.0,  
-        'moyenne_temps_possession_B': 55.0,  
         'motivation_A': 8,  
         'motivation_B': 7,  
         'forme_recente_A': 12,  
         'forme_recente_B': 9,  
-        'historique_face_a_face_A_B': 2,  
-        'historique_face_a_face_B_A': -1,  
     }  
 
 # Formulaire flottant pour la saisie des données  
@@ -95,9 +85,9 @@ with st.form("formulaire_saisie"):
     st.session_state.data['victoires_domicile_A'] = st.number_input("Victoires à Domicile (Équipe A)", value=int(st.session_state.data['victoires_domicile_A']), step=1)  
     st.session_state.data['victoires_exterieur_A'] = st.number_input("Victoires à l'Extérieur (Équipe A)", value=int(st.session_state.data['victoires_exterieur_A']), step=1)  
     st.session_state.data['joueurs_absents_A'] = st.number_input("Joueurs Absents (Équipe A)", value=int(st.session_state.data['joueurs_absents_A']), step=1)  
-    
+
     # Nouveaux champs pour l'équipe A  
-    st.session_state.data['moyenne_age_joueurs_A'] = st.number_input('Moyenne d'Âge des Joueurs (Équipe A)", value=float(st.session_state.data['moyenne_age_joueurs_A']), step=0.1)  
+    st.session_state.data['moyenne_age_joueurs_A'] = st.number_input("Moyenne d'Âge des Joueurs (Équipe A)", value=float(st.session_state.data['moyenne_age_joueurs_A']), step=0.1)  
     st.session_state.data['experience_entraineur_A'] = st.number_input("Expérience de l'Entraîneur (Années)", value=int(st.session_state.data['experience_entraineur_A']), step=1)  
     st.session_state.data['nombre_blessures_A'] = st.number_input("Nombre de Blessures (Équipe A)", value=int(st.session_state.data['nombre_blessures_A']), step=1)  
     st.session_state.data['cartons_jaunes_A'] = st.number_input("Cartons Jaunes (Équipe A)", value=int(st.session_state.data['cartons_jaunes_A']), step=1)  
@@ -106,11 +96,11 @@ with st.form("formulaire_saisie"):
     st.session_state.data['taux_possession_A'] = st.number_input("Taux de Possession (%) (Équipe A)", value=float(st.session_state.data['taux_possession_A']), step=0.1)  
     st.session_state.data['nombre_tirs_totaux_A'] = st.number_input("Nombre de Tirs Totaux (Équipe A)", value=int(st.session_state.data['nombre_tirs_totaux_A']), step=1)  
     st.session_state.data['nombre_tirs_cadres_A'] = st.number_input("Nombre de Tirs Cadrés (Équipe A)", value=int(st.session_state.data['nombre_tirs_cadres_A']), step=1)  
-    
+
     # Ratios avec descriptions  
     st.session_state.data['ratio_buts_tirs_A'] = st.number_input("Ratio Buts/Tirs (Équipe A)", value=float(st.session_state.data['ratio_buts_tirs_A']), step=0.01, help="Ratio des buts marqués par rapport au nombre total de tirs.")  
     st.session_state.data['ratio_buts_encais_tirs_A'] = st.number_input("Ratio Buts Encaissés/Tirs (Équipe A)", value=float(st.session_state.data['ratio_buts_encais_tirs_A']), step=0.01, help="Ratio des buts encaissés par rapport au nombre total de tirs subis.")  
-    
+
     st.session_state.data['performance_domicile_A'] = st.number_input("Performance à Domicile (Points) (Équipe A)", value=float(st.session_state.data['performance_domicile_A']), step=0.1)  
     st.session_state.data['performance_exterieur_A'] = st.number_input("Performance à l'Extérieur (Points) (Équipe A)", value=float(st.session_state.data['performance_exterieur_A']), step=0.1)  
     st.session_state.data['historique_confrontations_A_B'] = st.number_input("Historique Confrontations (Équipe A contre Équipe B)", value=int(st.session_state.data['historique_confrontations_A_B']), step=1)  
@@ -118,17 +108,17 @@ with st.form("formulaire_saisie"):
     st.session_state.data['moyenne_buts_encais_A'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe A)", value=float(st.session_state.data['moyenne_buts_encais_A']), step=0.1)  
     st.session_state.data['impact_joueurs_cles_A'] = st.number_input("Impact des Joueurs Clés (Équipe A)", value=float(st.session_state.data['impact_joueurs_cles_A']), step=0.1)  
     st.session_state.data['taux_reussite_corners_A'] = st.number_input("Taux de Réussite des Corners (%) (Équipe A)", value=float(st.session_state.data['taux_reussite_corners_A']), step=0.1)  
-    
+
     # Nouveau champ pour le nombre de dégagements  
     st.session_state.data['nombre_degagements_A'] = st.number_input("Nombre de Dégagements (Équipe A)", value=int(st.session_state.data['nombre_degagements_A']), step=1)  
-    
+
     # Nouveau champ pour la tactique  
     st.session_state.data['tactique_A'] = st.number_input("Tactique (Équipe A)", value=int(st.session_state.data['tactique_A']), min_value=1, max_value=10, help="Évaluez l'efficacité de la tactique sur une échelle de 1 à 10.")  
-    
+
     # Nouveaux champs pour la motivation et la forme récente  
     st.session_state.data['motivation_A'] = st.number_input("Motivation (Équipe A)", value=int(st.session_state.data['motivation_A']), min_value=1, max_value=10)  
     st.session_state.data['forme_recente_A'] = st.number_input("Forme Récente (Points sur 5 matchs) (Équipe A)", value=int(st.session_state.data['forme_recente_A']), step=1)  
-    
+
     # Champs pour les données de l'équipe B  
     st.subheader("Équipe B 🥈")  
     st.session_state.data['score_rating_B'] = st.number_input("Score de Performance (Équipe B)", value=float(st.session_state.data['score_rating_B']), step=0.1)  
@@ -152,156 +142,69 @@ with st.form("formulaire_saisie"):
     st.session_state.data['taux_possession_B'] = st.number_input("Taux de Possession (%) (Équipe B)", value=float(st.session_state.data['taux_possession_B']), step=0.1)  
     st.session_state.data['nombre_tirs_totaux_B'] = st.number_input("Nombre de Tirs Totaux (Équipe B)", value=int(st.session_state.data['nombre_tirs_totaux_B']), step=1)  
     st.session_state.data['nombre_tirs_cadres_B'] = st.number_input("Nombre de Tirs Cadrés (Équipe B)", value=int(st.session_state.data['nombre_tirs_cadres_B']), step=1)  
-    
+
     # Ratios avec descriptions  
     st.session_state.data['ratio_buts_tirs_B'] = st.number_input("Ratio Buts/Tirs (Équipe B)", value=float(st.session_state.data['ratio_buts_tirs_B']), step=0.01, help="Ratio des buts marqués par rapport au nombre total de tirs.")  
     st.session_state.data['ratio_buts_encais_tirs_B'] = st.number_input("Ratio Buts Encaissés/Tirs (Équipe B)", value=float(st.session_state.data['ratio_buts_encais_tirs_B']), step=0.01, help="Ratio des buts encaissés par rapport au nombre total de tirs subis.")  
+
     st.session_state.data['performance_domicile_B'] = st.number_input("Performance à Domicile (Points) (Équipe B)", value=float(st.session_state.data['performance_domicile_B']), step=0.1)  
     st.session_state.data['performance_exterieur_B'] = st.number_input("Performance à l'Extérieur (Points) (Équipe B)", value=float(st.session_state.data['performance_exterieur_B']), step=0.1)  
     st.session_state.data['historique_confrontations_B_A'] = st.number_input("Historique Confrontations (Équipe B contre Équipe A)", value=int(st.session_state.data['historique_confrontations_B_A']), step=1)  
-    st.session_state.data['moyenne_buts_marques_B'] = st.number_input("Moyenne de Buts Marqués par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_marques_B']),
-    st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)  
-    st.session_state.data['impact_joueurs_cles_B'] = st.number_input("Impact des Joueurs Clés (Équipe B)", value=float(st.session_state.data['impact_joueurs_cles_B']), step=0.1)  
-    st.session_state.data['taux_reussite_corners_B'] = st.number_input("Taux de Réussite des Corners (%) (Équipe B)", value=float(st.session_state.data['taux_reussite_corners_B']), step=0.1)  
-    
+
+    # Champs pour les statistiques supplémentaires  
+    st.session_state.data['moyenne_buts_marques_B'] = st.number_input(  
+        "Moyenne de Buts Marqués par Match (Équipe B)",   
+        value=float(st.session_state.data['moyenne_buts_marques_B']),   
+        step=0.1  
+    )  
+    st.session_state.data['moyenne_buts_encais_B'] = st.number_input(  
+        "Moyenne de Buts Encaissés par Match (Équipe B)",   
+        value=float(st.session_state.data['moyenne_buts_encais_B']),   
+        step=0.1  
+    )  
+    st.session_state.data['impact_joueurs_cles_B'] = st.number_input(  
+        "Impact des Joueurs Clés (Équipe B)",   
+        value=float(st.session_state.data['impact_joueurs_cles_B']),   
+        step=0.1  
+    )  
+        "Taux de Réussite des Corners (%) (Équipe B)",   
+        value=float(st.session_state.data['taux_reussite_corners_B']),   
+        step=0.1  
+    )  
+
     # Nouveau champ pour le nombre de dégagements  
-    st.session_state.data['nombre_degagements_B'] = st.number_input("Nombre de Dégagements (Équipe B)", value=int(st.session_state.data['nombre_degagements_B']), step=1)  
-    
+    st.session_state.data['nombre_degagements_B'] = st.number_input(  
+        "Nombre de Dégagements (Équipe B)",   
+        value=int(st.session_state.data['nombre_degagements_B']),   
+        step=1  
+    )  
+
     # Nouveau champ pour la tactique  
-    st.session_state.data['tactique_B'] = st.number_input("Tactique (Équipe B)", value=int(st.session_state.data['tactique_B']), min_value=1, max_value=10, help="Évaluez l'efficacité de la tactique sur une échelle de 1 à 10.")  
-    
+    st.session_state.data['tactique_B'] = st.number_input(  
+        "Tactique (Équipe B)",   
+        value=int(st.session_state.data['tactique_B']),   
+        min_value=1,   
+        max_value=10,   
+        help="Évaluez l'efficacité de la tactique sur une échelle de 1 à 10."  
+    )  
+
     # Nouveaux champs pour la motivation et la forme récente  
-    st.session_state.data['motivation_B'] = st.number_input("Motivation (Équipe B)", value=int(st.session_state.data['motivation_B']), min_value=1, max_value=10)  
-    st.session_state.data['forme_recente_B'] = st.number_input("Forme Récente (Points sur 5 matchs) (Équipe B)", value=int(st.session_state.data['forme_recente_B']), step=1)  
+    st.session_state.data['motivation_B'] = st.number_input(  
+        "Motivation (Équipe B)",   
+        value=int(st.session_state.data['motivation_B']),   
+        min_value=1,   
+        max_value=10  
+    )  
+    st.session_state.data['forme_recente_B'] = st.number_input(  
+        "Forme Récente (Points sur 5 matchs) (Équipe B)",   
+        value=int(st.session_state.data['forme_recente_B']),   
+        step=1  
+    )  
 
     # Bouton pour soumettre le formulaire  
     submitted = st.form_submit_button("✅ Soumettre les Données")  
     if submitted:  
         st.success("Données soumises avec succès! 🎉")  
-
-# Comparateur des équipes  
-st.header("🔍 Comparateur des Équipes")  
-data_comparaison = {  
-    "Statistiques": [  
-        "Score de Performance",  
-        "Buts par Match",  
-        "Buts Concedes par Match",  
-        "Possession Moyenne (%)",  
-        "Expected Goals",  
-        "Tirs Cadres",  
-        "Grandes Chances",  
-        "Victoires à Domicile",  
-        "Victoires à l'Extérieur",  
-        "Joueurs Absents",  
-        "Moyenne d'Âge des Joueurs",  
-        "Expérience de l'Entraîneur (Années)",  
-        "Nombre de Blessures",  
-        "Cartons Jaunes",  
-        "Cartons Rouges",  
-        "Taux de Réussite des Passes (%)",  
-        "Taux de Possession (%)",  
-        "Nombre de Tirs Totaux",  
-        "Nombre de Tirs Cadrés",  
-        "Ratio Buts/Tirs",  
-        "Ratio Buts Encaissés/Tirs",  
-        "Performance à Domicile",  
-        "Performance à l'Extérieur",  
-        "Historique Confrontations",  
-        "Moyenne de Buts Marqués par Match",  
-        "Moyenne de Buts Encaissés par Match",  
-        "Impact des Joueurs Clés",  
-        "Taux de Réussite des Corners (%)",  
-        "Nombre de Dégagements",  
-        "Tactique",  
-        "Motivation",  
-        "Forme Récente"  
-    ],  
-    "Équipe A": [  
-        st.session_state.data['score_rating_A'],  
-        st.session_state.data['buts_par_match_A'],  
-        st.session_state.data['buts_concedes_par_match_A'],  
-        st.session_state.data['possession_moyenne_A'],  
-        st.session_state.data['expected_but_A'],  
-        st.session_state.data['tirs_cadres_A'],  
-        st.session_state.data['grandes_chances_A'],  
-        st.session_state.data['victoires_domicile_A'],  
-        st.session_state.data['victoires_exterieur_A'],  
-        st.session_state.data['joueurs_absents_A'],  
-        st.session_state.data['moyenne_age_joueurs_A'],  
-        st.session_state.data['experience_entraineur_A'],  
-        st.session_state.data['nombre_blessures_A'],  
-        st.session_state.data['cartons_jaunes_A'],  
-        st.session_state.data['cartons_rouges_A'],  
-        st.session_state.data['taux_reussite_passes_A'],  
-        st.session_state.data['taux_possession_A'],  
-        st.session_state.data['nombre_tirs_totaux_A'],  
-        st.session_state.data['nombre_tirs_cadres_A'],  
-        st.session_state.data['ratio_buts_tirs_A'],  
-        st.session_state.data['ratio_buts_encais_tirs_A'],  
-        st.session_state.data['performance_domicile_A'],  
-        st.session_state.data['performance_exterieur_A'],  
-        st.session_state.data['historique_confrontations_A_B'],  
-        st.session_state.data['moyenne_buts_marques_A'],  
-        st.session_state.data['moyenne_buts_encais_A'],  
-        st.session_state.data['impact_joueurs_cles_A'],  
-        st.session_state.data['taux_reussite_corners_A'],  
-        st.session_state.data['nombre_degagements_A'],  
-        st.session_state.data['tactique_A'],  
-        st.session_state.data['motivation_A'],  
-        st.session_state.data['forme_recente_A']  
-    ],  
-    "Équipe B": [  
-        st.session_state.data['score_rating_B'],  
-        st.session_state.data['buts_par_match_B'],  
-        st.session_state.data['buts_concedes_par_match_B'],  
-        st.session_state.data['possession_moyenne_B'],  
-        st.session_state.data['expected_but_B'],  
-        st.session_state.data['tirs_cadres_B'],  
-        st.session_state.data['grandes_chances_B'],  
-        st.session_state.data['victoires_domicile_B'],  
-        st.session_state.data['victoires_exterieur_B'],  
-        st.session_state.data['joueurs_absents_B'],  
-        st.session_state.data['moyenne_age_joueurs_B'],  
-        st.session_state.data['experience_entraineur_B'],  
-        st.session_state.data['nombre_blessures_B'],  
-        st.session_state.data['cartons_jaunes_B'],  
-        st.session_state.data['cartons_rouges_B'],  
-        st.session_state.data['taux_reussite_passes_B'],  
-        st.session_state.data['taux_possession_B'],  
-        st.session_state.data['nombre_tirs_totaux_B'],  
-        st.session_state.data['nombre_tirs_cadres_B'],  
-        st.session_state.data['ratio_buts_tirs_B'],  
-        st.session_state.data['ratio_buts_encais_tirs_B'],  
-        st.session_state.data['performance_domicile_B'],  
-        st.session_state.data['performance_exterieur_B'],  
-        st.session_state.data['historique_confrontations_B_A'],  
-        st.session_state.data['moyenne_buts_marques_B'],  
-        st.session_state.data['moyenne_buts_encais_B'],  
-        st.session_state.data['impact_joueurs_cles_B'],  
-        st.session_state.data['taux_reussite_corners_B'],  
-        st.session_state.data['nombre_degagements_B'],  
-        st.session_state.data['tactique_B'],  
-        st.session_state.data['motivation_B'],  
-        st.session_state.data['forme_recente_B']  
-    ]  
-}  
-
-# Création d'un DataFrame pour afficher les données  
-df_comparaison = pd.DataFrame(data_comparaison)  
-
-# Affichage du tableau avec des couleurs  
-st.write("### Comparaison des Équipes")  
-st.dataframe(df_comparaison.style.highlight_max(axis=0, color='lightgreen').highlight_min(axis=0, color='salmon'))  
-
-# Graphique de comparaison  
-st.write("### Graphique de Comparaison")  
-chart_data = pd.DataFrame({  
-    'Statistiques': df_comparaison['Statistiques'],  
-    'Équipe A': df_comparaison['Équipe A'],  
-    'Équipe B': df_comparaison['Équipe B']  
-})  
-
-st.bar_chart(chart_data.set_index('Statistiques'))  
 
 # Fin de l'application  
 st.write("Merci d'utiliser l'outil d'analyse des équipes! ⚽️")
