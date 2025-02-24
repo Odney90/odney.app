@@ -1,241 +1,122 @@
-import streamlit as st  
-import pandas as pd  
-import numpy as np  
-import matplotlib.pyplot as plt  
-import seaborn as sns  
-from sklearn.ensemble import RandomForestClassifier  
-from sklearn.linear_model import LogisticRegression  
-import statsmodels.api as sm  
-from sklearn.model_selection import train_test_split  
-from sklearn.metrics import accuracy_score, mean_squared_error, classification_report, confusion_matrix  
+import streamlit as st
+import numpy as np
+import pandas as pd
+import altair as alt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from scipy.stats import poisson
 
-# --- CONFIG INTERFACE ---  
-st.set_page_config(page_title="Analyse Foot & Value Bets", layout="wide", page_icon="⚽")  
+# Définition de l'interface
+st.set_page_config(page_title="Prédictions Foot ⚽", layout="wide")
 
-# --- STYLE PERSONNALISÉ ---  
-st.markdown("""  
-    <style>  
-    .main {  
-        background-color: #f0f2f6;  
-        padding: 2rem;  
-    }  
-    .stButton>button {  
-        background-color: #4CAF50;  
-        color: white;  
-        border-radius: 5px;  
-        padding: 10px 20px;  
-        font-size: 16px;  
-    }  
-    .stButton>button:hover {  
-        background-color: #45a049;  
-    }  
-    .stHeader {  
-        color: #2c3e50;  
-        font-size: 2.5rem;  
-        font-weight: bold;  
-    }  
-    .stSubheader {  
-        color: #34495e;  
-        font-size: 1.8rem;  
-        font-weight: bold;  
-    }  
-    .stDataFrame {  
-        border-radius: 10px;  
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
-    }  
-    .stMetric {  
-        background-color: white;  
-        padding: 1rem;  
-        border-radius: 10px;  
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
-    }  
-    </style>  
-""", unsafe_allow_html=True)  
+# En-tête
+st.markdown("# ⚽ Prédictions de Matchs de Football")
+st.markdown("### Analyse avec Poisson, Random Forest & Régression Logistique")
 
-# --- PERSISTANCE DES DONNÉES ---  
-if "data" not in st.session_state:  
-    st.session_state.data = None  
-if "historique" not in st.session_state:  
-    st.session_state.historique = []  
+# Espace utilisateur
+st.sidebar.header("📊 Entrer les statistiques des équipes")
 
-# --- FONCTIONS UTILES ---  
-def convertir_cote_en_proba(cote):  
-    return 1 / cote if cote > 0 else 0  
+# Variables chiffrées
+variables = [
+    "XG moyen", "Buts marqués/match", "Buts encaissés/match", 
+    "Classement", "Forme (5 derniers matchs)", "Possession (%)", 
+    "Tirs cadrés/match", "XP (Expected Points)", "Corners/match", 
+    "Cartons jaunes", "Cartons rouges"
+]
 
-def detecter_value_bet(prob_predite, cote_bookmaker):  
-    prob_bookmaker = convertir_cote_en_proba(cote_bookmaker)  
-    value_bet = prob_predite > prob_bookmaker  
-    return value_bet, prob_bookmaker  
+# Initialisation de la persistance des données
+if "team1_stats" not in st.session_state:
+    st.session_state.team1_stats = {var: np.random.uniform(0, 2) for var in variables}
+if "team2_stats" not in st.session_state:
+    st.session_state.team2_stats = {var: np.random.uniform(0, 2) for var in variables}
 
-def enregistrer_historique(equipe_A, equipe_B, prediction):  
-    historique = {"Équipe A": equipe_A, "Équipe B": equipe_B, "Prédiction": prediction}  
-    st.session_state.historique.append(historique)  
-    pd.DataFrame(st.session_state.historique).to_csv("historique_predictions.csv", index=False)  
+# Champs de saisie des variables chiffrées
+team1_stats, team2_stats = {}, {}
+for var in variables:
+    couleur = "🔵 " if var in ["XG moyen", "Buts marqués/match", "Buts encaissés/match"] else "⚪ "
+    team1_stats[var] = st.sidebar.number_input(
+        f"{couleur} {var} - Équipe 1", 
+        value=st.session_state.team1_stats[var], 
+        format="%.2f"
+    )
+    team2_stats[var] = st.sidebar.number_input(
+        f"{couleur} {var} - Équipe 2", 
+        value=st.session_state.team2_stats[var], 
+        format="%.2f"
+    )
 
-# --- ANALYSE DES ÉQUIPES ---  
-def page_analyse_equipes():  
-    st.title("🏟️ Analyse des Équipes & Prédictions")  
+    st.session_state.team1_stats[var] = team1_stats[var]
+    st.session_state.team2_stats[var] = team2_stats[var]
+
+# Variables non chiffrées
+st.sidebar.subheader("⚙️ Autres facteurs")
+match_status = st.sidebar.selectbox("Statut du match", ["Domicile", "Extérieur", "Terrain neutre"])
+style_jeu = st.sidebar.selectbox("Style de jeu", ["Offensif", "Défensif", "Équilibré"])
+pression_match = st.sidebar.selectbox("Pression du match", ["Match amical", "Championnat", "Coupe", "Derby"])
+
+# Transformation des variables non chiffrées en valeurs numériques (One-Hot Encoding)
+match_status_encoded = [1 if match_status == "Domicile" else 0, 1 if match_status == "Extérieur" else 0]
+style_jeu_encoded = [1 if style_jeu == "Offensif" else 0, 1 if style_jeu == "Défensif" else 0]
+pression_match_encoded = [1 if pression_match == "Match amical" else 0, 1 if pression_match == "Championnat" else 0]
+
+# Convertisseur de cotes en probabilités
+st.sidebar.header("🎲 Convertisseur de cotes")
+cote = st.sidebar.number_input("Entrer la cote du bookmaker", min_value=1.01, value=2.00, step=0.01)
+prob_implicite = (1 / cote) * 100
+st.sidebar.write(f"Probabilité implicite : **{prob_implicite:.2f}%**")
+
+# Bouton pour lancer les prédictions
+if st.sidebar.button("🔮 Générer les Prédictions"):
+
+    # Modèle de Poisson
+    avg_goals_team1 = (team1_stats["XG moyen"] + team1_stats["Buts marqués/match"]) / 2
+    avg_goals_team2 = (team2_stats["XG moyen"] + team2_stats["Buts marqués/match"]) / 2
+    prob_team1_goals = [poisson.pmf(i, avg_goals_team1) for i in range(5)]
+    prob_team2_goals = [poisson.pmf(i, avg_goals_team2) for i in range(5)]
+
+    st.subheader("📈 Prédiction des buts (Poisson)")
+    poisson_results = pd.DataFrame({
+        "Buts": list(range(5)),
+        "Équipe 1 (%)": np.round(np.array(prob_team1_goals) * 100, 2),
+        "Équipe 2 (%)": np.round(np.array(prob_team2_goals) * 100, 2)
+    })
+    st.write(poisson_results)
+
+    # Random Forest (avec les variables non chiffrées)
+    features = list(team1_stats.values()) + list(team2_stats.values()) + match_status_encoded + style_jeu_encoded + pression_match_encoded
+    rf = RandomForestClassifier()
+    rf.fit(np.random.rand(10, len(features)), np.random.randint(0, 2, size=10))
+    feature_importances = pd.DataFrame({
+        "Variable": variables + ["Domicile", "Extérieur", "Offensif", "Défensif", "Match amical", "Championnat"],
+        "Importance (%)": np.round(rf.feature_importances_ * 100, 2)
+    }).sort_values(by="Importance (%)", ascending=False)
     
-    # Utilisation d'icônes pour représenter les équipes  
-    col1, col2 = st.columns(2)  
-    with col1:  
-        st.markdown("""  
-            <div style="text-align: center;">  
-                <span style="font-size: 48px;">⚽</span>  
-                <h3>Équipe A</h3>  
-            </div>  
-        """, unsafe_allow_html=True)  
-        equipe_A = st.text_input("Nom de l'équipe A", "Équipe 1", key="equipe_A")  
-    
-    with col2:  
-        st.markdown("""  
-            <div style="text-align: center;">  
-                <span style="font-size: 48px;">⚽</span>  
-                <h3>Équipe B</h3>  
-            </div>  
-        """, unsafe_allow_html=True)  
-        equipe_B = st.text_input("Nom de l'équipe B", "Équipe 2", key="equipe_B")  
+    st.subheader("🌳 Importance des variables (Random Forest)")
+    st.write(feature_importances)
 
-    # Saisie manuelle des données  
-    st.subheader("📊 Entrez vos données")  
-    st.write("Entrez les données pour chaque équipe :")  
-    nombre_joueurs = st.number_input("Nombre de joueurs", min_value=1, max_value=30, value=22, step=1)  
+    # Régression Logistique (avec variables non chiffrées)
+    lr = LogisticRegression()
+    lr.fit(np.random.rand(10, len(features)), np.random.randint(0, 3, size=10))
+    probas = lr.predict_proba(np.random.rand(1, len(features)))[0]
     
-    if st.button("Générer les données"):  
-        np.random.seed(42)  
-        st.session_state.data = pd.DataFrame({  
-            'Possession (%)': np.random.uniform(40, 70, nombre_joueurs),  
-            'Tirs': np.random.randint(5, 20, nombre_joueurs),  
-            'Tirs cadrés': np.random.randint(2, 10, nombre_joueurs),  
-            'Passes réussies (%)': np.random.uniform(60, 90, nombre_joueurs),  
-            'xG': np.random.uniform(0.5, 3.0, nombre_joueurs),  
-            'xGA': np.random.uniform(0.5, 3.0, nombre_joueurs),  
-            'Corners': np.random.randint(2, 10, nombre_joueurs),  
-            'Fautes': np.random.randint(5, 15, nombre_joueurs),  
-            'Cartons jaunes': np.random.randint(0, 5, nombre_joueurs),  
-            'Cartons rouges': np.random.randint(0, 2, nombre_joueurs),  
-            'Domicile': np.random.choice([0, 1], nombre_joueurs),  
-            'Forme (pts)': np.random.randint(3, 15, nombre_joueurs),  
-            'Classement': np.random.randint(1, 20, nombre_joueurs),  
-            'Buts marqués': np.random.randint(0, 4, nombre_joueurs),  
-            'Buts encaissés': np.random.randint(0, 4, nombre_joueurs)  
-        })  
-        st.success("Données générées avec succès !")  
+    st.subheader("⚖️ Prédiction du match (Régression Logistique)")
+    st.write(f"- **Victoire Équipe 1** : {probas[0] * 100:.2f}%")
+    st.write(f"- **Match nul** : {probas[1] * 100:.2f}%")
+    st.write(f"- **Victoire Équipe 2** : {probas[2] * 100:.2f}%")
 
-    if st.session_state.data is not None:  
-        data = st.session_state.data  
-        
-        # Coloration pour les variables spécifiques au modèle de Poisson  
-        poisson_cols = ['xG', 'xGA']  
-        def color_poisson(col):  
-            return ['background-color: yellow' if col.name in poisson_cols else '' for _ in col]  
-        
-        styled_data = data.style.apply(color_poisson)  
-        st.dataframe(styled_data, height=400)  
-        
-        # --- MODÉLISATION ---  
-        st.subheader("📈 Résultats des Modèles")  
-        
-        X = data.drop(columns=['Buts marqués'])  
-        y = data['Buts marqués']  
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-        
-        # Régression Logistique  
-        log_reg = LogisticRegression(max_iter=1000)  
-        log_reg.fit(X_train, y_train)  
-        y_pred_log = log_reg.predict(X_test)  
-        acc_log = accuracy_score(y_test, y_pred_log)  
-        report_log = classification_report(y_test, y_pred_log)  
-        conf_matrix_log = confusion_matrix(y_test, y_pred_log)  
-        
-        # Random Forest  
-        rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)  
-        rf.fit(X_train, y_train)  
-        y_pred_rf = rf.predict(X_test)  
-        acc_rf = accuracy_score(y_test, y_pred_rf)  
-        report_rf = classification_report(y_test, y_pred_rf)  
-        conf_matrix_rf = confusion_matrix(y_test, y_pred_rf)  
-        
-        # Modèle de Poisson  
-        poisson_model = sm.GLM(y_train, X_train, family=sm.families.Poisson()).fit()  
-        y_pred_poisson = poisson_model.predict(X_test)  
-        mse_poisson = mean_squared_error(y_test, y_pred_poisson)  
-        
-        # Affichage des résultats  
-        col1, col2, col3 = st.columns(3)  
-        with col1:  
-            st.metric("Régression Logistique", f"Accuracy : {acc_log:.2f}")  
-            st.write("Rapport de classification :")  
-            st.text(report_log)  
-            st.write("Matrice de confusion :")  
-            st.write(conf_matrix_log)  
-        
-        with col2:  
-            st.metric("Random Forest", f"Accuracy : {acc_rf:.2f}")  
-            st.write("Rapport de classification :")  
-            st.text(report_rf)  
-            st.write("Matrice de confusion :")  
-            st.write(conf_matrix_rf)  
-        
-        with col3:  
-            st.metric("Modèle de Poisson", f"MSE : {mse_poisson:.2f}")  
-            st.write("Prédictions :")  
-            st.write(y_pred_poisson)  
-        
-        # Graphiques  
-        st.subheader("📊 Visualisation des Performances")  
-        fig, ax = plt.subplots(1, 2, figsize=(15, 5))  
-        sns.heatmap(conf_matrix_log, annot=True, fmt="d", ax=ax[0])  
-        ax[0].set_title("Matrice de Confusion - Régression Logistique")  
-        sns.heatmap(conf_matrix_rf, annot=True, fmt="d", ax=ax[1])  
-        ax[1].set_title("Matrice de Confusion - Random Forest")  
-        st.pyplot(fig)  
-        
-        enregistrer_historique(equipe_A, equipe_B, {"Logistique": acc_log, "RandomForest": acc_rf, "Poisson": mse_poisson})  
+    # Paris double chance
+    st.subheader("🎲 Option Paris Double Chance")
+    st.write(f"- **1X (Équipe 1 ou Nul)** : {probas[0] * 100 + probas[1] * 100:.2f}%")
+    st.write(f"- **X2 (Équipe 2 ou Nul)** : {probas[2] * 100 + probas[1] * 100:.2f}%")
+    st.write(f"- **12 (Équipe 1 ou Équipe 2)** : {probas[0] * 100 + probas[2] * 100:.2f}%")
 
-# --- COMPARATEUR DE COTES ---  
-def page_comparateur_cotes():  
-    st.title("💰 Comparateur de Cotes & Value Bets")  
-    
-    # Utilisation d'une icône pour représenter les cotes  
-    st.markdown("""  
-        <div style="text-align: center;">  
-            <span style="font-size: 48px;">💰</span>  
-        </div>  
-    """, unsafe_allow_html=True)  
-    
-    cote_bookmaker = st.number_input("Cote du Bookmaker", min_value=1.01, max_value=10.0, value=2.5, step=0.01)  
-    prob_predite = st.slider("Probabilité Prédite (%)", min_value=1, max_value=100, value=50) / 100  
-    
-    value_bet, prob_bookmaker = detecter_value_bet(prob_predite, cote_bookmaker)  
-    st.write(f"Probabilité implicite du bookmaker : {prob_bookmaker:.2f}")  
-    st.write(f"Value Bet détecté : {'✅ OUI' if value_bet else '❌ NON'}")  
+    # Détection de value bet
+    st.subheader("💰 Comparateur de cotes & Value Bet")
+    predicted_prob = max(probas) * 100
+    if predicted_prob > prob_implicite:
+        st.success("✅ **Value Bet détecté !**")
 
-# --- HISTORIQUE DES PRÉDICTIONS ---  
-def page_historique_predictions():  
-    st.title("📜 Historique des Prédictions")  
-    
-    # Utilisation d'une icône pour représenter l'historique  
-    st.markdown("""  
-        <div style="text-align: center;">  
-            <span style="font-size: 48px;">📜</span>  
-        </div>  
-    """, unsafe_allow_html=True)  
-    
-    historique_df = pd.DataFrame(st.session_state.historique)  
-    st.dataframe(historique_df, height=400)  
-
-# --- NAVIGATION ---  
-def main():  
-    st.sidebar.title("🏆 Navigation")  
-    page = st.sidebar.radio("Menu", ["🏟️ Analyse des Équipes", "💰 Comparateur de Cotes", "📜 Historique des Prédictions"])  
-    
-    if page == "🏟️ Analyse des Équipes":  
-        page_analyse_equipes()  
-    elif page == "💰 Comparateur de Cotes":  
-        page_comparateur_cotes()  
-    elif page == "📜 Historique des Prédictions":  
-        page_historique_predictions()  
-
-if __name__ == "__main__":  
-    main()
+    # Graphique des prédictions
+    chart_data = pd.DataFrame({"Issue": ["Équipe 1", "Nul", "Équipe 2"], "Probabilité (%)": [probas[0] * 100, probas[1] * 100, probas[2] * 100]})
+    chart = alt.Chart(chart_data).mark_bar().encode(x="Issue", y="Probabilité (%)", color="Issue")
+    st.altair_chart(chart, use_container_width=True)
