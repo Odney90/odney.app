@@ -7,12 +7,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from scipy.stats import poisson
 
-# Fonction pour calculer la force d'attaque et la force de défense
-def calculate_forces(data):
-    # Exemple de calcul pour la force d'attaque et la défense
-    attack_strength = data['buts_marques'] / data['matchs_joues']
-    defense_strength = data['buts_subis'] / data['matchs_joues']
-    return attack_strength, defense_strength
 
 # Fonction pour générer les prédictions avec les modèles
 def generate_predictions(team1_data, team2_data):
