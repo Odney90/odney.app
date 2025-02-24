@@ -7,6 +7,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.model_selection import StratifiedKFold, cross_val_score  
 import io  
+import altair as alt  
+import plotly.express as px  
 
 # Fonction pour générer le rapport DOC  
 def generer_rapport(historique):  
@@ -203,8 +205,25 @@ with col_log_reg:
 with col_rf:  
     st.metric("🌲 Forêt Aléatoire (Précision)", f"{rf_score:.2%}")  
 
-# Tableau synthétique des résultats  
-st.subheader("📊 Tableau Synthétique des Résultats")  
+# Visualisation avec Altair  
+st.subheader("📊 Visualisation des Probabilités de Victoire")  
+df_probabilites = pd.DataFrame({  
+    'Équipe': ['Équipe A', 'Équipe B', 'Match Nul'],  
+    'Probabilité': [proba_A, proba_B, proba_Nul]  
+})  
+
+chart = alt.Chart(df_probabilites).mark_bar().encode(  
+    x='Équipe',  
+    y='Probabilité',  
+    color='Équipe'  
+).properties(  
+    title='Probabilités de Victoire'  
+)  
+
+st.altair_chart(chart, use_container_width=True)  
+
+# Tableau interactif avec Plotly  
+st.subheader("📊 Tableau des Résultats")  
 data_resultats = {  
     "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
     "Probabilité Prédite": [f"{proba_A:.2%}", f"{proba_B:.2%}", f"{proba_Nul:.2%}"],  
@@ -221,7 +240,11 @@ data_resultats = {
     ],  
 }  
 df_resultats = pd.DataFrame(data_resultats)  
-st.table(df_resultats)  
+
+# Utilisation de Plotly pour afficher le tableau  
+fig = px.data.tips()  
+fig = px.table(df_resultats, title="Tableau Synthétique des Résultats")  
+st.plotly_chart(fig)  
 
 # Message rappel sur le Value Bet  
 st.markdown("""  
