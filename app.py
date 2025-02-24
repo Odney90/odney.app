@@ -1,59 +1,36 @@
-from fpdf import FPDF
 import streamlit as st
 import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score
 
-# Fonction pour la prédiction des résultats (exemple simplifié)
+# Fonction pour la prédiction des résultats
 def generate_predictions(team1_data, team2_data):
-    poisson_prediction = {'team1_goals': np.random.poisson(lam=team1_data['attack'] * 2), 
-                          'team2_goals': np.random.poisson(lam=team2_data['attack'] * 2)}
-    rf_prediction = {'team1_win_prob': np.random.random()}
-    return poisson_prediction, rf_prediction
-
-# Fonction pour générer un fichier PDF
-def generate_pdf(team1_data, team2_data, poisson_prediction, rf_prediction):
-    pdf = FPDF()
-    pdf.add_page()
+    # Modèle Poisson
+    poisson_prediction = {
+        'team1_goals': np.random.poisson(lam=team1_data['attack'] * 2),
+        'team2_goals': np.random.poisson(lam=team2_data['attack'] * 2)
+    }
     
-    # Title
-    pdf.set_font("Arial", size=16)
-    pdf.cell(200, 10, txt="Analyse de Match de Football ⚽", ln=True, align='C')
-    pdf.ln(10)  # Line break
+    # Modèle Random Forest
+    features = ['attack', 'defense', 'form', 'injuries']
+    X = np.array([[team1_data[feature] for feature in features],
+                  [team2_data[feature] for feature in features]])
+    y = np.array([1, 0])  # 1 pour la victoire de l'équipe 1, 0 pour la victoire de l'équipe 2
     
-    # Section for Team 1 and Team 2 data
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Données des Équipes", ln=True)
+    rf = RandomForestClassifier(n_estimators=100, random_state=42)
+    cv_scores_rf = cross_val_score(rf, X, y, cv=5)
+    rf.fit(X, y)
+    rf_prediction = rf.predict_proba(X)[0][1]  # Probabilité que l'équipe 1 gagne
     
-    # Team 1
-    pdf.ln(5)  # Line break
-    pdf.cell(95, 10, txt=f"Équipe 1 : {team1_data['name']}")
-    pdf.ln(5)
-    for key, value in team1_data.items():
-        if key != 'name':
-            pdf.cell(95, 10, txt=f"{key.capitalize()} : {value}")
-            pdf.ln(5)
+    # Modèle Régression Logistique
+    logreg = LogisticRegression(random_state=42)
+    logreg.fit(X, y)
+    logreg_prediction = logreg.predict_proba(X)[0][1]  # Probabilité que l'équipe 1 gagne avec régression logistique
     
-    # Team 2
-    pdf.ln(10)  # Line break
-    pdf.cell(95, 10, txt=f"Équipe 2 : {team2_data['name']}")
-    pdf.ln(5)
-    for key, value in team2_data.items():
-        if key != 'name':
-            pdf.cell(95, 10, txt=f"{key.capitalize()} : {value}")
-            pdf.ln(5)
-    
-    # Predictions
-    pdf.ln(10)  # Line break
-    pdf.cell(200, 10, txt="Prédictions Poisson", ln=True)
-    pdf.cell(95, 10, txt=f"Team 1 Goals: {poisson_prediction['team1_goals']}")
-    pdf.ln(5)
-    pdf.cell(95, 10, txt=f"Team 2 Goals: {poisson_prediction['team2_goals']}")
-    
-    pdf.ln(10)  # Line break
-    pdf.cell(200, 10, txt="Prédictions Random Forest", ln=True)
-    pdf.cell(95, 10, txt=f"Team 1 Win Probability: {rf_prediction['team1_win_prob']*100:.2f}%")
-    
-    # Save the PDF to a file
-    pdf.output("predictions_football_match.pdf")
+    return poisson_prediction, rf_prediction, logreg_prediction, cv_scores_rf.mean()
 
 # Interface Streamlit
 st.title('Analyse de Match de Football ⚽')
@@ -79,24 +56,48 @@ team2_data = {
     'injuries': st.slider("Blessures dans l'équipe 2 (0-1)", 0.0, 1.0, 0.0)
 }
 
-# Option pour générer les prédictions et PDF
-if st.button('Générer les Prédictions et Télécharger le PDF'):
-    poisson_prediction, rf_prediction = generate_predictions(team1_data, team2_data)
+# Option pour générer les prédictions
+if st.button('Générer les Prédictions'):
+    poisson_prediction, rf_prediction, logreg_prediction, cv_score_rf = generate_predictions(team1_data, team2_data)
     
-    # Affichage des prédictions
+    # Affichage des prédictions Poisson
     st.write("### Prédictions Poisson")
-    st.write(f"Team 1 Goals: {poisson_prediction['team1_goals']}")
-    st.write(f"Team 2 Goals: {poisson_prediction['team2_goals']}")
+    st.write(f"{team1_name} Goals: {poisson_prediction['team1_goals']}")
+    st.write(f"{team2_name} Goals: {poisson_prediction['team2_goals']}")
     
+    # Affichage des prédictions Random Forest
     st.write("### Prédictions Random Forest")
-    st.write(f"Team 1 Win Probability: {rf_prediction['team1_win_prob']*100:.2f}%")
+    st.write(f"Probabilité de victoire de {team1_name}: {rf_prediction * 100:.2f}%")
+
+    # Affichage des prédictions Régression Logistique
+    st.write("### Prédictions Régression Logistique")
+    st.write(f"Probabilité de victoire de {team1_name} (Logistic Regression): {logreg_prediction * 100:.2f}%")
     
-    # Générer le PDF
-    generate_pdf(team1_data, team2_data, poisson_prediction, rf_prediction)
-    
-    # Option de téléchargement
-    st.download_button(
-        label="Télécharger le PDF",
-        data=open("predictions_football_match.pdf", "rb").read(),
-        file_name="predictions_football_match.pdf"
-    )
+    # Affichage de la validation croisée K=5 pour Random Forest
+    st.write("### Validation Croisée K=5 (Random Forest)")
+    st.write(f"Validation Croisée K=5 (moyenne des scores): {cv_score_rf * 100:.2f}%")
+
+    # Option Double Chance
+    if st.checkbox("Afficher la probabilité Double Chance"):
+        double_chance_prob_rf = rf_prediction + (1 - rf_prediction)  # Double Chance pour Random Forest
+        double_chance_prob_logreg = logreg_prediction + (1 - logreg_prediction)  # Double Chance pour Régression Logistique
+        st.write(f"Double Chance (Random Forest): {double_chance_prob_rf * 100:.2f}%")
+        st.write(f"Double Chance (Régression Logistique): {double_chance_prob_logreg * 100:.2f}%")
+
+    # Comparaison des cotes
+    st.write("### Comparateur de Cotes")
+    team1_odds = st.number_input(f"Entrez la cote pour {team1_name}", min_value=1.0)
+    team2_odds = st.number_input(f"Entrez la cote pour {team2_name}", min_value=1.0)
+
+    # Conversion des cotes en probabilité implicite
+    team1_prob = 1 / team1_odds
+    team2_prob = 1 / team2_odds
+
+    st.write(f"Probabilité implicite pour {team1_name}: {team1_prob * 100:.2f}%")
+    st.write(f"Probabilité implicite pour {team2_name}: {team2_prob * 100:.2f}%")
+
+    # Détection des Value Bets
+    if rf_prediction > team1_prob:
+        st.write(f"Value Bet pour {team1_name}: Parier sur {team1_name} pourrait être rentable.")
+    elif rf_prediction < team2_prob:
+        st.write(f"Value Bet pour {team2_name}: Parier sur {team2_name} pourrait être rentable.")
