@@ -1,10 +1,5 @@
 import streamlit as st  
 import pandas as pd  
-import numpy as np  
-from sklearn.linear_model import LogisticRegression, PoissonRegressor  
-from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import KFold, cross_val_score  
-import altair as alt  
 
 # Initialisation des données de session si elles n'existent pas  
 if 'data' not in st.session_state:  
@@ -65,9 +60,9 @@ if 'data' not in st.session_state:
         'impact_joueurs_cles_B': 0.7,  
         'taux_reussite_corners_A': 30.0,  
         'taux_reussite_corners_B': 25.0,  
-        'nombre_degagements_A': 15,  # Nouveau champ pour le nombre de dégagements  
+        'nombre_degagements_A': 15,  
         'nombre_degagements_B': 12,  
-        'tactique_A': 8,  # Nouveau champ pour la tactique sur une échelle de 1 à 10  
+        'tactique_A': 8,  
         'tactique_B': 7,  
         'moyenne_temps_possession_A': 60.0,  
         'moyenne_temps_possession_B': 55.0,  
@@ -156,12 +151,10 @@ with st.form("formulaire_saisie"):
     # Ratios avec descriptions  
     st.session_state.data['ratio_buts_tirs_B'] = st.number_input("Ratio Buts/Tirs (Équipe B)", value=float(st.session_state.data['ratio_buts_tirs_B']), step=0.01, help="Ratio des buts marqués par rapport au nombre total de tirs.")  
     st.session_state.data['ratio_buts_encais_tirs_B'] = st.number_input("Ratio Buts Encaissés/Tirs (Équipe B)", value=float(st.session_state.data['ratio_buts_encais_tirs_B']), step=0.01, help="Ratio des buts encaissés par rapport au nombre total de tirs subis.")  
-    
     st.session_state.data['performance_domicile_B'] = st.number_input("Performance à Domicile (Points) (Équipe B)", value=float(st.session_state.data['performance_domicile_B']), step=0.1)  
     st.session_state.data['performance_exterieur_B'] = st.number_input("Performance à l'Extérieur (Points) (Équipe B)", value=float(st.session_state.data['performance_exterieur_B']), step=0.1)  
     st.session_state.data['historique_confrontations_B_A'] = st.number_input("Historique Confrontations (Équipe B contre Équipe A)", value=int(st.session_state.data['historique_confrontations_B_A']), step=1)  
-    st.session_state.data['moyenne_buts_marques_B'] = st.number_input("Moyenne de Buts Marqués par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_marques_B']), step=0.1)  
-    st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)       
+    st.session_state.data['moyenne_buts_marques_B'] = st.number_input("Moyenne de Buts Marqués par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_marques_B']),
     st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)  
     st.session_state.data['impact_joueurs_cles_B'] = st.number_input("Impact des Joueurs Clés (Équipe B)", value=float(st.session_state.data['impact_joueurs_cles_B']), step=0.1)  
     st.session_state.data['taux_reussite_corners_B'] = st.number_input("Taux de Réussite des Corners (%) (Équipe B)", value=float(st.session_state.data['taux_reussite_corners_B']), step=0.1)  
