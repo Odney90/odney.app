@@ -12,6 +12,7 @@ openpyxl
 python-docx
 altair
 plotly
+statsmodels
 
 
 
