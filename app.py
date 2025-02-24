@@ -114,6 +114,11 @@ def display_results_and_visuals(data):
     X = np.array([data['buts_par_match_A'], data['possession_moyenne_A'], data['taux_reussite_passes_A']]).T  
     y = np.array(data['score_rating_A'])  
     
+    # Vérification de la forme des données  
+    if X.shape[0] == 0 or X.shape[1] == 0:  
+        st.error("Les données d'entrée sont vides ou mal formatées.")  
+        return  
+    
     # Affichage des données dans un tableau interactif  
     st.subheader("Données d'Entrée")  
     df = pd.DataFrame({  
