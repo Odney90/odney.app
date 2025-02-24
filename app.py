@@ -89,10 +89,11 @@ if page == "🏟️ Analyse des Équipes":
     
     # Coloration pour les variables spécifiques au modèle de Poisson  
     poisson_cols = ['xG', 'xGA']  
-    def color_poisson(val):  
-        return 'background-color: yellow' if val.name in poisson_cols else ''  
+    def color_poisson(col):  
+        return ['background-color: yellow' if col.name in poisson_cols else '' for _ in col]  
     
-    st.dataframe(data.style.applymap(color_poisson))  
+    styled_data = data.style.apply(color_poisson)  
+    st.dataframe(styled_data)  
     
     # --- MODÉLISATION ---  
     X = data.drop(columns=['Buts marqués'])  
