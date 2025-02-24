@@ -96,45 +96,31 @@ def page_analyse_equipes():
         """, unsafe_allow_html=True)  
         equipe_B = st.text_input("Nom de l'équipe B", "Équipe 2", key="equipe_B")  
 
-    # Option pour téléverser un fichier CSV ou saisir manuellement les données  
+    # Saisie manuelle des données  
     st.subheader("📊 Entrez vos données")  
-    option_donnees = st.radio("Choisissez une option", ["Téléverser un fichier CSV", "Saisir manuellement les données"])  
-
-    if option_donnees == "Téléverser un fichier CSV":  
-        st.write("Téléversez un fichier CSV contenant les données des équipes.")  
-        st.write("Le fichier doit contenir les colonnes suivantes : Possession (%), Tirs, Tirs cadrés, Passes réussies (%), xG, xGA, Corners, Fautes, Cartons jaunes, Cartons rouges, Domicile, Forme (pts), Classement, Buts marqués, Buts encaissés.")  
-        fichier_csv = st.file_uploader("Téléversez un fichier CSV", type=["csv"])  
-        if fichier_csv is not None:  
-            try:  
-                st.session_state.data = pd.read_csv(fichier_csv)  
-                st.success("Fichier CSV téléversé avec succès !")  
-            except Exception as e:  
-                st.error(f"Erreur lors de la lecture du fichier CSV : {e}")  
-    else:  
-        # Saisie manuelle des données  
-        st.write("Entrez les données pour chaque équipe :")  
-        nombre_joueurs = st.number_input("Nombre de joueurs", min_value=1, max_value=30, value=22, step=1)  
-        
-        if st.button("Générer les données"):  
-            np.random.seed(42)  
-            st.session_state.data = pd.DataFrame({  
-                'Possession (%)': np.random.uniform(40, 70, nombre_joueurs),  
-                'Tirs': np.random.randint(5, 20, nombre_joueurs),  
-                'Tirs cadrés': np.random.randint(2, 10, nombre_joueurs),  
-                'Passes réussies (%)': np.random.uniform(60, 90, nombre_joueurs),  
-                'xG': np.random.uniform(0.5, 3.0, nombre_joueurs),  
-                'xGA': np.random.uniform(0.5, 3.0, nombre_joueurs),  
-                'Corners': np.random.randint(2, 10, nombre_joueurs),  
-                'Fautes': np.random.randint(5, 15, nombre_joueurs),  
-                'Cartons jaunes': np.random.randint(0, 5, nombre_joueurs),  
-                'Cartons rouges': np.random.randint(0, 2, nombre_joueurs),  
-                'Domicile': np.random.choice([0, 1], nombre_joueurs),  
-                'Forme (pts)': np.random.randint(3, 15, nombre_joueurs),  
-                'Classement': np.random.randint(1, 20, nombre_joueurs),  
-                'Buts marqués': np.random.randint(0, 4, nombre_joueurs),  
-                'Buts encaissés': np.random.randint(0, 4, nombre_joueurs)  
-            })  
-            st.success("Données générées avec succès !")  
+    st.write("Entrez les données pour chaque équipe :")  
+    nombre_joueurs = st.number_input("Nombre de joueurs", min_value=1, max_value=30, value=22, step=1)  
+    
+    if st.button("Générer les données"):  
+        np.random.seed(42)  
+        st.session_state.data = pd.DataFrame({  
+            'Possession (%)': np.random.uniform(40, 70, nombre_joueurs),  
+            'Tirs': np.random.randint(5, 20, nombre_joueurs),  
+            'Tirs cadrés': np.random.randint(2, 10, nombre_joueurs),  
+            'Passes réussies (%)': np.random.uniform(60, 90, nombre_joueurs),  
+            'xG': np.random.uniform(0.5, 3.0, nombre_joueurs),  
+            'xGA': np.random.uniform(0.5, 3.0, nombre_joueurs),  
+            'Corners': np.random.randint(2, 10, nombre_joueurs),  
+            'Fautes': np.random.randint(5, 15, nombre_joueurs),  
+            'Cartons jaunes': np.random.randint(0, 5, nombre_joueurs),  
+            'Cartons rouges': np.random.randint(0, 2, nombre_joueurs),  
+            'Domicile': np.random.choice([0, 1], nombre_joueurs),  
+            'Forme (pts)': np.random.randint(3, 15, nombre_joueurs),  
+            'Classement': np.random.randint(1, 20, nombre_joueurs),  
+            'Buts marqués': np.random.randint(0, 4, nombre_joueurs),  
+            'Buts encaissés': np.random.randint(0, 4, nombre_joueurs)  
+        })  
+        st.success("Données générées avec succès !")  
 
     if st.session_state.data is not None:  
         data = st.session_state.data  
