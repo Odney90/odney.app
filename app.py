@@ -1,5 +1,10 @@
 import streamlit as st  
 import pandas as pd  
+import numpy as np  
+from sklearn.linear_model import LogisticRegression, PoissonRegressor  
+from sklearn.ensemble import RandomForestClassifier  
+from sklearn.model_selection import KFold, cross_val_score  
+import altair as alt  
 
 # Initialisation des données de session si elles n'existent pas  
 if 'data' not in st.session_state:  
