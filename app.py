@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import StratifiedKFold, cross_val_score  
+from sklearn.model_selection import KFold, cross_val_score  # Remplacement de StratifiedKFold par KFold  
 import io  
 import altair as alt  
 import plotly.express as px  
@@ -127,12 +127,12 @@ else:
     log_reg = LogisticRegression()  
     rf_clf = RandomForestClassifier()  
 
-    # Validation croisée avec StratifiedKFold  
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)  
+    # Validation croisée avec KFold  
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)  
 
     # Évaluation des modèles  
-    log_reg_scores = cross_val_score(log_reg, df.drop(columns=['Équipe']), y, cv=skf)  
-    rf_scores = cross_val_score(rf_clf, df.drop(columns=['Équipe']), y, cv=skf)  
+    log_reg_scores = cross_val_score(log_reg, df.drop(columns=['Équipe']), y, cv=kf)  
+    rf_scores = cross_val_score(rf_clf, df.drop(columns=['Équipe']), y, cv=kf)  
 
     # Calcul des scores moyens  
     log_reg_score = np.mean(log_reg_scores)  
@@ -240,8 +240,8 @@ else:
         "Value Bet": [  
             "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
             "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
-            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
-        ],  
+            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",
+            ],  
     }  
     df_resultats = pd.DataFrame(data_resultats)  
 
@@ -255,4 +255,28 @@ else:
     ### 💡 Qu'est-ce qu'un Value Bet ?  
     Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
     Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
-    """)
+    """)  
+
+    # Affichage des poids des critères (si disponible)  
+    if st.session_state.poids_criteres is not None:  
+        st.subheader("📊 Poids des Critères (Forêt Aléatoire)")  
+        df_poids = pd.DataFrame({  
+            'Critère': df.drop(columns=['Équipe']).columns,  
+            'Poids': st.session_state.poids_criteres  
+        })  
+        st.bar_chart(df_poids.set_index('Critère'))  
+
+    # Section pour l'historique des prédictions  
+    if st.session_state.historique:  
+        st.subheader("📜 Historique des Prédictions")  
+        for i, pred in enumerate(st.session_state.historique):  
+            st.markdown(f"**Prédiction {i+1}**")  
+            st.markdown(f"- Probabilité Équipe A: {pred['proba_A']:.2%}")  
+            st.markdown(f"- Probabilité Équipe B: {pred['proba_B']:.2%}")  
+            st.markdown(f"- Probabilité Match Nul: {pred['proba_Nul']:.2%}")  
+            st.markdown("---")  
+
+    # Bouton pour réinitialiser l'historique  
+    if st.button("🔄 Réinitialiser l'Historique"):  
+        st.session_state.historique = []  
+        st.success("L'historique des prédictions a été réinitialisé.")
