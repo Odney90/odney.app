@@ -103,7 +103,11 @@ def page_analyse_equipes():
     if option_donnees == "Téléverser un fichier CSV":  
         fichier_csv = st.file_uploader("Téléversez un fichier CSV", type=["csv"])  
         if fichier_csv is not None:  
-            st.session_state.data = pd.read_csv(fichier_csv)  
+            try:  
+                st.session_state.data = pd.read_csv(fichier_csv)  
+                st.success("Fichier CSV téléversé avec succès !")  
+            except Exception as e:  
+                st.error(f"Erreur lors de la lecture du fichier CSV : {e}")  
     else:  
         # Saisie manuelle des données  
         st.write("Entrez les données pour chaque équipe :")  
@@ -128,6 +132,7 @@ def page_analyse_equipes():
                 'Buts marqués': np.random.randint(0, 4, nombre_joueurs),  
                 'Buts encaissés': np.random.randint(0, 4, nombre_joueurs)  
             })  
+            st.success("Données générées avec succès !")  
 
     if st.session_state.data is not None:  
         data = st.session_state.data  
