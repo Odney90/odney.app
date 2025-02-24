@@ -226,11 +226,30 @@ else:
 
     st.altair_chart(chart, use_container_width=True)  
 
-        "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
+               "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
         "Cote Bookmaker": [  
             f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
             f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
             f"{st.session_state.data['cote_bookmaker_Nul']:.2f}",  
+        ],  
+        "Value Bet": [  
+            "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
+            "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
+            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
+        ],  
+    }  
+    df_resultats = pd.DataFrame(data_resultats)  
+
+    # Utilisation de Plotly pour afficher le tableau  
+    fig = px.table(df_resultats, title="Tableau Synthétique des Résultats")  
+    st.plotly_chart(fig)  
+
+    # Message rappel sur le Value Bet  
+    st.markdown("""  
+    ### 💡 Qu'est-ce qu'un Value Bet ?  
+    Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.  
+    Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
+    """)  
         ],  
         "Value Bet": [  
             "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
