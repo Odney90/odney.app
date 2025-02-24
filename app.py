@@ -1,145 +1,111 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import altair as alt
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import StratifiedKFold
 from scipy.stats import poisson
-from io import StringIO
-from docx import Document
 
-# Fonction pour calculer la probabilité implicite d'une cote
-def odds_to_probability(odds):
-    return 1 / odds
+# Fonction pour calculer la force d'attaque et la force de défense
+def calculate_forces(data):
+    # Exemple de calcul pour la force d'attaque et la défense
+    attack_strength = data['buts_marques'] / data['matchs_joues']
+    defense_strength = data['buts_subis'] / data['matchs_joues']
+    return attack_strength, defense_strength
 
-# Fonction pour détecter le value bet
-def check_value_bet(predicted_prob, odds):
-    implied_prob = odds_to_probability(odds)
-    return predicted_prob > implied_prob
-
-# Fonction pour prédire les résultats avec Poisson, Random Forest et Logistic Regression
+# Fonction pour générer les prédictions avec les modèles
 def generate_predictions(team1_data, team2_data):
-    # Variables d'exemple (peut être élargi à plus de variables pertinentes)
-    X = pd.DataFrame({
-        'attaque_1': [team1_data['attaque']],
-        'defense_1': [team1_data['defense']],
-        'forme_1': [team1_data['forme']],
-        'blessures_1': [team1_data['blessures']],
-        'attaque_2': [team2_data['attaque']],
-        'defense_2': [team2_data['defense']],
-        'forme_2': [team2_data['forme']],
-        'blessures_2': [team2_data['blessures']],
-    })
-    
-    y = [team1_data['resultat']]  # La colonne 'resultat' doit être définie avec les résultats historiques (1 pour victoire équipe 1, 2 pour victoire équipe 2, X pour match nul)
+    # Données de l'équipe 1 et équipe 2
+    X = pd.DataFrame([team1_data + team2_data], columns=team1_data.keys() + team2_data.keys())
+    y = np.array([1])  # Dummy label, à ajuster selon les critères de comparaison
 
-    # Poisson
-    attack1, attack2 = team1_data['attaque'], team2_data['attaque']
-    poisson_team1_prob = poisson.pmf(1, attack1)
-    poisson_team2_prob = poisson.pmf(1, attack2)
-    
-    # Random Forest
-    rf = RandomForestClassifier()
-    rf.fit(X, y)
-    rf_prediction = rf.predict(X)[0]
-    
-    # Logistic Regression
+    # Modèle de régression logistique
     logreg = LogisticRegression()
     logreg.fit(X, y)
-    logreg_prediction = logreg.predict(X)[0]
+    logreg_prediction = logreg.predict(X)
 
-    # Validation croisée K=5 pour le Random Forest
+    # Modèle Random Forest
+    rf = RandomForestClassifier()
     cv_scores_rf = cross_val_score(rf, X, y, cv=5)
-    
-    return poisson_team1_prob, poisson_team2_prob, rf_prediction, logreg_prediction, cv_scores_rf
 
-# Interface utilisateur Streamlit
-st.title("Analyse de Match de Football ⚽")
+    # Calcul des probabilités Poisson
+    poisson_team1_prob = poisson.pmf(2, team1_data['buts_marques'])
+    poisson_team2_prob = poisson.pmf(2, team2_data['buts_marques'])
 
-# Persistance des données dans la session
-if 'team1_name' not in st.session_state:
-    st.session_state.team1_name = "Équipe A"
-if 'team2_name' not in st.session_state:
-    st.session_state.team2_name = "Équipe B"
+    return poisson_team1_prob, poisson_team2_prob, logreg_prediction, cv_scores_rf.mean()
 
-# Renseigner les noms des équipes
-team1_name = st.text_input("Nom de l'Équipe 1", st.session_state.team1_name)
-team2_name = st.text_input("Nom de l'Équipe 2", st.session_state.team2_name)
-
-# Sauvegarder les noms dans la session
-st.session_state.team1_name = team1_name
-st.session_state.team2_name = team2_name
-
-# Variables pour l'Équipe 1
-team1_attack = st.slider("Force d'attaque de l'équipe 1 (0-1)", 0.0, 1.0, 0.5)
-team1_defense = st.slider("Force de défense de l'équipe 1 (0-1)", 0.0, 1.0, 0.5)
-team1_form = st.slider("Forme récente de l'équipe 1 (0-1)", 0.0, 1.0, 0.5)
-team1_injuries = st.slider("Blessures dans l'équipe 1 (0-1)", 0.0, 1.0, 0.0)
-
-# Variables pour l'Équipe 2
-team2_attack = st.slider("Force d'attaque de l'équipe 2 (0-1)", 0.0, 1.0, 0.5)
-team2_defense = st.slider("Force de défense de l'équipe 2 (0-1)", 0.0, 1.0, 0.5)
-team2_form = st.slider("Forme récente de l'équipe 2 (0-1)", 0.0, 1.0, 0.5)
-team2_injuries = st.slider("Blessures dans l'équipe 2 (0-1)", 0.0, 1.0, 0.0)
-
-# Collecte des données et prédiction
+# Définition des variables de l'équipe 1 et équipe 2 avec emojis
 team1_data = {
-    'attaque': team1_attack,
-    'defense': team1_defense,
-    'forme': team1_form,
-    'blessures': team1_injuries,
-    'resultat': 1  # Exemple de résultat historique
+    '🧑‍💼 Nom de l\'équipe': 'Équipe 1',
+    '⚽ Attaque': 0.8,
+    '🛡️ Défense': 0.6,
+    '🔥 Forme récente': 0.7,
+    '💔 Blessures': 0.3,
+    '💪 Motivation': 0.9,
+    '🔄 Tactique': 0.75,
+    '📊 Historique face à face': 0.5,
+    '⚽xG': 1.4,
+    '🔝 Nombre de corners': 5
 }
 
 team2_data = {
-    'attaque': team2_attack,
-    'defense': team2_defense,
-    'forme': team2_form,
-    'blessures': team2_injuries,
-    'resultat': 2  # Exemple de résultat historique
+    '🧑‍💼 Nom de l\'équipe': 'Équipe 2',
+    '⚽ Attaque': 0.6,
+    '🛡️ Défense': 0.8,
+    '🔥 Forme récente': 0.7,
+    '💔 Blessures': 0.4,
+    '💪 Motivation': 0.8,
+    '🔄 Tactique': 0.7,
+    '📊 Historique face à face': 0.6,
+    '⚽xG': 1.2,
+    '🔝 Nombre de corners': 6
 }
 
-# Calcul des prédictions
-poisson_team1_prob, poisson_team2_prob, rf_prediction, logreg_prediction, cv_scores_rf = generate_predictions(team1_data, team2_data)
+# Calcul des forces
+attack_strength_1, defense_strength_1 = calculate_forces(team1_data)
+attack_strength_2, defense_strength_2 = calculate_forces(team2_data)
 
-# Affichage des résultats avec visuels et tableaux
-st.subheader("Prédictions")
+# Affichage des résultats avec emojis
+st.title("Analyse du Match ⚽")
+st.write("### Team 1 vs Team 2")
 
-# Création d'un tableau pour afficher les prédictions
-predictions_df = pd.DataFrame({
-    'Modèle': ['Poisson - Équipe 1', 'Poisson - Équipe 2', 'Random Forest', 'Logistic Regression'],
-    'Probabilité / Résultat': [
-        poisson_team1_prob, poisson_team2_prob, rf_prediction, logreg_prediction
-    ]
-})
+st.write("### Variables pour Équipe 1:")
+st.write(f"🧑‍💼 Nom de l'équipe : {team1_data['🧑‍💼 Nom de l\'équipe']}")
+st.write(f"⚽ Force d'attaque : {team1_data['⚽ Attaque']}")
+st.write(f"🛡️ Force de défense : {team1_data['🛡️ Défense']}")
+st.write(f"🔥 Forme récente : {team1_data['🔥 Forme récente']}")
+st.write(f"💔 Blessures : {team1_data['💔 Blessures']}")
+st.write(f"💪 Motivation : {team1_data['💪 Motivation']}")
+st.write(f"🔄 Tactique : {team1_data['🔄 Tactique']}")
+st.write(f"📊 Historique face à face : {team1_data['📊 Historique face à face']}")
+st.write(f"⚽xG : {team1_data['⚽xG']}")
+st.write(f"🔝 Nombre de corners : {team1_data['🔝 Nombre de corners']}")
 
-# Affichage du tableau avec pandas
-st.dataframe(predictions_df)
+st.write("### Variables pour Équipe 2:")
+st.write(f"🧑‍💼 Nom de l'équipe : {team2_data['🧑‍💼 Nom de l\'équipe']}")
+st.write(f"⚽ Force d'attaque : {team2_data['⚽ Attaque']}")
+st.write(f"🛡️ Force de défense : {team2_data['🛡️ Défense']}")
+st.write(f"🔥 Forme récente : {team2_data['🔥 Forme récente']}")
+st.write(f"💔 Blessures : {team2_data['💔 Blessures']}")
+st.write(f"💪 Motivation : {team2_data['💪 Motivation']}")
+st.write(f"🔄 Tactique : {team2_data['🔄 Tactique']}")
+st.write(f"📊 Historique face à face : {team2_data['📊 Historique face à face']}")
+st.write(f"⚽xG : {team2_data['⚽xG']}")
+st.write(f"🔝 Nombre de corners : {team2_data['🔝 Nombre de corners']}")
 
-# Graphique pour comparer les probabilités
-fig, ax = plt.subplots(figsize=(8, 6))
-bar_data = {
-    'Modèle': ['Poisson - Équipe 1', 'Poisson - Équipe 2', 'Random Forest', 'Logistic Regression'],
-    'Probabilité': [poisson_team1_prob, poisson_team2_prob, rf_prediction, logreg_prediction]
-}
+# Prédictions
+poisson_team1_prob, poisson_team2_prob, logreg_prediction, cv_scores_rf_mean = generate_predictions(team1_data, team2_data)
 
-bar_df = pd.DataFrame(bar_data)
-sns.barplot(x='Modèle', y='Probabilité', data=bar_df, ax=ax, palette="viridis")
-ax.set_title("Comparaison des Probabilités des Modèles")
-st.pyplot(fig)
+st.write(f"⚽ Probabilité Poisson de l'Équipe 1 : {poisson_team1_prob}")
+st.write(f"⚽ Probabilité Poisson de l'Équipe 2 : {poisson_team2_prob}")
+st.write(f"📊 Prédiction de la régression logistique : {logreg_prediction}")
+st.write(f"📊 Moyenne des scores de validation croisée (Random Forest) : {cv_scores_rf_mean:.2f}")
 
-# Graphique de la validation croisée (K=5) pour Random Forest
-st.subheader("Validation Croisée (K=5) - Random Forest")
-fig, ax = plt.subplots(figsize=(8, 6))
-sns.boxplot(data=cv_scores_rf, ax=ax)
-ax.set_title("Distribution des Scores de Validation Croisée (K=5)")
-st.pyplot(fig)
-
-# Option de téléchargement
-if st.button("Télécharger les données et prédictions en format DOC"):
-    doc = generate_doc(team1_name, team2_name, team1_data, team2_data, poisson_team1_prob, poisson_team2_prob, rf_prediction, logreg_prediction, cv_scores_rf)
-    doc.save("/mnt/data/match_analysis.docx")
-    st.download_button("Télécharger le fichier DOC", "/mnt/data/match_analysis.docx", "Télécharger le fichier DOC")
+# Option de télécharger les résultats
+st.download_button(
+    label="Télécharger les prédictions en format DOC",
+    data="Les données et prédictions ici",  # Remplace avec le format DOC généré
+    file_name="predictions.docx",
+    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+)
