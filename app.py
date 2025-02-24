@@ -161,8 +161,8 @@ with st.form("formulaire_saisie"):
     st.session_state.data['performance_exterieur_B'] = st.number_input("Performance à l'Extérieur (Points) (Équipe B)", value=float(st.session_state.data['performance_exterieur_B']), step=0.1)  
     st.session_state.data['historique_confrontations_B_A'] = st.number_input("Historique Confrontations (Équipe B contre Équipe A)", value=int(st.session_state.data['historique_confrontations_B_A']), step=1)  
     st.session_state.data['moyenne_buts_marques_B'] = st.number_input("Moyenne de Buts Marqués par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_marques_B']), step=0.1)  
-        st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)       
-        st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)  
+    st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)       
+    st.session_state.data['moyenne_buts_encais_B'] = st.number_input("Moyenne de Buts Encaissés par Match (Équipe B)", value=float(st.session_state.data['moyenne_buts_encais_B']), step=0.1)  
     st.session_state.data['impact_joueurs_cles_B'] = st.number_input("Impact des Joueurs Clés (Équipe B)", value=float(st.session_state.data['impact_joueurs_cles_B']), step=0.1)  
     st.session_state.data['taux_reussite_corners_B'] = st.number_input("Taux de Réussite des Corners (%) (Équipe B)", value=float(st.session_state.data['taux_reussite_corners_B']), step=0.1)  
     
