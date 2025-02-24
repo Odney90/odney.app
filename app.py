@@ -25,14 +25,14 @@ def generer_rapport(historique):
 # Initialisation de la session pour la persistance des données  
 if 'data' not in st.session_state:  
     st.session_state.data = {  
-        'score_rating_A': 85,  
-        'score_rating_B': 78,  
+        'score_rating_A': 85.0,  
+        'score_rating_B': 78.0,  
         'buts_par_match_A': 1.8,  
         'buts_par_match_B': 1.5,  
         'buts_concedes_par_match_A': 1.2,  
         'buts_concedes_par_match_B': 1.4,  
-        'possession_moyenne_A': 58,  
-        'possession_moyenne_B': 52,  
+        'possession_moyenne_A': 58.0,  
+        'possession_moyenne_B': 52.0,  
         'expected_but_A': 1.7,  
         'expected_but_B': 1.4,  
         'expected_concedes_A': 1.1,  
@@ -75,19 +75,19 @@ with st.form("formulaire_saisie"):
 
     with col1:  
         st.subheader("Équipe A")  
-        st.session_state.data['score_rating_A'] = st.number_input("Score de Performance (Équipe A)", value=st.session_state.data['score_rating_A'], step=1)  
-        st.session_state.data['buts_par_match_A'] = st.number_input("Buts par Match (Équipe A)", value=st.session_state.data['buts_par_match_A'], step=0.1)  
-        st.session_state.data['victoires_domicile_A'] = st.number_input("Victoires à Domicile (Équipe A)", value=st.session_state.data['victoires_domicile_A'], step=1)  
-        st.session_state.data['joueurs_absents_A'] = st.number_input("Joueurs Absents (Équipe A)", value=st.session_state.data['joueurs_absents_A'], step=1)  
-        st.session_state.data['expected_but_A'] = st.number_input("Expected Goals (Équipe A)", value=st.session_state.data['expected_but_A'], step=0.1)  
+        st.session_state.data['score_rating_A'] = st.number_input("Score de Performance (Équipe A)", value=float(st.session_state.data['score_rating_A']), step=1.0)  
+        st.session_state.data['buts_par_match_A'] = st.number_input("Buts par Match (Équipe A)", value=float(st.session_state.data['buts_par_match_A']), step=0.1)  
+        st.session_state.data['victoires_domicile_A'] = st.number_input("Victoires à Domicile (Équipe A)", value=int(st.session_state.data['victoires_domicile_A']), step=1)  
+        st.session_state.data['joueurs_absents_A'] = st.number_input("Joueurs Absents (Équipe A)", value=int(st.session_state.data['joueurs_absents_A']), step=1)  
+        st.session_state.data['expected_but_A'] = st.number_input("Expected Goals (Équipe A)", value=float(st.session_state.data['expected_but_A']), step=0.1)  
 
     with col2:  
         st.subheader("Équipe B")  
-        st.session_state.data['score_rating_B'] = st.number_input("Score de Performance (Équipe B)", value=st.session_state.data['score_rating_B'], step=1)  
-        st.session_state.data['buts_par_match_B'] = st.number_input("Buts par Match (Équipe B)", value=st.session_state.data['buts_par_match_B'], step=0.1)  
-        st.session_state.data['victoires_domicile_B'] = st.number_input("Victoires à Domicile (Équipe B)", value=st.session_state.data['victoires_domicile_B'], step=1)  
-        st.session_state.data['joueurs_absents_B'] = st.number_input("Joueurs Absents (Équipe B)", value=st.session_state.data['joueurs_absents_B'], step=1)  
-        st.session_state.data['expected_but_B'] = st.number_input("Expected Goals (Équipe B)", value=st.session_state.data['expected_but_B'], step=0.1)  
+        st.session_state.data['score_rating_B'] = st.number_input("Score de Performance (Équipe B)", value=float(st.session_state.data['score_rating_B']), step=1.0)  
+        st.session_state.data['buts_par_match_B'] = st.number_input("Buts par Match (Équipe B)", value=float(st.session_state.data['buts_par_match_B']), step=0.1)  
+        st.session_state.data['victoires_domicile_B'] = st.number_input("Victoires à Domicile (Équipe B)", value=int(st.session_state.data['victoires_domicile_B']), step=1)  
+        st.session_state.data['joueurs_absents_B'] = st.number_input("Joueurs Absents (Équipe B)", value=int(st.session_state.data['joueurs_absents_B']), step=1)  
+        st.session_state.data['expected_but_B'] = st.number_input("Expected Goals (Équipe B)", value=float(st.session_state.data['expected_but_B']), step=0.1)  
 
     # Bouton pour soumettre le formulaire  
     submitted = st.form_submit_button("Mettre à jour les données")  
