@@ -62,10 +62,20 @@ team2_data = {
     'injuries': st.slider("Blessures dans l'équipe 2 (0-1)", 0.0, 1.0, 0.0)
 }
 
-# Affichage des variables utilisées par Poisson
-st.write("### Variables utilisées par le modèle Poisson (mis en valeur)")
-st.write(f"- Attaque de l'Équipe 1: {team1_data['attack']}")
-st.write(f"- Attaque de l'Équipe 2: {team2_data['attack']}")
+# Affichage des données des équipes
+st.write("### Données de l'Équipe 1")
+st.write(f"Nom : {team1_data['name']}")
+st.write(f"Force d'attaque : {team1_data['attack']}")
+st.write(f"Force de défense : {team1_data['defense']}")
+st.write(f"Forme récente : {team1_data['form']}")
+st.write(f"Blessures : {team1_data['injuries']}")
+
+st.write("### Données de l'Équipe 2")
+st.write(f"Nom : {team2_data['name']}")
+st.write(f"Force d'attaque : {team2_data['attack']}")
+st.write(f"Force de défense : {team2_data['defense']}")
+st.write(f"Forme récente : {team2_data['form']}")
+st.write(f"Blessures : {team2_data['injuries']}")
 
 # Option pour générer les prédictions
 if st.button('Générer les Prédictions'):
