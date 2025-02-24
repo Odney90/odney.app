@@ -8,6 +8,7 @@ from sklearn.metrics import mean_squared_error
 from statsmodels.api import GLM  
 import matplotlib.pyplot as plt  
 import seaborn as sns  
+import altair as alt  
 
 # Initialisation des données de session si elles n'existent pas  
 if 'data' not in st.session_state:  
@@ -78,9 +79,11 @@ if 'data' not in st.session_state:
         'forme_recente_B': 9,  
     }  
 
-# Fonction pour entraîner un modèle de régression linéaire avec KFold  
+# Fonction pour entraîner un modèle de régression linéaire avec KFold (k=3)  
 def train_linear_regression_with_kfold(X, y):  
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)  
+    if X.shape[0] < 3:  
+        raise ValueError("Nombre d'échantillons insuffisant pour KFold (minimum 3 requis).")  
+    kf = KFold(n_splits=3, shuffle=True, random_state=42)  # k=3  
     mse_scores = []  
     for train_index, test_index in kf.split(X):  
         X_train, X_test = X[train_index], X[test_index]  
@@ -111,10 +114,13 @@ def display_results_and_visuals(data):
     X = np.array([data['buts_par_match_A'], data['possession_moyenne_A'], data['taux_reussite_passes_A']]).T  
     y = np.array(data['score_rating_A'])  
     
-    # KFold avec régression linéaire  
-    st.subheader("Validation Croisée (KFold) avec Régression Linéaire")  
-    mse = train_linear_regression_with_kfold(X, y)  
-    st.write(f"Erreur Quadratique Moyenne (MSE) : {mse:.2f}")  
+    # KFold avec régression linéaire (k=3)  
+    st.subheader("Validation Croisée (KFold avec k=3) avec Régression Linéaire")  
+    try:  
+        mse = train_linear_regression_with_kfold(X, y)  
+        st.write(f"Erreur Quadratique Moyenne (MSE) : {mse:.2f}")  
+    except ValueError as e:  
+        st.error(f"Erreur lors de la validation croisée : {e}")  
     
     # Régression de Poisson  
     st.subheader("Régression de Poisson")  
@@ -127,13 +133,18 @@ def display_results_and_visuals(data):
     y_pred = rf_model.predict(X)  
     st.write(f"Score de Performance Prédit : {y_pred[0]:.2f}")  
     
-    # Graphique explicatif  
-    st.subheader("Graphique Explicatif")  
-    fig, ax = plt.subplots()  
-    sns.regplot(x=X[:, 0], y=y, ax=ax)  
-    ax.set_xlabel("Buts par Match (Équipe A)")  
-    ax.set_ylabel("Score de Performance")  
-    st.pyplot(fig)  
+    # Graphique explicatif avec Altair  
+    st.subheader("Graphique Explicatif (Altair)")  
+    df = pd.DataFrame({  
+        'Buts par Match': X[:, 0],  
+        'Score de Performance': y  
+    })  
+    chart = alt.Chart(df).mark_circle(size=60).encode(  
+        x='Buts par Match',  
+        y='Score de Performance',  
+        tooltip=['Buts par Match', 'Score de Performance']  
+    ).interactive()  
+    st.altair_chart(chart, use_container_width=True)  
 
 # Onglets pour l'application  
 tab1, tab2 = st.tabs(["📝 Saisie des Données", "📊 Résultats et Visuels"])  
