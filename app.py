@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import KFold, cross_val_score  # Remplacement de StratifiedKFold par KFold  
+from sklearn.model_selection import KFold, cross_val_score  # Utilisation de KFold  
 import io  
 import altair as alt  
 import plotly.express as px  
@@ -127,8 +127,8 @@ else:
     log_reg = LogisticRegression()  
     rf_clf = RandomForestClassifier()  
 
-    # Validation croisée avec KFold  
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)  
+    # Validation croisée avec KFold (n_splits=2)  
+    kf = KFold(n_splits=2, shuffle=True, random_state=42)  
 
     # Évaluation des modèles  
     log_reg_scores = cross_val_score(log_reg, df.drop(columns=['Équipe']), y, cv=kf)  
@@ -226,12 +226,7 @@ else:
 
     st.altair_chart(chart, use_container_width=True)  
 
-    # Tableau interactif avec Plotly  
-    st.subheader("📊 Tableau des Résultats")  
-    data_resultats = {  
-        "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
-        "Probabilité Prédite": [f"{proba_A:.2%}", f"{proba_B:.2%}", f"{proba_Nul:.2%}"],  
-        "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
+          "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
         "Cote Bookmaker": [  
             f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
             f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
@@ -240,43 +235,18 @@ else:
         "Value Bet": [  
             "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
             "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
-            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",
-            ],  
+            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
+        ],  
     }  
     df_resultats = pd.DataFrame(data_resultats)  
 
     # Utilisation de Plotly pour afficher le tableau  
-    fig = px.data.tips()  
     fig = px.table(df_resultats, title="Tableau Synthétique des Résultats")  
     st.plotly_chart(fig)  
 
     # Message rappel sur le Value Bet  
     st.markdown("""  
     ### 💡 Qu'est-ce qu'un Value Bet ?  
-    Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.   
+    Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.  
     Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
-    """)  
-
-    # Affichage des poids des critères (si disponible)  
-    if st.session_state.poids_criteres is not None:  
-        st.subheader("📊 Poids des Critères (Forêt Aléatoire)")  
-        df_poids = pd.DataFrame({  
-            'Critère': df.drop(columns=['Équipe']).columns,  
-            'Poids': st.session_state.poids_criteres  
-        })  
-        st.bar_chart(df_poids.set_index('Critère'))  
-
-    # Section pour l'historique des prédictions  
-    if st.session_state.historique:  
-        st.subheader("📜 Historique des Prédictions")  
-        for i, pred in enumerate(st.session_state.historique):  
-            st.markdown(f"**Prédiction {i+1}**")  
-            st.markdown(f"- Probabilité Équipe A: {pred['proba_A']:.2%}")  
-            st.markdown(f"- Probabilité Équipe B: {pred['proba_B']:.2%}")  
-            st.markdown(f"- Probabilité Match Nul: {pred['proba_Nul']:.2%}")  
-            st.markdown("---")  
-
-    # Bouton pour réinitialiser l'historique  
-    if st.button("🔄 Réinitialiser l'Historique"):  
-        st.session_state.historique = []  
-        st.success("L'historique des prédictions a été réinitialisé.")
+    """)
