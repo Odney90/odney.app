@@ -1,28 +1,13 @@
-# Imports  
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
 from scipy.stats import poisson  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
-from sklearn.model_selection import KFold, cross_val_score  # Utilisation de KFold  
-import io  
-import altair as alt  
-import plotly.express as px  
+from sklearn.model_selection import KFold, cross_val_score  
+import plotly.express as px
 
-# Fonction pour générer le rapport DOC  
-def generer_rapport(historique):  
-    from docx import Document  
-    doc = Document()  
-    doc.add_heading('Rapport de Prédictions', 0)  
-    for i, pred in enumerate(historique):  
-        doc.add_heading(f"Prédiction {i+1}", level=1)  
-        doc.add_paragraph(f"Probabilité Équipe A: {pred['proba_A']:.2%}")  
-        doc.add_paragraph(f"Probabilité Équipe B: {pred['proba_B']:.2%}")  
-        doc.add_paragraph(f"Probabilité Match Nul: {pred['proba_Nul']:.2%}")  
-    return doc  
-
-# Initialisation de la session pour la persistance des données  
+# Initialisation des données de session  
 if 'data' not in st.session_state:  
     st.session_state.data = {  
         'score_rating_A': 85.0,  
@@ -66,9 +51,8 @@ if 'historique' not in st.session_state:
     st.session_state.historique = []  
 
 if 'poids_criteres' not in st.session_state:  
-    st.session_state.poids_criteres = None  
-
-# Formulaire flottant pour la saisie des données  
+    st.session_state.poids_criteres = None
+    # Formulaire flottant pour la saisie des données  
 with st.form("formulaire_saisie"):  
     st.header("📊 Saisie des Données")  
     col1, col2 = st.columns(2)  
@@ -90,9 +74,8 @@ with st.form("formulaire_saisie"):
         st.session_state.data['expected_but_B'] = st.number_input("Expected Goals (Équipe B)", value=float(st.session_state.data['expected_but_B']), step=0.1)  
 
     # Bouton pour soumettre le formulaire  
-    submitted = st.form_submit_button("Mettre à jour les données")  
-
-# Données existantes pour l'Équipe A et l'Équipe B  
+    submitted = st.form_submit_button("Mettre à jour les données")
+# Création du DataFrame  
 data = {  
     'Équipe': ['Équipe A', 'Équipe B'],  
     'score_rating': [st.session_state.data['score_rating_A'], st.session_state.data['score_rating_B']],  
@@ -112,160 +95,105 @@ data = {
     'motivation': [st.session_state.data['motivation_A'], st.session_state.data['motivation_B']],  
     'face_a_face': [st.session_state.data['face_a_face_A'], st.session_state.data['face_a_face_B']],  
 }  
+df = pd.DataFrame(data)
+# Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
+y = np.array([1, 0])  # Équipe A gagne par défaut  
 
-# Création du DataFrame  
-df = pd.DataFrame(data)  
+# Modèles de classification  
+log_reg = LogisticRegression()  
+rf_clf = RandomForestClassifier()  
 
-# Vérification des données avant l'entraînement  
-if df.drop(columns=['Équipe']).isnull().values.any():  
-    st.error("Les données contiennent des valeurs manquantes. Veuillez vérifier les entrées.")  
-else:  
-    # Création de la variable cible (1 si l'équipe A gagne, 0 sinon)  
-    y = np.array([1, 0])  # Équipe A gagne par défaut  
+# Validation croisée avec KFold (n_splits=2)  
+kf = KFold(n_splits=2, shuffle=True, random_state=42)  
 
-    # Modèles de classification  
-    log_reg = LogisticRegression()  
-    rf_clf = RandomForestClassifier()  
+# Évaluation des modèles  
+log_reg_scores = cross_val_score(log_reg, df.drop(columns=['Équipe']), y, cv=kf)  
+rf_scores = cross_val_score(rf_clf, df.drop(columns=['Équipe']), y, cv=kf)  
 
-    # Validation croisée avec KFold (n_splits=2)  
-    kf = KFold(n_splits=2, shuffle=True, random_state=42)  
+# Calcul des scores moyens  
+log_reg_score = np.mean(log_reg_scores)  
+rf_score = np.mean(rf_scores)  
 
-    # Évaluation des modèles  
-    log_reg_scores = cross_val_score(log_reg, df.drop(columns=['Équipe']), y, cv=kf)  
-    rf_scores = cross_val_score(rf_clf, df.drop(columns=['Équipe']), y, cv=kf)  
+# Entraînement des modèles sur l'ensemble des données  
+log_reg.fit(df.drop(columns=['Équipe']), y)  
+rf_clf.fit(df.drop(columns=['Équipe']), y)  
 
-    # Calcul des scores moyens  
-    log_reg_score = np.mean(log_reg_scores)  
-    rf_score = np.mean(rf_scores)  
+# Entraînement du modèle Random Forest pour obtenir les poids des critères  
+st.session_state.poids_criteres = rf_clf.feature_importances_
 
-    # Entraînement des modèles sur l'ensemble des données  
-    log_reg.fit(df.drop(columns=['Équipe']), y)  
-    rf_clf.fit(df.drop(columns=['Équipe']), y)  
+# Modèle Poisson  
+lambda_A = (  
+    data['expected_but'][0] +  
+    data['buts_par_match'][0] +  
+    data['tirs_cadres'][0] * 0.1 +  
+    data['grandes_chances'][0] * 0.2 +  
+    (data['victoires_domicile'][0] * 0.3) - (data['joueurs_absents'][1] * 0.2)  # Impact des victoires et joueurs absents  
+)  
 
-    # Entraînement du modèle Random Forest pour obtenir les poids des critères  
-    st.session_state.poids_criteres = rf_clf.feature_importances_  
+lambda_B = (  
+    data['expected_but'][1] +  
+    data['buts_par_match'][1] +  
+    data['tirs_cadres'][1] * 0.1 +  
+    data['grandes_chances'][1] * 0.2 +  
+    (data['victoires_domicile'][1] * 0.3) - (data['joueurs_absents'][0] * 0.2)  # Impact des victoires et joueurs absents  
+)  
 
-    # Modèle Poisson  
-    lambda_A = (  
-        data['expected_but'][0] +  
-        data['buts_par_match'][0] +  
-        data['tirs_cadres'][0] * 0.1 +  
-        data['grandes_chances'][0] * 0.2 +  
-        (data['victoires_domicile'][0] * 0.3) - (data['joueurs_absents'][1] * 0.2)  # Impact des victoires et joueurs absents  
-    )  
+# Prédiction des buts avec Poisson  
+buts_A = poisson.rvs(mu=lambda_A, size=1000)  
+buts_B = poisson.rvs(mu=lambda_B, size=1000)
 
-    lambda_B = (  
-        data['expected_but'][1] +  
-        data['buts_par_match'][1] +  
-        data['tirs_cadres'][1] * 0.1 +  
-        data['grandes_chances'][1] * 0.2 +  
-        (data['victoires_domicile'][1] * 0.3) - (data['joueurs_absents'][0] * 0.2)  # Impact des victoires et joueurs absents  
-    )  
+# Résultats Poisson  
+st.subheader("📊 Prédiction des Buts (Poisson)")  
+col_poisson_A, col_poisson_B = st.columns(2)  
+with col_poisson_A:  
+    st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
+    st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_A, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
+with col_poisson_B:  
+    st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
+    st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_B, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
 
-    # Prédiction des buts avec Poisson  
-    buts_A = poisson.rvs(mu=lambda_A, size=1000)  
-    buts_B = poisson.rvs(mu=lambda_B, size=1000)  
+# Comparaison des probabilités de victoire  
+proba_A = np.mean(buts_A) / (np.mean(buts_A) + np.mean(buts_B))  
+proba_B = np.mean(buts_B) / (np.mean(buts_A) + np.mean(buts_B))  
+proba_Nul = 1 - (proba_A + proba_B)  
 
-    # Résultats Poisson  
-    st.subheader("📊 Prédiction des Buts (Poisson)")  
-    col_poisson_A, col_poisson_B = st.columns(2)  
-    with col_poisson_A:  
-        st.metric("⚽ Buts Moyens (Équipe A)", f"{np.mean(buts_A):.2f}")  
-        st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_A, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
-    with col_poisson_B:  
-        st.metric("⚽ Buts Moyens (Équipe B)", f"{np.mean(buts_B):.2f}")  
-        st.metric("⚽ Buts Prévus (75e percentile)", f"{np.percentile(buts_B, 75):.2f}", help="75% des simulations prévoient moins de buts que cette valeur.")  
+# Cotes prédites  
+cote_predite_A = 1 / proba_A  
+cote_predite_B = 1 / proba_B  
+cote_predite_Nul = 1 / proba_Nul  
 
-    # Comparaison des probabilités de victoire  
-    proba_A = np.mean(buts_A) / (np.mean(buts_A) + np.mean(buts_B))  
-    proba_B = np.mean(buts_B) / (np.mean(buts_A) + np.mean(buts_B))  
-    proba_Nul = 1 - (proba_A + proba_B)  
+# Stockage des prédictions dans l'historique  
+st.session_state.historique.append({  
+    'proba_A': proba_A,  
+    'proba_B': proba_B,  
+    'proba_Nul': proba_Nul,  
+})
+# Tableau interactif avec Plotly  
+st.subheader("📊 Tableau des Résultats")  
+data_resultats = {  
+    "Équipe": ["Équipe A", "Équipe B", "Match Nul"],  
+    "Probabilité Prédite": [f"{proba_A:.2%}", f"{proba_B:.2%}", f"{proba_Nul:.2%}"],  
+    "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
+    "Cote Bookmaker": [  
+        f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
+        f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
+        f"{st.session_state.data['cote_bookmaker_Nul']:.2f}",  
+    ],  
+    "Value Bet": [  
+        "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
+        "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
+        "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
+    ],  
+}  
+df_resultats = pd.DataFrame(data_resultats)  
 
-    # Cotes prédites  
-    cote_predite_A = 1 / proba_A  
-    cote_predite_B = 1 / proba_B  
-    cote_predite_Nul = 1 / proba_Nul  
+# Utilisation de Plotly pour afficher le tableau  
+fig = px.table(df_resultats, title="Tableau Synthétique des Résultats")  
+st.plotly_chart(fig)  
 
-    # Stockage des prédictions dans l'historique  
-    st.session_state.historique.append({  
-        'proba_A': proba_A,  
-        'proba_B': proba_B,  
-        'proba_Nul': proba_Nul,  
-    })  
-
-    # Génération du rapport DOC  
-    if st.button("📄 Télécharger le Rapport"):  
-        doc = generer_rapport(st.session_state.historique)  
-        buffer = io.BytesIO()  
-        doc.save(buffer)  
-        buffer.seek(0)  
-        st.download_button("Télécharger le rapport", buffer, "rapport_predictions.docx")  
-
-    # Affichage des résultats des modèles  
-    st.subheader("🤖 Performance des Modèles")  
-    col_log_reg, col_rf = st.columns(2)  
-    with col_log_reg:  
-        st.metric("📈 Régression Logistique (Précision)", f"{log_reg_score:.2%}")  
-    with col_rf:  
-        st.metric("🌲 Forêt Aléatoire (Précision)", f"{rf_score:.2%}")  
-
-    # Visualisation avec Altair  
-    st.subheader("📊 Visualisation des Probabilités de Victoire")  
-    df_probabilites = pd.DataFrame({  
-        'Équipe': ['Équipe A', 'Équipe B', 'Match Nul'],  
-        'Probabilité': [proba_A, proba_B, proba_Nul]  
-    })  
-
-    chart = alt.Chart(df_probabilites).mark_bar().encode(  
-        x='Équipe',  
-        y='Probabilité',  
-        color='Équipe'  
-    ).properties(  
-        title='Probabilités de Victoire'  
-    )  
-
-    st.altair_chart(chart, use_container_width=True)  
-
-               "Cote Prédite": [f"{cote_predite_A:.2f}", f"{cote_predite_B:.2f}", f"{cote_predite_Nul:.2f}"],  
-        "Cote Bookmaker": [  
-            f"{st.session_state.data['cote_bookmaker_A']:.2f}",  
-            f"{st.session_state.data['cote_bookmaker_B']:.2f}",  
-            f"{st.session_state.data['cote_bookmaker_Nul']:.2f}",  
-        ],  
-        "Value Bet": [  
-            "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
-            "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
-            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
-        ],  
-    }  
-    df_resultats = pd.DataFrame(data_resultats)  
-
-    # Utilisation de Plotly pour afficher le tableau  
-    fig = px.table(df_resultats, title="Tableau Synthétique des Résultats")  
-    st.plotly_chart(fig)  
-
-    # Message rappel sur le Value Bet  
-    st.markdown("""  
-    ### 💡 Qu'est-ce qu'un Value Bet ?  
-    Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.  
-    Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
-    """)  
-        ],  
-        "Value Bet": [  
-            "✅" if cote_predite_A < st.session_state.data['cote_bookmaker_A'] else "❌",  
-            "✅" if cote_predite_B < st.session_state.data['cote_bookmaker_B'] else "❌",  
-            "✅" if cote_predite_Nul < st.session_state.data['cote_bookmaker_Nul'] else "❌",  
-        ],  
-    }  
-    df_resultats = pd.DataFrame(data_resultats)  
-
-    # Utilisation de Plotly pour afficher le tableau  
-    fig = px.table(df_resultats, title="Tableau Synthétique des Résultats")  
-    st.plotly_chart(fig)  
-
-    # Message rappel sur le Value Bet  
-    st.markdown("""  
-    ### 💡 Qu'est-ce qu'un Value Bet ?  
-    Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.  
-    Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
-    """)
+# Message rappel sur le Value Bet  
+st.markdown("""  
+### 💡 Qu'est-ce qu'un Value Bet ?  
+Un **Value Bet** est un pari où la cote prédite par le modèle est **inférieure** à la cote proposée par le bookmaker.  
+Cela indique que le bookmaker sous-estime la probabilité de cet événement.  
+""")
