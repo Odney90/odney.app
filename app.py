@@ -97,7 +97,7 @@ with st.form("formulaire_saisie"):
     st.session_state.data['joueurs_absents_A'] = st.number_input("Joueurs Absents (Équipe A)", value=int(st.session_state.data['joueurs_absents_A']), step=1)  
     
     # Nouveaux champs pour l'équipe A  
-    st.session_state.data['moyenne_age_joueurs_A'] = st.number_input("Moyenne d'Âge des Joueurs (Équipe A)", value=float(st.session_state.data['moyenne_age_joueurs_A']), step=0.1)  
+    st.session_state.data['moyenne_age_joueurs_A'] = st.number_input('Moyenne d'Âge des Joueurs (Équipe A)", value=float(st.session_state.data['moyenne_age_joueurs_A']), step=0.1)  
     st.session_state.data['experience_entraineur_A'] = st.number_input("Expérience de l'Entraîneur (Années)", value=int(st.session_state.data['experience_entraineur_A']), step=1)  
     st.session_state.data['nombre_blessures_A'] = st.number_input("Nombre de Blessures (Équipe A)", value=int(st.session_state.data['nombre_blessures_A']), step=1)  
     st.session_state.data['cartons_jaunes_A'] = st.number_input("Cartons Jaunes (Équipe A)", value=int(st.session_state.data['cartons_jaunes_A']), step=1)  
