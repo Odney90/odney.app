@@ -115,6 +115,8 @@ def display_results_and_visuals(data):
     y = np.array(data['score_rating_A'])  
     
     # Vérification de la forme des données  
+    if len(X.shape) == 1:  
+        X = X.reshape(-1, 1)  # Convertir en tableau 2D si nécessaire  
     if X.shape[0] == 0 or X.shape[1] == 0:  
         st.error("Les données d'entrée sont vides ou mal formatées.")  
         return  
