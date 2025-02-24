@@ -114,6 +114,16 @@ def display_results_and_visuals(data):
     X = np.array([data['buts_par_match_A'], data['possession_moyenne_A'], data['taux_reussite_passes_A']]).T  
     y = np.array(data['score_rating_A'])  
     
+    # Affichage des données dans un tableau interactif  
+    st.subheader("Données d'Entrée")  
+    df = pd.DataFrame({  
+        'Buts par Match': X[:, 0],  
+        'Possession Moyenne (%)': X[:, 1],  
+        'Taux de Réussite des Passes (%)': X[:, 2],  
+        'Score de Performance': y  
+    })  
+    st.dataframe(df)  
+    
     # KFold avec régression linéaire (k=3)  
     st.subheader("Validation Croisée (KFold avec k=3) avec Régression Linéaire")  
     try:  
@@ -135,10 +145,6 @@ def display_results_and_visuals(data):
     
     # Graphique explicatif avec Altair  
     st.subheader("Graphique Explicatif (Altair)")  
-    df = pd.DataFrame({  
-        'Buts par Match': X[:, 0],  
-        'Score de Performance': y  
-    })  
     chart = alt.Chart(df).mark_circle(size=60).encode(  
         x='Buts par Match',  
         y='Score de Performance',  
