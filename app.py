@@ -276,7 +276,8 @@ if st.button("🔍 Prédire les résultats"):
                                 xgb_prob[1] * 100 if xgb_prob is not None else 0],  
         "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                                        rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],
+    }
         # Graphique des performances des modèles  
     st.subheader("📈 Comparaison des Modèles")  
     model_comparison_data = {  
