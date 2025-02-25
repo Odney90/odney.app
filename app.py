@@ -28,9 +28,6 @@ def create_doc(results):
     doc.add_paragraph(f"Équipe Extérieure: {results['Équipe Extérieure']}")  
     doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
     doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
-    doc.add_paragraph(f"Nombre de Victoires à Domicile: {results['Victoires Domicile']}")  
-    doc.add_paragraph(f"Nombre de Victoires à Extérieur: {results['Victoires Extérieur']}")  
-    doc.add_paragraph(f"Motivation: {results['Motivation']}")  
 
     # Ajout des probabilités des modèles  
     doc.add_heading('Probabilités des Modèles', level=2)  
@@ -47,16 +44,15 @@ def create_doc(results):
 # Fonction pour entraîner et prédire avec les modèles  
 @st.cache_resource  
 def train_models():  
-    # Créer un ensemble de données d'entraînement synthétique une seule fois  
-    np.random.seed(42)  # Pour la reproductibilité  
+    # Créer un ensemble de données d'entraînement fictif  
     data = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=1000),  
-        'away_goals': np.random.randint(0, 3, size=1000),  
-        'home_xG': np.random.uniform(0, 2, size=1000),  
-        'away_xG': np.random.uniform(0, 2, size=1000),  
-        'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000),  
-        'result': np.random.choice([0, 1, 2], size=1000)  
+        'home_goals': np.random.randint(0, 3, size=50),  
+        'away_goals': np.random.randint(0, 3, size=50),  
+        'home_xG': np.random.uniform(0, 2, size=50),  
+        'away_xG': np.random.uniform(0, 2, size=50),  
+        'home_encais': np.random.uniform(0, 2, size=50),  
+        'away_encais': np.random.uniform(0, 2, size=50),  
+        'result': np.random.choice([0, 1, 2], size=50)  
     })  
 
     # Séparer les caractéristiques et la cible  
@@ -64,15 +60,15 @@ def train_models():
     y = data['result']  
 
     # Modèle de régression logistique  
-    log_reg = LogisticRegression(max_iter=50)  # Réduire le nombre d'itérations pour la démonstration  
+    log_reg = LogisticRegression(max_iter=100)  
     log_reg.fit(X, y)  
 
     # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=50)  # Réduire le nombre d'estimations pour la démonstration  
+    rf = RandomForestClassifier(n_estimators=10)  
     rf.fit(X, y)  
 
     # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50)  # Réduire le nombre d'estimations  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=10)  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
@@ -88,22 +84,43 @@ st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")
 
 # Saisie des données des équipes  
 st.header("Saisie des données des équipes")  
+col1, col2 = st.columns(2)  
 
-# Utilisation d'accordéons pour les statistiques des équipes  
-with st.expander("Statistiques de l'équipe à domicile", expanded=True):  
+# Statistiques de l'équipe à domicile  
+with col1:  
     home_team = st.text_input("Nom de l'équipe à domicile", value="Équipe A")  
-    home_goals = st.slider("Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5, step=0.1)  
-    home_xG = st.slider("xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
-    home_encais = st.slider("Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=1.0, step=0.1)  
-    home_victoires = st.number_input("Nombre de victoires à domicile", min_value=0, value=5)  
-    home_motivation = st.slider("Motivation (0 à 10)", min_value=0, max_value=10, value=7)  
+    st.subheader("Statistiques de l'équipe à domicile")  
+    home_goals = st.number_input("Moyenne de buts marqués par match (domicile)", min_value=0.0, value=2.5)  
+    home_xG = st.number_input("xG (Expected Goals) (domicile)", min_value=0.0, value=2.0)  
+    home_encais = st.number_input("Moyenne de buts encaissés par match (domicile)", min_value=0.0, value=1.0)  
+    home_xGA = st.number_input("xGA (Expected Goals Against) (domicile)", min_value=0.0, value=1.5)  
+    home_tirs_par_match = st.number_input("Nombres de tirs par match (domicile)", min_value=0, value=15)  
+    home_passes_menant_a_tir = st.number_input("Nombres de passes menant à un tir (domicile)", min_value=0, value=10)  
+    home_tirs_cadres = st.number_input("Tirs cadrés par match (domicile)", min_value=0, value=5)  
+    home_tirs_concedes = st.number_input("Nombres de tirs concédés par match (domicile)", min_value=0, value=8)  
+    home_duels_defensifs = st.number_input("Duels défensifs gagnés (%) (domicile)", min_value=0.0, max_value=100.0, value=60.0)  
+    home_possession = st.number_input("Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
+    home_passes_reussies = st.number_input("Passes réussies (%) (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
+    home_touches_surface = st.number_input("Balles touchées dans la surface adverse (domicile)", min_value=0, value=20)  
+    home_forme_recente = st.number_input("Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, value=10)  
 
-with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):  
+# Statistiques de l'équipe à l'extérieur  
+with col2:  
     away_team = st.text_input("Nom de l'équipe à l'extérieur", value="Équipe B")  
-    away_goals = st.slider("Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
-    away_xG = st.slider("xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8, step=0.1)  
-    away_encais = st.slider("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
-    away_victoires = st.number_input("Nombre de victoires à l'extérieur", min_value=0, value=3)  
+    st.subheader("Statistiques de l'équipe à l'extérieur")  
+    away_goals = st.number_input("Moyenne de buts marqués par match (extérieur)", min_value=0.0, value=1.5)  
+    away_xG = st.number_input("xG (Expected Goals) (extérieur)", min_value=0.0, value=1.8)  
+    away_encais = st.number_input("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, value=2.0)  
+    away_xGA = st.number_input("xGA (Expected Goals Against) (extérieur)", min_value=0.0, value=1.5)  
+    away_tirs_par_match = st.number_input("Nombres de tirs par match (extérieur)", min_value=0, value=12)  
+    away_passes_menant_a_tir = st.number_input("Nombres de passes menant à un tir (extérieur)", min_value=0, value=8)  
+    away_tirs_cadres = st.number_input("Tirs cadrés par match (extérieur)", min_value=0, value=4)  
+    away_tirs_concedes = st.number_input("Nombres de tirs concédés par match (extérieur)", min_value=0, value=10)  
+    away_duels_defensifs = st.number_input("Duels défensifs gagnés (%) (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
+    away_possession = st.number_input("Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
+    away_passes_reussies = st.number_input("Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
+    away_touches_surface = st.number_input("Balles touchées dans la surface adverse (extérieur)", min_value=0, value=15)  
+    away_forme_recente = st.number_input("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, value=8)  
 
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
@@ -222,9 +239,6 @@ if st.button("🔍 Prédire les résultats"):
         "Équipe Extérieure": away_team,  
         "Buts Prédit Domicile": home_goals_pred,  
         "Buts Prédit Extérieur": away_goals_pred,  
-        "Victoires Domicile": home_victoires,  
-        "Victoires Extérieur": away_victoires,  
-        "Motivation": home_motivation,  
         "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
         "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
         "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
