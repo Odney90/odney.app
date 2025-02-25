@@ -124,10 +124,12 @@ with col2:
 
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
-odds_home = 1.8  # Cote pour l'équipe à domicile  
-odds_away = 2.2  # Cote pour l'équipe à l'extérieur  
-st.write(f"**Cote pour {home_team} :** {odds_home}")  
-st.write(f"**Cote pour {away_team} :** {odds_away}")  
+odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
+odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
+
+# Calcul des probabilités implicites  
+def calculate_implied_prob(odds):  
+    return 1 / odds  
 
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
@@ -142,6 +144,11 @@ if st.button("🔍 Prédire les résultats"):
     # Formatage des résultats pour l'affichage  
     home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
     away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
+
+    # Calcul des probabilités implicites  
+    implied_home_prob = calculate_implied_prob(odds_home)  
+    implied_away_prob = calculate_implied_prob(odds_away)  
+    implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
     # Prédictions avec les modèles  
     input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  
@@ -182,6 +189,22 @@ if st.button("🔍 Prédire les résultats"):
     }  
     model_details_df = pd.DataFrame(model_details)  
     st.dataframe(model_details_df, use_container_width=True)  
+
+    # Comparaison des probabilités implicites et prédites  
+    st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
+    comparison_data = {  
+        "Type": ["Implicite Domicile", "Implicite Nul", "Implicite Extérieure", "Prédite Domicile", "Prédite Nul", "Prédite Extérieure"],  
+        "Probabilité (%)": [  
+            implied_home_prob * 100,  
+            implied_draw_prob * 100,  
+            implied_away_prob * 100,  
+            log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
+            log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+            log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+        ]  
+    }  
+    comparison_df = pd.DataFrame(comparison_data)  
+    st.dataframe(comparison_df, use_container_width=True)  
 
     # Graphique des performances des modèles  
     st.subheader("📈 Comparaison des Modèles")  
