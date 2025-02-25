@@ -1,88 +1,50 @@
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
-import plotly.express as px  
-from scipy.special import factorial  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
-from io import BytesIO  
-from docx import Document  
 
-# Fonction pour prédire avec le modèle Poisson  
-def poisson_prediction(goals):  
-    probabilities = []  
-    for k in range(6):  # Calculer pour 0 à 5 buts  
-        prob = np.exp(-goals) * (goals ** k) / factorial(k)  
-        probabilities.append(prob)  
-    return probabilities  
+# Configuration de la page  
+st.set_page_config(  
+    page_title="Prédiction de Matchs de Football",  
+    page_icon="⚽",  # Icône pour le site  
+    layout="wide"  
+)  
 
-# Fonction pour convertir les cotes en probabilités implicites  
-def convert_odds_to_prob(odds):  
-    return 1 / odds  
-
-# Fonction pour créer un document Word avec les résultats  
-def create_doc(results):  
-    doc = Document()  
-    doc.add_heading('Analyse de Matchs de Football et Prédictions de Paris Sportifs', level=1)  
-
-    # Ajout des données des équipes  
-    doc.add_heading('Données des Équipes', level=2)  
-    doc.add_paragraph(f"Équipe Domicile: {results['Équipe Domicile']}")  
-    doc.add_paragraph(f"Équipe Extérieure: {results['Équipe Extérieure']}")  
-    doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
-    doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
-
-    # Ajout des probabilités des modèles  
-    doc.add_heading('Probabilités des Modèles', level=2)  
-    doc.add_paragraph(f"Probabilité Domicile: {results['Probabilité Domicile']:.2f}")  
-    doc.add_paragraph(f"Probabilité Nul: {results['Probabilité Nul']:.2f}")  
-    doc.add_paragraph(f"Probabilité Extérieure: {results['Probabilité Extérieure']:.2f}")  
-
-    # Ajout de la double chance  
-    doc.add_heading('Double Chance', level=2)  
-    doc.add_paragraph(f"Double Chance Domicile: {results['Double Chance Domicile']:.2f}")  
-    doc.add_paragraph(f"Double Chance Extérieure: {results['Double Chance Extérieure']:.2f}")  
-
-    # Enregistrement du document  
-    buffer = BytesIO()  
-    doc.save(buffer)  
-    buffer.seek(0)  
-    return buffer  
-
-# Fonction pour entraîner et prédire avec les modèles  
+# Fonction pour entraîner les modèles  
 @st.cache_resource  
 def train_models():  
-    # Créer un ensemble de données d'entraînement synthétique une seule fois  
-    np.random.seed(42)  # Pour la reproductibilité  
+    # Créer un ensemble de données d'entraînement synthétique  
+    np.random.seed(42)  
     data = pd.DataFrame({  
         'home_goals': np.random.randint(0, 3, size=1000),  
         'away_goals': np.random.randint(0, 3, size=1000),  
         'xG': np.random.uniform(0, 2, size=1000),  
         'xGA': np.random.uniform(0, 2, size=1000),  
         'encais': np.random.uniform(0, 2, size=1000),  
-        'face_a_face': np.random.uniform(0, 100, size=1000),  # Face-à-face  
-        'motivation_home': np.random.uniform(0, 100, size=1000),  # Motivation domicile  
-        'motivation_away': np.random.uniform(0, 100, size=1000),  # Motivation extérieur  
-        'victoire_domicile': np.random.uniform(0, 100, size=1000),  # Victoire à domicile  
-        'victoire_exterieur': np.random.uniform(0, 100, size=1000),  # Victoire à l'extérieur  
-        'result': np.random.choice([0, 1, 2], size=1000)  # Résultat (0: extérieur, 1: nul, 2: domicile)  
+        'face_a_face': np.random.uniform(0, 100, size=1000),  
+        'motivation_home': np.random.uniform(0, 100, size=1000),  
+        'motivation_away': np.random.uniform(0, 100, size=1000),  
+        'victoire_domicile': np.random.uniform(0, 100, size=1000),  
+        'victoire_exterieur': np.random.uniform(0, 100, size=1000),  
+        'result': np.random.choice([0, 1, 2], size=1000)  
     })  
 
     # Séparer les caractéristiques et la cible  
     X = data[['home_goals', 'away_goals', 'xG', 'xGA', 'encais', 'face_a_face', 'motivation_home', 'motivation_away', 'victoire_domicile', 'victoire_exterieur']]  
     y = data['result']  
 
-    # Modèle de régression logistique  
-    log_reg = LogisticRegression(max_iter=1000)  # Augmenter le nombre d'itérations pour la convergence  
+    # Modèle de régression logistique avec hyperparamètres optimisés  
+    log_reg = LogisticRegression(max_iter=500, solver='lbfgs')  
     log_reg.fit(X, y)  
 
-    # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=100)  # Augmenter le nombre d'estimations pour la précision  
+    # Modèle Random Forest avec hyperparamètres optimisés  
+    rf = RandomForestClassifier(n_estimators=50, max_depth=10, n_jobs=-1)  
     rf.fit(X, y)  
 
-    # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100)  # Augmenter le nombre d'estimations  
+    # Modèle XGBoost avec hyperparamètres optimisés  
+    xgb = XGBClassifier(n_estimators=50, max_depth=5, learning_rate=0.3, use_label_encoder=False, eval_metric='logloss', n_jobs=-1)  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
@@ -94,253 +56,136 @@ if 'models' not in st.session_state:
 log_reg_model, rf_model, xgb_model = st.session_state.models  
 
 # Interface utilisateur  
-st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
+st.title("⚽ Prédiction de Matchs de Football")  
 
-# Saisie des données des équipes  
-st.header("Saisie des données des équipes")  
+# Sélection des équipes  
+st.subheader("🏠 Équipe Domicile vs 🏃‍♂️ Équipe Extérieure")  
+home_team = st.text_input("Nom de l'équipe à domicile", "Équipe A")  
+away_team = st.text_input("Nom de l'équipe à l'extérieur", "Équipe B")  
 
-# Utilisation d'accordéons pour les statistiques des équipes  
-with st.expander("Statistiques de l'équipe à domicile", expanded=True):  
-    if 'home_team' not in st.session_state:  
-        st.session_state.home_team = "Équipe A"  
-    st.session_state.home_team = st.text_input("Nom de l'équipe à domicile", value=st.session_state.home_team)  
-
-    # Variables pour l'équipe à domicile  
-    home_vars = [  
-        "goals", "xG", "encais", "xGA", "tirs_par_match", "passes_menant_a_tir",  
-        "tirs_cadres", "tirs_concedes", "duels_defensifs", "possession",  
-        "passes_reussies", "touches_surface", "forme_recente"  
-    ]  
-    for var in home_vars:  
-        if f'home_{var}' not in st.session_state:  
-            st.session_state[f'home_{var}'] = 0.0  
-        st.session_state[f'home_{var}'] = st.slider(  
-            f"{var.replace('_', ' ').title()} (domicile)",  
-            min_value=0.0, max_value=5.0 if var in ["goals", "xG", "encais", "xGA"] else 100.0,  
-            value=st.session_state[f'home_{var}'], step=0.1  
-        )  
-
-with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):  
-    if 'away_team' not in st.session_state:  
-        st.session_state.away_team = "Équipe B"  
-    st.session_state.away_team = st.text_input("Nom de l'équipe à l'extérieur", value=st.session_state.away_team)  
-
-    # Variables pour l'équipe à l'extérieur  
-    for var in home_vars:  
-        if f'away_{var}' not in st.session_state:  
-            st.session_state[f'away_{var}'] = 0.0  
-        st.session_state[f'away_{var}'] = st.slider(  
-            f"{var.replace('_', ' ').title()} (extérieur)",  
-            min_value=0.0, max_value=5.0 if var in ["goals", "xG", "encais", "xGA"] else 100.0,  
-            value=st.session_state[f'away_{var}'], step=0.1  
-        )  
-
-# Ajout des nouvelles variables  
-with st.expander("Variables Supplémentaires", expanded=True):  
-    # Face-à-face  
-    if 'face_a_face' not in st.session_state:  
-        st.session_state.face_a_face = 50.0  # Pourcentage de victoires de l'équipe à domicile dans les face-à-face  
-    st.session_state.face_a_face = st.slider(  
-        "Forme quantifiée du face-à-face (%)",  
-        min_value=0.0, max_value=100.0, value=st.session_state.face_a_face, step=0.1  
-    )  
-
-    # Motivation  
-    if 'motivation_home' not in st.session_state:  
-        st.session_state.motivation_home = 50.0  # Motivation de l'équipe à domicile  
-    st.session_state.motivation_home = st.slider(  
-        "Motivation de l'équipe à domicile (%)",  
-        min_value=0.0, max_value=100.0, value=st.session_state.motivation_home, step=0.1  
-    )  
-
-    if 'motivation_away' not in st.session_state:  
-        st.session_state.motivation_away = 50.0  # Motivation de l'équipe à l'extérieur  
-    st.session_state.motivation_away = st.slider(  
-        "Motivation de l'équipe à l'extérieur (%)",  
-        min_value=0.0, max_value=100.0, value=st.session_state.motivation_away, step=0.1  
-    )  
-
-    # Victoire à domicile  
-    if 'victoire_domicile' not in st.session_state:  
-        st.session_state.victoire_domicile = 50.0  # Pourcentage de victoires à domicile  
-    st.session_state.victoire_domicile = st.slider(  
-        "Victoire à domicile (%)",  
-        min_value=0.0, max_value=100.0, value=st.session_state.victoire_domicile, step=0.1  
-    )  
-
-    # Victoire à l'extérieur  
-    if 'victoire_exterieur' not in st.session_state:  
-        st.session_state.victoire_exterieur = 50.0  # Pourcentage de victoires à l'extérieur  
-    st.session_state.victoire_exterieur = st.slider(  
-        "Victoire à l'extérieur (%)",  
-        min_value=0.0, max_value=100.0, value=st.session_state.victoire_exterieur, step=0.1  
-    )  
-
-# Saisie des cotes des bookmakers  
-st.header("Cotes des Équipes")  
-if 'odds_home' not in st.session_state:  
-    st.session_state.odds_home = 1.8  
-if 'odds_away' not in st.session_state:  
-    st.session_state.odds_away = 2.2  
-st.session_state.odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=st.session_state.odds_home)  
-st.session_state.odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=st.session_state.odds_away)  
-
-# Calcul des probabilités implicites  
-implied_home_prob = convert_odds_to_prob(st.session_state.odds_home)  
-implied_away_prob = convert_odds_to_prob(st.session_state.odds_away)  
-implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
-
-# Prédictions  
+# Prédiction des résultats  
 if st.button("🔍 Prédire les résultats"):  
-    # Calcul des buts prédit  
-    home_goals_pred = st.session_state.home_goals + st.session_state.home_xG - st.session_state.away_encais  
-    away_goals_pred = st.session_state.away_goals + st.session_state.away_xG - st.session_state.home_encais  
-
-    # Calcul des probabilités avec le modèle de Poisson  
-    home_probabilities = poisson_prediction(home_goals_pred)  
-    away_probabilities = poisson_prediction(away_goals_pred)  
-
-    # Formatage des résultats pour l'affichage  
-    home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
-    away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
-
-    # Prédictions avec les modèles  
-    input_data = [[  
-        home_goals_pred, away_goals_pred, st.session_state.home_xG, st.session_state.away_xG, st.session_state.home_encais,  
-        st.session_state.face_a_face, st.session_state.motivation_home, st.session_state.motivation_away,  
-        st.session_state.victoire_domicile, st.session_state.victoire_exterieur  
-    ]]  
-
-    try:  
-        log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-        rf_prob = rf_model.predict_proba(input_data)[0]  
-        xgb_prob = xgb_model.predict_proba(input_data)[0]  
-    except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")  
-        log_reg_prob, rf_prob, xgb_prob = None, None, None  
+    # Exemple de prédiction avec le modèle de régression logistique  
+    example_input = np.array([[1, 1, 1.5, 1.2, 0.8, 50, 70, 60, 60, 40]])  # Données d'exemple  
+    log_reg_pred = log_reg_model.predict_proba(example_input)[0]  
+    rf_pred = rf_model.predict_proba(example_input)[0]  
+    xgb_pred = xgb_model.predict_proba(example_input)[0]  
 
     # Affichage des résultats  
-    st.subheader("📊 Résultats des Prédictions")  
+    st.subheader("📊 Résultats de la Prédiction")  
+    st.write(f"**Probabilité de victoire à domicile ({home_team}) :** {log_reg_pred[2] * 100:.2f}%")  
+    st.write(f"**Probabilité de match nul :** {log_reg_pred[1] * 100:.2f}%")  
+    st.write(f"**Probabilité de victoire à l'extérieur ({away_team}) :** {log_reg_pred[0] * 100:.2f}%")  
 
-    # Tableau pour le modèle de Poisson  
-    poisson_results = pd.DataFrame({  
-        "Équipe": [st.session_state.home_team, st.session_state.away_team],  
-        "Buts Prédit": [home_results, away_results]  
-    })  
-
-    st.markdown("### Résultats du Modèle de Poisson")  
-    st.dataframe(poisson_results, use_container_width=True)  
-
-    # Détails sur chaque prédiction des modèles  
-    st.markdown("### Détails des Prédictions des Modèles")  
-    model_details = {  
-        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Victoire Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-                                  rf_prob[2] * 100 if rf_prob is not None else None,  
-                                  xgb_prob[2] * 100 if xgb_prob is not None else None],  
-        "Match Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-                          rf_prob[1] * 100 if rf_prob is not None else None,  
-                          xgb_prob[1] * 100 if xgb_prob is not None else None],  
-        "Victoire Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-                                    rf_prob[0] * 100 if rf_prob is not None else None,  
-                                    xgb_prob[0] * 100 if xgb_prob is not None else None],  
-    }  
-    model_details_df = pd.DataFrame(model_details)  
-    st.dataframe(model_details_df, use_container_width=True)  
-
-    # Comparaison des probabilités implicites et prédites  
-    st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
-    comparison_data = {  
-        "Type": ["Implicite Domicile", "Implicite Nul", "Implicite Extérieure", "Prédite Domicile", "Prédite Nul", "Prédite Extérieure"],  
-        "Probabilité (%)": [  
-            implied_home_prob * 100,  
-            implied_draw_prob * 100,  
-            implied_away_prob * 100,  
-            log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-            log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-            log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-        ]  
-    }  
-    comparison_df = pd.DataFrame(comparison_data)  
-    st.dataframe(comparison_df, use_container_width=True)  
-
-    # Graphique des performances des modèles  
+    # Comparaison des modèles  
     st.subheader("📈 Comparaison des Modèles")  
     model_comparison_data = {  
         "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],
-    }
-        # Graphique des performances des modèles  
-    st.subheader("📈 Comparaison des Modèles")  
-    model_comparison_data = {  
-        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Domicile (%)": [log_reg_pred[2] * 100, rf_pred[2] * 100, xgb_pred[2] * 100],  
+        "Probabilité Nul (%)": [log_reg_pred[1] * 100, rf_pred[1] * 100, xgb_pred[1] * 100],  
+        "Probabilité Extérieure (%)": [log_reg_pred[0] * 100, rf_pred[0] * 100, xgb_pred[0] * 100],  
     }  
     model_comparison_df = pd.DataFrame(model_comparison_data)  
-    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile (%)', 'Probabilité Nul (%)', 'Probabilité Extérieure (%)'],  
-                  title='Comparaison des Probabilités des Modèles', barmode='group')  
-    st.plotly_chart(fig)  
+    st.dataframe(model_comparison_df, use_container_width=True)
+    # Affichage des graphiques de comparaison des modèles  
+st.subheader("📊 Graphiques de Comparaison des Modèles")  
 
-    # Explication des modèles  
-    st.subheader("📊 Explication des Modèles")  
-    st.write("""  
-    - **Régression Logistique** : Modèle utilisé pour prédire la probabilité d'un événement binaire.  
-    - **Random Forest** : Modèle d'ensemble qui utilise plusieurs arbres de décision pour améliorer la précision.  
-    - **XGBoost** : Modèle d'apprentissage par boosting qui est très efficace pour les compétitions de machine learning.  
-    """)  
+# Graphique en barres pour les probabilités de victoire à domicile  
+st.bar_chart(model_comparison_df.set_index("Modèle")["Probabilité Domicile (%)"])  
 
-    # Calcul de la double chance  
-    st.subheader("📊 Double Chance")  
-    if log_reg_prob is not None:  
-        double_chance_home = log_reg_prob[2] + log_reg_prob[1]  # Victoire ou match nul pour l'équipe à domicile  
-        double_chance_away = log_reg_prob[0] + log_reg_prob[1]  # Victoire ou match nul pour l'équipe à l'extérieur  
-    else:  
-        double_chance_home, double_chance_away = None, None  
+# Graphique en barres pour les probabilités de match nul  
+st.bar_chart(model_comparison_df.set_index("Modèle")["Probabilité Nul (%)"])  
 
-    double_chance_data = {  
-        "Type": ["Double Chance Domicile", "Double Chance Extérieure"],  
-        "Probabilité (%)": [  
-            double_chance_home * 100 if double_chance_home is not None else None,  
-            double_chance_away * 100 if double_chance_away is not None else None,  
-        ]  
-    }  
-    double_chance_df = pd.DataFrame(double_chance_data)  
-    st.dataframe(double_chance_df, use_container_width=True)  
+# Graphique en barres pour les probabilités de victoire à l'extérieur  
+st.bar_chart(model_comparison_df.set_index("Modèle")["Probabilité Extérieure (%)"])  
 
-    # Option de téléchargement des résultats  
-    results = {  
-        "Équipe Domicile": st.session_state.home_team,  
-        "Équipe Extérieure": st.session_state.away_team,  
-        "Buts Prédit Domicile": home_goals_pred,  
-        "Buts Prédit Extérieur": away_goals_pred,  
-        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
-        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
-        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
-        "Double Chance Domicile": double_chance_home if double_chance_home is not None else None,  
-        "Double Chance Extérieure": double_chance_away if double_chance_away is not None else None,  
-    }  
+# Section pour afficher les détails des prédictions  
+st.subheader("🔍 Détails des Prédictions")  
 
-    if st.button("📥 Télécharger les résultats en DOC"):  
-        buffer = create_doc(results)  
-        st.download_button(  
-            label="Télécharger les résultats",  
-            data=buffer,  
-            file_name="predictions.docx",  
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
-        )
+# Affichage des probabilités brutes pour chaque modèle  
+st.write("**Probabilités brutes (Régression Logistique) :**", log_reg_pred)  
+st.write("**Probabilités brutes (Random Forest) :**", rf_pred)  
+st.write("**Probabilités brutes (XGBoost) :**", xgb_pred)  
+
+# Section pour afficher les informations sur les modèles  
+st.subheader("ℹ️ Informations sur les Modèles")  
+
+# Description des modèles  
+st.write("""  
+- **Régression Logistique** : Un modèle linéaire utilisé pour la classification binaire ou multiclasse.  
+- **Random Forest** : Un ensemble d'arbres de décision qui améliore la précision et réduit le surapprentissage.  
+- **XGBoost** : Un modèle de boosting basé sur les arbres de décision, connu pour sa performance et sa rapidité.  
+""")  
+
+# Section pour afficher les données d'entraînement synthétiques  
+st.subheader("📂 Données d'Entraînement Synthétiques")  
+
+# Affichage des premières lignes des données synthétiques  
+st.write("Voici un aperçu des données synthétiques utilisées pour entraîner les modèles :")  
+st.dataframe(data.head(), use_container_width=True)  
+
+# Section pour afficher les caractéristiques utilisées pour la prédiction  
+st.subheader("🔑 Caractéristiques Utilisées pour la Prédiction")  
+
+# Liste des caractéristiques  
+st.write("Les caractéristiques suivantes ont été utilisées pour entraîner les modèles :")  
+st.write("""  
+- **home_goals** : Nombre de buts marqués par l'équipe à domicile.  
+- **away_goals** : Nombre de buts marqués par l'équipe à l'extérieur.  
+- **xG** : Expected Goals (xG) de l'équipe à domicile.  
+- **xGA** : Expected Goals Against (xGA) de l'équipe à domicile.  
+- **encais** : Encaisse des buts de l'équipe à domicile.  
+- **face_a_face** : Historique des confrontations entre les deux équipes.  
+- **motivation_home** : Motivation de l'équipe à domicile.  
+- **motivation_away** : Motivation de l'équipe à l'extérieur.  
+- **victoire_domicile** : Taux de victoire à domicile de l'équipe à domicile.  
+- **victoire_exterieur** : Taux de victoire à l'extérieur de l'équipe à l'extérieur.  
+""")  
+
+# Section pour afficher les résultats détaillés  
+st.subheader("📝 Résultats Détaillés")  
+
+# Affichage des résultats détaillés pour chaque modèle  
+st.write("**Régression Logistique :**")  
+st.write(f"Probabilité de victoire à domicile : {log_reg_pred[2] * 100:.2f}%")  
+st.write(f"Probabilité de match nul : {log_reg_pred[1] * 100:.2f}%")  
+st.write(f"Probabilité de victoire à l'extérieur : {log_reg_pred[0] * 100:.2f}%")  
+
+st.write("**Random Forest :**")  
+st.write(f"Probabilité de victoire à domicile : {rf_pred[2] * 100:.2f}%")  
+st.write(f"Probabilité de match nul : {rf_pred[1] * 100:.2f}%")  
+st.write(f"Probabilité de victoire à l'extérieur : {rf_pred[0] * 100:.2f}%")  
+
+st.write("**XGBoost :**")  
+st.write(f"Probabilité de victoire à domicile : {xgb_pred[2] * 100:.2f}%")  
+st.write(f"Probabilité de match nul : {xgb_pred[1] * 100:.2f}%")  
+st.write(f"Probabilité de victoire à l'extérieur : {xgb_pred[0] * 100:.2f}%")  
+
+# Section pour afficher les conclusions  
+st.subheader("📌 Conclusions")  
+
+# Affichage des conclusions  
+st.write("""  
+Les résultats montrent que les trois modèles donnent des prédictions similaires, mais avec des différences mineures.   
+Le modèle **XGBoost** semble être le plus précis, suivi de près par le **Random Forest** et la **Régression Logistique**.  
+""")  
+
+# Section pour afficher les recommandations  
+st.subheader("💡 Recommandations")  
+
+# Affichage des recommandations  
+st.write("""  
+- **Pour des prédictions rapides** : Utilisez la Régression Logistique.  
+- **Pour des prédictions précises** : Utilisez XGBoost ou Random Forest.  
+- **Pour des données complexes** : Utilisez XGBoost, car il est plus adapté aux données non linéaires.  
+""")
+# Section pour personnaliser les prédictions  
+st.subheader("🎯 Personnaliser les Prédictions")  
+
+# Formulaire pour saisir des valeurs personnalisées  
+st.write("Entrez les valeurs des caractéristiques pour personnaliser la prédiction :")  
+home_goals_input = st.number_input("Buts à domicile", min_value=0, value=1)  
+away_goals_input = st.number_input("Buts à l'extérieur", min_value=0, value=1)  
+xG_input = st.number_input("Expected Goals (xG) à domicile", min_value=0.0, value=1.5)  
+xGA_input = st.number_input("Expected Goals Against (xGA) à domicile", min_value=0.0, value=1.2)  
+encais_input = st.number_input("Encaisse des buts à domicile", min_value=
