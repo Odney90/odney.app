@@ -85,6 +85,7 @@ def train_models():
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb    
+    
 else:  
     # Saisie des données des équipes  
     st.header("📋 Saisie des données des équipes")  
