@@ -8,7 +8,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
 from docx import Document  
-from joblib import dump, load  # Pour la persistance des modèles  
 
 # Fonction pour prédire avec le modèle Poisson  
 def poisson_prediction(home_goals, away_goals):  
@@ -61,19 +60,8 @@ def create_doc(results):
     buffer.seek(0)  
     return buffer  
 
-# Charger les modèles si disponibles  
-def load_models():  
-    try:  
-        log_reg = load('log_reg_model.joblib')  
-        rf = load('rf_model.joblib')  
-        xgb = load('xgb_model.joblib')  
-        return log_reg, rf, xgb  
-    except FileNotFoundError:  
-        st.error("Erreur : Les fichiers de modèles n'ont pas été trouvés.")  
-        return None, None, None  
-
 # Fonction pour entraîner et prédire avec les modèles  
-def train_and_predict(home_stats, away_stats):  
+def train_models():  
     # Créer un ensemble de données d'entraînement fictif  
     data = pd.DataFrame({  
         'home_goals': np.random.randint(0, 5, size=100),  
@@ -92,28 +80,23 @@ def train_and_predict(home_stats, away_stats):
     # Modèle de régression logistique  
     log_reg = LogisticRegression()  
     log_reg.fit(X, y)  
-    dump(log_reg, 'log_reg_model.joblib')  # Sauvegarde du modèle  
 
     # Modèle Random Forest  
     rf = RandomForestClassifier()  
     rf.fit(X, y)  
-    dump(rf, 'rf_model.joblib')  # Sauvegarde du modèle  
 
     # Modèle XGBoost  
     xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')  
     xgb.fit(X, y)  
-    dump(xgb, 'xgb_model.joblib')  # Sauvegarde du modèle  
 
-    # Prédictions  
-    input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
-    log_reg_prob = log_reg.predict_proba(input_data)[0]  
-    rf_prob = rf.predict_proba(input_data)[0]  
-    xgb_prob = xgb.predict_proba(input_data)[0]  
+    # Stocker les modèles dans l'état de session  
+    st.session_state.log_reg_model = log_reg  
+    st.session_state.rf_model = rf  
+    st.session_state.xgb_model = xgb  
 
-    return log_reg_prob, rf_prob, xgb_prob  
-
-# Charger les modèles au démarrage  
-log_reg_model, rf_model, xgb_model = load_models()  
+# Vérifier si les modèles sont déjà chargés dans l'état de session  
+if 'log_reg_model' not in st.session_state:  
+    train_models()  
 
 # Interface utilisateur  
 st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
@@ -167,21 +150,22 @@ if st.button("🔍 Prédire les résultats"):
     
     home_prob, away_prob = poisson_prediction(home_goals, away_goals)  
 
-    # Prédictions avec les autres modèles  
-    if log_reg_model is None or rf_model is None or xgb_model is None:  
-        log_reg_prob, rf_prob, xgb_prob = train_and_predict(home_stats, away_stats)  
-    else:  
-        # Vérification des données d'entrée  
-        input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
-        st.write("Données d'entrée pour les prédictions :", input_data)  
+    # Prédictions avec les modèles  
+    log_reg_model = st.session_state.log_reg_model  
+    rf_model = st.session_state.rf_model  
+    xgb_model = st.session_state.xgb_model  
 
-        try:  
-            log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-            rf_prob = rf_model.predict_proba(input_data)[0]  
-            xgb_prob = xgb_model.predict_proba(input_data)[0]  
-        except Exception as e:  
-            st.error(f"Erreur lors de la prédiction : {e}")  
-            log_reg_prob, rf_prob, xgb_prob = None, None, None  
+    # Vérification des données d'entrée  
+    input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
+    st.write("Données d'entrée pour les prédictions :", input_data)  
+
+    try:  
+        log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
+        rf_prob = rf_model.predict_proba(input_data)[0]  
+        xgb_prob = xgb_model.predict_proba(input_data)[0]  
+    except Exception as e:  
+        st.error(f"Erreur lors de la prédiction : {e}")  
+        log_reg_prob, rf_prob, xgb_prob = None, None, None  
 
     # Affichage des résultats  
     st.subheader("📊 Résultats des Prédictions")  
@@ -254,4 +238,11 @@ if st.button("🔍 Prédire les résultats"):
         "Paris Double Chance 12": double_chance["12"] if 'double_chance' in locals() else None,  
     }  
 
-    if st.button("📥")
+    if st.button("📥 Télécharger les résultats en DOC"):  
+        buffer = create_doc(results)  
+        st.download_button(  
+            label="Télécharger les résultats",  
+            data=buffer,  
+            file_name="predictions.docx",  
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
+        )
