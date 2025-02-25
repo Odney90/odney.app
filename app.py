@@ -254,8 +254,8 @@ if st.button("🔍 Prédire les résultats"):
                 implied_draw_prob * 100,  
                 implied_away_prob * 100,  
                 log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-                log_reg_prob[1] * 100 if log_reg_prob is not None else None
-                log_reg_prob[2] * 100 if log_reg_prob is not None else None  
+                log_reg_prob[1] * 100 if log_reg_prob is not None else None,
+                log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
             ]  
         }  
         comparison_df = pd.DataFrame(comparison_data)  
