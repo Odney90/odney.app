@@ -1,12 +1,12 @@
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
-import matplotlib.pyplot as plt  
-from io import BytesIO  
+import plotly.express as px  
 from scipy.special import factorial  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
+from io import BytesIO  
 from docx import Document  
 
 # Fonction pour prédire avec le modèle Poisson  
@@ -103,7 +103,7 @@ with col2:
     }  
 
 # Saisie des cotes des bookmakers  
-st.header("Saisie des cotes des bookmakers")  
+st.header("Cotes des Équipes")  
 odds_home = 1.8  # Cote pour l'équipe à domicile  
 odds_away = 2.2  # Cote pour l'équipe à l'extérieur  
 st.write(f"**Cote pour {home_team} :** {odds_home}")  
@@ -155,6 +155,25 @@ if st.button("🔍 Prédire les résultats"):
     }  
     model_details_df = pd.DataFrame(model_details)  
     st.dataframe(model_details_df)  
+
+    # Graphique des performances des modèles  
+    st.subheader("📈 Comparaison des Modèles")  
+    model_comparison_data = {  
+        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                                rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
+                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+    }  
+    model_comparison_df = pd.DataFrame(model_comparison_data)  
+    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile (%)', 'Probabilité Nul (%)', 'Probabilité Extérieure (%)'],  
+                  title='Comparaison des Probabilités des Modèles', barmode='group')  
+    st.plotly_chart(fig)  
 
     # Explication des modèles  
     st.subheader("📊 Explication des Modèles")  
