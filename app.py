@@ -6,6 +6,7 @@ from scipy.special import factorial
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
+from sklearn.model_selection import cross_val_score  
 from io import BytesIO  
 from docx import Document  
 
@@ -31,9 +32,9 @@ def create_doc(results):
 
     # Ajout des probabilités des modèles  
     doc.add_heading('Probabilités des Modèles', level=2)  
-    doc.add_paragraph(f"Probabilité Domicile: {results['Probabilité Domicile']:.2f}")  
-    doc.add_paragraph(f"Probabilité Nul: {results['Probabilité Nul']:.2f}")  
-    doc.add_paragraph(f"Probabilité Extérieure: {results['Probabilité Extérieure']:.2f}")  
+    doc.add_paragraph(f"Probabilité Domicile ou Nul: {results['Probabilité Domicile']:.2f}")  
+    doc.add_paragraph(f"Probabilité Nul ou Extérieure: {results['Probabilité Nul']:.2f}")  
+    doc.add_paragraph(f"Probabilité Domicile ou Extérieure: {results['Probabilité Extérieure']:.2f}")  
 
     # Enregistrement du document  
     buffer = BytesIO()  
@@ -44,41 +45,81 @@ def create_doc(results):
 # Fonction pour entraîner et prédire avec les modèles  
 @st.cache_resource  
 def train_models():  
-    # Créer un ensemble de données d'entraînement synthétique une seule fois  
-    np.random.seed(42)  # Pour la reproductibilité  
-    data = pd.DataFrame({  
+    try:  
+        np.random.seed(42)  
+        data = pd.DataFrame({  
+            'home_goals': np.random.randint(0, 3, size=1000),  
+            'away_goals': np.random.randint(0, 3, size=1000),  
+            'home_xG': np.random.uniform(0, 2, size=1000),  
+            'away_xG': np.random.uniform(0, 2, size=1000),  
+            'home_encais': np.random.uniform(0, 2, size=1000),  
+            'away_encais': np.random.uniform(0, 2, size=1000),  
+            'result': np.random.choice([0, 1, 2], size=1000)  # 0: D, 1: N, 2: E  
+        })  
+
+        # Création des cibles pour le paris double chance  
+        data['double_chance'] = np.where(data['result'] == 0, 0,  # D ou N  
+                                          np.where(data['result'] == 1, 1,  # N ou E  
+                                                   2))  # D ou E  
+
+        X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais']]  
+        y = data['double_chance']  # Utiliser la nouvelle cible  
+
+        # Modèle de régression logistique avec hyperparamètres  
+        log_reg = LogisticRegression(max_iter=100, C=1.0, solver='lbfgs')  
+        log_reg.fit(X, y)  
+
+        # Modèle Random Forest avec hyperparamètres  
+        rf = RandomForestClassifier(n_estimators=100, max_depth=10, min_samples_split=2)  
+        rf.fit(X, y)  
+
+        # Modèle XGBoost avec hyperparamètres  
+        xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100, max_depth=5, learning_rate=0.1)  
+        xgb.fit(X, y)  
+
+        return log_reg, rf, xgb  
+    except Exception as e:  
+        st.error(f"Erreur lors de l'entraînement des modèles : {e}")  
+        return None  # Retourner None en cas d'erreur  
+
+# Vérifier si les modèles sont déjà chargés dans l'état de session  
+if 'models' not in st.session_state:  
+    st.session_state.models = train_models()  # Appel de la fonction pour entraîner les modèles  
+
+# Assurez-vous que les modèles sont bien chargés  
+if st.session_state.models is not None:  
+    log_reg_model, rf_model, xgb_model = st.session_state.models  
+else:  
+    st.error("Les modèles n'ont pas pu être chargés.")  
+
+# Fonction pour évaluer les modèles avec validation croisée K-Fold  
+def evaluate_models(X, y):  
+    models = {  
+        "Régression Logistique": LogisticRegression(max_iter=100, C=1.0, solver='lbfgs'),  
+        "Random Forest": RandomForestClassifier(n_estimators=100, max_depth=10, min_samples_split=2),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100, max_depth=5, learning_rate=0.1)  
+    }  
+    
+    results = {}  
+    for name, model in models.items():  
+        scores = cross_val_score(model, X, y, cv=10, scoring='accuracy')  # K=10  
+        results[name] = scores.mean()  # Moyenne des scores de validation croisée  
+    
+    return results  
+
+# Évaluation des modèles après l'entraînement  
+if st.session_state.models is not None:  
+    X = pd.DataFrame({  
         'home_goals': np.random.randint(0, 3, size=1000),  
         'away_goals': np.random.randint(0, 3, size=1000),  
         'home_xG': np.random.uniform(0, 2, size=1000),  
         'away_xG': np.random.uniform(0, 2, size=1000),  
         'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000),  
-        'result': np.random.choice([0, 1, 2], size=1000)  
+        'away_encais': np.random.uniform(0, 2, size=1000)  
     })  
-
-    # Séparer les caractéristiques et la cible  
-    X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais']]  
-    y = data['result']  
-
-    # Modèle de régression logistique  
-    log_reg = LogisticRegression(max_iter=50)  # Réduire le nombre d'itérations pour la démonstration  
-    log_reg.fit(X, y)  
-
-    # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=50)  # Réduire le nombre d'estimations pour la démonstration  
-    rf.fit(X, y)  
-
-    # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50)  # Réduire le nombre d'estimations  
-    xgb.fit(X, y)  
-
-    return log_reg, rf, xgb  
-
-# Vérifier si les modèles sont déjà chargés dans l'état de session  
-if 'models' not in st.session_state:  
-    st.session_state.models = train_models()  
-
-log_reg_model, rf_model, xgb_model = st.session_state.models  
+    y = np.random.choice([0, 1, 2], size=1000)  
+    results = evaluate_models(X, y)  
+    st.write("Résultats de la validation croisée K-Fold :", results)  
 
 # Interface utilisateur  
 st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
@@ -174,15 +215,15 @@ if st.button("🔍 Prédire les résultats"):
     st.markdown("### Détails des Prédictions des Modèles")  
     model_details = {  
         "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Victoire Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-                                  rf_prob[2] * 100 if rf_prob is not None else None,  
-                                  xgb_prob[2] * 100 if xgb_prob is not None else None],  
-        "Match Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-                          rf_prob[1] * 100 if rf_prob is not None else None,  
-                          xgb_prob[1] * 100 if xgb_prob is not None else None],  
-        "Victoire Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-                                    rf_prob[0] * 100 if rf_prob is not None else None,  
-                                    xgb_prob[0] * 100 if xgb_prob is not None else None],  
+        "Victoire Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+                                          rf_prob[0] * 100 if rf_prob is not None else None,  
+                                          xgb_prob[0] * 100 if xgb_prob is not None else None],  
+        "Match Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+                                                  rf_prob[1] * 100 if rf_prob is not None else None,  
+                                                  xgb_prob[1] * 100 if xgb_prob is not None else None],  
+        "Victoire Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
+                                                         rf_prob[2] * 100 if rf_prob is not None else None,  
+                                                         xgb_prob[2] * 100 if xgb_prob is not None else None],  
     }  
     model_details_df = pd.DataFrame(model_details)  
     st.dataframe(model_details_df, use_container_width=True)  
@@ -190,14 +231,15 @@ if st.button("🔍 Prédire les résultats"):
     # Comparaison des probabilités implicites et prédites  
     st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
     comparison_data = {  
-        "Type": ["Implicite Domicile", "Implicite Nul", "Implicite Extérieure", "Prédite Domicile", "Prédite Nul", "Prédite Extérieure"],  
+        "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
+                 "Prédite Domicile ou Nul", "Prédite Nul ou Extérieure", "Prédite Domicile ou Extérieure"],  
         "Probabilité (%)": [  
             implied_home_prob * 100,  
             implied_draw_prob * 100,  
             implied_away_prob * 100,  
-            log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-            log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
             log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+            log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+            log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
         ]  
     }  
     comparison_df = pd.DataFrame(comparison_data)  
@@ -207,45 +249,38 @@ if st.button("🔍 Prédire les résultats"):
     st.subheader("📈 Comparaison des Modèles")  
     model_comparison_data = {  
         "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                                             rf_prob[0] * 100 if rf_prob is not None else 0,  
+                                             xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                                                       rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                                       xgb_prob[1] * 100 if xgb_prob is not
+     "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                                             rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                                             xgb_prob[2] * 100 if xgb_prob is not None else 0],  
     }  
     model_comparison_df = pd.DataFrame(model_comparison_data)  
-    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile (%)', 'Probabilité Nul (%)', 'Probabilité Extérieure (%)'],  
+    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile ou Nul (%)',   
+                                                       'Probabilité Nul ou Victoire Extérieure (%)',   
+                                                       'Probabilité Domicile ou Victoire Extérieure (%)'],  
                   title='Comparaison des Probabilités des Modèles', barmode='group')  
     st.plotly_chart(fig)  
 
-    # Explication des modèles  
-    st.subheader("📊 Explication des Modèles")  
-    st.write("""  
-    - **Régression Logistique** : Modèle utilisé pour prédire la probabilité d'un événement binaire.  
-    - **Random Forest** : Modèle d'ensemble qui utilise plusieurs arbres de décision pour améliorer la précision.  
-    - **XGBoost** : Modèle d'apprentissage par boosting qui est très efficace pour les compétitions de machine learning.  
-    """)  
-
-    # Option de téléchargement des résultats  
+    # Option pour télécharger le document avec les résultats  
     results = {  
-        "Équipe Domicile": home_team,  
-        "Équipe Extérieure": away_team,  
-        "Buts Prédit Domicile": home_goals_pred,  
-        "Buts Prédit Extérieur": away_goals_pred,  
-        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
-        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
-        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
+        'Équipe Domicile': home_team,  
+        'Équipe Extérieure': away_team,  
+        'Buts Prédit Domicile': home_goals_pred,  
+        'Buts Prédit Extérieur': away_goals_pred,  
+        'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+        'Probabilité Nul ou Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+        'Probabilité Domicile ou Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
     }  
+    
+    if st.button("Télécharger les résultats en document Word"):  
+        doc_buffer = create_doc(results)  
+        st.download_button("Télécharger le document", doc_buffer, "resultats_match.docx")  
 
-    if st.button("📥 Télécharger les résultats en DOC"):  
-        buffer = create_doc(results)  
-        st.download_button(  
-            label="Télécharger les résultats",  
-            data=buffer,  
-            file_name="predictions.docx",  
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
-        )
+# Fin de l'application  
+if __name__ == "__main__":  
+    st.write("Merci d'utiliser notre application de prédiction de matchs de football !")  
