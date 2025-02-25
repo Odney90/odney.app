@@ -49,15 +49,14 @@ def train_models():
     data = pd.DataFrame({  
         'home_goals': np.random.randint(0, 3, size=1000),  
         'away_goals': np.random.randint(0, 3, size=1000),  
-        'home_xG': np.random.uniform(0, 2, size=1000),  
-        'away_xG': np.random.uniform(0, 2, size=1000),  
-        'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000),  
+        'xG': np.random.uniform(0, 2, size=1000),  
+        'xGA': np.random.uniform(0, 2, size=1000),  
+        'encais': np.random.uniform(0, 2, size=1000),  
         'result': np.random.choice([0, 1, 2], size=1000)  
     })  
 
     # Séparer les caractéristiques et la cible  
-    X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais']]  
+    X = data[['home_goals', 'away_goals', 'xG', 'xGA', 'encais']]  
     y = data['result']  
 
     # Modèle de régression logistique  
@@ -88,41 +87,48 @@ st.header("Saisie des données des équipes")
 
 # Utilisation d'accordéons pour les statistiques des équipes  
 with st.expander("Statistiques de l'équipe à domicile", expanded=True):  
-    home_team = st.text_input("Nom de l'équipe à domicile", value="Équipe A")  
-    home_goals = st.slider("Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5, step=0.1)  
-    home_xG = st.slider("xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
-    home_encais = st.slider("Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=1.0, step=0.1)  
-    home_xGA = st.slider("xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
-    home_tirs_par_match = st.slider("Nombres de tirs par match (domicile)", min_value=0, max_value=30, value=15)  
-    home_passes_menant_a_tir = st.slider("Nombres de passes menant à un tir (domicile)", min_value=0, max_value=30, value=10)  
-    home_tirs_cadres = st.slider("Tirs cadrés par match (domicile)", min_value=0, max_value=15, value=5)  
-    home_tirs_concedes = st.slider("Nombres de tirs concédés par match (domicile)", min_value=0, max_value=30, value=8)  
-    home_duels_defensifs = st.slider("Duels défensifs gagnés (%) (domicile)", min_value=0.0, max_value=100.0, value=60.0)  
-    home_possession = st.slider("Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
-    home_passes_reussies = st.slider("Passes réussies (%) (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
-    home_touches_surface = st.slider("Balles touchées dans la surface adverse (domicile)", min_value=0, max_value=50, value=20)  
-    home_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=10)  
+    if 'home_team' not in st.session_state:  
+        st.session_state.home_team = "Équipe A"  
+    st.session_state.home_team = st.text_input("Nom de l'équipe à domicile", value=st.session_state.home_team)  
+
+    # Variables pour l'équipe à domicile  
+    home_vars = [  
+        "goals", "xG", "encais", "xGA", "tirs_par_match", "passes_menant_a_tir",  
+        "tirs_cadres", "tirs_concedes", "duels_defensifs", "possession",  
+        "passes_reussies", "touches_surface", "forme_recente"  
+    ]  
+    for var in home_vars:  
+        if f'home_{var}' not in st.session_state:  
+            st.session_state[f'home_{var}'] = 0.0  
+        st.session_state[f'home_{var}'] = st.slider(  
+            f"{var.replace('_', ' ').title()} (domicile)",  
+            min_value=0.0, max_value=5.0 if var in ["goals", "xG", "encais", "xGA"] else 100.0,  
+            value=st.session_state[f'home_{var}'], step=0.1  
+        )  
 
 with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):  
-    away_team = st.text_input("Nom de l'équipe à l'extérieur", value="Équipe B")  
-    away_goals = st.slider("Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
-    away_xG = st.slider("xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8, step=0.1)  
-    away_encais = st.slider("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
-    away_xGA = st.slider("xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
-    away_tirs_par_match = st.slider("Nombres de tirs par match (extérieur)", min_value=0, max_value=30, value=12)  
-    away_passes_menant_a_tir = st.slider("Nombres de passes menant à un tir (extérieur)", min_value=0, max_value=30, value=8)  
-    away_tirs_cadres = st.slider("Tirs cadrés par match (extérieur)", min_value=0, max_value=15, value=4)  
-    away_tirs_concedes = st.slider("Nombres de tirs concédés par match (extérieur)", min_value=0, max_value=30, value=10)  
-    away_duels_defensifs = st.slider("Duels défensifs gagnés (%) (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
-    away_possession = st.slider("Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
-    away_passes_reussies = st.slider("Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
-    away_touches_surface = st.slider("Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=15)  
-    away_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
+    if 'away_team' not in st.session_state:  
+        st.session_state.away_team = "Équipe B"  
+    st.session_state.away_team = st.text_input("Nom de l'équipe à l'extérieur", value=st.session_state.away_team)  
+
+    # Variables pour l'équipe à l'extérieur  
+    for var in home_vars:  
+        if f'away_{var}' not in st.session_state:  
+            st.session_state[f'away_{var}'] = 0.0  
+        st.session_state[f'away_{var}'] = st.slider(  
+            f"{var.replace('_', ' ').title()} (extérieur)",  
+            min_value=0.0, max_value=5.0 if var in ["goals", "xG", "encais", "xGA"] else 100.0,  
+            value=st.session_state[f'away_{var}'], step=0.1  
+        )  
 
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
-odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
-odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
+if 'odds_home' not in st.session_state:  
+    st.session_state.odds_home = 1.8  
+if 'odds_away' not in st.session_state:  
+    st.session_state.odds_away = 2.2  
+st.session_state.odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=st.session_state.odds_home)  
+st.session_state.odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=st.session_state.odds_away)  
 
 # Calcul des probabilités implicites  
 def calculate_implied_prob(odds):  
@@ -131,9 +137,9 @@ def calculate_implied_prob(odds):
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
     # Calcul des buts prédit  
-    home_goals_pred = home_goals + home_xG - away_encais  
-    away_goals_pred = away_goals + away_xG - home_encais  
-    
+    home_goals_pred = st.session_state.home_goals + st.session_state.home_xG - st.session_state.away_encais  
+    away_goals_pred = st.session_state.away_goals + st.session_state.away_xG - st.session_state.home_encais  
+
     # Calcul des probabilités avec le modèle de Poisson  
     home_probabilities = poisson_prediction(home_goals_pred)  
     away_probabilities = poisson_prediction(away_goals_pred)  
@@ -143,13 +149,13 @@ if st.button("🔍 Prédire les résultats"):
     away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
 
     # Calcul des probabilités implicites  
-    implied_home_prob = calculate_implied_prob(odds_home)  
-    implied_away_prob = calculate_implied_prob(odds_away)  
+    implied_home_prob = calculate_implied_prob(st.session_state.odds_home)  
+    implied_away_prob = calculate_implied_prob(st.session_state.odds_away)  
     implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
     # Prédictions avec les modèles  
-    input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  
-    
+    input_data = [[home_goals_pred, away_goals_pred, st.session_state.home_xG, st.session_state.away_xG, st.session_state.home_encais, st.session_state.away_encais]]  
+
     try:  
         log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
         rf_prob = rf_model.predict_proba(input_data)[0]  
@@ -163,7 +169,7 @@ if st.button("🔍 Prédire les résultats"):
 
     # Tableau pour le modèle de Poisson  
     poisson_results = pd.DataFrame({  
-        "Équipe": [home_team, away_team],  
+        "Équipe": [st.session_state.home_team, st.session_state.away_team],  
         "Buts Prédit": [home_results, away_results]  
     })  
 
@@ -232,8 +238,8 @@ if st.button("🔍 Prédire les résultats"):
 
     # Option de téléchargement des résultats  
     results = {  
-        "Équipe Domicile": home_team,  
-        "Équipe Extérieure": away_team,  
+        "Équipe Domicile": st.session_state.home_team,  
+        "Équipe Extérieure": st.session_state.away_team,  
         "Buts Prédit Domicile": home_goals_pred,  
         "Buts Prédit Extérieur": away_goals_pred,  
         "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
