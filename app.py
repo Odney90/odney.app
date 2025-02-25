@@ -60,6 +60,16 @@ def create_doc(results):
     buffer.seek(0)  
     return buffer  
 
+# Charger les modèles si disponibles  
+def load_models():  
+    try:  
+        log_reg = load('log_reg_model.joblib')  
+        rf = load('rf_model.joblib')  
+        xgb = load('xgb_model.joblib')  
+        return log_reg, rf, xgb  
+    except FileNotFoundError:  
+        return None, None, None  
+
 # Fonction pour entraîner et prédire avec les modèles  
 def train_and_predict(home_stats, away_stats):  
     # Créer un ensemble de données d'entraînement fictif  
@@ -71,7 +81,7 @@ def train_and_predict(home_stats, away_stats):
         'away_xG': np.random.uniform(0, 3, size=100),  
         'home_defense': np.random.randint(0, 5, size=100),  
         'away_defense': np.random.randint(0, 5, size=100),  
-        'result': np.random.choice([0, 1], size=100)  # 0 pour défaite, 1 pour victoire  
+        'result': np.random.choice([0, 1, 2], size=100)  # 0 pour victoire extérieure, 1 pour match nul, 2 pour victoire domicile  
     })  
 
     # Séparer les caractéristiques et la cible  
@@ -94,11 +104,14 @@ def train_and_predict(home_stats, away_stats):
     dump(xgb, 'xgb_model.joblib')  # Sauvegarde du modèle  
 
     # Prédictions  
-    log_reg_prob = log_reg.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0][1]  
-    rf_prob = rf.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0][1]  
-    xgb_prob = xgb.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0][1]  
+    log_reg_prob = log_reg.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
+    rf_prob = rf.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
+    xgb_prob = xgb.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
 
     return log_reg_prob, rf_prob, xgb_prob  
+
+# Charger les modèles au démarrage  
+log_reg_model, rf_model, xgb_model = load_models()  
 
 # Interface utilisateur  
 st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
@@ -153,16 +166,21 @@ if st.button("🔍 Prédire les résultats"):
     home_prob, away_prob = poisson_prediction(home_goals, away_goals)  
 
     # Prédictions avec les autres modèles  
-    log_reg_prob, rf_prob, xgb_prob = train_and_predict(home_stats, away_stats)  
+    if log_reg_model is None or rf_model is None or xgb_model is None:  
+        log_reg_prob, rf_prob, xgb_prob = train_and_predict(home_stats, away_stats)  
+    else:  
+        log_reg_prob = log_reg_model.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
+        rf_prob = rf_model.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
+        xgb_prob = xgb_model.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
 
     # Affichage des résultats  
     st.subheader("📊 Résultats des Prédictions")  
     st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
     st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
     
-    st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob * 100:.2f}%")  
-    st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob * 100:.2f}%")  
-    st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob * 100:.2f}%")  
+    st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}% (Victoire Domicile), {log_reg_prob[1] * 100:.2f}% (Match Nul), {log_reg_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+    st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[2] * 100:.2f}% (Victoire Domicile), {rf_prob[1] * 100:.2f}% (Match Nul), {rf_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+    st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[2] * 100:.2f}% (Victoire Domicile), {xgb_prob[1] * 100:.2f}% (Match Nul), {xgb_prob[0] * 100:.2f}% (Victoire Extérieure)")  
 
     # Calcul des paris double chance  
     double_chance = double_chance_probabilities(home_prob, away_prob)  
@@ -173,7 +191,7 @@ if st.button("🔍 Prédire les résultats"):
     # Visualisation des résultats  
     st.subheader("📈 Visualisation des résultats")  
     fig, ax = plt.subplots()  
-    ax.bar(["Domicile", "Extérieur"], [home_prob, away_prob], color=['blue', 'orange'])  
+    ax.bar(["Domicile", "Nul", "Extérieur"], [log_reg_prob[2], log_reg_prob[1], log_reg_prob[0]], color=['blue', 'orange', 'green'])  
     ax.set_ylabel("Probabilités")  
     ax.set_title("Probabilités des résultats")  
     st.pyplot(fig)  
@@ -184,8 +202,8 @@ if st.button("🔍 Prédire les résultats"):
     odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
 
     if odds_home > 1.0 and odds_away > 1.0:  
-        kelly_home = kelly_criterion(home_prob, odds_home)  
-        kelly_away = kelly_criterion(away_prob, odds_away)  
+        kelly_home = kelly_criterion(log_reg_prob[2], odds_home)  # Victoire Domicile  
+        kelly_away = kelly_criterion(log_reg_prob[0], odds_away)  # Victoire Extérieure  
         st.write(f"**Mise recommandée selon Kelly pour {home_team}:** {kelly_home:.2f}")  
         st.write(f"**Mise recommandée selon Kelly pour {away_team}:** {kelly_away:.2f}")  
 
@@ -195,8 +213,9 @@ if st.button("🔍 Prédire les résultats"):
         "Équipe Extérieure": away_team,  
         "Buts Prédit Domicile": home_goals,  
         "Buts Prédit Extérieur": away_goals,  
-        "Probabilité Domicile": home_prob,  
-        "Probabilité Extérieure": away_prob,  
+        "Probabilité Domicile": log_reg_prob[2],  
+        "Probabilité Nul": log_reg_prob[1],  
+        "Probabilité Extérieure": log_reg_prob[0],  
         "Probabilité Régression Logistique": log_reg_prob,  
         "Probabilité Random Forest": rf_prob,  
         "Probabilité XGBoost": xgb_prob,  
