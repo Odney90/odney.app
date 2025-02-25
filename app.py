@@ -47,40 +47,40 @@ def create_doc(results):
 def train_models():  
     np.random.seed(42)  
     data = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=10000),  
-        'away_goals': np.random.randint(0, 3, size=10000),  
-        'home_xG': np.random.uniform(0, 2, size=10000),  
-        'away_xG': np.random.uniform(0, 2, size=10000),  
-        'home_encais': np.random.uniform(0, 2, size=10000),  
-        'away_encais': np.random.uniform(0, 2, size=10000),  
-        'result': np.random.choice([0, 1, 2], size=10000)  # 0: D, 1: N, 2: E  
+        'home_goals': np.random.randint(0, 3, size=1000),  
+        'away_goals': np.random.randint(0, 3, size=1000),  
+        'home_xG': np.random.uniform(0, 2, size=1000),  
+        'away_xG': np.random.uniform(0, 2, size=1000),  
+        'home_encais': np.random.uniform(0, 2, size=1000),  
+        'away_encais': np.random.uniform(0, 2, size=1000),  
+        'result': np.random.choice([0, 1, 2], size=1000)  # 0: D, 1: N, 2: E  
     })  
 
     # Création des cibles pour le paris double chance  
-    data['double_chance'] = np.where(data['result'] == 0, 0,  # D ou N  
-                                      np.where(data['result'] == 1, 1,  # N ou E  
-                                               2))  # D ou E  
+    data['double_chance'] = np.where(data['result'] == 0, 0,  
+                                      np.where(data['result'] == 1, 1,  
+                                               2))  
 
     X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais']]  
-    y = data['double_chance']  # Utiliser la nouvelle cible  
+    y = data['double_chance']  
 
     # Modèle de régression logistique  
     log_reg = LogisticRegression(max_iter=100, C=1.0, solver='lbfgs')  
     log_reg.fit(X, y)  
 
-    # Modèle Random Forest avec hyperparamètres ajustés  
-    rf = RandomForestClassifier(n_estimators=50, max_depth=5, min_samples_split=2)  
+    # Modèle Random Forest  
+    rf = RandomForestClassifier(n_estimators=20, max_depth=3, min_samples_split=2)  
     rf.fit(X, y)  
 
-    # Modèle XGBoost avec hyperparamètres ajustés  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=3, learning_rate=0.1)  
+    # Modèle XGBoost  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=20, max_depth=3, learning_rate=0.1)  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
 
 # Vérifier si les modèles sont déjà chargés dans l'état de session  
 if 'models' not in st.session_state:  
-    st.session_state.models = train_models()  # Appel de la fonction pour entraîner les modèles  
+    st.session_state.models = train_models()  
 
 # Assurez-vous que les modèles sont bien chargés  
 if st.session_state.models is not None:  
@@ -92,28 +92,28 @@ else:
 def evaluate_models(X, y):  
     models = {  
         "Régression Logistique": LogisticRegression(max_iter=100, C=1.0, solver='lbfgs'),  
-        "Random Forest": RandomForestClassifier(n_estimators=50, max_depth=5, min_samples_split=2),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=3, learning_rate=0.1)  
+        "Random Forest": RandomForestClassifier(n_estimators=20, max_depth=3, min_samples_split=2),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=20, max_depth=3, learning_rate=0.1)  
     }  
     
     results = {}  
     for name, model in models.items():  
-        scores = cross_val_score(model, X, y, cv=10, scoring='accuracy')  # K=10  
-        results[name] = scores.mean()  # Moyenne des scores de validation croisée  
+        scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')  
+        results[name] = scores.mean()  
     
     return results  
 
 # Évaluation des modèles après l'entraînement  
 if st.session_state.models is not None:  
     X = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=10000),  
-        'away_goals': np.random.randint(0, 3, size=10000),  
-        'home_xG': np.random.uniform(0, 2, size=10000),  
-        'away_xG': np.random.uniform(0, 2, size=10000),  
-        'home_encais': np.random.uniform(0, 2, size=10000),  
-        'away_encais': np.random.uniform(0, 2, size=10000)  
+        'home_goals': np.random.randint(0, 3, size=1000),  
+        'away_goals': np.random.randint(0, 3, size=1000),  
+        'home_xG': np.random.uniform(0, 2, size=1000),  
+        'away_xG': np.random.uniform(0, 2, size=1000),  
+        'home_encais': np.random.uniform(0, 2, size=1000),  
+        'away_encais': np.random.uniform(0, 2, size=1000)  
     })  
-    y = np.random.choice([0, 1, 2], size=10000)  
+    y = np.random.choice([0, 1, 2], size=1000)  
     results = evaluate_models(X, y)  
     st.write("Résultats de la validation croisée K-Fold :", results)  
 
@@ -156,6 +156,23 @@ with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):
     away_touches_surface = st.slider("Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=15)  
     away_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
 
+# Ajout des nouvelles variables de comparaison  
+st.header("Variables de Comparaison")  
+with st.expander("Statistiques de Victoire", expanded=True):  
+    home_wins = st.number_input("Victoires à domicile", min_value=0, value=5)  
+    away_wins = st.number_input("Victoires à l'extérieur", min_value=0, value=3)  
+
+with st.expander("Confrontations Directes", expanded=True):  
+    head_to_head = st.number_input("Résultats des confrontations directes (Domicile - Extérieur)", min_value=-10, max_value=10, value=0)  
+
+with st.expander("Buts", expanded=True):  
+    home_goals_total = st.number_input("Nombre total de buts à domicile", min_value=0, value=15)  
+    away_goals_total = st.number_input("Nombre total de buts à l'extérieur", min_value=0, value=10)  
+
+# Variable pour indiquer quelle équipe reçoit  
+receiving_team = st.selectbox("Équipe qui reçoit", options=["Domicile", "Extérieur"], index=0)  
+is_home = 1 if receiving_team == "Domicile" else 0  
+
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
 odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
@@ -185,7 +202,7 @@ if st.button("🔍 Prédire les résultats"):
     implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
     # Prédictions avec les modèles  
-    input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  
+    input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais, home_wins, away_wins, head_to_head, home_goals_total, away_goals_total, is_home]]  
     
     try:  
         log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
@@ -235,8 +252,7 @@ if st.button("🔍 Prédire les résultats"):
     comparison_data = {  
         "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
                  "Prédite Domicile ou Nul", "Prédite Nul ou Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
-        "Probabilité (%)": [  
-            implied_home_prob * 100,  
+        "Probabilité (%)": [              implied_home_prob * 100,  
             implied_draw_prob * 100,  
             implied_away_prob * 100,  
             log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
@@ -257,32 +273,26 @@ if st.button("🔍 Prédire les résultats"):
         "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
                                                          rf_prob[1] * 100 if rf_prob is not None else 0,  
                                                          xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Domicile ou Victoire Extérieure (%)": [og_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                                             rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                                              xgb_prob[2] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                                              rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                                              xgb_prob[2] * 100 if xgb_prob is not None else 0]  
     }  
     model_comparison_df = pd.DataFrame(model_comparison_data)  
-    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile ou Nul (%)',   
-                                                       'Probabilité Nul ou Victoire Extérieure (%)',   
-                                                       'Probabilité Domicile ou Victoire Extérieure (%)'],  
-                  title='Comparaison des Probabilités des Modèles', barmode='group')  
-    st.plotly_chart(fig)  
+    st.dataframe(model_comparison_df, use_container_width=True)  
 
-    # Option pour télécharger le document avec les résultats  
-    results = {  
-        'Équipe Domicile': home_team,  
-        'Équipe Extérieure': away_team,  
-        'Buts Prédit Domicile': home_goals_pred,  
-        'Buts Prédit Extérieur': away_goals_pred,  
-        'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-        'Probabilité Nul ou Victoire Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-        'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-    }  
-    
+    # Option pour télécharger le document Word avec les résultats  
     if st.button("Télécharger les résultats en document Word"):  
+        results = {  
+            'Équipe Domicile': home_team,  
+            'Équipe Extérieure': away_team,  
+            'Buts Prédit Domicile': home_results,  
+            'Buts Prédit Extérieur': away_results,  
+            'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+            'Probabilité Nul ou Victoire Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+            'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+        }  
         doc_buffer = create_doc(results)  
         st.download_button("Télécharger le document", doc_buffer, "resultats_match.docx")  
 
-# Fin de l'application  
-if __name__ == "__main__":  
-    st.write("Merci d'utiliser notre application de prédiction de matchs de football !")
+# Fin de l'application
+            
