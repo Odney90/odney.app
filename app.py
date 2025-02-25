@@ -5,11 +5,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 import xgboost as xgb
+from scipy.stats import poisson
 
 # Fonction pour générer les prédictions
 def generate_predictions(team1_data, team2_data):
-    # Créer un DataFrame avec les données des deux équipes
-    X = pd.DataFrame([team1_data + team2_data], columns=team1_data.keys() + team2_data.keys())
+    # Combinaison des données des deux équipes
+    combined_data = {**team1_data, **team2_data}
+    
+    # Créer un DataFrame avec les données combinées
+    X = pd.DataFrame([combined_data], columns=list(combined_data.keys()))
     
     # Cibles possibles : 0 -> équipe 1 gagne, 1 -> match nul, 2 -> équipe 2 gagne
     y = [0, 1, 2]
@@ -54,93 +58,58 @@ def generate_predictions(team1_data, team2_data):
     }
 
 # Interface utilisateur Streamlit
-st.title("Prédiction des Résultats des Matchs de Football")
+st.title("Prédiction de résultats de matchs de football")
 
-# Variables modifiables pour l'équipe 1
-st.header("Données Équipe 1")
-attack1 = st.number_input("Force d'attaque", min_value=0, max_value=100, value=50, key="attack1")
-defense1 = st.number_input("Force de défense", min_value=0, max_value=100, value=50, key="defense1")
-injuries1 = st.number_input("Blessures", min_value=0, max_value=10, value=0, key="injuries1")
-motivation1 = st.number_input("Motivation", min_value=0, max_value=10, value=5, key="motivation1")
-tactic1 = st.number_input("Tactique (0-10)", min_value=0, max_value=10, value=5, key="tactic1")
-h2h1 = st.number_input("Historique face-à-face", min_value=0, max_value=10, value=5, key="h2h1")
-xg1 = st.number_input("xG (Expected Goals)", min_value=0.0, max_value=5.0, value=1.5, key="xg1")
-corners1 = st.number_input("Nombre de corners", min_value=0, max_value=10, value=5, key="corners1")
-yellow_cards1 = st.number_input("Cartons jaunes", min_value=0, max_value=10, value=2, key="yellow_cards1")
-red_cards1 = st.number_input("Cartons rouges", min_value=0, max_value=10, value=0, key="red_cards1")
-possession1 = st.number_input("Possession (%)", min_value=0, max_value=100, value=50, key="possession1")
-away_advantage1 = st.number_input("Avantage extérieur (0-10)", min_value=0, max_value=10, value=5, key="away_advantage1")
-home_advantage1 = st.number_input("Avantage domicile (0-10)", min_value=0, max_value=10, value=5, key="home_advantage1")
+# Saisie des données des équipes
+team1_name = st.text_input("Nom de l'Équipe 1", "Équipe A")
+team2_name = st.text_input("Nom de l'Équipe 2", "Équipe B")
 
-# Variables modifiables pour l'équipe 2
-st.header("Données Équipe 2")
-attack2 = st.number_input("Force d'attaque", min_value=0, max_value=100, value=50, key="attack2")
-defense2 = st.number_input("Force de défense", min_value=0, max_value=100, value=50, key="defense2")
-injuries2 = st.number_input("Blessures", min_value=0, max_value=10, value=0, key="injuries2")
-motivation2 = st.number_input("Motivation", min_value=0, max_value=10, value=5, key="motivation2")
-tactic2 = st.number_input("Tactique (0-10)", min_value=0, max_value=10, value=5, key="tactic2")
-h2h2 = st.number_input("Historique face-à-face", min_value=0, max_value=10, value=5, key="h2h2")
-xg2 = st.number_input("xG (Expected Goals)", min_value=0.0, max_value=5.0, value=1.5, key="xg2")
-corners2 = st.number_input("Nombre de corners", min_value=0, max_value=10, value=5, key="corners2")
-yellow_cards2 = st.number_input("Cartons jaunes", min_value=0, max_value=10, value=2, key="yellow_cards2")
-red_cards2 = st.number_input("Cartons rouges", min_value=0, max_value=10, value=0, key="red_cards2")
-possession2 = st.number_input("Possession (%)", min_value=0, max_value=100, value=50, key="possession2")
-away_advantage2 = st.number_input("Avantage extérieur (0-10)", min_value=0, max_value=10, value=5, key="away_advantage2")
-home_advantage2 = st.number_input("Avantage domicile (0-10)", min_value=0, max_value=10, value=5, key="home_advantage2")
+# Variables quantitatives pour chaque équipe
+attack1 = st.number_input(f"Force d'attaque de {team1_name}", min_value=0, max_value=100, value=50)
+defense1 = st.number_input(f"Force de défense de {team1_name}", min_value=0, max_value=100, value=50)
+attack2 = st.number_input(f"Force d'attaque de {team2_name}", min_value=0, max_value=100, value=50)
+defense2 = st.number_input(f"Force de défense de {team2_name}", min_value=0, max_value=100, value=50)
+home_advantage = st.number_input("Avantage à domicile (en %)", min_value=0, max_value=100, value=0)
 
-# Données des équipes sous forme de dictionnaires
+# Variables supplémentaires que l'utilisateur peut ajouter
+team1_goals_scored = st.number_input(f"Buts marqués par {team1_name}", min_value=0, max_value=100, value=1)
+team1_goals_conceded = st.number_input(f"Buts encaissés par {team1_name}", min_value=0, max_value=100, value=1)
+team2_goals_scored = st.number_input(f"Buts marqués par {team2_name}", min_value=0, max_value=100, value=1)
+team2_goals_conceded = st.number_input(f"Buts encaissés par {team2_name}", min_value=0, max_value=100, value=1)
+
+# Rassembler les données des équipes dans des dictionnaires
 team1_data = {
-    'Force d\'attaque': attack1,
-    'Force de défense': defense1,
-    'Blessures': injuries1,
-    'Motivation': motivation1,
-    'Tactique': tactic1,
-    'Historique face-à-face': h2h1,
-    'xG': xg1,
-    'Nombre de corners': corners1,
-    'Cartons jaunes': yellow_cards1,
-    'Cartons rouges': red_cards1,
-    'Possession (%)': possession1,
-    'Avantage extérieur': away_advantage1,
-    'Avantage domicile': home_advantage1
+    'attack': attack1,
+    'defense': defense1,
+    'goals_scored': team1_goals_scored,
+    'goals_conceded': team1_goals_conceded,
+    'home_advantage': home_advantage
 }
 
 team2_data = {
-    'Force d\'attaque': attack2,
-    'Force de défense': defense2,
-    'Blessures': injuries2,
-    'Motivation': motivation2,
-    'Tactique': tactic2,
-    'Historique face-à-face': h2h2,
-    'xG': xg2,
-    'Nombre de corners': corners2,
-    'Cartons jaunes': yellow_cards2,
-    'Cartons rouges': red_cards2,
-    'Possession (%)': possession2,
-    'Avantage extérieur': away_advantage2,
-    'Avantage domicile': home_advantage2
+    'attack': attack2,
+    'defense': defense2,
+    'goals_scored': team2_goals_scored,
+    'goals_conceded': team2_goals_conceded,
+    'home_advantage': home_advantage
 }
 
-# Bouton pour générer les prédictions
-if st.button("Générer les Prédictions"):
+# Générer les prédictions
+if st.button("Prédire le résultat du match"):
     results = generate_predictions(team1_data, team2_data)
+
+    st.write(f"Prédictions pour le match entre {team1_name} et {team2_name} :")
     
-    if results:
-        st.write("### Prédictions des Modèles :")
-        
-        st.write("#### Régression Logistique:")
-        st.write(f"Prédiction Issue: {'1' if results['logreg_predicted_issue'] == 0 else 'X' if results['logreg_predicted_issue'] == 1 else '2'}")
-        st.write(f"Probabilités : {results['logreg_prediction']}")
-        
-        st.write("#### Random Forest:")
-        st.write(f"Prédiction Issue: {'1' if results['rf_predicted_issue'] == 0 else 'X' if results['rf_predicted_issue'] == 1 else '2'}")
-        st.write(f"Probabilités : {results['rf_prediction']}")
-        
-        st.write("#### XGBoost:")
-        st.write(f"Prédiction Issue: {'1' if results['xgb_predicted_issue'] == 0 else 'X' if results['xgb_predicted_issue'] == 1 else '2'}")
-        st.write(f"Probabilités : {results['xgb_prediction']}")
-        
-        st.write("#### Double Chance:")
-        st.write(f"1X : {results['double_chance_1x']}")
-        st.write(f"X2 : {results['double_chance_x2']}")
-        st.write(f"12 : {results['double_chance_12']}")
+    # Affichage des résultats des modèles
+    st.write(f"Régression Logistique : {results['logreg_predicted_issue']} avec probabilités {results['logreg_prediction']}")
+    st.write(f"Random Forest : {results['rf_predicted_issue']} avec probabilités {results['rf_prediction']}")
+    st.write(f"XGBoost : {results['xgb_predicted_issue']} avec probabilités {results['xgb_prediction']}")
+    
+    # Affichage de la validation croisée pour Random Forest et XGBoost
+    st.write(f"Score CV Random Forest : {results['rf_cv_score']}")
+    st.write(f"Score CV XGBoost : {results['xgb_cv_score']}")
+    
+    # Affichage des résultats Double Chance
+    st.write(f"Double Chance 1X : {results['double_chance_1x']}")
+    st.write(f"Double Chance X2 : {results['double_chance_x2']}")
+    st.write(f"Double Chance 12 : {results['double_chance_12']}")
