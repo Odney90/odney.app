@@ -48,13 +48,13 @@ def train_models():
         'away_goals': np.random.randint(0, 3, size=50),  
         'home_xG': np.random.uniform(0, 2, size=50),  
         'away_xG': np.random.uniform(0, 2, size=50),  
-        'home_defense': np.random.randint(0, 3, size=50),  
-        'away_defense': np.random.randint(0, 3, size=50),  
+        'home_encais': np.random.uniform(0, 2, size=50),  
+        'away_encais': np.random.uniform(0, 2, size=50),  
         'result': np.random.choice([0, 1, 2], size=50)  
     })  
 
     # Séparer les caractéristiques et la cible  
-    X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']]  
+    X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais']]  
     y = data['result']  
 
     # Modèle de régression logistique  
@@ -136,15 +136,7 @@ if st.button("🔍 Prédire les résultats"):
     home_prob, away_prob = poisson_prediction(home_goals_pred, away_goals_pred)  
 
     # Prédictions avec les modèles  
-    input_data = [[home_goals, away_goals, home_xG, away_xG, home_encais, away_encais,   
-                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
-                   home_passes_menant_a_tir, away_passes_menant_a_tir,   
-                   home_tirs_cadres, away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
-                   home_duels_defensifs, away_duels_defensifs,   
-                   home_possession, away_possession,   
-                   home_passes_reussies, away_passes_reussies,   
-                   home_touches_surface, away_touches_surface,   
-                   home_forme_recente, away_forme_recente]]  
+    input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  
     
     try:  
         log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
