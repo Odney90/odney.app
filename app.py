@@ -23,10 +23,6 @@ def double_chance_probabilities(home_prob, away_prob):
         "12": home_prob + away_prob  
     }  
 
-# Fonction pour gérer la bankroll  
-def kelly_criterion(probability, odds):  
-    return (probability * odds - 1) / (odds - 1)  
-
 # Fonction pour créer un document Word avec les résultats  
 def create_doc(results):  
     doc = Document()  
@@ -38,6 +34,9 @@ def create_doc(results):
     doc.add_paragraph(f"Équipe Extérieure: {results['Équipe Extérieure']}")  
     doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
     doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
+
+    # Ajout des probabilités des modèles  
+    doc.add_heading('Probabilités des Modèles', level=2)  
     doc.add_paragraph(f"Probabilité Domicile: {results['Probabilité Domicile']:.2f}")  
     doc.add_paragraph(f"Probabilité Nul: {results['Probabilité Nul']:.2f}")  
     doc.add_paragraph(f"Probabilité Extérieure: {results['Probabilité Extérieure']:.2f}")  
@@ -48,12 +47,6 @@ def create_doc(results):
         if "Paris Double Chance" in bet:  
             doc.add_paragraph(f"{bet}: {prob:.2f}")  
 
-    # Ajout des probabilités des modèles  
-    doc.add_heading('Probabilités des Modèles', level=2)  
-    doc.add_paragraph(f"Probabilité Régression Logistique: {results['Probabilité Régression Logistique']:.2f}")  
-    doc.add_paragraph(f"Probabilité Random Forest: {results['Probabilité Random Forest']:.2f}")  
-    doc.add_paragraph(f"Probabilité XGBoost: {results['Probabilité XGBoost']:.2f}")  
-
     # Enregistrement du document  
     buffer = BytesIO()  
     doc.save(buffer)  
@@ -61,7 +54,7 @@ def create_doc(results):
     return buffer  
 
 # Fonction pour entraîner et prédire avec les modèles  
-@st.cache_resource  # Utilisation de st.cache_resource pour les modèles  
+@st.cache_resource  
 def train_models():  
     # Créer un ensemble de données d'entraînement fictif  
     data = pd.DataFrame({  
@@ -170,32 +163,34 @@ if st.button("🔍 Prédire les résultats"):
     # Affichage des résultats  
     st.subheader("📊 Résultats des Prédictions")  
 
-    # Vérification de la structure des probabilités  
-    if log_reg_prob is not None and len(log_reg_prob) == 3:  
-        st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
-        st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
-        
-        st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}% (Victoire Domicile)")  
-        st.write(f"**Probabilité de match nul :** {log_reg_prob[1] * 100:.2f}% (Match Nul)")  
-        st.write(f"**Probabilité de victoire selon la régression logistique pour {away_team} :** {log_reg_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+    # Section pour les buts prédit  
+    st.markdown("### Nombre de buts prédit")  
+    st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
+    st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
 
-        # Affichage des probabilités des autres modèles  
-        st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[2] * 100:.2f}% (Victoire Domicile)")  
-        st.write(f"**Probabilité de match nul :** {rf_prob[1] * 100:.2f}% (Match Nul)")  
-        st.write(f"**Probabilité de victoire selon Random Forest pour {away_team} :** {rf_prob[0] * 100:.2f}% (Victoire Extérieure)")  
-
-        st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[2] * 100:.2f}% (Victoire Domicile)")  
-        st.write(f"**Probabilité de match nul :** {xgb_prob[1] * 100:.2f}% (Match Nul)")  
-        st.write(f"**Probabilité de victoire selon XGBoost pour {away_team} :** {xgb_prob[0] * 100:.2f}% (Victoire Extérieure)")  
-    else:  
-        st.error("Erreur dans les probabilités prédites. Vérifiez les modèles et les données d'entrée.")  
+    # Section pour les probabilités des modèles  
+    st.markdown("### Probabilités des Modèles")  
+    model_results = {  
+        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+        "Victoire Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
+                                  rf_prob[2] * 100 if rf_prob is not None else None,  
+                                  xgb_prob[2] * 100 if xgb_prob is not None else None],  
+        "Match Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+                          rf_prob[1] * 100 if rf_prob is not None else None,  
+                          xgb_prob[1] * 100 if xgb_prob is not None else None],  
+        "Victoire Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+                                    rf_prob[0] * 100 if rf_prob is not None else None,  
+                                    xgb_prob[0] * 100 if xgb_prob is not None else None],  
+    }  
+    model_results_df = pd.DataFrame(model_results)  
+    st.dataframe(model_results_df)  
 
     # Calcul des paris double chance  
     if home_prob is not None and away_prob is not None:  
         double_chance = double_chance_probabilities(home_prob, away_prob)  
-        st.write("**Probabilités des paris double chance :**")  
-        for bet, prob in double_chance.items():  
-            st.write(f"{bet}: {prob:.2f}")  
+        st.markdown("### Probabilités des Paris Double Chance")  
+        double_chance_df = pd.DataFrame(double_chance.items(), columns=["Paris", "Probabilité (%)"])  
+        st.dataframe(double_chance_df)  
 
     # Visualisation des résultats  
     if log_reg_prob is not None and len(log_reg_prob) == 3:  
