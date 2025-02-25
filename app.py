@@ -59,7 +59,13 @@ def train_models():
 if 'models' not in st.session_state:  
     st.session_state.models = train_models()  
 
-log_reg_model, rf_model, xgb_model, poisson_model = st.session_state.models  
+# Vérifiez que les modèles sont bien chargés  
+try:  
+    log_reg_model, rf_model, xgb_model, poisson_model = st.session_state.models  
+except ValueError as e:  
+    st.error("Erreur lors du chargement des modèles : " + str(e))  
+    st.session_state.models = train_models()  # Réentraîner les modèles si nécessaire  
+    log_reg_model, rf_model, xgb_model, poisson_model = st.session_state.models  
 
 # Validation croisée  
 def cross_validate_models(X, y):  
