@@ -44,15 +44,16 @@ def create_doc(results):
 # Fonction pour entraîner et prédire avec les modèles  
 @st.cache_resource  
 def train_models():  
-    # Créer un ensemble de données d'entraînement fictif  
+    # Créer un ensemble de données d'entraînement synthétique une seule fois  
+    np.random.seed(42)  # Pour la reproductibilité  
     data = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=50),  
-        'away_goals': np.random.randint(0, 3, size=50),  
-        'home_xG': np.random.uniform(0, 2, size=50),  
-        'away_xG': np.random.uniform(0, 2, size=50),  
-        'home_encais': np.random.uniform(0, 2, size=50),  
-        'away_encais': np.random.uniform(0, 2, size=50),  
-        'result': np.random.choice([0, 1, 2], size=50)  
+        'home_goals': np.random.randint(0, 3, size=1000),  
+        'away_goals': np.random.randint(0, 3, size=1000),  
+        'home_xG': np.random.uniform(0, 2, size=1000),  
+        'away_xG': np.random.uniform(0, 2, size=1000),  
+        'home_encais': np.random.uniform(0, 2, size=1000),  
+        'away_encais': np.random.uniform(0, 2, size=1000),  
+        'result': np.random.choice([0, 1, 2], size=1000)  
     })  
 
     # Séparer les caractéristiques et la cible  
@@ -60,15 +61,15 @@ def train_models():
     y = data['result']  
 
     # Modèle de régression logistique  
-    log_reg = LogisticRegression(max_iter=100)  
+    log_reg = LogisticRegression(max_iter=50)  # Réduire le nombre d'itérations pour la démonstration  
     log_reg.fit(X, y)  
 
     # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=10)  
+    rf = RandomForestClassifier(n_estimators=50)  # Réduire le nombre d'estimations pour la démonstration  
     rf.fit(X, y)  
 
     # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=10)  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50)  # Réduire le nombre d'estimations  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
