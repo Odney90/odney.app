@@ -74,7 +74,6 @@ def load_models():
 # Fonction pour entraîner et prédire avec les modèles  
 def train_and_predict(home_stats, away_stats):  
     # Créer un ensemble de données d'entraînement fictif  
-    # Dans un cas réel, vous chargeriez un ensemble de données historique  
     data = pd.DataFrame({  
         'home_goals': np.random.randint(0, 5, size=100),  
         'away_goals': np.random.randint(0, 5, size=100),  
@@ -176,12 +175,17 @@ if st.button("🔍 Prédire les résultats"):
 
     # Affichage des résultats  
     st.subheader("📊 Résultats des Prédictions")  
-    st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
-    st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
-    
-    st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}% (Victoire Domicile), {log_reg_prob[1] * 100:.2f}% (Match Nul), {log_reg_prob[0] * 100:.2f}% (Victoire Extérieure)")  
-    st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[2] * 100:.2f}% (Victoire Domicile), {rf_prob[1] * 100:.2f}% (Match Nul), {rf_prob[0] * 100:.2f}% (Victoire Extérieure)")  
-    st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[2] * 100:.2f}% (Victoire Domicile), {xgb_prob[1] * 100:.2f}% (Match Nul), {xgb_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+
+    # Vérification de la structure des probabilités  
+    if log_reg_prob is not None and len(log_reg_prob) == 3:  
+        st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
+        st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
+        
+        st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}% (Victoire Domicile), {log_reg_prob[1] * 100:.2f}% (Match Nul), {log_reg_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+        st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[2] * 100:.2f}% (Victoire Domicile), {rf_prob[1] * 100:.2f}% (Match Nul), {rf_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+        st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[2] * 100:.2f}% (Victoire Domicile), {xgb_prob[1] * 100:.2f}% (Match Nul), {xgb_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+    else:  
+        st.error("Erreur dans les probabilités prédites. Vérifiez les modèles et les données d'entrée.")  
 
     # Calcul des paris double chance  
     double_chance = double_chance_probabilities(home_prob, away_prob)  
