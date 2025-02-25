@@ -95,6 +95,7 @@ else:
     st.error("Les modèles n'ont pas pu être chargés.")  
 
 # Fonction pour évaluer les modèles avec validation croisée K-Fold  
+@st.cache_data  
 def evaluate_models(X, y):  
     models = {  
         "Régression Logistique": LogisticRegression(max_iter=100, C=1.0, solver='lbfgs'),  
@@ -247,55 +248,39 @@ if st.button("🔍 Prédire les résultats"):
         # Comparaison des probabilités implicites et prédites  
         st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
         comparison_data = {  
-            "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
+            "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Victoire Extérieure", "Implicite Domicile ou Victoire Extérieure",   
                      "Prédite Domicile ou Nul", "Prédite Nul ou Victoire Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
             "Probabilité (%)": [  
                 implied_home_prob * 100,  
                 implied_draw_prob * 100,  
                 implied_away_prob * 100,  
-                log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-                log_reg_prob[1] * 100 if log_reg_prob is not None else None,
-                log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
+                log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                log_reg_prob[2] * 100 if log_reg_prob is not None else 0  
             ]  
         }  
         comparison_df = pd.DataFrame(comparison_data)  
         st.dataframe(comparison_df, use_container_width=True)  
 
-        # Graphique des performances des modèles  
-        st.subheader("📈 Comparaison des Modèles")  
-        model_comparison_data = {  
-            "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-            "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                                                 rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                                 xgb_prob[0] * 100 if xgb_prob is not None else 0],  
-            "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                                             rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                                             xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-            "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                                                  rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                                                  xgb_prob[2] * 100 if xgb_prob is not None else 0]  
-        }  
-        model_comparison_df = pd.DataFrame(model_comparison_data)  
-        st.dataframe(model_comparison_df, use_container_width=True)  
+        # Détection des Value Bets  
+        st.subheader("💰 Détection des Value Bets")  
+        value_bets = []  
+        for i in range(3):  # Pour chaque résultat possible (Domicile, Nul, Extérieur)  
+            implied_prob = [implied_home_prob, implied_draw_prob, implied_away_prob][i]  
+            predicted_prob = log_reg_prob[i] if log_reg_prob is not None else 0  
+            if predicted_prob > implied_prob:  
+                value_bets.append({  
+                    "Résultat": ["Domicile", "Nul", "Extérieur"][i],  
+                    "Probabilité Implicite (%)": implied_prob * 100,  
+                    "Probabilité Prédite (%)": predicted_prob * 100,  
+                    "Différence (%)": (predicted_prob - implied_prob) * 100  
+                })  
 
-        # Graphique des probabilités prédites  
-        st.subheader("📊 Graphique des Probabilités Prédites par Modèle")  
-        fig, ax = plt.subplots()  
-        bar_width = 0.2  
-        index = np.arange(len(model_comparison_data["Modèle"]))  
-
-        ax.bar(index, model_comparison_data["Probabilité Domicile ou Nul (%)"], bar_width, label='Domicile ou Nul')  
-        ax.bar(index + bar_width, model_comparison_data["Probabilité Nul ou Victoire Extérieure (%)"], bar_width, label='Nul ou Victoire Extérieure')  
-        ax.bar(index + 2 * bar_width, model_comparison_data["Probabilité Domicile ou Victoire Extérieure (%)"], bar_width, label='Domicile ou Victoire Extérieure')  
-
-        ax.set_xlabel('Modèles')  
-        ax.set_ylabel('Probabilités (%)')  
-        ax.set_title('Comparaison des Probabilités Prédites par Modèle')  
-        ax.set_xticks(index + bar_width)  
-        ax.set_xticklabels(model_comparison_data["Modèle"])  
-        ax.legend()  
-
-        st.pyplot(fig)  
+        if value_bets:  
+            value_bets_df = pd.DataFrame(value_bets)  
+            st.dataframe(value_bets_df, use_container_width=True)  
+        else:  
+            st.write("Aucun value bet détecté.")  
 
         # Option pour télécharger le document Word avec les résultats  
         results = {  
