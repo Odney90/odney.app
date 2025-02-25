@@ -198,7 +198,7 @@ if st.button("🔍 Prédire les résultats"):
         implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
         # Prédictions avec les modèles  
-        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais, home_wins, away_wins, head_to_head, home_goals_total, away_goals_total, is_home]]  
+        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  # 6 caractéristiques  
     
         try:  
             log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
@@ -225,7 +225,7 @@ if st.button("🔍 Prédire les résultats"):
         model_details = {  
             "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
             "Probabilité Domicile ou Nul (%)": [  
-                log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+               log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                 rf_prob[0] * 100 if rf_prob is not None else 0,  
                 xgb_prob[0] * 100 if xgb_prob is not None else 0  
             ],  
@@ -262,7 +262,7 @@ if st.button("🔍 Prédire les résultats"):
 
         # Graphique des performances des modèles  
         st.subheader("📈 Comparaison des Modèles")  
-        model_comparison_data_model_comparison_data = {  
+        model_comparison_data = {  
             "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
             "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                                                  rf_prob[0] * 100 if rf_prob is not None else 0,  
