@@ -1,121 +1,103 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb
+from sklearn.model_selection import cross_val_score
+from scipy.stats import poisson
 
-# Collecte des données des équipes
-team1_name = st.text_input("Nom de l'équipe 1", "Équipe 1")
-team2_name = st.text_input("Nom de l'équipe 2", "Équipe 2")
+# Fonction pour générer des prédictions avec les modèles
+def generate_predictions(team1_data, team2_data):
+    # Créer un DataFrame avec les données des deux équipes
+    X = pd.DataFrame([team1_data + team2_data], columns=team1_data.keys() + team2_data.keys())
+    
+    # Variables cibles : issues possibles d'un match (1 = équipe 1 gagne, X = match nul, 2 = équipe 2 gagne)
+    y = np.array([1, 0, 0, 0, 1, 0])  # Cible fictive pour entraîner les modèles (exemple)
+    
+    # Modèle Poisson
+    poisson_team1_prob = poisson.pmf(0, team1_data['average_goals'])  # Exemple : probabilité de 0 but pour l'équipe 1
+    poisson_team2_prob = poisson.pmf(0, team2_data['average_goals'])  # Exemple : probabilité de 0 but pour l'équipe 2
+    
+    # Modèle Logistique
+    logreg = LogisticRegression(max_iter=1000)
+    logreg.fit(X, y)
+    logreg_pred = logreg.predict(X)  # Prédiction logistique
+    
+    # Modèle Random Forest
+    rf = RandomForestClassifier(n_estimators=100)
+    rf.fit(X, y)
+    rf_pred = rf.predict(X)  # Prédiction Random Forest
+    
+    # Modèle XGBoost
+    xgb_model = xgb.XGBClassifier(n_estimators=100)
+    xgb_model.fit(X, y)
+    xgb_pred = xgb_model.predict(X)  # Prédiction XGBoost
+    
+    # Validation croisée
+    rf_cv_score = cross_val_score(rf, X, y, cv=10).mean()  # Validation croisée pour Random Forest
+    
+    return poisson_team1_prob, poisson_team2_prob, logreg_pred, rf_pred, rf_cv_score, xgb_pred
 
-# Variables pour l'équipe 1
-attack1 = st.number_input(f"Force d'attaque de {team1_name}", min_value=0, max_value=100, value=50)
-defense1 = st.number_input(f"Force de défense de {team1_name}", min_value=0, max_value=100, value=50)
-goals_scored1 = st.number_input(f"Buts marqués par {team1_name}", min_value=0, max_value=100, value=1)
-goals_conceded1 = st.number_input(f"Buts encaissés par {team1_name}", min_value=0, max_value=100, value=1)
-shots1 = st.number_input(f"Tirs de {team1_name}", min_value=0, max_value=100, value=10)
-shots_on_target1 = st.number_input(f"Tirs cadrés de {team1_name}", min_value=0, max_value=100, value=5)
-pass_success1 = st.number_input(f"Passes réussies par {team1_name}", min_value=0, max_value=100, value=50)
-fouls1 = st.number_input(f"Fautes commises par {team1_name}", min_value=0, max_value=100, value=5)
-yellow_cards1 = st.number_input(f"Cartons jaunes reçus par {team1_name}", min_value=0, max_value=100, value=1)
-red_cards1 = st.number_input(f"Cartons rouges reçus par {team1_name}", min_value=0, max_value=100, value=0)
-home_advantage1 = st.number_input(f"Avantage à domicile pour {team1_name} (%)", min_value=0, max_value=100, value=50)
+# Interface utilisateur
+st.title("Analyse des Paris Sportifs - Match de Football")
 
-# Forme actuelle de l'équipe 1 (qualitative)
-form1 = st.selectbox(f"Forme actuelle de {team1_name} (1: Mauvaise, 4: Excellente)", [1, 2, 3, 4])
-
-# Conditions météorologiques pour l'équipe 1
-weather1 = st.selectbox(f"Conditions météorologiques pour {team1_name} (0: Pas de pluie, 1: Pluie)", [0, 1])
-
-# Absences pour l'équipe 1 (qualitative)
-absences1 = st.number_input(f"Absences de joueurs clés de {team1_name} (0: Pas d'absent, 100: Tous absents)", min_value=0, max_value=100, value=0)
-
-# Variables pour l'équipe 2
-attack2 = st.number_input(f"Force d'attaque de {team2_name}", min_value=0, max_value=100, value=50)
-defense2 = st.number_input(f"Force de défense de {team2_name}", min_value=0, max_value=100, value=50)
-goals_scored2 = st.number_input(f"Buts marqués par {team2_name}", min_value=0, max_value=100, value=1)
-goals_conceded2 = st.number_input(f"Buts encaissés par {team2_name}", min_value=0, max_value=100, value=1)
-shots2 = st.number_input(f"Tirs de {team2_name}", min_value=0, max_value=100, value=10)
-shots_on_target2 = st.number_input(f"Tirs cadrés de {team2_name}", min_value=0, max_value=100, value=5)
-pass_success2 = st.number_input(f"Passes réussies par {team2_name}", min_value=0, max_value=100, value=50)
-fouls2 = st.number_input(f"Fautes commises par {team2_name}", min_value=0, max_value=100, value=5)
-yellow_cards2 = st.number_input(f"Cartons jaunes reçus par {team2_name}", min_value=0, max_value=100, value=1)
-red_cards2 = st.number_input(f"Cartons rouges reçus par {team2_name}", min_value=0, max_value=100, value=0)
-home_advantage2 = st.number_input(f"Avantage à domicile pour {team2_name} (%)", min_value=0, max_value=100, value=50)
-
-# Forme actuelle de l'équipe 2 (qualitative)
-form2 = st.selectbox(f"Forme actuelle de {team2_name} (1: Mauvaise, 4: Excellente)", [1, 2, 3, 4])
-
-# Conditions météorologiques pour l'équipe 2
-weather2 = st.selectbox(f"Conditions météorologiques pour {team2_name} (0: Pas de pluie, 1: Pluie)", [0, 1])
-
-# Absences pour l'équipe 2 (qualitative)
-absences2 = st.number_input(f"Absences de joueurs clés de {team2_name} (0: Pas d'absent, 100: Tous absents)", min_value=0, max_value=100, value=0)
-
-# Dictionnaires pour stocker les données des équipes
+# Saisie des données des équipes
+st.header("Saisie des données des équipes")
 team1_data = {
-    'attack': attack1,
-    'defense': defense1,
-    'goals_scored': goals_scored1,
-    'goals_conceded': goals_conceded1,
-    'shots': shots1,
-    'shots_on_target': shots_on_target1,
-    'pass_success': pass_success1,
-    'fouls': fouls1,
-    'yellow_cards': yellow_cards1,
-    'red_cards': red_cards1,
-    'home_advantage': home_advantage1,
-    'form': form1,
-    'weather': weather1,
-    'absences': absences1
+    'average_goals': st.number_input("Moyenne de buts de l'équipe 1 par match", min_value=0.0, max_value=5.0, value=1.5),
+    'attack_strength': st.number_input("Force d'attaque de l'équipe 1", min_value=0, max_value=100, value=50),
+    'defense_strength': st.number_input("Force de défense de l'équipe 1", min_value=0, max_value=100, value=50),
+    'home_advantage': st.number_input("Avantage à domicile de l'équipe 1", min_value=0, max_value=100, value=60)
 }
 
 team2_data = {
-    'attack': attack2,
-    'defense': defense2,
-    'goals_scored': goals_scored2,
-    'goals_conceded': goals_conceded2,
-    'shots': shots2,
-    'shots_on_target': shots_on_target2,
-    'pass_success': pass_success2,
-    'fouls': fouls2,
-    'yellow_cards': yellow_cards2,
-    'red_cards': red_cards2,
-    'home_advantage': home_advantage2,
-    'form': form2,
-    'weather': weather2,
-    'absences': absences2
+    'average_goals': st.number_input("Moyenne de buts de l'équipe 2 par match", min_value=0.0, max_value=5.0, value=1.2),
+    'attack_strength': st.number_input("Force d'attaque de l'équipe 2", min_value=0, max_value=100, value=45),
+    'defense_strength': st.number_input("Force de défense de l'équipe 2", min_value=0, max_value=100, value=55),
+    'home_advantage': st.number_input("Avantage à domicile de l'équipe 2", min_value=0, max_value=100, value=45)
 }
 
-# Fonction de prédiction
-def generate_predictions(team1_data, team2_data):
-    # Fusionner les données des deux équipes
-    team1_data_prefixed = {f"team1_{key}": value for key, value in team1_data.items()}
-    team2_data_prefixed = {f"team2_{key}": value for key, value in team2_data.items()}
-    combined_data = {**team1_data_prefixed, **team2_data_prefixed}
+# Calcul des prédictions
+if st.button("Générer les prédictions"):
+    poisson_team1_prob, poisson_team2_prob, logreg_pred, rf_pred, rf_cv_score, xgb_pred = generate_predictions(team1_data, team2_data)
     
-    X = pd.DataFrame([combined_data], columns=list(combined_data.keys()))
+    # Affichage des résultats
+    st.subheader("Prédictions des Modèles")
+    st.write(f"Probabilité Poisson (Equipe 1) : {poisson_team1_prob:.2f}")
+    st.write(f"Probabilité Poisson (Equipe 2) : {poisson_team2_prob:.2f}")
     
-    # Prédiction avec Logistic Regression, Random Forest, XGBoost
-    y = [0]  # Remplacer par des données réelles pour l'issue du match (0: match nul, 1: victoire équipe 1, 2: victoire équipe 2)
+    st.write(f"Prédiction Logistique (Equipe 1) : {'Gagne' if logreg_pred[0] == 1 else 'Perd'}")
+    st.write(f"Prédiction Random Forest (Equipe 1) : {'Gagne' if rf_pred[0] == 1 else 'Perd'}")
+    st.write(f"Prédiction XGBoost (Equipe 1) : {'Gagne' if xgb_pred[0] == 1 else 'Perd'}")
     
-    logreg = LogisticRegression()
-    rf = RandomForestClassifier(n_estimators=100)
-    xgb_model = xgb.XGBClassifier()
-    
-    logreg.fit(X, y)
-    rf.fit(X, y)
-    xgb_model.fit(X, y)
-    
-    logreg_pred = logreg.predict(X)[0]
-    rf_pred = rf.predict(X)[0]
-    xgb_pred = xgb_model.predict(X)[0]
-    
-    return logreg_pred, rf_pred, xgb_pred
+    st.write(f"Score de Validation Croisée Random Forest (K=10) : {rf_cv_score:.2f}")
 
-# Affichage des résultats
-if st.button("Prédire le résultat du match"):
-    logreg_pred, rf_pred, xgb_pred = generate_predictions(team1_data, team2_data)
-    st.write(f"Prédiction avec Logistic Regression: {logreg_pred}")
-    st.write(f"Prédiction avec Random Forest: {rf_pred}")
-    st.write(f"Prédiction avec XGBoost: {xgb_pred}")
+    # Ajout de la fonctionnalité des paris double chance
+    st.subheader("Paris Double Chance")
+    st.write(f"Double chance pour l'équipe 1 (gagne ou nul) : {poisson_team1_prob + poisson_team2_prob:.2f}")
+    st.write(f"Double chance pour l'équipe 2 (gagne ou nul) : {poisson_team2_prob + poisson_team1_prob:.2f}")
+
+# Gestion de la bankroll et système de mise de Kelly (optionnel)
+st.sidebar.header("Gestion de la Bankroll")
+bet_percentage = st.sidebar.slider("Pourcentage de la bankroll à parier", min_value=1, max_value=10, value=5)
+st.sidebar.write(f"Pourcentage à parier : {bet_percentage}%")
+
+# Téléchargement des résultats au format DOC (optionnel)
+if st.button("Télécharger les résultats"):
+    results = {
+        "Equipe 1": team1_data,
+        "Equipe 2": team2_data,
+        "Poisson Team 1": poisson_team1_prob,
+        "Poisson Team 2": poisson_team2_prob,
+        "Logistic Regression": logreg_pred[0],
+        "Random Forest": rf_pred[0],
+        "XGBoost": xgb_pred[0],
+        "RF CV Score": rf_cv_score,
+        "Double Chance Team 1": poisson_team1_prob + poisson_team2_prob,
+        "Double Chance Team 2": poisson_team2_prob + poisson_team1_prob
+    }
+    
+    df = pd.DataFrame([results])
+    df.to_csv("match_predictions.csv")
+    st.download_button("Télécharger les résultats", data=df.to_csv(), file_name="match_predictions.csv", mime="text/csv")
