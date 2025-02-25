@@ -84,31 +84,7 @@ def train_models():
     rf.fit(X, y)  
     xgb.fit(X, y)  
 
-    return log_reg, rf, xgb  
-
-# Fonction de connexion  
-def login(username, password):  
-    # Remplacez ces valeurs par une base de données ou un système d'authentification sécurisé  
-    return username == "admin" and password == "password"  
-
-# Interface utilisateur  
-st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
-
-# Système d'authentification  
-if 'logged_in' not in st.session_state:  
-    st.session_state.logged_in = False  
-
-if not st.session_state.logged_in:  
-    st.header("🔒 Connexion")  
-    username = st.text_input("Identifiant")  
-    password = st.text_input("Mot de passe", type="password")  
-    
-    if st.button("Se connecter"):  
-        if login(username, password):  
-            st.session_state.logged_in = True  
-            st.success("Connexion réussie !")  
-        else:  
-            st.error("Identifiant ou mot de passe incorrect.")  
+    return log_reg, rf, xgb    
 else:  
     # Saisie des données des équipes  
     st.header("📋 Saisie des données des équipes")  
