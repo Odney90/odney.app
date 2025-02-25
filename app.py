@@ -117,6 +117,8 @@ with st.expander("Statistiques des Équipes", expanded=True):
     home_goals = st.slider("Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5, step=0.1)  
     home_xG = st.slider("xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
     home_encais = st.slider("Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=1.0, step=0.1)  
+    home_victories = st.number_input("Nombre de victoires à domicile", min_value=0, value=5)  # Nouveau champ  
+    home_goals_scored = st.number_input("Nombre de buts marqués à domicile", min_value=0, value=15)  # Nouveau champ  
     home_xGA = st.slider("xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
     home_tirs_par_match = st.slider("Nombres de tirs par match (domicile)", min_value=0, max_value=30, value=15)  
     home_passes_menant_a_tir = st.slider("Nombres de passes menant à un tir (domicile)", min_value=0, max_value=30, value=10)  
@@ -133,6 +135,8 @@ with st.expander("Statistiques des Équipes", expanded=True):
     away_goals = st.slider("Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
     away_xG = st.slider("xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8, step=0.1)  
     away_encais = st.slider("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
+    away_victories = st.number_input("Nombre de victoires à l'extérieur", min_value=0, value=3)  # Nouveau champ  
+    away_goals_scored = st.number_input("Nombre de buts marqués à l'extérieur", min_value=0, value=10)  # Nouveau champ  
     away_xGA = st.slider("xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
     away_tirs_par_match = st.slider("Nombres de tirs par match (extérieur)", min_value=0, max_value=30, value=12)  
     away_passes_menant_a_tir = st.slider("Nombres de passes menant à un tir (extérieur)", min_value=0, max_value=30, value=8)  
@@ -190,7 +194,7 @@ if st.button("🔍 Prédire les résultats"):
         implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
         # Prédictions avec les modèles  
-        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais, receiving_team]]  # 7 caractéristiques  
+        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  # 6 caractéristiques  
     
         try:  
             log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
@@ -240,7 +244,7 @@ if st.button("🔍 Prédire les résultats"):
         comparison_data = {  
             "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
                      "Prédite Domicile ou Nul", "Prédite Nul ou Victoire Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
-            "Probabilité (%)": [
+            "Probabilité (%)": [  
                 implied_home_prob * 100,  
                 implied_draw_prob * 100,  
                 implied_away_prob * 100,  
