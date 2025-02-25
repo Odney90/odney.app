@@ -16,22 +16,25 @@ def generate_predictions(team1_data, team2_data):
     # Modèle de régression logistique
     logreg = LogisticRegression(max_iter=10000)
     logreg.fit(X, y)
-    logreg_prediction = logreg.predict(X)
+    logreg_prediction = logreg.predict(X)[0]
 
     # Modèle Random Forest
     rf = RandomForestClassifier()
+    rf.fit(X, y)
+    rf_prediction = rf.predict(X)[0]
     cv_scores_rf = cross_val_score(rf, X, y, cv=5)
+    rf_cv_score = cv_scores_rf.mean()
 
     # Modèle XGBoost
     xgb_model = xgb.XGBClassifier()
     xgb_model.fit(X, y)
-    xgb_prediction = xgb_model.predict(X)
+    xgb_prediction = xgb_model.predict(X)[0]
 
     # Calcul des probabilités Poisson
     poisson_team1_prob = poisson.pmf(2, team1_data['⚽ Attaque'])
     poisson_team2_prob = poisson.pmf(2, team2_data['⚽ Attaque'])
 
-    return poisson_team1_prob, poisson_team2_prob, logreg_prediction, cv_scores_rf.mean(), xgb_prediction
+    return poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction
 
 # Interface utilisateur Streamlit pour saisir les données des équipes
 st.title("Analyse des Paris Sportifs ⚽")
@@ -90,17 +93,19 @@ team2_data = {
 }
 
 # Prédictions
-poisson_team1_prob, poisson_team2_prob, logreg_prediction, cv_scores_rf_mean, xgb_prediction = generate_predictions(team1_data, team2_data)
+poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction = generate_predictions(team1_data, team2_data)
 
 # Affichage des résultats
 st.write("### Résultats des Prédictions:")
 
-st.write(f"⚽ Probabilité Poisson pour Équipe 1 : {poisson_team1_prob:.4f}")
-st.write(f"⚽ Probabilité Poisson pour Équipe 2 : {poisson_team2_prob:.4f}")
+# Prédictions des modèles
+st.write(f"⚽ **Probabilité Poisson pour Équipe 1** : {poisson_team1_prob:.4f}")
+st.write(f"⚽ **Probabilité Poisson pour Équipe 2** : {poisson_team2_prob:.4f}")
 
-st.write(f"📊 Prédiction de la régression logistique (Équipe 1) : {logreg_prediction[0]}")
-st.write(f"📊 Moyenne des scores de validation croisée (Random Forest) : {cv_scores_rf_mean:.2f}")
-st.write(f"📊 Prédiction de XGBoost (Équipe 1) : {xgb_prediction[0]}")
+st.write(f"📊 **Prédiction de la régression logistique (Équipe 1)** : {logreg_prediction}")
+st.write(f"📊 **Prédiction de Random Forest (Équipe 1)** : {rf_prediction}")
+st.write(f"📊 **Moyenne des scores de validation croisée (Random Forest)** : {rf_cv_score:.2f}")
+st.write(f"📊 **Prédiction de XGBoost (Équipe 1)** : {xgb_prediction}")
 
 # Option de téléchargement des résultats
 st.download_button(
