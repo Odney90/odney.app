@@ -2,37 +2,50 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 import xgboost as xgb
 from scipy.stats import poisson
 
 # Fonction pour générer les prédictions avec les modèles
 def generate_predictions(team1_data, team2_data):
-    # Données des équipes 1 et 2 combinées
-    X = pd.DataFrame([team1_data + team2_data], columns=team1_data.keys() + team2_data.keys())
+    # Extraire les valeurs et les clés de chaque dictionnaire
+    team1_values = list(team1_data.values())
+    team2_values = list(team2_data.values())
+    columns = list(team1_data.keys()) + list(team2_data.keys())
     
-    # Prédiction Poisson
-    poisson_team1_prob = poisson.pmf(2, team1_data['⚽ Attaque'])
-    poisson_team2_prob = poisson.pmf(2, team2_data['⚽ Attaque'])
+    # Créer un DataFrame avec ces valeurs combinées
+    X = pd.DataFrame([team1_values + team2_values], columns=columns)
     
-    # Prédiction avec régression logistique
+    # Cible fictive (à ajuster selon vos données réelles)
+    y = np.array([1])
+    
+    # 1. Régression Logistique
     logreg = LogisticRegression(max_iter=10000)
-    y = np.array([1])  # Dummy label pour l'entraînement
     logreg.fit(X, y)
     logreg_prediction = logreg.predict(X)[0]
     
-    # Prédiction avec Random Forest
-    rf = RandomForestClassifier()
+    # 2. Random Forest avec validation croisée K=5
+    rf = RandomForestClassifier(n_estimators=100, random_state=42)
+    cv_scores_rf = cross_val_score(rf, X, y, cv=5)
     rf.fit(X, y)
     rf_prediction = rf.predict(X)[0]
-    rf_cv_score = np.mean(cross_val_score(rf, X, y, cv=5))
+    rf_cv_score = cv_scores_rf.mean()
     
-    # Prédiction avec XGBoost
-    xgb_model = xgb.XGBClassifier()
+    # 3. XGBoost avec validation croisée K=5
+    xgb_model = xgb.XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3,
+                                  use_label_encoder=False, eval_metric='logloss', random_state=42)
+    cv_scores_xgb = cross_val_score(xgb_model, X, y, cv=5)
     xgb_model.fit(X, y)
     xgb_prediction = xgb_model.predict(X)[0]
+    xgb_cv_score = cv_scores_xgb.mean()
     
-    return poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction
+    # 4. Calcul des probabilités Poisson pour les buts marqués (utilise la variable '⚽ Attaque')
+    poisson_team1_prob = poisson.pmf(2, team1_data['⚽ Attaque'])
+    poisson_team2_prob = poisson.pmf(2, team2_data['⚽ Attaque'])
+    
+    return (poisson_team1_prob, poisson_team2_prob, logreg_prediction, 
+            rf_prediction, rf_cv_score, xgb_prediction, xgb_cv_score)
 
 # Interface utilisateur Streamlit pour saisir les données des équipes
 st.title("Analyse des Paris Sportifs ⚽")
@@ -51,9 +64,9 @@ xg1 = st.slider("xG Équipe 1", 0.0, 5.0, 1.4)
 corners1 = st.slider("Nombre de corners Équipe 1", 0, 20, 5)
 yellow_cards1 = st.slider("Cartons jaunes Équipe 1", 0, 10, 2)
 red_cards1 = st.slider("Cartons rouges Équipe 1", 0, 5, 0)
-possession1 = st.slider("Temps de possession Équipe 1 (%)", 0.0, 100.0, 55.0)
-away_advantage1 = st.slider("Avantage à l'extérieur Équipe 1", 0.0, 5.0, 2.0)
-home_advantage1 = st.slider("Avantage à domicile Équipe 1", 0.0, 5.0, 3.5)
+possession1 = st.slider("Possession (%) Équipe 1", 0.0, 100.0, 55.0)
+away_advantage1 = st.slider("Avantage extérieur Équipe 1 (0 à 5)", 0.0, 5.0, 2.0)
+home_advantage1 = st.slider("Avantage domicile Équipe 1 (0 à 5)", 0.0, 5.0, 3.5)
 
 # Saisie des données pour l'équipe 2
 st.write("### Données pour l'Équipe 2:")
@@ -69,11 +82,11 @@ xg2 = st.slider("xG Équipe 2", 0.0, 5.0, 1.1)
 corners2 = st.slider("Nombre de corners Équipe 2", 0, 20, 6)
 yellow_cards2 = st.slider("Cartons jaunes Équipe 2", 0, 10, 3)
 red_cards2 = st.slider("Cartons rouges Équipe 2", 0, 5, 1)
-possession2 = st.slider("Temps de possession Équipe 2 (%)", 0.0, 100.0, 45.0)
-away_advantage2 = st.slider("Avantage à l'extérieur Équipe 2", 0.0, 5.0, 1.5)
-home_advantage2 = st.slider("Avantage à domicile Équipe 2", 0.0, 5.0, 2.5)
+possession2 = st.slider("Possession (%) Équipe 2", 0.0, 100.0, 45.0)
+away_advantage2 = st.slider("Avantage extérieur Équipe 2 (0 à 5)", 0.0, 5.0, 1.5)
+home_advantage2 = st.slider("Avantage domicile Équipe 2 (0 à 5)", 0.0, 5.0, 2.5)
 
-# Données d'entrée sous forme de dictionnaire
+# Constitution des dictionnaires pour chaque équipe
 team1_data = {
     '🧑‍💼 Nom de l\'équipe': team1_name,
     '⚽ Attaque': attack1,
@@ -110,25 +123,44 @@ team2_data = {
     '🚶‍♂️ Avantage extérieur': away_advantage2
 }
 
-# Prédictions
-poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction = generate_predictions(team1_data, team2_data)
+# Génération des prédictions
+results = generate_predictions(team1_data, team2_data)
+(poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction) = results
 
 # Affichage des résultats
 st.write("### Résultats des Prédictions:")
 
-# Prédictions des modèles
-st.write(f"⚽ **Probabilité Poisson pour Équipe 1** : {poisson_team1_prob:.4f}")
-st.write(f"⚽ **Probabilité Poisson pour Équipe 2** : {poisson_team2_prob:.4f}")
+st.write(f"⚽ **Probabilité Poisson pour {team1_name}** : {poisson_team1_prob:.4f}")
+st.write(f"⚽ **Probabilité Poisson pour {team2_name}** : {poisson_team2_prob:.4f}")
 
-st.write(f"📊 **Prédiction de la régression logistique (Équipe 1)** : {logreg_prediction}")
-st.write(f"📊 **Prédiction de Random Forest (Équipe 1)** : {rf_prediction}")
-st.write(f"📊 **Moyenne des scores de validation croisée (Random Forest)** : {rf_cv_score:.2f}")
-st.write(f"📊 **Prédiction de XGBoost (Équipe 1)** : {xgb_prediction}")
+st.write(f"📊 **Prédiction de la régression logistique** : {'Victoire ' + team1_name if logreg_prediction == 1 else 'Victoire ' + team2_name}")
+st.write(f"🌳 **Prédiction de Random Forest** : {'Victoire ' + team1_name if rf_prediction == 1 else 'Victoire ' + team2_name}")
+st.write(f"🌟 **CV Score moyen (Random Forest)** : {rf_cv_score:.2f}")
+st.write(f"🚀 **Prédiction de XGBoost** : {'Victoire ' + team1_name if xgb_prediction == 1 else 'Victoire ' + team2_name}")
 
-# Prédictions pour Double Chance
-# Modélisation hypothétique pour Double Chance
-double_chance_1 = poisson_team1_prob > poisson_team2_prob
-double_chance_2 = poisson_team2_prob > poisson_team1_prob
+# Option de téléchargement des résultats (exemple de texte)
+download_text = f"""
+Résultats du match : {team1_name} vs {team2_name}
 
-st.write(f"🔄 **Double Chance Équipe 1** : {'Gagnant ou Match nul' if double_chance_1 else 'Non favorable'}")
-st.write(f"🔄 **Double Chance Équipe 2** : {'Gagnant ou Match nul' if double_chance_2 else 'Non favorable'}")
+Variables Équipe 1 :
+{team1_data}
+
+Variables Équipe 2 :
+{team2_data}
+
+Prédictions :
+- Poisson {team1_name} (2 buts) : {poisson_team1_prob:.4f}
+- Poisson {team2_name} (2 buts) : {poisson_team2_prob:.4f}
+- Régression Logistique : {'Victoire ' + team1_name if logreg_prediction == 1 else 'Victoire ' + team2_name}
+- Random Forest : {'Victoire ' + team1_name if rf_prediction == 1 else 'Victoire ' + team2_name}
+- XGBoost : {'Victoire ' + team1_name if xgb_prediction == 1 else 'Victoire ' + team2_name}
+
+CV Score (RF) : {rf_cv_score:.2f}
+"""
+
+st.download_button(
+    label="📥 Télécharger les résultats",
+    data=download_text,
+    file_name="predictions.txt",
+    mime="text/plain"
+)
