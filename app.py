@@ -87,20 +87,16 @@ col1, col2 = st.columns(2)
 with col1:  
     home_team = st.text_input("Nom de l'équipe à domicile", value="Équipe A")  
     st.subheader("Statistiques de l'équipe à domicile")  
-    home_stats = {  
-        "moyenne_buts_marques": st.number_input("Moyenne de buts marqués par match (domicile)", min_value=0.0, value=2.5),  
-        "xG": st.number_input("xG (Expected Goals) (domicile)", min_value=0.0, value=2.0),  
-        "moyenne_buts_encais": st.number_input("Moyenne de buts encaissés par match (domicile)", min_value=0.0, value=1.0),  
-    }  
+    home_goals = st.number_input("Buts marqués par l'équipe à domicile", min_value=0, value=2)  
+    home_xG = st.number_input("xG (Expected Goals) (domicile)", min_value=0.0, value=2.0)  
+    home_defense = st.number_input("Défense (domicile)", min_value=0, max_value=2, value=1)  
 
 with col2:  
     away_team = st.text_input("Nom de l'équipe à l'extérieur", value="Équipe B")  
     st.subheader("Statistiques de l'équipe à l'extérieur")  
-    away_stats = {  
-        "moyenne_buts_marques": st.number_input("Moyenne de buts marqués par match (extérieur)", min_value=0.0, value=1.5),  
-        "xG": st.number_input("xG (Expected Goals) (extérieur)", min_value=0.0, value=1.8),  
-        "moyenne_buts_encais": st.number_input("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, value=2.0),  
-    }  
+    away_goals = st.number_input("Buts marqués par l'équipe à l'extérieur", min_value=0, value=1)  
+    away_xG = st.number_input("xG (Expected Goals) (extérieur)", min_value=0.0, value=1.8)  
+    away_defense = st.number_input("Défense (extérieur)", min_value=0, max_value=2, value=1)  
 
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
@@ -112,13 +108,13 @@ st.write(f"**Cote pour {away_team} :** {odds_away}")
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
     # Calcul des buts prédit  
-    home_goals = home_stats["moyenne_buts_marques"] + home_stats["xG"] - away_stats["moyenne_buts_encais"]  
-    away_goals = away_stats["moyenne_buts_marques"] + away_stats["xG"] - home_stats["moyenne_buts_encais"]  
+    home_goals_pred = home_goals + home_xG - away_goals  
+    away_goals_pred = away_goals + away_xG - home_goals  
     
-    home_prob, away_prob = poisson_prediction(home_goals, away_goals)  
+    home_prob, away_prob = poisson_prediction(home_goals_pred, away_goals_pred)  
 
     # Prédictions avec les modèles  
-    input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG']]]  
+    input_data = [[home_goals, away_goals, home_xG, away_xG, home_defense, away_defense]]  
     try:  
         log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
         rf_prob = rf_model.predict_proba(input_data)[0]  
@@ -133,7 +129,7 @@ if st.button("🔍 Prédire les résultats"):
     # Tableau pour le modèle de Poisson  
     poisson_results = pd.DataFrame({  
         "Équipe": [home_team, away_team],  
-        "Buts Prédit": [f"{home_goals:.2f} (🔵{home_prob * 100:.2f}%)", f"{away_goals:.2f} (🔵{away_prob * 100:.2f}%)"]  
+        "Buts Prédit": [f"{home_goals_pred:.2f} (🔵{home_prob * 100:.2f}%)", f"{away_goals_pred:.2f} (🔵{away_prob * 100:.2f}%)"]  
     })  
 
     st.markdown("### Résultats du Modèle de Poisson")  
@@ -187,8 +183,8 @@ if st.button("🔍 Prédire les résultats"):
     results = {  
         "Équipe Domicile": home_team,  
         "Équipe Extérieure": away_team,  
-        "Buts Prédit Domicile": home_goals,  
-        "Buts Prédit Extérieur": away_goals,  
+        "Buts Prédit Domicile": home_goals_pred,  
+        "Buts Prédit Extérieur": away_goals_pred,  
         "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
         "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
         "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
