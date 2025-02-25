@@ -52,6 +52,41 @@ weather2 = st.selectbox(f"Conditions météorologiques pour {team2_name} (0: Pas
 # Absences pour l'équipe 2 (qualitative)
 absences2 = st.number_input(f"Absences de joueurs clés de {team2_name} (0: Pas d'absent, 100: Tous absents)", min_value=0, max_value=100, value=0)
 
+# Dictionnaires pour stocker les données des équipes
+team1_data = {
+    'attack': attack1,
+    'defense': defense1,
+    'goals_scored': goals_scored1,
+    'goals_conceded': goals_conceded1,
+    'shots': shots1,
+    'shots_on_target': shots_on_target1,
+    'pass_success': pass_success1,
+    'fouls': fouls1,
+    'yellow_cards': yellow_cards1,
+    'red_cards': red_cards1,
+    'home_advantage': home_advantage1,
+    'form': form1,
+    'weather': weather1,
+    'absences': absences1
+}
+
+team2_data = {
+    'attack': attack2,
+    'defense': defense2,
+    'goals_scored': goals_scored2,
+    'goals_conceded': goals_conceded2,
+    'shots': shots2,
+    'shots_on_target': shots_on_target2,
+    'pass_success': pass_success2,
+    'fouls': fouls2,
+    'yellow_cards': yellow_cards2,
+    'red_cards': red_cards2,
+    'home_advantage': home_advantage2,
+    'form': form2,
+    'weather': weather2,
+    'absences': absences2
+}
+
 # Fonction de prédiction
 def generate_predictions(team1_data, team2_data):
     # Fusionner les données des deux équipes
