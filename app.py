@@ -254,4 +254,4 @@ if st.button("🔍 Prédire les résultats"):
         "Paris Double Chance 12": double_chance["12"] if 'double_chance' in locals() else None,  
     }  
 
-    if st.button("📥
+    if st.button("📥")
