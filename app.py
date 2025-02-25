@@ -69,6 +69,7 @@ def load_models():
         xgb = load('xgb_model.joblib')  
         return log_reg, rf, xgb  
     except FileNotFoundError:  
+        st.error("Erreur : Les fichiers de modèles n'ont pas été trouvés.")  
         return None, None, None  
 
 # Fonction pour entraîner et prédire avec les modèles  
@@ -174,9 +175,13 @@ if st.button("🔍 Prédire les résultats"):
         input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
         st.write("Données d'entrée pour les prédictions :", input_data)  
 
-        log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-        rf_prob = rf_model.predict_proba(input_data)[0]  
-        xgb_prob = xgb_model.predict_proba(input_data)[0]  
+        try:  
+            log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
+            rf_prob = rf_model.predict_proba(input_data)[0]  
+            xgb_prob = xgb_model.predict_proba(input_data)[0]  
+        except Exception as e:  
+            st.error(f"Erreur lors de la prédiction : {e}")  
+            log_reg_prob, rf_prob, xgb_prob = None, None, None  
 
     # Affichage des résultats  
     st.subheader("📊 Résultats des Prédictions")  
@@ -193,10 +198,11 @@ if st.button("🔍 Prédire les résultats"):
         st.error("Erreur dans les probabilités prédites. Vérifiez les modèles et les données d'entrée.")  
 
     # Calcul des paris double chance  
-    double_chance = double_chance_probabilities(home_prob, away_prob)  
-    st.write("**Probabilités des paris double chance :**")  
-    for bet, prob in double_chance.items():  
-        st.write(f"{bet}: {prob:.2f}")  
+    if home_prob is not None and away_prob is not None:  
+        double_chance = double_chance_probabilities(home_prob, away_prob)  
+        st.write("**Probabilités des paris double chance :**")  
+        for bet, prob in double_chance.items():  
+            st.write(f"{bet}: {prob:.2f}")  
 
     # Visualisation des résultats  
     if log_reg_prob is not None and len(log_reg_prob) == 3:  
@@ -225,15 +231,15 @@ if st.button("🔍 Prédire les résultats"):
         "Équipe Extérieure": away_team,  
         "Buts Prédit Domicile": home_goals,  
         "Buts Prédit Extérieur": away_goals,  
-        "Probabilité Domicile": log_reg_prob[2],  
-        "Probabilité Nul": log_reg_prob[1],  
-        "Probabilité Extérieure": log_reg_prob[0],  
+        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
+        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
+        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
         "Probabilité Régression Logistique": log_reg_prob,  
         "Probabilité Random Forest": rf_prob,  
         "Probabilité XGBoost": xgb_prob,  
-        "Paris Double Chance 1X": double_chance["1X"],  
-        "Paris Double Chance X2": double_chance["X2"],  
-        "Paris Double Chance 12": double_chance["12"],  
+        "Paris Double Chance 1X": double_chance["1X"] if 'double_chance' in locals() else None,  
+        "Paris Double Chance X2": double_chance["X2"] if 'double_chance' in locals() else None,  
+        "Paris Double Chance 12": double_chance["12"] if 'double_chance' in locals() else None,  
     }  
 
     if st.button("📥 Télécharger les résultats en DOC"):  
@@ -241,6 +247,4 @@ if st.button("🔍 Prédire les résultats"):
         st.download_button(  
             label="Télécharger les résultats",  
             data=buffer,  
-            file_name="predictions.docx",  
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
-        )
+            file
