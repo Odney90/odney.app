@@ -1,7 +1,6 @@
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
-import plotly.express as px  
 from scipy.special import factorial  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
@@ -98,8 +97,8 @@ def evaluate_models(X, y):
     
     results = {}  
     for name, model in models.items():  
-        scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')  
-        results[name] = scores.mean()  
+        scores = cross_val_score(model, X, y, cv=3, scoring='accuracy')  # K=3 pour réduire le temps  
+        results[name] = scores.mean()  # Moyenne des scores de validation croisée  
     
     return results  
 
@@ -184,104 +183,105 @@ def calculate_implied_prob(odds):
 
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
-    # Calcul des buts prédit  
-    home_goals_pred = home_goals + home_xG - away_encais  
-    away_goals_pred = away_goals + away_xG - home_encais  
+    with st.spinner('Calcul des résultats...'):  
+        # Calcul des buts prédit  
+        home_goals_pred = home_goals + home_xG - away_encais  
+        away_goals_pred = away_goals + away_xG - home_encais  
     
-    # Calcul des probabilités avec le modèle de Poisson  
-    home_probabilities = poisson_prediction(home_goals_pred)  
-    away_probabilities = poisson_prediction(away_goals_pred)  
+        # Calcul des probabilités avec le modèle de Poisson  
+        home_probabilities = poisson_prediction(home_goals_pred)  
+        away_probabilities = poisson_prediction(away_goals_pred)  
 
-    # Formatage des résultats pour l'affichage  
-    home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
-    away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
+        # Formatage des résultats pour l'affichage  
+        home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
+        away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
 
-    # Calcul des probabilités implicites  
-    implied_home_prob = calculate_implied_prob(odds_home)  
-    implied_away_prob = calculate_implied_prob(odds_away)  
-    implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
+        # Calcul des probabilités implicites  
+        implied_home_prob = calculate_implied_prob(odds_home)  
+        implied_away_prob = calculate_implied_prob(odds_away)  
+        implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
-    # Prédictions avec les modèles  
-    input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais, home_wins, away_wins, head_to_head, home_goals_total, away_goals_total, is_home]]  
+        # Prédictions avec les modèles  
+        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais, home_wins, away_wins, head_to_head, home_goals_total, away_goals_total, is_home]]  
     
-    try:  
-        log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-        rf_prob = rf_model.predict_proba(input_data)[0]  
-        xgb_prob = xgb_model.predict_proba(input_data)[0]  
-    except Exception as e:  
-        st.error(f"Erreur lors de la prédiction : {e}")  
-        log_reg_prob, rf_prob, xgb_prob = None, None, None  
+        try:  
+            log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
+            rf_prob = rf_model.predict_proba(input_data)[0]  
+            xgb_prob = xgb_model.predict_proba(input_data)[0]  
+        except Exception as e:  
+            st.error(f"Erreur lors de la prédiction : {e}")  
+            log_reg_prob, rf_prob, xgb_prob = None, None, None  
 
-    # Affichage des résultats  
-    st.subheader("📊 Résultats des Prédictions")  
+        # Affichage des résultats  
+        st.subheader("📊 Résultats des Prédictions")  
 
-    # Tableau pour le modèle de Poisson  
-    poisson_results = pd.DataFrame({  
-        "Équipe": [home_team, away_team],  
-        "Buts Prédit": [home_results, away_results]  
-    })  
+        # Tableau pour le modèle de Poisson  
+        poisson_results = pd.DataFrame({  
+            "Équipe": [home_team, away_team],  
+            "Buts Prédit": [home_results, away_results]  
+        })  
 
-    st.markdown("### Résultats du Modèle de Poisson")  
-    st.dataframe(poisson_results, use_container_width=True)  
+        st.markdown("### Résultats du Modèle de Poisson")  
+        st.dataframe(poisson_results, use_container_width=True)  
 
-    # Détails sur chaque prédiction des modèles  
-    st.markdown("### Détails des Prédictions des Modèles")  
-    model_details = {  
-        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Probabilité Domicile ou Nul (%)": [  
-            log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-            rf_prob[0] * 100 if rf_prob is not None else 0,  
-            xgb_prob[0] * 100 if xgb_prob is not None else 0  
-        ],  
-        "Probabilité Nul ou Victoire Extérieure (%)": [  
-            log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-            rf_prob[1] * 100 if rf_prob is not None else 0,  
-            xgb_prob[1] * 100 if xgb_prob is not None else 0  
-        ],  
-        "Probabilité Domicile ou Victoire Extérieure (%)": [  
-            log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-            rf_prob[2] * 100 if rf_prob is not None else 0,  
-            xgb_prob[2] * 100 if xgb_prob is not None else 0  
-        ]  
-    }  
-    model_details_df = pd.DataFrame(model_details)  
-    st.dataframe(model_details_df, use_container_width=True)  
+        # Détails sur chaque prédiction des modèles  
+        st.markdown("### Détails des Prédictions des Modèles")  
+        model_details = {  
+            "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+            "Probabilité Domicile ou Nul (%)": [  
+                log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                rf_prob[0] * 100 if rf_prob is not None else 0,  
+                xgb_prob[0] * 100 if xgb_prob is not None else 0  
+            ],  
+            "Probabilité Nul ou Victoire Extérieure (%)": [  
+                log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                rf_prob[1] * 100 if rf_prob is not None else 0,  
+                xgb_prob[1] * 100 if xgb_prob is not None else 0  
+            ],  
+            "Probabilité Domicile ou Victoire Extérieure (%)": [  
+                log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                rf_prob[2] * 100 if rf_prob is not None else 0,  
+                xgb_prob[2] * 100 if xgb_prob is not None else 0  
+            ]  
+        }  
+        model_details_df = pd.DataFrame(model_details)  
+        st.dataframe(model_details_df, use_container_width=True)  
 
-    # Comparaison des probabilités implicites et prédites  
-    st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
-    comparison_data = {  
-        "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
-                 "Prédite Domicile ou Nul", "Prédite Nul ou Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
-        "Probabilité (%)": [              implied_home_prob * 100,  
-            implied_draw_prob * 100,  
-            implied_away_prob * 100,  
-            log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-            log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-            log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-        ]  
-    }  
-    comparison_df = pd.DataFrame(comparison_data)  
-    st.dataframe(comparison_df, use_container_width=True)  
+        # Comparaison des probabilités implicites et prédites  
+        st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
+        comparison_data = {  
+            "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
+                     "Prédite Domicile ou Nul", "Prédite Nul ou Victoire Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
+            "Probabilité (%)": [  
+                implied_home_prob * 100,  
+                implied_draw_prob * 100,  
+                implied_away_prob * 100,  
+                log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+                log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+                                log_reg_prob[2] * 100 if log_reg_prob is not None else None  
+            ]  
+        }  
+        comparison_df = pd.DataFrame(comparison_data)  
+        st.dataframe(comparison_df, use_container_width=True)  
 
-    # Graphique des performances des modèles  
-    st.subheader("📈 Comparaison des Modèles")  
-    model_comparison_data = {  
-        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                                             rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                             xgb_prob[0] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                                         rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                                         xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                                              rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                                              xgb_prob[2] * 100 if xgb_prob is not None else 0]  
-    }  
-    model_comparison_df = pd.DataFrame(model_comparison_data)  
-    st.dataframe(model_comparison_df, use_container_width=True)  
+        # Graphique des performances des modèles  
+        st.subheader("📈 Comparaison des Modèles")  
+        model_comparison_data = {  
+            "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+            "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                                                 rf_prob[0] * 100 if rf_prob is not None else 0,  
+                                                 xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+            "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                                                             rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                                             xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+            "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                                                  rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                                                  xgb_prob[2] * 100 if xgb_prob is not None else 0]  
+        }  
+        model_comparison_df = pd.DataFrame(model_comparison_data)  
+        st.dataframe(model_comparison_df, use_container_width=True)  
 
-    # Option pour télécharger le document Word avec les résultats  
-    if st.button("Télécharger les résultats en document Word"):  
+        # Option pour télécharger le document Word avec les résultats  
         results = {  
             'Équipe Domicile': home_team,  
             'Équipe Extérieure': away_team,  
@@ -295,4 +295,3 @@ if st.button("🔍 Prédire les résultats"):
         st.download_button("Télécharger le document", doc_buffer, "resultats_match.docx")  
 
 # Fin de l'application
-            
