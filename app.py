@@ -84,19 +84,41 @@ st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")
 st.header("Saisie des données des équipes")  
 col1, col2 = st.columns(2)  
 
+# Statistiques de l'équipe à domicile  
 with col1:  
     home_team = st.text_input("Nom de l'équipe à domicile", value="Équipe A")  
     st.subheader("Statistiques de l'équipe à domicile")  
-    home_goals = st.number_input("Buts marqués par l'équipe à domicile", min_value=0, value=2)  
+    home_goals = st.number_input("Moyenne de buts marqués par match (domicile)", min_value=0.0, value=2.5)  
     home_xG = st.number_input("xG (Expected Goals) (domicile)", min_value=0.0, value=2.0)  
-    home_defense = st.number_input("Défense (domicile)", min_value=0, max_value=2, value=1)  
+    home_encais = st.number_input("Moyenne de buts encaissés par match (domicile)", min_value=0.0, value=1.0)  
+    home_xGA = st.number_input("xGA (Expected Goals Against) (domicile)", min_value=0.0, value=1.5)  
+    home_tirs_par_match = st.number_input("Nombres de tirs par match (domicile)", min_value=0, value=15)  
+    home_passes_menant_a_tir = st.number_input("Nombres de passes menant à un tir (domicile)", min_value=0, value=10)  
+    home_tirs_cadres = st.number_input("Tirs cadrés par match (domicile)", min_value=0, value=5)  
+    home_tirs_concedes = st.number_input("Nombres de tirs concédés par match (domicile)", min_value=0, value=8)  
+    home_duels_defensifs = st.number_input("Duels défensifs gagnés (%) (domicile)", min_value=0.0, max_value=100.0, value=60.0)  
+    home_possession = st.number_input("Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
+    home_passes_reussies = st.number_input("Passes réussies (%) (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
+    home_touches_surface = st.number_input("Balles touchées dans la surface adverse (domicile)", min_value=0, value=20)  
+    home_forme_recente = st.number_input("Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, value=10)  
 
+# Statistiques de l'équipe à l'extérieur  
 with col2:  
     away_team = st.text_input("Nom de l'équipe à l'extérieur", value="Équipe B")  
     st.subheader("Statistiques de l'équipe à l'extérieur")  
-    away_goals = st.number_input("Buts marqués par l'équipe à l'extérieur", min_value=0, value=1)  
+    away_goals = st.number_input("Moyenne de buts marqués par match (extérieur)", min_value=0.0, value=1.5)  
     away_xG = st.number_input("xG (Expected Goals) (extérieur)", min_value=0.0, value=1.8)  
-    away_defense = st.number_input("Défense (extérieur)", min_value=0, max_value=2, value=1)  
+    away_encais = st.number_input("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, value=2.0)  
+    away_xGA = st.number_input("xGA (Expected Goals Against) (extérieur)", min_value=0.0, value=1.5)  
+    away_tirs_par_match = st.number_input("Nombres de tirs par match (extérieur)", min_value=0, value=12)  
+    away_passes_menant_a_tir = st.number_input("Nombres de passes menant à un tir (extérieur)", min_value=0, value=8)  
+    away_tirs_cadres = st.number_input("Tirs cadrés par match (extérieur)", min_value=0, value=4)  
+    away_tirs_concedes = st.number_input("Nombres de tirs concédés par match (extérieur)", min_value=0, value=10)  
+    away_duels_defensifs = st.number_input("Duels défensifs gagnés (%) (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
+    away_possession = st.number_input("Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
+    away_passes_reussies = st.number_input("Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
+    away_touches_surface = st.number_input("Balles touchées dans la surface adverse (extérieur)", min_value=0, value=15)  
+    away_forme_recente = st.number_input("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, value=8)  
 
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
@@ -108,13 +130,22 @@ st.write(f"**Cote pour {away_team} :** {odds_away}")
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
     # Calcul des buts prédit  
-    home_goals_pred = home_goals + home_xG - away_goals  
-    away_goals_pred = away_goals + away_xG - home_goals  
+    home_goals_pred = home_goals + home_xG - away_encais  
+    away_goals_pred = away_goals + away_xG - home_encais  
     
     home_prob, away_prob = poisson_prediction(home_goals_pred, away_goals_pred)  
 
     # Prédictions avec les modèles  
-    input_data = [[home_goals, away_goals, home_xG, away_xG, home_defense, away_defense]]  
+    input_data = [[home_goals, away_goals, home_xG, away_xG, home_encais, away_encais,   
+                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                   home_passes_menant_a_tir, away_passes_menant_a_tir,   
+                   home_tirs_cadres, away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                   home_duels_defensifs, away_duels_defensifs,   
+                   home_possession, away_possession,   
+                   home_passes_reussies, away_passes_reussies,   
+                   home_touches_surface, away_touches_surface,   
+                   home_forme_recente, away_forme_recente]]  
+    
     try:  
         log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
         rf_prob = rf_model.predict_proba(input_data)[0]  
