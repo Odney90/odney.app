@@ -191,9 +191,18 @@ if st.button("🔍 Prédire les résultats"):
         st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
         st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
         
-        st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}% (Victoire Domicile), {log_reg_prob[1] * 100:.2f}% (Match Nul), {log_reg_prob[0] * 100:.2f}% (Victoire Extérieure)")  
-        st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[2] * 100:.2f}% (Victoire Domicile), {rf_prob[1] * 100:.2f}% (Match Nul), {rf_prob[0] * 100:.2f}% (Victoire Extérieure)")  
-        st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[2] * 100:.2f}% (Victoire Domicile), {xgb_prob[1] * 100:.2f}% (Match Nul), {xgb_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+        st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}% (Victoire Domicile)")  
+        st.write(f"**Probabilité de match nul :** {log_reg_prob[1] * 100:.2f}% (Match Nul)")  
+        st.write(f"**Probabilité de victoire selon la régression logistique pour {away_team} :** {log_reg_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+
+        # Affichage des probabilités des autres modèles  
+        st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[2] * 100:.2f}% (Victoire Domicile)")  
+        st.write(f"**Probabilité de match nul :** {rf_prob[1] * 100:.2f}% (Match Nul)")  
+        st.write(f"**Probabilité de victoire selon Random Forest pour {away_team} :** {rf_prob[0] * 100:.2f}% (Victoire Extérieure)")  
+
+        st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[2] * 100:.2f}% (Victoire Domicile)")  
+        st.write(f"**Probabilité de match nul :** {xgb_prob[1] * 100:.2f}% (Match Nul)")  
+        st.write(f"**Probabilité de victoire selon XGBoost pour {away_team} :** {xgb_prob[0] * 100:.2f}% (Victoire Extérieure)")  
     else:  
         st.error("Erreur dans les probabilités prédites. Vérifiez les modèles et les données d'entrée.")  
 
@@ -219,11 +228,14 @@ if st.button("🔍 Prédire les résultats"):
     odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
     odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
 
-    if odds_home > 1.0 and odds_away > 1.0:  
+    # Vérification des probabilités avant de calculer les mises  
+    if log_reg_prob is not None and len(log_reg_prob) == 3:  
         kelly_home = kelly_criterion(log_reg_prob[2], odds_home)  # Victoire Domicile  
         kelly_away = kelly_criterion(log_reg_prob[0], odds_away)  # Victoire Extérieure  
         st.write(f"**Mise recommandée selon Kelly pour {home_team}:** {kelly_home:.2f}")  
         st.write(f"**Mise recommandée selon Kelly pour {away_team}:** {kelly_away:.2f}")  
+    else:  
+        st.error("Impossible de calculer les mises recommandées en raison d'une erreur dans les probabilités prédites.")  
 
     # Option de téléchargement des résultats  
     results = {  
@@ -242,9 +254,4 @@ if st.button("🔍 Prédire les résultats"):
         "Paris Double Chance 12": double_chance["12"] if 'double_chance' in locals() else None,  
     }  
 
-    if st.button("📥 Télécharger les résultats en DOC"):  
-        buffer = create_doc(results)  
-        st.download_button(  
-            label="Télécharger les résultats",  
-            data=buffer,  
-            file
+    if st.button("📥
