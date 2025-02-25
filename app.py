@@ -61,7 +61,7 @@ def create_doc(results):
     return buffer  
 
 # Fonction pour entraîner et prédire avec les modèles  
-@st.cache(allow_output_mutation=True)  # Mise en cache des modèles  
+@st.cache_resource  # Utilisation de st.cache_resource pour les modèles  
 def train_models():  
     # Créer un ensemble de données d'entraînement fictif  
     data = pd.DataFrame({  
