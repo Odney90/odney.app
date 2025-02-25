@@ -47,13 +47,13 @@ def create_doc(results):
 def train_models():  
     np.random.seed(42)  
     data = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=1000),  
-        'away_goals': np.random.randint(0, 3, size=1000),  
-        'home_xG': np.random.uniform(0, 2, size=1000),  
-        'away_xG': np.random.uniform(0, 2, size=1000),  
-        'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000),  
-        'result': np.random.choice([0, 1, 2], size=1000)  # 0: D, 1: N, 2: E  
+        'home_goals': np.random.randint(0, 3, size=10000),  
+        'away_goals': np.random.randint(0, 3, size=10000),  
+        'home_xG': np.random.uniform(0, 2, size=10000),  
+        'away_xG': np.random.uniform(0, 2, size=10000),  
+        'home_encais': np.random.uniform(0, 2, size=10000),  
+        'away_encais': np.random.uniform(0, 2, size=10000),  
+        'result': np.random.choice([0, 1, 2], size=10000)  # 0: D, 1: N, 2: E  
     })  
 
     # Création des cibles pour le paris double chance  
@@ -68,12 +68,12 @@ def train_models():
     log_reg = LogisticRegression(max_iter=100, C=1.0, solver='lbfgs')  
     log_reg.fit(X, y)  
 
-    # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=100, max_depth=10, min_samples_split=2)  
+    # Modèle Random Forest avec hyperparamètres ajustés  
+    rf = RandomForestClassifier(n_estimators=50, max_depth=5, min_samples_split=2)  
     rf.fit(X, y)  
 
-    # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100, max_depth=5, learning_rate=0.1)  
+    # Modèle XGBoost avec hyperparamètres ajustés  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=3, learning_rate=0.1)  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
@@ -92,8 +92,8 @@ else:
 def evaluate_models(X, y):  
     models = {  
         "Régression Logistique": LogisticRegression(max_iter=100, C=1.0, solver='lbfgs'),  
-        "Random Forest": RandomForestClassifier(n_estimators=100, max_depth=10, min_samples_split=2),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100, max_depth=5, learning_rate=0.1)  
+        "Random Forest": RandomForestClassifier(n_estimators=50, max_depth=5, min_samples_split=2),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=3, learning_rate=0.1)  
     }  
     
     results = {}  
@@ -106,14 +106,14 @@ def evaluate_models(X, y):
 # Évaluation des modèles après l'entraînement  
 if st.session_state.models is not None:  
     X = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=1000),  
-        'away_goals': np.random.randint(0, 3, size=1000),  
-        'home_xG': np.random.uniform(0, 2, size=1000),  
-        'away_xG': np.random.uniform(0, 2, size=1000),  
-        'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000)  
+        'home_goals': np.random.randint(0, 3, size=10000),  
+        'away_goals': np.random.randint(0, 3, size=10000),  
+        'home_xG': np.random.uniform(0, 2, size=10000),  
+        'away_xG': np.random.uniform(0, 2, size=10000),  
+        'home_encais': np.random.uniform(0, 2, size=10000),  
+        'away_encais': np.random.uniform(0, 2, size=10000)  
     })  
-    y = np.random.choice([0, 1, 2], size=1000)  
+    y = np.random.choice([0, 1, 2], size=10000)  
     results = evaluate_models(X, y)  
     st.write("Résultats de la validation croisée K-Fold :", results)  
 
@@ -255,33 +255,33 @@ if st.button("🔍 Prédire les résultats"):
                                              rf_prob[0] * 100 if rf_prob is not None else 0,  
                                              xgb_prob[0] * 100 if xgb_prob is not None else 0],  
         "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                                        rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                                        xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-    "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                                         rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                                         xgb_prob[2] * 100 if xgb_prob is not None else 0],  
-}  
-model_comparison_df = pd.DataFrame(model_comparison_data)  
-fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile ou Nul (%)',   
-                                                   'Probabilité Nul ou Victoire Extérieure (%)',   
-                                                   'Probabilité Domicile ou Victoire Extérieure (%)'],  
-              title='Comparaison des Probabilités des Modèles', barmode='group')  
-st.plotly_chart(fig)  
+                                                         rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                                         xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Domicile ou Victoire Extérieure (%)": [og_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                                             rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                                              xgb_prob[2] * 100 if xgb_prob is not None else 0],  
+    }  
+    model_comparison_df = pd.DataFrame(model_comparison_data)  
+    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile ou Nul (%)',   
+                                                       'Probabilité Nul ou Victoire Extérieure (%)',   
+                                                       'Probabilité Domicile ou Victoire Extérieure (%)'],  
+                  title='Comparaison des Probabilités des Modèles', barmode='group')  
+    st.plotly_chart(fig)  
 
-# Option pour télécharger le document avec les résultats  
-results = {  
-    'Équipe Domicile': home_team,  
-    'Équipe Extérieure': away_team,  
-    'Buts Prédit Domicile': home_goals_pred,  
-    'Buts Prédit Extérieur': away_goals_pred,  
-    'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-    'Probabilité Nul ou Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-    'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
-}  
-
-if st.button("Télécharger les résultats en document Word"):  
-    doc_buffer = create_doc(results)  
-    st.download_button("Télécharger le document", doc_buffer, "resultats_match.docx")  
+    # Option pour télécharger le document avec les résultats  
+    results = {  
+        'Équipe Domicile': home_team,  
+        'Équipe Extérieure': away_team,  
+        'Buts Prédit Domicile': home_goals_pred,  
+        'Buts Prédit Extérieur': away_goals_pred,  
+        'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
+        'Probabilité Nul ou Victoire Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+        'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else None,  
+    }  
+    
+    if st.button("Télécharger les résultats en document Word"):  
+        doc_buffer = create_doc(results)  
+        st.download_button("Télécharger le document", doc_buffer, "resultats_match.docx")  
 
 # Fin de l'application  
 if __name__ == "__main__":  
