@@ -121,6 +121,47 @@ with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):
             value=st.session_state[f'away_{var}'], step=0.1  
         )  
 
+# Ajout des nouvelles variables  
+with st.expander("Variables Supplémentaires", expanded=True):  
+    # Face-à-face  
+    if 'face_a_face' not in st.session_state:  
+        st.session_state.face_a_face = 50.0  # Pourcentage de victoires de l'équipe à domicile dans les face-à-face  
+    st.session_state.face_a_face = st.slider(  
+        "Forme quantifiée du face-à-face (%)",  
+        min_value=0.0, max_value=100.0, value=st.session_state.face_a_face, step=0.1  
+    )  
+
+    # Motivation  
+    if 'motivation_home' not in st.session_state:  
+        st.session_state.motivation_home = 50.0  # Motivation de l'équipe à domicile  
+    st.session_state.motivation_home = st.slider(  
+        "Motivation de l'équipe à domicile (%)",  
+        min_value=0.0, max_value=100.0, value=st.session_state.motivation_home, step=0.1  
+    )  
+
+    if 'motivation_away' not in st.session_state:  
+        st.session_state.motivation_away = 50.0  # Motivation de l'équipe à l'extérieur  
+    st.session_state.motivation_away = st.slider(  
+        "Motivation de l'équipe à l'extérieur (%)",  
+        min_value=0.0, max_value=100.0, value=st.session_state.motivation_away, step=0.1  
+    )  
+
+    # Victoire à domicile  
+    if 'victoire_domicile' not in st.session_state:  
+        st.session_state.victoire_domicile = 50.0  # Pourcentage de victoires à domicile  
+    st.session_state.victoire_domicile = st.slider(  
+        "Victoire à domicile (%)",  
+        min_value=0.0, max_value=100.0, value=st.session_state.victoire_domicile, step=0.1  
+    )  
+
+    # Victoire à l'extérieur  
+    if 'victoire_exterieur' not in st.session_state:  
+        st.session_state.victoire_exterieur = 50.0  # Pourcentage de victoires à l'extérieur  
+    st.session_state.victoire_exterieur = st.slider(  
+        "Victoire à l'extérieur (%)",  
+        min_value=0.0, max_value=100.0, value=st.session_state.victoire_exterieur, step=0.1  
+    )  
+
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
 if 'odds_home' not in st.session_state:  
@@ -240,18 +281,4 @@ if st.button("🔍 Prédire les résultats"):
     results = {  
         "Équipe Domicile": st.session_state.home_team,  
         "Équipe Extérieure": st.session_state.away_team,  
-        "Buts Prédit Domicile": home_goals_pred,  
-        "Buts Prédit Extérieur": away_goals_pred,  
-        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
-        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
-        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
-    }  
-
-    if st.button("📥 Télécharger les résultats en DOC"):  
-        buffer = create_doc(results)  
-        st.download_button(  
-            label="Télécharger les résultats",  
-            data=buffer,  
-            file_name="predictions.docx",  
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
-        )
+        "Buts Prédit Domicile
