@@ -1,4 +1,4 @@
-Voici le code complet pour l'application Streamlit selon les spécifications :
+Je vous fournis le code complet en français avec tous les commentaires et libellés traduits :
 
 ```python
 import streamlit as st
@@ -13,202 +13,188 @@ from xgboost import XGBClassifier
 from docx import Document
 from io import BytesIO
 
-st.set_page_config(page_title="Prediction Foot", layout="wide")
+# Configuration de la page
+st.set_page_config(page_title="Prédicteur Football", layout="wide")
 
 # Fonctions utilitaires
-def generate_poisson_prob(h_att, a_def, a_att, h_def):
-    lambda_home = h_att * a_def * 0.1
-    lambda_away = a_att * h_def * 0.1
+def calcul_probabilites_poisson(attaque_domicile, defense_exterieur, attaque_exterieur, defense_domicile):
+    """Calcule les probabilités de résultats avec le modèle Poisson"""
+    lambda_domicile = attaque_domicile * defense_exterieur * 0.1
+    lambda_exterieur = attaque_exterieur * defense_domicile * 0.1
     
-    max_goals = 10
-    prob_matrix = np.outer(
-        [poisson.pmf(i, lambda_home) for i in range(max_goals)],
-        [poisson.pmf(i, lambda_away) for i in range(max_goals)]
+    max_buts = 10
+    matrice_prob = np.outer(
+        [poisson.pmf(i, lambda_domicile) for i in range(max_buts)],
+        [poisson.pmf(i, lambda_exterieur) for i in range(max_buts)]
     )
     
     return {
-        '1': np.sum(np.tril(prob_matrix, -1)),
-        'X': np.sum(np.diag(prob_matrix)),
-        '2': np.sum(np.triu(prob_matrix, 1))
+        '1': np.sum(np.tril(matrice_prob, -1)),  # Victoire domicile
+        'X': np.sum(np.diag(matrice_prob)),      # Match nul
+        '2': np.sum(np.triu(matrice_prob, 1))    # Victoire extérieur
     }
 
-def kelly_criterion(prob, odds):
-    if odds <= 1:
+def critere_kelly(probabilite, cote):
+    """Calcule la mise optimale avec le critère de Kelly"""
+    if cote <= 1:
         return 0.0
-    b = odds - 1
-    return max((b * prob - (1 - prob)) / b, 0)
+    b = cote - 1
+    return max((b * probabilite - (1 - probabilite)) / b, 0)
 
 # Interface utilisateur
-st.title("📊 Football Predictor Pro")
+st.title("⚽ Analyseur de Matchs Football")
 st.markdown("---")
 
-with st.form("match_form"):
+with st.form("formulaire_match"):
     col1, col2 = st.columns(2)
     
     with col1:
         st.header("Équipe Domicile")
-        h_att = st.slider("Attaque domicile", 1, 10, 7)
-        h_def = st.slider("Défense domicile", 1, 10, 6)
-        h_possession = st.slider("Possession (%)", 0, 100, 55)
+        attaque_dom = st.slider("Niveau d'attaque", 1, 10, 7, key='att_dom')
+        defense_dom = st.slider("Niveau de défense", 1, 10, 6, key='def_dom')
+        possession_dom = st.slider("Possession (%)", 0, 100, 55, key='pos_dom')
         
     with col2:
         st.header("Équipe Extérieur")
-        a_att = st.slider("Attaque extérieur", 1, 10, 6)
-        a_def = st.slider("Défense extérieur", 1, 10, 5)
-        a_possession = st.slider("Possession (%)", 0, 100, 45)
+        attaque_ext = st.slider("Niveau d'attaque", 1, 10, 6, key='att_ext')
+        defense_ext = st.slider("Niveau de défense", 1, 10, 5, key='def_ext')
+        possession_ext = st.slider("Possession (%)", 0, 100, 45, key='pos_ext')
     
-    submitted = st.form_submit_button("🔍 Analyser le match")
+    soumis = st.form_submit_button("🔍 Analyser le match")
 
-if submitted:
-    # Génération des données synthétiques
+if soumis:
+    # Génération de données synthétiques pour l'entraînement
     np.random.seed(42)
-    num_samples = 1000
+    n_echantillons = 1000
     
     X = pd.DataFrame({
-        'h_att': np.clip(np.random.normal(h_att, 1.5, num_samples), 1, 10),
-        'h_def': np.clip(np.random.normal(h_def, 1.5, num_samples), 1, 10),
-        'a_att': np.clip(np.random.normal(a_att, 1.5, num_samples), 1, 10),
-        'a_def': np.clip(np.random.normal(a_def, 1.5, num_samples), 1, 10),
+        'attaque_dom': np.clip(np.random.normal(attaque_dom, 1.5, n_echantillons), 1, 10),
+        'defense_dom': np.clip(np.random.normal(defense_dom, 1.5, n_echantillons), 1, 10),
+        'attaque_ext': np.clip(np.random.normal(attaque_ext, 1.5, n_echantillons), 1, 10),
+        'defense_ext': np.clip(np.random.normal(defense_ext, 1.5, n_echantillons), 1, 10),
     })
     
+    # Création de la variable cible
     y = np.where(
-        X['h_att']/X['a_def'] > X['a_att']/X['h_def'], 
-        1, 
+        X['attaque_dom']/X['defense_ext'] > X['attaque_ext']/X['defense_dom'], 
+        1,  # Victoire domicile
         np.where(
-            X['h_att']/X['a_def'] < X['a_att']/X['h_def'], 
-            2, 
-            0
+            X['attaque_dom']/X['defense_ext'] < X['attaque_ext']/X['defense_dom'], 
+            2,  # Victoire extérieur
+            0   # Match nul
         )
     )
     
-    current_match = [[h_att, h_def, a_att, a_def]]
+    match_actuel = [[attaque_dom, defense_dom, attaque_ext, defense_ext]]
     
-    # Entraînement des modèles
-    models = {
-        "Poisson": generate_poisson_prob(h_att, a_def, a_att, h_def),
-        "Logistic Regression": LogisticRegression(multi_class='multinomial', max_iter=1000),
-        "Random Forest": RandomForestClassifier(),
+    # Initialisation des modèles
+    modeles = {
+        "Poisson": calcul_probabilites_poisson(attaque_dom, defense_ext, attaque_ext, defense_dom),
+        "Régression Logistique": LogisticRegression(multi_class='multinomial', max_iter=1000),
+        "Forêt Aléatoire": RandomForestClassifier(),
         "XGBoost": XGBClassifier(use_label_encoder=False)
     }
     
-    results = {}
-    for name, model in models.items():
-        if name != "Poisson":
-            preds = cross_val_predict(model, X, y, cv=10, method='predict_proba')
-            model.fit(X, y)
-            results[name] = model.predict_proba(current_match)[0]
+    resultats = {}
+    for nom, modele in modeles.items():
+        if nom != "Poisson":
+            predictions = cross_val_predict(modele, X, y, cv=10, method='predict_proba')
+            modele.fit(X, y)
+            resultats[nom] = modele.predict_proba(match_actuel)[0]
         else:
-            results[name] = model
+            resultats[nom] = modele
     
     # Affichage des résultats
     st.markdown("---")
-    st.header("📈 Résultats des prédictions")
+    st.header("📊 Probabilités Prédites")
     
-    cols = st.columns(4)
-    model_names = list(models.keys())
+    colonnes = st.columns(4)
+    noms_modeles = list(modeles.keys())
     
-    for idx, col in enumerate(cols):
+    for idx, col in enumerate(colonnes):
         with col:
-            st.subheader(model_names[idx])
-            if model_names[idx] == "Poisson":
-                probs = results[model_names[idx]]
+            st.subheader(noms_modeles[idx])
+            if noms_modeles[idx] == "Poisson":
+                probs = resultats[noms_modeles[idx]]
                 col.metric("Victoire Domicile", f"{probs['1']:.1%}")
                 col.metric("Match Nul", f"{probs['X']:.1%}")
                 col.metric("Victoire Extérieur", f"{probs['2']:.1%}")
             else:
-                probs = results[model_names[idx]]
+                probs = resultats[noms_modeles[idx]]
                 col.metric("Victoire Domicile", f"{probs[1]:.1%}")
                 col.metric("Match Nul", f"{probs[0]:.1%}")
                 col.metric("Victoire Extérieur", f"{probs[2]:.1%}")
     
-    # Visualisation des fonctionnalités importantes
+    # Visualisation des variables importantes
     st.markdown("---")
-    st.header("📌 Importance des variables")
+    st.header("📈 Importance des Variables")
     
     fig, ax = plt.subplots()
-    pd.Series(models["Random Forest"].feature_importances_, index=X.columns).sort_values().plot.barh(ax=ax)
+    importance = pd.Series(modeles["Forêt Aléatoire"].feature_importances_, index=X.columns)
+    importance.sort_values().plot.barh(ax=ax)
     st.pyplot(fig)
     
-    # Gestion de bankroll
+    # Gestion de la bankroll
     st.markdown("---")
-    st.header("💰 Gestion de Bankroll")
+    st.header("💶 Gestion des Mises")
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        odds_1 = st.number_input("Cote Victoire Domicile", min_value=1.0, value=2.0)
+        cote_1 = st.number_input("Cote Victoire Domicile", min_value=1.0, value=2.0)
     with col2:
-        odds_X = st.number_input("Cote Match Nul", min_value=1.0, value=3.5)
+        cote_X = st.number_input("Cote Match Nul", min_value=1.0, value=3.5)
     with col3:
-        odds_2 = st.number_input("Cote Victoire Extérieur", min_value=1.0, value=2.8)
+        cote_2 = st.number_input("Cote Victoire Extérieur", min_value=1.0, value=2.8)
     
-    bankroll = st.number_input("Bankroll disponible (€)", min_value=0, value=1000)
+    bankroll = st.number_input("Bankroll totale (€)", min_value=0, value=1000)
     
-    kelly_stakes = {
-        '1': kelly_criterion(results['Poisson']['1'], odds_1) * bankroll,
-        'X': kelly_criterion(results['Poisson']['X'], odds_X) * bankroll,
-        '2': kelly_criterion(results['Poisson']['2'], odds_2) * bankroll
+    mises_kelly = {
+        '1': critere_kelly(resultats['Poisson']['1'], cote_1) * bankroll,
+        'X': critere_kelly(resultats['Poisson']['X'], cote_X) * bankroll,
+        '2': critere_kelly(resultats['Poisson']['2'], cote_2) * bankroll
     }
     
-    st.subheader("Mises recommandées (Kelly Criterion)")
-    cols = st.columns(3)
-    cols[0].metric("Mise 1", f"{kelly_stakes['1']:.2f} €")
-    cols[1].metric("Mise X", f"{kelly_stakes['X']:.2f} €")
-    cols[2].metric("Mise 2", f"{kelly_stakes['2']:.2f} €")
+    st.subheader("Mises Recommandées (Critère de Kelly)")
+    colonnes = st.columns(3)
+    colonnes[0].metric("Mise 1", f"{mises_kelly['1']:.2f} €")
+    colonnes[1].metric("Mise X", f"{mises_kelly['X']:.2f} €")
+    colonnes[2].metric("Mise 2", f"{mises_kelly['2']:.2f} €")
     
     # Génération du rapport
     doc = Document()
-    doc.add_heading('Rapport de Prédiction', 0)
-    doc.add_paragraph(f"Configuration du match :\nDomicile: Attaque {h_att}/10, Défense {h_def}/10\nExtérieur: Attaque {a_att}/10, Défense {a_def}/10")
+    doc.add_heading('Rapport d\'Analyse', 0)
+    doc.add_paragraph(
+        f"Configuration du match :\n"
+        f"Domicile: Attaque {attaque_dom}/10, Défense {defense_dom}/10\n"
+        f"Extérieur: Attaque {attaque_ext}/10, Défense {defense_ext}/10"
+    )
     
-    table = doc.add_table(rows=1, cols=4)
-    table.style = 'Table Grid'
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Modèle'
-    hdr_cells[1].text = '1'
-    hdr_cells[2].text = 'X'
-    hdr_cells[3].text = '2'
+    tableau = doc.add_table(rows=1, cols=4)
+    tableau.style = 'Table Grid'
+    cellules_entete = tableau.rows[0].cells
+    cellules_entete[0].text = 'Modèle'
+    cellules_entete[1].text = '1'
+    cellules_entete[2].text = 'X'
+    cellules_entete[3].text = '2'
     
-    for model in models:
-        row_cells = table.add_row().cells
-        row_cells[0].text = model
-        if model == 'Poisson':
-            probs = results[model]
-            row_cells[1].text = f"{probs['1']:.1%}"
-            row_cells[2].text = f"{probs['X']:.1%}"
-            row_cells[3].text = f"{probs['2']:.1%}"
+    for modele in modeles:
+        cellules = tableau.add_row().cells
+        cellules[0].text = modele
+        if modele == 'Poisson':
+            probs = resultats[modele]
+            cellules[1].text = f"{probs['1']:.1%}"
+            cellules[2].text = f"{probs['X']:.1%}"
+            cellules[3].text = f"{probs['2']:.1%}"
         else:
-            probs = results[model]
-            row_cells[1].text = f"{probs[1]:.1%}"
-            row_cells[2].text = f"{probs[0]:.1%}"
-            row_cells[3].text = f"{probs[2]:.1%}"
+            probs = resultats[modele]
+            cellules[1].text = f"{probs[1]:.1%}"
+            cellules[2].text = f"{probs[0]:.1%}"
+            cellules[3].text = f"{probs[2]:.1%}"
     
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     
     st.download_button(
-        label="📥 Télécharger le rapport complet",
-        data=buffer,
-        file_name="prediction_report.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
-
-st.markdown("---")
-st.info("ℹ️ Les prédictions sont basées sur des modèles statistiques et ne garantissent pas les résultats réels.")
-```
-
-Ce code crée une application Streamlit complète avec :
-1. Interface utilisateur intuitive pour saisir les données des équipes
-2. Quatre modèles de prédiction différents
-3. Visualisation des probabilités et de l'importance des variables
-4. Système de gestion de bankroll avec Kelly Criterion
-5. Génération de rapports en format Word
-6. Validation croisée K=10 pour les modèles ML
-7. Visualisations interactives
-
-Pour exécuter l'application :
-1. Installer les dépendances : `pip install streamlit pandas numpy scikit-learn xgboost python-docx matplotlib`
-2. Sauvegarder le code dans un fichier `app.py`
-3. Exécuter avec `streamlit run app.py`
-
-L'application offre une expérience complète d'analyse de matchs avec des fonctionnalités professionnelles tout en restant facilement personnalisable.
+        label="📥 Télécharger le Rapport",
+        data=b
