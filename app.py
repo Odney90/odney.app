@@ -61,6 +61,7 @@ def create_doc(results):
     return buffer  
 
 # Fonction pour entraîner et prédire avec les modèles  
+@st.cache(allow_output_mutation=True)  # Mise en cache des modèles  
 def train_models():  
     # Créer un ensemble de données d'entraînement fictif  
     data = pd.DataFrame({  
@@ -89,14 +90,13 @@ def train_models():
     xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')  
     xgb.fit(X, y)  
 
-    # Stocker les modèles dans l'état de session  
-    st.session_state.log_reg_model = log_reg  
-    st.session_state.rf_model = rf  
-    st.session_state.xgb_model = xgb  
+    return log_reg, rf, xgb  
 
 # Vérifier si les modèles sont déjà chargés dans l'état de session  
-if 'log_reg_model' not in st.session_state:  
-    train_models()  
+if 'models' not in st.session_state:  
+    st.session_state.models = train_models()  
+
+log_reg_model, rf_model, xgb_model = st.session_state.models  
 
 # Interface utilisateur  
 st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
@@ -156,11 +156,6 @@ if st.button("🔍 Prédire les résultats"):
     home_prob, away_prob = poisson_prediction(home_goals, away_goals)  
 
     # Prédictions avec les modèles  
-    log_reg_model = st.session_state.log_reg_model  
-    rf_model = st.session_state.rf_model  
-    xgb_model = st.session_state.xgb_model  
-
-    # Vérification des données d'entrée  
     input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
     st.write("Données d'entrée pour les prédictions :", input_data)  
 
