@@ -53,7 +53,7 @@ def train_models():
     # Modèle Poisson  
     poisson_model = GLM(y, X, family=Poisson()).fit()  
 
-    return log_reg, rf, xgb, poisson_model  
+    return log_reg, rf, xgb, poisson_model  # Retourner tous les modèles  
 
 # Charger les modèles  
 if 'models' not in st.session_state:  
