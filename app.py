@@ -17,6 +17,10 @@ def poisson_prediction(goals):
         probabilities.append(prob)  
     return probabilities  
 
+# Fonction pour convertir les cotes en probabilités implicites  
+def convert_odds_to_prob(odds):  
+    return 1 / odds  
+
 # Fonction pour créer un document Word avec les résultats  
 def create_doc(results):  
     doc = Document()  
@@ -172,8 +176,9 @@ st.session_state.odds_home = st.number_input("Cote pour l'équipe à domicile", 
 st.session_state.odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=st.session_state.odds_away)  
 
 # Calcul des probabilités implicites  
-def calculate_implied_prob(odds):  
-    return 1 / odds  
+implied_home_prob = convert_odds_to_prob(st.session_state.odds_home)  
+implied_away_prob = convert_odds_to_prob(st.session_state.odds_away)  
+implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
@@ -188,11 +193,6 @@ if st.button("🔍 Prédire les résultats"):
     # Formatage des résultats pour l'affichage  
     home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
     away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
-
-    # Calcul des probabilités implicites  
-    implied_home_prob = calculate_implied_prob(st.session_state.odds_home)  
-    implied_away_prob = calculate_implied_prob(st.session_state.odds_away)  
-    implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
     # Prédictions avec les modèles  
     input_data = [[home_goals_pred, away_goals_pred, st.session_state.home_xG, st.session_state.away_xG, st.session_state.home_encais, st.session_state.away_encais]]  
@@ -269,7 +269,7 @@ if st.button("🔍 Prédire les résultats"):
                   title='Comparaison des Probabilités des Modèles', barmode='group')  
     st.plotly_chart(fig)  
 
-    # Explication des modèles  
+        # Explication des modèles  
     st.subheader("📊 Explication des Modèles")  
     st.write("""  
     - **Régression Logistique** : Modèle utilisé pour prédire la probabilité d'un événement binaire.  
@@ -277,8 +277,42 @@ if st.button("🔍 Prédire les résultats"):
     - **XGBoost** : Modèle d'apprentissage par boosting qui est très efficace pour les compétitions de machine learning.  
     """)  
 
+    # Calcul de la double chance  
+    st.subheader("📊 Double Chance")  
+    if log_reg_prob is not None:  
+        double_chance_home = log_reg_prob[2] + log_reg_prob[1]  # Victoire ou match nul pour l'équipe à domicile  
+        double_chance_away = log_reg_prob[0] + log_reg_prob[1]  # Victoire ou match nul pour l'équipe à l'extérieur  
+    else:  
+        double_chance_home, double_chance_away = None, None  
+
+    double_chance_data = {  
+        "Type": ["Double Chance Domicile", "Double Chance Extérieure"],  
+        "Probabilité (%)": [  
+            double_chance_home * 100 if double_chance_home is not None else None,  
+            double_chance_away * 100 if double_chance_away is not None else None,  
+        ]  
+    }  
+    double_chance_df = pd.DataFrame(double_chance_data)  
+    st.dataframe(double_chance_df, use_container_width=True)  
+
     # Option de téléchargement des résultats  
     results = {  
         "Équipe Domicile": st.session_state.home_team,  
         "Équipe Extérieure": st.session_state.away_team,  
-        "Buts Prédit Domicile
+        "Buts Prédit Domicile": home_goals_pred,  
+        "Buts Prédit Extérieur": away_goals_pred,  
+        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
+        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
+        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
+        "Double Chance Domicile": double_chance_home if double_chance_home is not None else None,  
+        "Double Chance Extérieure": double_chance_away if double_chance_away is not None else None,  
+    }  
+
+    if st.button("📥 Télécharger les résultats en DOC"):  
+        buffer = create_doc(results)  
+        st.download_button(  
+            label="Télécharger les résultats",  
+            data=buffer,  
+            file_name="predictions.docx",  
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
+        )
