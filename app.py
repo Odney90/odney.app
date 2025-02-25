@@ -7,6 +7,8 @@ from scipy.special import factorial
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
+from docx import Document  
+from joblib import dump, load  # Pour la persistance des modèles  
 
 # Fonction pour prédire avec le modèle Poisson  
 def poisson_prediction(home_goals, away_goals):  
@@ -26,40 +28,75 @@ def double_chance_probabilities(home_prob, away_prob):
 def kelly_criterion(probability, odds):  
     return (probability * odds - 1) / (odds - 1)  
 
-# Fonction pour télécharger les résultats  
-def download_results(results):  
-    df = pd.DataFrame([results])  
+# Fonction pour créer un document Word avec les résultats  
+def create_doc(results):  
+    doc = Document()  
+    doc.add_heading('Analyse de Matchs de Football et Prédictions de Paris Sportifs', level=1)  
+
+    # Ajout des données des équipes  
+    doc.add_heading('Données des Équipes', level=2)  
+    doc.add_paragraph(f"Équipe Domicile: {results['Équipe Domicile']}")  
+    doc.add_paragraph(f"Équipe Extérieure: {results['Équipe Extérieure']}")  
+    doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
+    doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
+    doc.add_paragraph(f"Probabilité Domicile: {results['Probabilité Domicile']:.2f}")  
+    doc.add_paragraph(f"Probabilité Extérieure: {results['Probabilité Extérieure']:.2f}")  
+
+    # Ajout des probabilités des paris double chance  
+    doc.add_heading('Probabilités des Paris Double Chance', level=2)  
+    for bet, prob in results.items():  
+        if "Paris Double Chance" in bet:  
+            doc.add_paragraph(f"{bet}: {prob:.2f}")  
+
+    # Ajout des probabilités des modèles  
+    doc.add_heading('Probabilités des Modèles', level=2)  
+    doc.add_paragraph(f"Probabilité Régression Logistique: {results['Probabilité Régression Logistique']:.2f}")  
+    doc.add_paragraph(f"Probabilité Random Forest: {results['Probabilité Random Forest']:.2f}")  
+    doc.add_paragraph(f"Probabilité XGBoost: {results['Probabilité XGBoost']:.2f}")  
+
+    # Enregistrement du document  
     buffer = BytesIO()  
-    df.to_csv(buffer, index=False)  
+    doc.save(buffer)  
     buffer.seek(0)  
     return buffer  
 
 # Fonction pour entraîner et prédire avec les modèles  
 def train_and_predict(home_stats, away_stats):  
-    # Créer un DataFrame avec les statistiques  
+    # Créer un ensemble de données d'entraînement fictif  
+    # Dans un cas réel, vous chargeriez un ensemble de données historique  
     data = pd.DataFrame({  
-        'home_goals': [home_stats['moyenne_buts_marques']],  
-        'away_goals': [away_stats['moyenne_buts_marques']],  
-        'home_xG': [home_stats['xG']],  
-        'away_xG': [away_stats['xG']],  
-        'home_defense': [home_stats['moyenne_buts_encais']],  
-        'away_defense': [away_stats['moyenne_buts_encais']]  
+        'home_goals': np.random.randint(0, 5, size=100),  
+        'away_goals': np.random.randint(0, 5, size=100),  
+        'home_xG': np.random.uniform(0, 3, size=100),  
+        'away_xG': np.random.uniform(0, 3, size=100),  
+        'home_defense': np.random.randint(0, 5, size=100),  
+        'away_defense': np.random.randint(0, 5, size=100),  
+        'result': np.random.choice([0, 1], size=100)  # 0 pour défaite, 1 pour victoire  
     })  
+
+    # Séparer les caractéristiques et la cible  
+    X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']]  
+    y = data['result']  
 
     # Modèle de régression logistique  
     log_reg = LogisticRegression()  
-    log_reg.fit(data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']], [1])  # Dummy target  
-    log_reg_prob = log_reg.predict_proba(data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']])[:, 1]  
+    log_reg.fit(X, y)  
+    dump(log_reg, 'log_reg_model.joblib')  # Sauvegarde du modèle  
 
     # Modèle Random Forest  
     rf = RandomForestClassifier()  
-    rf.fit(data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']], [1])  # Dummy target  
-    rf_prob = rf.predict_proba(data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']])[:, 1]  
+    rf.fit(X, y)  
+    dump(rf, 'rf_model.joblib')  # Sauvegarde du modèle  
 
     # Modèle XGBoost  
     xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')  
-    xgb.fit(data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']], [1])  # Dummy target  
-    xgb_prob = xgb.predict_proba(data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_defense', 'away_defense']])[:, 1]  
+    xgb.fit(X, y)  
+    dump(xgb, 'xgb_model.joblib')  # Sauvegarde du modèle  
+
+    # Prédictions  
+    log_reg_prob = log_reg.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0][1]  
+    rf_prob = rf.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0][1]  
+    xgb_prob = xgb.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0][1]  
 
     return log_reg_prob, rf_prob, xgb_prob  
 
@@ -123,9 +160,9 @@ if st.button("🔍 Prédire les résultats"):
     st.write(f"**Nombre de buts prédit pour {home_team} :** {home_goals:.2f} ({home_prob * 100:.2f}%)")  
     st.write(f"**Nombre de buts prédit pour {away_team} :** {away_goals:.2f} ({away_prob * 100:.2f}%)")  
     
-    st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[0] * 100:.2f}%")  
-    st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob[0] * 100:.2f}%")  
-    st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob[0] * 100:.2f}%")  
+    st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob * 100:.2f}%")  
+    st.write(f"**Probabilité de victoire selon Random Forest pour {home_team} :** {rf_prob * 100:.2f}%")  
+    st.write(f"**Probabilité de victoire selon XGBoost pour {home_team} :** {xgb_prob * 100:.2f}%")  
 
     # Calcul des paris double chance  
     double_chance = double_chance_probabilities(home_prob, away_prob)  
@@ -160,19 +197,19 @@ if st.button("🔍 Prédire les résultats"):
         "Buts Prédit Extérieur": away_goals,  
         "Probabilité Domicile": home_prob,  
         "Probabilité Extérieure": away_prob,  
-        "Probabilité Régression Logistique": log_reg_prob[0],  
-        "Probabilité Random Forest": rf_prob[0],  
-        "Probabilité XGBoost": xgb_prob[0],  
+        "Probabilité Régression Logistique": log_reg_prob,  
+        "Probabilité Random Forest": rf_prob,  
+        "Probabilité XGBoost": xgb_prob,  
         "Paris Double Chance 1X": double_chance["1X"],  
         "Paris Double Chance X2": double_chance["X2"],  
         "Paris Double Chance 12": double_chance["12"],  
     }  
 
-    if st.button("📥 Télécharger les résultats"):  
-        buffer = download_results(results)  
+    if st.button("📥 Télécharger les résultats en DOC"):  
+        buffer = create_doc(results)  
         st.download_button(  
             label="Télécharger les résultats",  
             data=buffer,  
-            file_name="predictions.csv",  
-            mime="text/csv"  
+            file_name="predictions.docx",  
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
         )
