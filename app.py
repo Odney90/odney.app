@@ -7,11 +7,12 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score  
 import matplotlib.pyplot as plt  
 from io import BytesIO  
+from scipy.special import factorial  # Importation de la fonction factorial depuis SciPy  
 
 # Fonction pour prédire avec le modèle Poisson  
 def poisson_prediction(home_goals, away_goals):  
-    home_prob = np.exp(-home_goals) * (home_goals ** home_goals) / np.math.factorial(home_goals)  
-    away_prob = np.exp(-away_goals) * (away_goals ** away_goals) / np.math.factorial(away_goals)  
+    home_prob = np.exp(-home_goals) * (home_goals ** home_goals) / factorial(home_goals)  
+    away_prob = np.exp(-away_goals) * (away_goals ** away_goals) / factorial(away_goals)  
     return home_prob, away_prob  
 
 # Fonction pour calculer les paris double chance  
