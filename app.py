@@ -1,36 +1,37 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold
-from scipy.stats import poisson
+# Fonction pour calculer la cible avec Double Chance
+def generate_target_with_double_chance(match):
+    # Si l'équipe 1 gagne ou il y a match nul, c'est un Double Chance pour l'équipe 1
+    if match['score1'] > match['score2']:  # L'équipe à domicile gagne
+        return 1  # Double Chance équipe 1
+    elif match['score1'] < match['score2']:  # L'équipe à l'extérieur gagne
+        return 2  # Double Chance équipe 2
+    else:  # Match nul
+        return 'X'  # Double Chance match nul
 
-# Fonction pour calculer la force d'attaque et la force de défense
-def calculate_forces(data):
-    attack_strength = data['buts_marques'] / data['matchs_joues']
-    defense_strength = data['buts_subis'] / data['matchs_joues']
-    return attack_strength, defense_strength
-
-# Fonction pour générer les prédictions avec les modèles
-def generate_predictions(team1_data, team2_data):
-    # Données de l'équipe 1 et équipe 2
+# Fonction pour générer les prédictions avec Double Chance
+def generate_predictions_with_double_chance(team1_data, team2_data):
+    # Préparer les données d'entrée (variables des deux équipes)
     X = pd.DataFrame([team1_data + team2_data], columns=team1_data.keys() + team2_data.keys())
-    y = np.array([1])  # Dummy label, à ajuster selon les critères de comparaison
+    
+    # Générer la cible en fonction des scores simulés (à remplacer par des données réelles)
+    y = np.array([generate_target_with_double_chance({'score1': 2, 'score2': 1})])  # Exemple avec une cible fictive pour test
+    
+    # Appliquer la régression logistique et Random Forest comme précédemment...
+    logreg = LogisticRegression()
+    logreg.fit(X, y)
+    logreg_prediction = logreg.predict(X)
 
-    # Modèle Random Forest
-    rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf.fit(X, y)
-    feature_importances = rf.feature_importances_  # Poids attribués par Random Forest
+    # Random Forest
+    rf = RandomForestClassifier()
+    cv_scores_rf = cross_val_score(rf, X, y, cv=5)
 
-    # Calcul des probabilités Poisson
-    poisson_team1_prob = poisson.pmf(2, team1_data['buts_marques'])
-    poisson_team2_prob = poisson.pmf(2, team2_data['buts_marques'])
+    # Calcul des probabilités Poisson (à ajuster selon le cas)
+    poisson_team1_prob = poisson.pmf(2, team1_data['⚽xG'])
+    poisson_team2_prob = poisson.pmf(2, team2_data['⚽xG'])
 
-    return poisson_team1_prob, poisson_team2_prob, feature_importances
+    return poisson_team1_prob, poisson_team2_prob, logreg_prediction, cv_scores_rf.mean()
 
-# Données fictives des équipes 1 et 2 avec les nouvelles variables
+# Données fictives des équipes avec Double Chance
 team1_data = {
     '🧑‍💼 Nom de l\'équipe': 'Équipe 1',
     '⚽ Attaque': 0.8,
@@ -42,16 +43,8 @@ team1_data = {
     '📊 Historique face à face': 0.5,
     '⚽xG': 1.4,
     '🔝 Nombre de corners': 5,
-    '🏠 Buts marqués à domicile': 15,
-    '🏠 Buts encaissés à domicile': 10,
-    '🌍 Buts marqués à l’extérieur': 18,
-    '🌍 Buts encaissés à l’extérieur': 12,
-    '🏠 Forme à domicile': 0.6,
-    '🌍 Forme à l’extérieur': 0.7,
-    '🏠 Taux de victoire à domicile': 0.55,
-    '🌍 Taux de victoire à l’extérieur': 0.65,
-    '🏠 Historique à domicile vs top 10': 0.4,
-    '🌍 Historique à l’extérieur vs top 10': 0.6,
+    '🏠 Buts à domicile': 1.5,
+    '✈️ Buts à l\'extérieur': 1.2
 }
 
 team2_data = {
@@ -65,54 +58,50 @@ team2_data = {
     '📊 Historique face à face': 0.6,
     '⚽xG': 1.2,
     '🔝 Nombre de corners': 6,
-    '🏠 Buts marqués à domicile': 20,
-    '🏠 Buts encaissés à domicile': 15,
-    '🌍 Buts marqués à l’extérieur': 25,
-    '🌍 Buts encaissés à l’extérieur': 18,
-    '🏠 Forme à domicile': 0.7,
-    '🌍 Forme à l’extérieur': 0.5,
-    '🏠 Taux de victoire à domicile': 0.65,
-    '🌍 Taux de victoire à l’extérieur': 0.60,
-    '🏠 Historique à domicile vs top 10': 0.5,
-    '🌍 Historique à l’extérieur vs top 10': 0.65,
+    '🏠 Buts à domicile': 1.1,
+    '✈️ Buts à l\'extérieur': 1.3
 }
 
 # Calcul des forces
 attack_strength_1, defense_strength_1 = calculate_forces(team1_data)
 attack_strength_2, defense_strength_2 = calculate_forces(team2_data)
 
-# Affichage des résultats avec emojis
+# Affichage des résultats
 st.title("Analyse du Match ⚽")
 st.write("### Team 1 vs Team 2")
 
-# Affichage des variables
 st.write("### Variables pour Équipe 1:")
-for key, value in team1_data.items():
-    st.write(f"{key}: {value}")
+st.write(f"🧑‍💼 Nom de l'équipe : {team1_data['🧑‍💼 Nom de l\'équipe']}")
+st.write(f"⚽ Force d'attaque : {team1_data['⚽ Attaque']}")
+st.write(f"🛡️ Force de défense : {team1_data['🛡️ Défense']}")
+st.write(f"🔥 Forme récente : {team1_data['🔥 Forme récente']}")
+st.write(f"💔 Blessures : {team1_data['💔 Blessures']}")
+st.write(f"💪 Motivation : {team1_data['💪 Motivation']}")
+st.write(f"🔄 Tactique : {team1_data['🔄 Tactique']}")
+st.write(f"📊 Historique face à face : {team1_data['📊 Historique face à face']}")
+st.write(f"⚽xG : {team1_data['⚽xG']}")
+st.write(f"🔝 Nombre de corners : {team1_data['🔝 Nombre de corners']}")
+st.write(f"🏠 Buts à domicile : {team1_data['🏠 Buts à domicile']}")
+st.write(f"✈️ Buts à l'extérieur : {team1_data['✈️ Buts à l\'extérieur']}")
 
 st.write("### Variables pour Équipe 2:")
-for key, value in team2_data.items():
-    st.write(f"{key}: {value}")
+st.write(f"🧑‍💼 Nom de l'équipe : {team2_data['🧑‍💼 Nom de l\'équipe']}")
+st.write(f"⚽ Force d'attaque : {team2_data['⚽ Attaque']}")
+st.write(f"🛡️ Force de défense : {team2_data['🛡️ Défense']}")
+st.write(f"🔥 Forme récente : {team2_data['🔥 Forme récente']}")
+st.write(f"💔 Blessures : {team2_data['💔 Blessures']}")
+st.write(f"💪 Motivation : {team2_data['💪 Motivation']}")
+st.write(f"🔄 Tactique : {team2_data['🔄 Tactique']}")
+st.write(f"📊 Historique face à face : {team2_data['📊 Historique face à face']}")
+st.write(f"⚽xG : {team2_data['⚽xG']}")
+st.write(f"🔝 Nombre de corners : {team2_data['🔝 Nombre de corners']}")
+st.write(f"🏠 Buts à domicile : {team2_data['🏠 Buts à domicile']}")
+st.write(f"✈️ Buts à l'extérieur : {team2_data['✈️ Buts à l\'extérieur']}")
 
-# Prédictions
-poisson_team1_prob, poisson_team2_prob, feature_importances = generate_predictions(team1_data, team2_data)
+# Prédictions avec Double Chance
+poisson_team1_prob, poisson_team2_prob, logreg_prediction, cv_scores_rf_mean = generate_predictions_with_double_chance(team1_data, team2_data)
 
 st.write(f"⚽ Probabilité Poisson de l'Équipe 1 : {poisson_team1_prob}")
 st.write(f"⚽ Probabilité Poisson de l'Équipe 2 : {poisson_team2_prob}")
-
-# Affichage de l'importance des variables par Random Forest
-st.write("📊 Importance des variables par Random Forest :")
-importance_df = pd.DataFrame({
-    'Variable': list(team1_data.keys()) + list(team2_data.keys()),
-    'Importance': feature_importances
-})
-importance_df = importance_df.sort_values(by='Importance', ascending=False)
-st.write(importance_df)
-
-# Option de téléchargement des résultats
-st.download_button(
-    label="Télécharger les prédictions en format DOC",
-    data="Les données et prédictions ici",  # Remplace avec le format DOC généré
-    file_name="predictions.docx",
-    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-)
+st.write(f"📊 Prédiction de la régression logistique : {logreg_prediction}")
+st.write(f"📊 Moyenne des scores de validation croisée (Random Forest) : {cv_scores_rf_mean:.2f}")
