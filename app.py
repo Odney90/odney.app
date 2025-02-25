@@ -8,8 +8,10 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score  
 from io import BytesIO  
 from docx import Document  
+import matplotlib.pyplot as plt  
 
 # Fonction pour prédire avec le modèle Poisson  
+@st.cache_data  
 def poisson_prediction(goals):  
     probabilities = []  
     for k in range(6):  # Calculer pour 0 à 5 buts  
@@ -156,19 +158,10 @@ with st.expander("Statistiques des Équipes", expanded=True):
     away_touches_surface = st.slider("Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=15)  
     away_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
 
-    # Ajout des nouvelles variables de comparaison  
-    st.header("Variables de Comparaison")  
-    home_wins = st.number_input("Victoires à domicile", min_value=0, value=5)  
-    away_wins = st.number_input("Victoires à l'extérieur", min_value=0, value=3)  
-    head_to_head = st.number_input("Résultats des confrontations directes (Domicile - Extérieur)", min_value=-10, max_value=10, value=0)  
-    home_goals_total = st.number_input("Nombre total de buts à domicile", min_value=0, value=15)  
-    away_goals_total = st.number_input("Nombre total de buts à l'extérieur", min_value=0, value=10)  
+    # Quantification de l'équipe qui reçoit  
+    receiving_team = st.slider("Équipe qui reçoit (0 = Extérieur, 1 = Domicile)", min_value=0.0, max_value=1.0, value=0.5)  
 
-# Variable pour indiquer quelle équipe reçoit  
-receiving_team = st.selectbox("Équipe qui reçoit", options=["Domicile", "Extérieur"], index=0)  
-is_home = 1 if receiving_team == "Domicile" else 0  
-
-# Saisie des cotes des bookmakers  
+# Saisie des cotes des bookmakers (non utilisées par les modèles)  
 st.header("Cotes des Équipes")  
 odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
 odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
@@ -198,7 +191,7 @@ if st.button("🔍 Prédire les résultats"):
         implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
         # Prédictions avec les modèles  
-        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  # 6 caractéristiques  
+        input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais, receiving_team]]  # 7 caractéristiques  
     
         try:  
             log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
@@ -225,7 +218,7 @@ if st.button("🔍 Prédire les résultats"):
         model_details = {  
             "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
             "Probabilité Domicile ou Nul (%)": [  
-               log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                 rf_prob[0] * 100 if rf_prob is not None else 0,  
                 xgb_prob[0] * 100 if xgb_prob is not None else 0  
             ],  
@@ -267,15 +260,34 @@ if st.button("🔍 Prédire les résultats"):
             "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                                                  rf_prob[0] * 100 if rf_prob is not None else 0,  
                                                  xgb_prob[0] * 100 if xgb_prob is not None else 0],  
-            "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                                             rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                                             xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+            "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] *100 if log_reg_prob is not None else 0,  
+                rf_prob[1] * 100 if rf_prob is not None else 0,  
+                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
             "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
                                                                   rf_prob[2] * 100 if rf_prob is not None else 0,  
                                                                   xgb_prob[2] * 100 if xgb_prob is not None else 0]  
         }  
         model_comparison_df = pd.DataFrame(model_comparison_data)  
         st.dataframe(model_comparison_df, use_container_width=True)  
+
+        # Graphique des probabilités prédites  
+        st.subheader("📊 Graphique des Probabilités Prédites par Modèle")  
+        fig, ax = plt.subplots()  
+        bar_width = 0.2  
+        index = np.arange(len(model_comparison_data["Modèle"]))  
+
+        ax.bar(index, model_comparison_data["Probabilité Domicile ou Nul (%)"], bar_width, label='Domicile ou Nul')  
+        ax.bar(index + bar_width, model_comparison_data["Probabilité Nul ou Victoire Extérieure (%)"], bar_width, label='Nul ou Victoire Extérieure')  
+        ax.bar(index + 2 * bar_width, model_comparison_data["Probabilité Domicile ou Victoire Extérieure (%)"], bar_width, label='Domicile ou Victoire Extérieure')  
+
+        ax.set_xlabel('Modèles')  
+        ax.set_ylabel('Probabilités (%)')  
+        ax.set_title('Comparaison des Probabilités Prédites par Modèle')  
+        ax.set_xticks(index + bar_width)  
+        ax.set_xticklabels(model_comparison_data["Modèle"])  
+        ax.legend()  
+
+        st.pyplot(fig)  
 
         # Option pour télécharger le document Word avec les résultats  
         results = {  
