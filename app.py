@@ -9,8 +9,12 @@ from scipy.stats import poisson
 
 # Fonction pour générer les prédictions
 def generate_predictions(team1_data, team2_data):
+    # Préfixe les clés des données pour éviter les conflits
+    team1_data_prefixed = {f"team1_{key}": value for key, value in team1_data.items()}
+    team2_data_prefixed = {f"team2_{key}": value for key, value in team2_data.items()}
+    
     # Combinaison des données des deux équipes
-    combined_data = {**team1_data, **team2_data}
+    combined_data = {**team1_data_prefixed, **team2_data_prefixed}
     
     # Créer un DataFrame avec les données combinées
     X = pd.DataFrame([combined_data], columns=list(combined_data.keys()))
