@@ -104,9 +104,10 @@ def train_and_predict(home_stats, away_stats):
     dump(xgb, 'xgb_model.joblib')  # Sauvegarde du modèle  
 
     # Prédictions  
-    log_reg_prob = log_reg.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
-    rf_prob = rf.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
-    xgb_prob = xgb.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
+    input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
+    log_reg_prob = log_reg.predict_proba(input_data)[0]  
+    rf_prob = rf.predict_proba(input_data)[0]  
+    xgb_prob = xgb.predict_proba(input_data)[0]  
 
     return log_reg_prob, rf_prob, xgb_prob  
 
@@ -169,9 +170,13 @@ if st.button("🔍 Prédire les résultats"):
     if log_reg_model is None or rf_model is None or xgb_model is None:  
         log_reg_prob, rf_prob, xgb_prob = train_and_predict(home_stats, away_stats)  
     else:  
-        log_reg_prob = log_reg_model.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
-        rf_prob = rf_model.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
-        xgb_prob = xgb_model.predict_proba([[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]])[0]  
+        # Vérification des données d'entrée  
+        input_data = [[home_stats['moyenne_buts_marques'], away_stats['moyenne_buts_marques'], home_stats['xG'], away_stats['xG'], home_stats['moyenne_buts_encais'], away_stats['moyenne_buts_encais']]]  
+        st.write("Données d'entrée pour les prédictions :", input_data)  
+
+        log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
+        rf_prob = rf_model.predict_proba(input_data)[0]  
+        xgb_prob = xgb_model.predict_proba(input_data)[0]  
 
     # Affichage des résultats  
     st.subheader("📊 Résultats des Prédictions")  
@@ -194,12 +199,14 @@ if st.button("🔍 Prédire les résultats"):
         st.write(f"{bet}: {prob:.2f}")  
 
     # Visualisation des résultats  
-    st.subheader("📈 Visualisation des résultats")  
-    fig, ax = plt.subplots()  
-    ax.bar(["Domicile", "Nul", "Extérieur"], [log_reg_prob[2], log_reg_prob[1], log_reg_prob[0]], color=['blue', 'orange', 'green'])  
-    ax.set_ylabel("Probabilités")  
-    ax.set_title("Probabilités des résultats")  
-    st.pyplot(fig)  
+    if log_reg_prob is not None and len(log_reg_prob) == 3:  
+        fig, ax = plt.subplots()  
+        ax.bar(["Domicile", "Nul", "Extérieur"], [log_reg_prob[2], log_reg_prob[1], log_reg_prob[0]], color=['blue', 'orange', 'green'])  
+        ax.set_ylabel("Probabilités")  
+        ax.set_title("Probabilités des résultats")  
+        st.pyplot(fig)  
+    else:  
+        st.error("Impossible de visualiser les résultats en raison d'une erreur dans les probabilités prédites.")  
 
     # Gestion de la bankroll  
     st.subheader("💰 Gestion de la bankroll")  
