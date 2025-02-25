@@ -8,9 +8,7 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score  
 from io import BytesIO  
 from docx import Document  
-
-# Configuration de l'icône du site  
-st.set_page_config(page_title="Analyse de Matchs de Football", page_icon="favicon.ico")  
+import matplotlib.pyplot as plt  
 
 # Fonction pour prédire avec le modèle Poisson  
 @st.cache_data  
@@ -84,189 +82,218 @@ def train_models():
     rf.fit(X, y)  
     xgb.fit(X, y)  
 
-    return log_reg, rf, xgb    
-    
+    return log_reg, rf, xgb  
+
+# Vérifier si les modèles sont déjà chargés dans l'état de session  
+if 'models' not in st.session_state:  
+    st.session_state.models = train_models()  
+
+# Assurez-vous que les modèles sont bien chargés  
+if st.session_state.models is not None:  
+    log_reg_model, rf_model, xgb_model = st.session_state.models  
 else:  
-    # Saisie des données des équipes  
-    st.header("📋 Saisie des données des équipes")  
+    st.error("⚠️ Les modèles n'ont pas pu être chargés.")  
 
-    # Regroupement des statistiques des équipes  
-    with st.expander("📊 Statistiques des Équipes", expanded=True):  
-        # Équipe à domicile  
-        home_team = st.text_input("🏠 Nom de l'équipe à domicile", value=st.session_state.get('home_team', "Équipe A"))  
-        home_goals = st.slider("⚽ Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=st.session_state.get('home_goals', 2.5), step=0.1)  
-        home_xG = st.slider("📈 xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=st.session_state.get('home_xG', 2.0), step=0.1)  
-        home_encais = st.slider("🚫 Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=st.session_state.get('home_encais', 1.0), step=0.1)  
-        home_victories = st.number_input("🏆 Nombre de victoires à domicile", min_value=0, value=st.session_state.get('home_victories', 5))  
-        home_goals_scored = st.number_input("⚽ Nombre de buts marqués à domicile", min_value=0, value=st.session_state.get('home_goals_scored', 15))  
-        home_xGA = st.slider("📉 xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=st.session_state.get('home_xGA', 1.5), step=0.1)  
-        home_tirs_par_match = st.slider("🔫 Nombres de tirs par match (domicile)", min_value=0, max_value=30, value=st.session_state.get('home_tirs_par_match', 15))  
-        home_passes_menant_a_tir = st.slider("📊 Nombres de passes menant à un tir (domicile)", min_value=0, max_value=30, value=st.session_state.get('home_passes_menant_a_tir', 10))  
-        home_tirs_cadres = st.slider("🎯 Tirs cadrés par match (domicile)", min_value=0, max_value=15, value=st.session_state.get('home_tirs_cadres', 5))  
-        home_tirs_concedes = st.slider("🚫 Nombres de tirs concédés par match (domicile)", min_value=0, max_value=30, value=st.session_state.get('home_tirs_concedes', 8))  
-        home_duels_defensifs = st.slider("🤼 Duels défensifs gagnés (%) (domicile)", min_value=0.0, max_value=100.0, value=st.session_state.get('home_duels_defensifs', 60.0))  
-        home_possession = st.slider("📊 Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=st.session_state.get('home_possession', 55.0))  
-        home_passes_reussies = st.slider("✅ Passes réussies (%) (domicile)", min_value=0.0, max_value=100.0, value=st.session_state.get('home_passes_reussies', 80.0))  
-        home_touches_surface = st.slider("⚽ Balles touchées dans la surface adverse (domicile)", min_value=0, max_value=50, value=st.session_state.get('home_touches_surface', 20))  
-        home_forme_recente = st.slider("📈 Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=st.session_state.get('home_forme_recente', 10))  
+# Fonction pour évaluer les modèles avec validation croisée K-Fold  
+@st.cache_data  
+def evaluate_models(X, y):  
+    models = {  
+        "Régression Logistique": LogisticRegression(max_iter=100, C=1.0, solver='lbfgs'),  
+        "Random Forest": RandomForestClassifier(n_estimators=10, max_depth=3),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=10, max_depth=3)  
+    }  
+    
+    results = {}  
+    for name, model in models.items():  
+        # Utiliser une validation croisée avec moins de plis pour réduire le temps d'exécution  
+        scores = cross_val_score(model, X, y, cv=3, scoring='accuracy')  # K=3 pour réduire le temps  
+        results[name] = scores.mean()  # Moyenne des scores de validation croisée  
+    
+    return results  
 
-        # Équipe à l'extérieur  
-        away_team = st.text_input("🏟️ Nom de l'équipe à l'extérieur", value=st.session_state.get('away_team', "Équipe B"))  
-        away_goals = st.slider("⚽ Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=st.session_state.get('away_goals', 1.5), step=0.1)  
-        away_xG = st.slider("📈 xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=st.session_state.get('away_xG', 1.8), step=0.1)  
-        away_encais = st.slider("🚫 Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=st.session_state.get('away_encais', 2.0), step=0.1)  
-        away_victories = st.number_input("🏆 Nombre de victoires à l'extérieur", min_value=0, value=st.session_state.get('away_victories', 3))  
-        away_goals_scored = st.number_input("⚽ Nombre de buts marqués à l'extérieur", min_value=0, value=st.session_state.get('away_goals_scored', 10))  
-        away_xGA = st.slider("📉 xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=st.session_state.get('away_xGA', 1.5), step=0.1)  
-        away_tirs_par_match = st.slider("🔫 Nombres de tirs par match (extérieur)", min_value=0, max_value=30, value=st.session_state.get('away_tirs_par_match', 12))  
-        away_passes_menant_a_tir = st.slider("📊 Nombres de passes menant à un tir (extérieur)", min_value=0, max_value=30, value=st.session_state.get('away_passes_menant_a_tir', 8))  
-        away_tirs_cadres = st.slider("🎯 Tirs cadrés par match (extérieur)", min_value=0, max_value=15, value=st.session_state.get('away_tirs_cadres', 4))  
-        away_tirs_concedes = st.slider("🚫 Nombres de tirs concédés par match (extérieur)", min_value=0, max_value=30, value=st.session_state.get('away_tirs_concedes', 10))  
-        away_duels_defensifs = st.slider("🤼 Duels défensifs gagnés (%) (extérieur)", min_value=0.0, max_value=100.0, value=st.session_state.get('away_duels_defensifs', 55.0))  
-        away_possession = st.slider("📊 Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=st.session_state.get('away_possession', 50.0))  
-        away_passes_reussies = st.slider("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=st.session_state.get('away_passes_reussies', 75.0))  
-        away_touches_surface = st.slider("⚽ Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=st.session_state.get('away_touches_surface', 15))  
-        away_forme_recente = st.slider("📈 Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=st.session_state.get('away_forme_recente', 8))  
+# Interface utilisateur  
+st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
 
-        # Quantification de l'équipe qui reçoit  
-        receiving_team = st.slider("⚽ Équipe qui reçoit (0 = Extérieur, 1 = Domicile)", min_value=0.0, max_value=1.0, value=0.5)  
+# Saisie des données des équipes  
+st.header("📋 Saisie des données des équipes")  
 
-    # Saisie des cotes des bookmakers (non utilisées par les modèles)  
-    st.header("💰 Cotes des Équipes")  
-    odds_home = st.number_input("🏠 Cote pour l'équipe à domicile", min_value=1.0, value=st.session_state.get('odds_home', 1.8))  
-    odds_away = st.number_input("🏟️ Cote pour l'équipe à l'extérieur", min_value=1.0, value=st.session_state.get('odds_away', 2.2))  
+# Regroupement des statistiques des équipes  
+with st.expander("📊 Statistiques des Équipes", expanded=True):  
+    # Équipe à domicile  
+    home_team = st.text_input("🏠 Nom de l'équipe à domicile", value="Équipe A")  
+    home_goals = st.slider("⚽ Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5, step=0.1)  
+    home_xG = st.slider("📈 xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
+    home_encais = st.slider("🚫 Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=1.0, step=0.1)  
+    home_victories = st.number_input("🏆 Nombre de victoires à domicile", min_value=0, value=5)  # Nouveau champ  
+    home_goals_scored = st.number_input("⚽ Nombre de buts marqués à domicile", min_value=0, value=15)  # Nouveau champ  
+    home_xGA = st.slider("📉 xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
+    home_tirs_par_match = st.slider("🔫 Nombres de tirs par match (domicile)", min_value=0, max_value=30, value=15)  
+    home_passes_menant_a_tir = st.slider("📊 Nombres de passes menant à un tir (domicile)", min_value=0, max_value=30, value=10)  
+    home_tirs_cadres = st.slider("🎯 Tirs cadrés par match (domicile)", min_value=0, max_value=15, value=5)  
+    home_tirs_concedes = st.slider("🚫 Nombres de tirs concédés par match (domicile)", min_value=0, max_value=30, value=8)  
+    home_duels_defensifs = st.slider("🤼 Duels défensifs gagnés (%) (domicile)", min_value=0.0, max_value=100.0, value=60.0)  
+    home_possession = st.slider("📊 Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
+    home_passes_reussies = st.slider("✅ Passes réussies (%) (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
+    home_touches_surface = st.slider("⚽ Balles touchées dans la surface adverse (domicile)", min_value=0, max_value=50, value=20)  
+    home_forme_recente = st.slider("📈 Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=10)  
 
-    # Calcul des probabilités implicites  
-    def calculate_implied_prob(odds):  
-        return 1 / odds  
+    # Équipe à l'extérieur  
+    away_team = st.text_input("🏟️ Nom de l'équipe à l'extérieur", value="Équipe B")  
+    away_goals = st.slider("⚽ Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
+    away_xG = st.slider("📈 xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8, step=0.1)  
+    away_encais = st.slider("🚫 Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
+    away_victories = st.number_input("🏆 Nombre de victoires à l'extérieur", min_value=0, value=3)  # Nouveau champ  
+    away_goals_scored = st.number_input("⚽ Nombre de buts marqués à l'extérieur", min_value=0, value=10)  # Nouveau champ  
+    away_xGA = st.slider("📉 xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
+    away_tirs_par_match = st.slider("🔫 Nombres de tirs par match (extérieur)", min_value=0, max_value=30, value=12)  
+    away_passes_menant_a_tir = st.slider("📊 Nombres de passes menant à un tir (extérieur)", min_value=0, max_value=30, value=8)  
+    away_tirs_cadres = st.slider("🎯 Tirs cadrés par match (extérieur)", min_value=0, max_value=15, value=4)  
+    away_tirs_concedes = st.slider("🚫 Nombres de tirs concédés par match (extérieur)", min_value=0, max_value=30, value=10)  
+    away_duels_defensifs = st.slider("🤼 Duels défensifs gagnés (%) (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
+    away_possession = st.slider("📊 Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
+    away_passes_reussies = st.slider("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
+    away_touches_surface = st.slider("⚽ Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=15)  
+    away_forme_recente = st.slider("📈 Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
 
-    # Prédictions  
-    if st.button("🔍 Prédire les résultats"):  
-        with st.spinner('Calcul des résultats...'):  
-            try:  
-                # Évaluation des modèles avec validation croisée K-Fold  
-                X = pd.DataFrame({  
-                    'home_goals': np.random.randint(0, 3, size=1000),  
-                    'away_goals': np.random.randint(0, 3, size=1000),  
-                    'home_xG': np.random.uniform(0, 2, size=1000),  
-                    'away_xG': np.random.uniform(0, 2, size=1000),  
-                    'home_encais': np.random.uniform(0, 2, size=1000),  
-                    'away_encais': np.random.uniform(0, 2, size=1000)  
-                })  
-                y = np.random.choice([0, 1, 2], size=1000)  
-                results = evaluate_models(X, y)  
-                st.write("📊 Résultats de la validation croisée K-Fold :", results)  
+    # Quantification de l'équipe qui reçoit  
+    receiving_team = st.slider("⚽ Équipe qui reçoit (0 = Extérieur, 1 = Domicile)", min_value=0.0, max_value=1.0, value=0.5)  
 
-                # Calcul des buts prédit  
-                home_goals_pred = home_goals + home_xG - away_encais  
-                away_goals_pred = away_goals + away_xG - home_encais  
+# Saisie des cotes des bookmakers (non utilisées par les modèles)  
+st.header("💰 Cotes des Équipes")  
+odds_home = st.number_input("🏠 Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
+odds_away = st.number_input("🏟️ Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
 
-                # Calcul des probabilités avec le modèle de Poisson  
-                home_probabilities = poisson_prediction(home_goals_pred)  
-                away_probabilities = poisson_prediction(away_goals_pred)  
+# Calcul des probabilités implicites  
+def calculate_implied_prob(odds):  
+    return 1 / odds  
 
-                # Formatage des résultats pour l'affichage  
-                home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
-                away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
+# Prédictions  
+if st.button("🔍 Prédire les résultats"):  
+    with st.spinner('Calcul des résultats...'):  
+        try:  
+            # Évaluation des modèles avec validation croisée K-Fold  
+            X = pd.DataFrame({  
+                'home_goals': np.random.randint(0, 3, size=1000),  
+                'away_goals': np.random.randint(0, 3, size=1000),  
+                'home_xG': np.random.uniform(0, 2, size=1000),  
+                'away_xG': np.random.uniform(0, 2, size=1000),  
+                'home_encais': np.random.uniform(0, 2, size=1000),  
+                'away_encais': np.random.uniform(0, 2, size=1000)  
+            })  
+            y = np.random.choice([0, 1, 2], size=1000)  
+            results = evaluate_models(X, y)  
+            st.write("📊 Résultats de la validation croisée K-Fold :", results)  
 
-                # Calcul des probabilités implicites  
-                implied_home_prob = calculate_implied_prob(odds_home)  
-                implied_away_prob = calculate_implied_prob(odds_away)  
-                implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
+            # Calcul des buts prédit  
+            home_goals_pred = home_goals + home_xG - away_encais  
+            away_goals_pred = away_goals + away_xG - home_encais  
 
-                # Prédictions avec les modèles  
-                input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  # 6 caractéristiques  
+            # Calcul des probabilités avec le modèle de Poisson  
+            home_probabilities = poisson_prediction(home_goals_pred)  
+            away_probabilities = poisson_prediction(away_goals_pred)  
 
-                log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-                rf_prob = rf_model.predict_proba(input_data)[0]  
-                xgb_prob = xgb_model.predict_proba(input_data)[0]  
+            # Formatage des résultats pour l'affichage  
+            home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
+            away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
 
-                # Affichage des résultats  
-                st.subheader("📊 Résultats des Prédictions")  
+            # Calcul des probabilités implicites  
+            implied_home_prob = calculate_implied_prob(odds_home)  
+            implied_away_prob = calculate_implied_prob(odds_away)  
+            implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
-                # Tableau pour le modèle de Poisson  
-                poisson_results = pd.DataFrame({  
-                    "Équipe": [home_team, away_team],  
-                    "Buts Prédit": [home_results, away_results]  
-                })  
+            # Prédictions avec les modèles  
+            input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  # 6 caractéristiques  
 
-                st.markdown("### Résultats du Modèle de Poisson")  
-                st.dataframe(poisson_results, use_container_width=True)  
+            log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
+            rf_prob = rf_model.predict_proba(input_data)[0]  
+            xgb_prob = xgb_model.predict_proba(input_data)[0]  
 
-                                # Détails sur chaque prédiction des modèles  
-                st.markdown("### Détails des Prédictions des Modèles")  
-                model_details = {  
-                    "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-                    "Probabilité Domicile ou Nul (%)": [  
-                        log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                        rf_prob[0] * 100 if rf_prob is not None else 0,  
-                        xgb_prob[0] * 100 if xgb_prob is not None else 0  
-                    ],  
-                    "Probabilité Nul ou Victoire Extérieure (%)": [  
-                        log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                        rf_prob[1] * 100 if rf_prob is not None else 0,  
-                        xgb_prob[1] * 100 if xgb_prob is not None else 0  
-                    ],  
-                    "Probabilité Domicile ou Victoire Extérieure (%)": [  
-                        log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                        rf_prob[2] * 100 if rf_prob is not None else 0,  
-                        xgb_prob[2] * 100 if xgb_prob is not None else 0  
-                    ]  
-                }  
-                model_details_df = pd.DataFrame(model_details)  
-                st.dataframe(model_details_df, use_container_width=True)  
+            # Affichage des résultats  
+            st.subheader("📊 Résultats des Prédictions")  
 
-                # Comparaison des probabilités implicites et prédites  
-                st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
-                comparison_data = {  
-                    "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Victoire Extérieure", "Implicite Domicile ou Victoire Extérieure",   
-                             "Prédite Domicile ou Nul", "Prédite Nul ou Victoire Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
-                    "Probabilité (%)": [  
-                        implied_home_prob * 100,  
-                        implied_draw_prob * 100,  
-                        implied_away_prob * 100,  
-                        log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                        log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                        log_reg_prob[2] * 100 if log_reg_prob is not None else 0  
-                    ]  
-                }  
-                comparison_df = pd.DataFrame(comparison_data)  
-                st.dataframe(comparison_df, use_container_width=True)  
+            # Tableau pour le modèle de Poisson  
+            poisson_results = pd.DataFrame({  
+                "Équipe": [home_team, away_team],  
+                "Buts Prédit": [home_results, away_results]  
+            })  
 
-                # Détection des Value Bets  
-                st.subheader("💰 Détection des Value Bets")  
-                value_bets = []  
-                for i in range(3):  # Pour chaque résultat possible (Domicile, Nul, Extérieur)  
-                    implied_prob = [implied_home_prob, implied_draw_prob, implied_away_prob][i]  
-                    predicted_prob = log_reg_prob[i] if log_reg_prob is not None else 0  
-                    if predicted_prob > implied_prob:  
-                        value_bets.append({  
-                            "Résultat": ["🏠 Domicile", "🤝 Nul", "🏟️ Extérieur"][i],  
-                            "Probabilité Implicite (%)": implied_prob * 100,  
-                            "Probabilité Prédite (%)": predicted_prob * 100,  
-                            "Différence (%)": (predicted_prob - implied_prob) * 100  
-                        })  
+            st.markdown("### Résultats du Modèle de Poisson")  
+            st.dataframe(poisson_results, use_container_width=True)  
 
-                if value_bets:  
-                    value_bets_df = pd.DataFrame(value_bets)  
-                    st.dataframe(value_bets_df, use_container_width=True)  
-                else:  
-                    st.write("❌ Aucun value bet détecté.")  
+            # Détails sur chaque prédiction des modèles  
+            st.markdown("### Détails des Prédictions des Modèles")  
+            model_details = {  
+                "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+                "Probabilité Domicile ou Nul (%)": [  
+                    log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                    rf_prob[0] * 100 if rf_prob is not None else 0,  
+                    xgb_prob[0] * 100 if xgb_prob is not None else 0  
+                ],  
+                "Probabilité Nul ou Victoire Extérieure (%)": [  
+                    log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                    rf_prob[1] * 100 if rf_prob is not None else 0,  
+                    xgb_prob[1] * 100 if xgb_prob is not None else 0  
+                ],  
+                "Probabilité Domicile ou Victoire Extérieure (%)": [  
+                    log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                    rf_prob[2] * 100 if rf_prob is not None else 0,  
+                    xgb_prob[2] * 100 if xgb_prob is not None else 0  
+                ]  
+            }  
+            model_details_df = pd.DataFrame(model_details)  
+            st.dataframe(model_details_df, use_container_width=True)  
 
-                # Option pour télécharger le document Word avec les résultats  
-                results = {  
-                    'Équipe Domicile': home_team,  
-                    'Équipe Extérieure': away_team,  
-                    'Buts Prédit Domicile': home_results,  
-                    'Buts Prédit Extérieur': away_results,  
-                    'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                    'Probabilité Nul ou Victoire Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                    'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                }  
-                doc_buffer = create_doc(results)  
-                st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
+            # Comparaison des probabilités implicites et prédites  
+            st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
+            comparison_data = {  
+                "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Victoire Extérieure", "Implicite Domicile ou Victoire Extérieure",   
+                         "Prédite Domicile ou Nul", "Prédite Nul ou Victoire Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
+                "Probabilité (%)": [  
+                    implied_home_prob * 100,  
+                    implied_draw_prob * 100,  
+                    implied_away_prob * 100,  
+                    log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                    log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                    log_reg_prob[2] * 100 if log_reg_prob is not None else 0  
+                ]  
+            }  
+            comparison_df = pd.DataFrame(comparison_data)  
+            st.dataframe(comparison_df, use_container_width=True)  
 
-            except Exception as e:  
-                st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
+            # Détection des Value Bets  
+            st.subheader("💰 Détection des Value Bets")  
+            value_bets = []  
+            for i in range(3):  # Pour chaque résultat possible (Domicile, Nul, Extérieur)  
+                implied_prob = [implied_home_prob, implied_draw_prob, implied_away_prob][i]  
+                predicted_prob = log_reg_prob[i] if log_reg_prob is not None else 0  
+                if predicted_prob > implied_prob:  
+                    value_bets.append({  
+                        "Résultat": ["🏠 Domicile", "🤝 Nul", "🏟️ Extérieur"][i],  
+                        "Probabilité Implicite (%)": implied_prob * 100,  
+                        "Probabilité Prédite (%)": predicted_prob * 100,  
+                        "Différence (%)": (predicted_prob - implied_prob) * 100  
+                    })  
+
+            if value_bets:  
+                value_bets_df = pd.DataFrame(value_bets)  
+                st.dataframe(value_bets_df, use_container_width=True)  
+            else:  
+                st.write("❌ Aucun value bet détecté.")  
+
+            # Option pour télécharger le document Word avec les résultats  
+            results = {  
+                'Équipe Domicile': home_team,  
+                'Équipe Extérieure': away_team,  
+                'Buts Prédit Domicile': home_results,  
+                'Buts Prédit Extérieur': away_results,  
+                'Probabilité Domicile ou Nul': log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                'Probabilité Nul ou Victoire Extérieure': log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+            }  
+            doc_buffer = create_doc(results)  
+            st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
+
+        except Exception as e:  
+            st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
 
 # Fin de l'application
