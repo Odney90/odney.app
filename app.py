@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 import xgboost as xgb
 from scipy.stats import poisson
 
-# Fonction pour générer les prédictions avec les modèles
+# Fonction pour générer les prédictions avec les 4 modèles : Poisson, Régression Logistique, Random Forest, XGBoost
 def generate_predictions(team1_data, team2_data):
     # Extraire les valeurs et les clés de chaque dictionnaire
     team1_values = list(team1_data.values())
@@ -17,7 +17,7 @@ def generate_predictions(team1_data, team2_data):
     # Créer un DataFrame avec ces valeurs combinées
     X = pd.DataFrame([team1_values + team2_values], columns=columns)
     
-    # Cible fictive (à ajuster selon vos données réelles)
+    # Cible fictive (à remplacer par des données réelles)
     y = np.array([1])
     
     # 1. Régression Logistique
@@ -33,19 +33,21 @@ def generate_predictions(team1_data, team2_data):
     rf_cv_score = cv_scores_rf.mean()
     
     # 3. XGBoost avec validation croisée K=5
-    xgb_model = xgb.XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3,
+    xgb_model = xgb.XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, 
                                   use_label_encoder=False, eval_metric='logloss', random_state=42)
     cv_scores_xgb = cross_val_score(xgb_model, X, y, cv=5)
     xgb_model.fit(X, y)
     xgb_prediction = xgb_model.predict(X)[0]
     xgb_cv_score = cv_scores_xgb.mean()
     
-    # 4. Calcul des probabilités Poisson pour les buts marqués (utilise la variable '⚽ Attaque')
+    # 4. Calcul des probabilités Poisson pour les buts marqués par chaque équipe
+    # Ici, on utilise la variable '⚽ Attaque' comme proxy pour l'attaque
     poisson_team1_prob = poisson.pmf(2, team1_data['⚽ Attaque'])
     poisson_team2_prob = poisson.pmf(2, team2_data['⚽ Attaque'])
     
-    return (poisson_team1_prob, poisson_team2_prob, logreg_prediction, 
-            rf_prediction, rf_cv_score, xgb_prediction, xgb_cv_score)
+    return (poisson_team1_prob, poisson_team2_prob, 
+            logreg_prediction, rf_prediction, rf_cv_score, 
+            xgb_prediction, xgb_cv_score)
 
 # Interface utilisateur Streamlit pour saisir les données des équipes
 st.title("Analyse des Paris Sportifs ⚽")
@@ -125,7 +127,7 @@ team2_data = {
 
 # Génération des prédictions
 results = generate_predictions(team1_data, team2_data)
-(poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction) = results
+(poisson_team1_prob, poisson_team2_prob, logreg_prediction, rf_prediction, rf_cv_score, xgb_prediction, xgb_cv_score) = results
 
 # Affichage des résultats
 st.write("### Résultats des Prédictions:")
@@ -135,10 +137,11 @@ st.write(f"⚽ **Probabilité Poisson pour {team2_name}** : {poisson_team2_prob:
 
 st.write(f"📊 **Prédiction de la régression logistique** : {'Victoire ' + team1_name if logreg_prediction == 1 else 'Victoire ' + team2_name}")
 st.write(f"🌳 **Prédiction de Random Forest** : {'Victoire ' + team1_name if rf_prediction == 1 else 'Victoire ' + team2_name}")
-st.write(f"🌟 **CV Score moyen (Random Forest)** : {rf_cv_score:.2f}")
+st.write(f"🌟 **Moyenne CV (Random Forest)** : {rf_cv_score:.2f}")
 st.write(f"🚀 **Prédiction de XGBoost** : {'Victoire ' + team1_name if xgb_prediction == 1 else 'Victoire ' + team2_name}")
+st.write(f"🌟 **Moyenne CV (XGBoost)** : {xgb_cv_score:.2f}")
 
-# Option de téléchargement des résultats (exemple de texte)
+# Option de téléchargement des résultats
 download_text = f"""
 Résultats du match : {team1_name} vs {team2_name}
 
@@ -156,6 +159,7 @@ Prédictions :
 - XGBoost : {'Victoire ' + team1_name if xgb_prediction == 1 else 'Victoire ' + team2_name}
 
 CV Score (RF) : {rf_cv_score:.2f}
+CV Score (XGBoost) : {xgb_cv_score:.2f}
 """
 
 st.download_button(
