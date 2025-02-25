@@ -133,7 +133,7 @@ if st.button("🔍 Prédire les résultats"):
     })  
 
     st.markdown("### Résultats du Modèle de Poisson")  
-    st.dataframe(poisson_results)  
+    st.dataframe(poisson_results, use_container_width=True)  
 
     # Détails sur chaque prédiction des modèles  
     st.markdown("### Détails des Prédictions des Modèles")  
@@ -150,7 +150,7 @@ if st.button("🔍 Prédire les résultats"):
                                     xgb_prob[0] * 100 if xgb_prob is not None else None],  
     }  
     model_details_df = pd.DataFrame(model_details)  
-    st.dataframe(model_details_df)  
+    st.dataframe(model_details_df, use_container_width=True)  
 
     # Graphique des performances des modèles  
     st.subheader("📈 Comparaison des Modèles")  
