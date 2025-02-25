@@ -104,20 +104,6 @@ def evaluate_models(X, y):
     
     return results  
 
-# Évaluation des modèles après l'entraînement  
-if st.session_state.models is not None:  
-    X = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=1000),  
-        'away_goals': np.random.randint(0, 3, size=1000),  
-        'home_xG': np.random.uniform(0, 2, size=1000),  
-        'away_xG': np.random.uniform(0, 2, size=1000),  
-        'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000)  
-    })  
-    y = np.random.choice([0, 1, 2], size=1000)  
-    results = evaluate_models(X, y)  
-    st.write("Résultats de la validation croisée K-Fold :", results)  
-
 # Interface utilisateur  
 st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
 
@@ -173,6 +159,19 @@ def calculate_implied_prob(odds):
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
     with st.spinner('Calcul des résultats...'):  
+        # Évaluation des modèles avec validation croisée K-Fold  
+        X = pd.DataFrame({  
+            'home_goals': np.random.randint(0, 3, size=1000),  
+            'away_goals': np.random.randint(0, 3, size=1000),  
+            'home_xG': np.random.uniform(0, 2, size=1000),  
+            'away_xG': np.random.uniform(0, 2, size=1000),  
+            'home_encais': np.random.uniform(0, 2, size=1000),  
+            'away_encais': np.random.uniform(0, 2, size=1000)  
+        })  
+        y = np.random.choice([0, 1, 2], size=1000)  
+        results = evaluate_models(X, y)  
+        st.write("Résultats de la validation croisée K-Fold :", results)  
+
         # Calcul des buts prédit  
         home_goals_pred = home_goals + home_xG - away_encais  
         away_goals_pred = away_goals + away_xG - home_encais  
@@ -241,7 +240,7 @@ if st.button("🔍 Prédire les résultats"):
         comparison_data = {  
             "Type": ["Implicite Domicile ou Nul", "Implicite Nul ou Extérieure", "Implicite Domicile ou Extérieure",   
                      "Prédite Domicile ou Nul", "Prédite Nul ou Victoire Extérieure", "Prédite Domicile ou Victoire Extérieure"],  
-            "Probabilité (%)": [  
+            "Probabilité (%)": [
                 implied_home_prob * 100,  
                 implied_draw_prob * 100,  
                 implied_away_prob * 100,  
@@ -260,9 +259,9 @@ if st.button("🔍 Prédire les résultats"):
             "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                                                  rf_prob[0] * 100 if rf_prob is not None else 0,  
                                                  xgb_prob[0] * 100 if xgb_prob is not None else 0],  
-            "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] *100 if log_reg_prob is not None else 0,  
-                rf_prob[1] * 100 if rf_prob is not None else 0,  
-                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+            "Probabilité Nul ou Victoire Extérieure (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                                                             rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                                             xgb_prob[1] * 100 if xgb_prob is not None else 0],  
             "Probabilité Domicile ou Victoire Extérieure (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
                                                                   rf_prob[2] * 100 if rf_prob is not None else 0,  
                                                                   xgb_prob[2] * 100 if xgb_prob is not None else 0]  
