@@ -39,6 +39,11 @@ def create_doc(results):
     doc.add_paragraph(f"Probabilité Nul: {results['Probabilité Nul']:.2f}")  
     doc.add_paragraph(f"Probabilité Extérieure: {results['Probabilité Extérieure']:.2f}")  
 
+    # Ajout de la double chance  
+    doc.add_heading('Double Chance', level=2)  
+    doc.add_paragraph(f"Double Chance Domicile: {results['Double Chance Domicile']:.2f}")  
+    doc.add_paragraph(f"Double Chance Extérieure: {results['Double Chance Extérieure']:.2f}")  
+
     # Enregistrement du document  
     buffer = BytesIO()  
     doc.save(buffer)  
@@ -56,23 +61,28 @@ def train_models():
         'xG': np.random.uniform(0, 2, size=1000),  
         'xGA': np.random.uniform(0, 2, size=1000),  
         'encais': np.random.uniform(0, 2, size=1000),  
-        'result': np.random.choice([0, 1, 2], size=1000)  
+        'face_a_face': np.random.uniform(0, 100, size=1000),  # Face-à-face  
+        'motivation_home': np.random.uniform(0, 100, size=1000),  # Motivation domicile  
+        'motivation_away': np.random.uniform(0, 100, size=1000),  # Motivation extérieur  
+        'victoire_domicile': np.random.uniform(0, 100, size=1000),  # Victoire à domicile  
+        'victoire_exterieur': np.random.uniform(0, 100, size=1000),  # Victoire à l'extérieur  
+        'result': np.random.choice([0, 1, 2], size=1000)  # Résultat (0: extérieur, 1: nul, 2: domicile)  
     })  
 
     # Séparer les caractéristiques et la cible  
-    X = data[['home_goals', 'away_goals', 'xG', 'xGA', 'encais']]  
+    X = data[['home_goals', 'away_goals', 'xG', 'xGA', 'encais', 'face_a_face', 'motivation_home', 'motivation_away', 'victoire_domicile', 'victoire_exterieur']]  
     y = data['result']  
 
     # Modèle de régression logistique  
-    log_reg = LogisticRegression(max_iter=50)  # Réduire le nombre d'itérations pour la démonstration  
+    log_reg = LogisticRegression(max_iter=1000)  # Augmenter le nombre d'itérations pour la convergence  
     log_reg.fit(X, y)  
 
     # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=50)  # Réduire le nombre d'estimations pour la démonstration  
+    rf = RandomForestClassifier(n_estimators=100)  # Augmenter le nombre d'estimations pour la précision  
     rf.fit(X, y)  
 
     # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50)  # Réduire le nombre d'estimations  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100)  # Augmenter le nombre d'estimations  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
@@ -195,7 +205,11 @@ if st.button("🔍 Prédire les résultats"):
     away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
 
     # Prédictions avec les modèles  
-    input_data = [[home_goals_pred, away_goals_pred, st.session_state.home_xG, st.session_state.away_xG, st.session_state.home_encais, st.session_state.away_encais]]  
+    input_data = [[  
+        home_goals_pred, away_goals_pred, st.session_state.home_xG, st.session_state.away_xG, st.session_state.home_encais,  
+        st.session_state.face_a_face, st.session_state.motivation_home, st.session_state.motivation_away,  
+        st.session_state.victoire_domicile, st.session_state.victoire_exterieur  
+    ]]  
 
     try:  
         log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
@@ -263,13 +277,26 @@ if st.button("🔍 Prédire les résultats"):
         "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                                        rf_prob[0] * 100 if rf_prob is not None else 0,  
                                        xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+        # Graphique des performances des modèles  
+    st.subheader("📈 Comparaison des Modèles")  
+    model_comparison_data = {  
+        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                                rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
+                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
     }  
     model_comparison_df = pd.DataFrame(model_comparison_data)  
     fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile (%)', 'Probabilité Nul (%)', 'Probabilité Extérieure (%)'],  
                   title='Comparaison des Probabilités des Modèles', barmode='group')  
     st.plotly_chart(fig)  
 
-        # Explication des modèles  
+    # Explication des modèles  
     st.subheader("📊 Explication des Modèles")  
     st.write("""  
     - **Régression Logistique** : Modèle utilisé pour prédire la probabilité d'un événement binaire.  
