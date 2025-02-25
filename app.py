@@ -143,6 +143,11 @@ with col2:
         "forme_recente": st.number_input("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, value=8),  
     }  
 
+# Saisie des cotes des bookmakers  
+st.header("Saisie des cotes des bookmakers")  
+odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
+odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
+
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
     home_goals = home_stats["moyenne_buts_marques"] + home_stats["xG"] - away_stats["moyenne_buts_encais"]  
@@ -209,17 +214,24 @@ if st.button("🔍 Prédire les résultats"):
 
     # Gestion de la bankroll  
     st.subheader("💰 Gestion de la bankroll")  
-    odds_home = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
-    odds_away = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
 
-    # Vérification des probabilités avant de calculer les mises  
+    # Conversion des cotes en probabilités implicites  
+    implied_prob_home = 1 / odds_home  
+    implied_prob_away = 1 / odds_away  
+    st.write(f"**Probabilité implicite pour {home_team} :** {implied_prob_home * 100:.2f}%")  
+    st.write(f"**Probabilité implicite pour {away_team} :** {implied_prob_away * 100:.2f}%")  
+
+    # Comparaison avec les probabilités des modèles  
+    st.subheader("🔍 Comparaison des Probabilités")  
     if log_reg_prob is not None and len(log_reg_prob) == 3:  
-        kelly_home = kelly_criterion(log_reg_prob[2], odds_home)  # Victoire Domicile  
-        kelly_away = kelly_criterion(log_reg_prob[0], odds_away)  # Victoire Extérieure  
-        st.write(f"**Mise recommandée selon Kelly pour {home_team}:** {kelly_home:.2f}")  
-        st.write(f"**Mise recommandée selon Kelly pour {away_team}:** {kelly_away:.2f}")  
-    else:  
-        st.error("Impossible de calculer les mises recommandées en raison d'une erreur dans les probabilités prédites.")  
+        st.write(f"**Probabilité de victoire selon la régression logistique pour {home_team} :** {log_reg_prob[2] * 100:.2f}%")  
+        st.write(f"**Probabilité de victoire selon la régression logistique pour {away_team} :** {log_reg_prob[0] * 100:.2f}%")  
+
+        # Détection de valeur de pari  
+        if log_reg_prob[2] > implied_prob_home:  
+            st.success(f"Opportunité de pari sur {home_team} !")  
+        if log_reg_prob[0] > implied_prob_away:  
+            st.success(f"Opportunité de pari sur {away_team} !")  
 
     # Option de téléchargement des résultats  
     results = {  
