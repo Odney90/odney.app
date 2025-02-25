@@ -192,4 +192,49 @@ if st.button("🔍 Prédire les résultats"):
     # Graphique des performances des modèles  
     st.subheader("📈 Comparaison des Modèles")  
     model_comparison_data = {  
-        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],
+        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
+                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
+                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
+                                rf_prob[1] * 100 if rf_prob is not None else 0,  
+                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
+        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
+                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
+                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
+    }  
+    model_comparison_df = pd.DataFrame(model_comparison_data)  
+    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile (%)', 'Probabilité Nul (%)', 'Probabilité Extérieure (%)'],  
+                  title='Comparaison des Probabilités des Modèles', barmode='group')  
+    st.plotly_chart(fig)  
+
+    # Explication des modèles  
+    st.subheader("📊 Explication des Modèles")  
+    st.write("""  
+    - **Régression Logistique** : Modèle utilisé pour prédire la probabilité d'un événement binaire.  
+    - **Random Forest** : Modèle d'ensemble qui utilise plusieurs arbres de décision pour améliorer la précision.  
+    - **XGBoost** : Modèle d'apprentissage par boosting qui est très efficace pour les compétitions de machine learning.  
+    """)  
+
+    # Option de téléchargement des résultats  
+    results = {  
+        "Équipe Domicile": home_team,  
+        "Équipe Extérieure": away_team,  
+        "Buts Prédit Domicile": home_goals_pred,  
+        "Buts Prédit Extérieur": away_goals_pred,  
+        "Victoires Domicile": home_victoires,  
+        "Victoires Extérieur": away_victoires,  
+        "Motivation": home_motivation,  
+        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
+        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
+        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
+    }  
+
+    if st.button("📥 Télécharger les résultats en DOC"):  
+        buffer = create_doc(results)  
+        st.download_button(  
+            label="Télécharger les résultats",  
+            data=buffer,  
+            file_name="predictions.docx",  
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
+        )
