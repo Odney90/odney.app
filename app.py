@@ -28,6 +28,9 @@ def create_doc(results):
     doc.add_paragraph(f"Équipe Extérieure: {results['Équipe Extérieure']}")  
     doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
     doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
+    doc.add_paragraph(f"Nombre de Victoires à Domicile: {results['Victoires Domicile']}")  
+    doc.add_paragraph(f"Nombre de Victoires à Extérieur: {results['Victoires Extérieur']}")  
+    doc.add_paragraph(f"Motivation: {results['Motivation']}")  
 
     # Ajout des probabilités des modèles  
     doc.add_heading('Probabilités des Modèles', level=2)  
@@ -92,32 +95,15 @@ with st.expander("Statistiques de l'équipe à domicile", expanded=True):
     home_goals = st.slider("Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5, step=0.1)  
     home_xG = st.slider("xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
     home_encais = st.slider("Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=1.0, step=0.1)  
-    home_xGA = st.slider("xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
-    home_tirs_par_match = st.slider("Nombres de tirs par match (domicile)", min_value=0, max_value=30, value=15)  
-    home_passes_menant_a_tir = st.slider("Nombres de passes menant à un tir (domicile)", min_value=0, max_value=30, value=10)  
-    home_tirs_cadres = st.slider("Tirs cadrés par match (domicile)", min_value=0, max_value=15, value=5)  
-    home_tirs_concedes = st.slider("Nombres de tirs concédés par match (domicile)", min_value=0, max_value=30, value=8)  
-    home_duels_defensifs = st.slider("Duels défensifs gagnés (%) (domicile)", min_value=0.0, max_value=100.0, value=60.0)  
-    home_possession = st.slider("Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
-    home_passes_reussies = st.slider("Passes réussies (%) (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
-    home_touches_surface = st.slider("Balles touchées dans la surface adverse (domicile)", min_value=0, max_value=50, value=20)  
-    home_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=10)  
+    home_victoires = st.number_input("Nombre de victoires à domicile", min_value=0, value=5)  
+    home_motivation = st.slider("Motivation (0 à 10)", min_value=0, max_value=10, value=7)  
 
 with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):  
     away_team = st.text_input("Nom de l'équipe à l'extérieur", value="Équipe B")  
     away_goals = st.slider("Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
     away_xG = st.slider("xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8, step=0.1)  
     away_encais = st.slider("Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
-    away_xGA = st.slider("xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
-    away_tirs_par_match = st.slider("Nombres de tirs par match (extérieur)", min_value=0, max_value=30, value=12)  
-    away_passes_menant_a_tir = st.slider("Nombres de passes menant à un tir (extérieur)", min_value=0, max_value=30, value=8)  
-    away_tirs_cadres = st.slider("Tirs cadrés par match (extérieur)", min_value=0, max_value=15, value=4)  
-    away_tirs_concedes = st.slider("Nombres de tirs concédés par match (extérieur)", min_value=0, max_value=30, value=10)  
-    away_duels_defensifs = st.slider("Duels défensifs gagnés (%) (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
-    away_possession = st.slider("Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
-    away_passes_reussies = st.slider("Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
-    away_touches_surface = st.slider("Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=15)  
-    away_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
+    away_victoires = st.number_input("Nombre de victoires à l'extérieur", min_value=0, value=3)  
 
 # Saisie des cotes des bookmakers  
 st.header("Cotes des Équipes")  
@@ -206,46 +192,4 @@ if st.button("🔍 Prédire les résultats"):
     # Graphique des performances des modèles  
     st.subheader("📈 Comparaison des Modèles")  
     model_comparison_data = {  
-        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-        "Probabilité Domicile (%)": [log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
-                                      rf_prob[2] * 100 if rf_prob is not None else 0,  
-                                      xgb_prob[2] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Nul (%)": [log_reg_prob[1] * 100 if log_reg_prob is not None else 0,  
-                                rf_prob[1] * 100 if rf_prob is not None else 0,  
-                                xgb_prob[1] * 100 if xgb_prob is not None else 0],  
-        "Probabilité Extérieure (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
-                                       rf_prob[0] * 100 if rf_prob is not None else 0,  
-                                       xgb_prob[0] * 100 if xgb_prob is not None else 0],  
-    }  
-    model_comparison_df = pd.DataFrame(model_comparison_data)  
-    fig = px.bar(model_comparison_df, x='Modèle', y=['Probabilité Domicile (%)', 'Probabilité Nul (%)', 'Probabilité Extérieure (%)'],  
-                  title='Comparaison des Probabilités des Modèles', barmode='group')  
-    st.plotly_chart(fig)  
-
-    # Explication des modèles  
-    st.subheader("📊 Explication des Modèles")  
-    st.write("""  
-    - **Régression Logistique** : Modèle utilisé pour prédire la probabilité d'un événement binaire.  
-    - **Random Forest** : Modèle d'ensemble qui utilise plusieurs arbres de décision pour améliorer la précision.  
-    - **XGBoost** : Modèle d'apprentissage par boosting qui est très efficace pour les compétitions de machine learning.  
-    """)  
-
-    # Option de téléchargement des résultats  
-    results = {  
-        "Équipe Domicile": home_team,  
-        "Équipe Extérieure": away_team,  
-        "Buts Prédit Domicile": home_goals_pred,  
-        "Buts Prédit Extérieur": away_goals_pred,  
-        "Probabilité Domicile": log_reg_prob[2] if log_reg_prob is not None else None,  
-        "Probabilité Nul": log_reg_prob[1] if log_reg_prob is not None else None,  
-        "Probabilité Extérieure": log_reg_prob[0] if log_reg_prob is not None else None,  
-    }  
-
-    if st.button("📥 Télécharger les résultats en DOC"):  
-        buffer = create_doc(results)  
-        st.download_button(  
-            label="Télécharger les résultats",  
-            data=buffer,  
-            file_name="predictions.docx",  
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"  
-        )
+        "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],
