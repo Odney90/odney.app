@@ -10,10 +10,12 @@ from io import BytesIO
 from docx import Document  
 
 # Fonction pour prédire avec le modèle Poisson  
-def poisson_prediction(home_goals, away_goals):  
-    home_prob = np.exp(-home_goals) * (home_goals ** home_goals) / factorial(home_goals)  
-    away_prob = np.exp(-away_goals) * (away_goals ** away_goals) / factorial(away_goals)  
-    return home_prob, away_prob  
+def poisson_prediction(goals):  
+    probabilities = []  
+    for k in range(6):  # Calculer pour 0 à 5 buts  
+        prob = np.exp(-goals) * (goals ** k) / factorial(k)  
+        probabilities.append(prob)  
+    return probabilities  
 
 # Fonction pour créer un document Word avec les résultats  
 def create_doc(results):  
@@ -133,7 +135,13 @@ if st.button("🔍 Prédire les résultats"):
     home_goals_pred = home_goals + home_xG - away_encais  
     away_goals_pred = away_goals + away_xG - home_encais  
     
-    home_prob, away_prob = poisson_prediction(home_goals_pred, away_goals_pred)  
+    # Calcul des probabilités avec le modèle de Poisson  
+    home_probabilities = poisson_prediction(home_goals_pred)  
+    away_probabilities = poisson_prediction(away_goals_pred)  
+
+    # Formatage des résultats pour l'affichage  
+    home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
+    away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
 
     # Prédictions avec les modèles  
     input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais]]  
@@ -152,7 +160,7 @@ if st.button("🔍 Prédire les résultats"):
     # Tableau pour le modèle de Poisson  
     poisson_results = pd.DataFrame({  
         "Équipe": [home_team, away_team],  
-        "Buts Prédit": [f"{home_goals_pred:.2f} (🔵{home_prob * 100:.2f}%)", f"{away_goals_pred:.2f} (🔵{away_prob * 100:.2f}%)"]  
+        "Buts Prédit": [home_results, away_results]  
     })  
 
     st.markdown("### Résultats du Modèle de Poisson")  
