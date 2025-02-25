@@ -26,16 +26,21 @@ def create_doc(results):
 
     # Ajout des données des équipes  
     doc.add_heading('Données des Équipes', level=2)  
-    doc.add_paragraph(f"Équipe Domicile: {results['Équipe Domicile']}")  
-    doc.add_paragraph(f"Équipe Extérieure: {results['Équipe Extérieure']}")  
-    doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
-    doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
+    doc.add_paragraph(f"Équipe Domicile: {results.get('Équipe Domicile', 'Inconnu')}")  
+    doc.add_paragraph(f"Équipe Extérieure: {results.get('Équipe Extérieure', 'Inconnu')}")  
+
+    # Vérification et ajout des buts prédits  
+    buts_domicile = results.get('Buts Prédit Domicile', 0)  
+    buts_exterieur = results.get('Buts Prédit Extérieur', 0)  
+    
+    doc.add_paragraph(f"Buts Prédit Domicile: {buts_domicile:.2f}" if isinstance(buts_domicile, (int, float)) else "Buts Prédit Domicile: Non disponible")  
+    doc.add_paragraph(f"Buts Prédit Extérieur: {buts_exterieur:.2f}" if isinstance(buts_exterieur, (int, float)) else "Buts Prédit Extérieur: Non disponible")  
 
     # Ajout des probabilités des modèles  
     doc.add_heading('Probabilités des Modèles', level=2)  
-    doc.add_paragraph(f"Probabilité Domicile ou Nul: {results['Probabilité Domicile']:.2f}")  
-    doc.add_paragraph(f"Probabilité Nul ou Victoire Extérieure: {results['Probabilité Nul']:.2f}")  
-    doc.add_paragraph(f"Probabilité Domicile ou Victoire Extérieure: {results['Probabilité Extérieure']:.2f}")  
+    doc.add_paragraph(f"Probabilité Domicile ou Nul: {results.get('Probabilité Domicile', 0):.2f}")  
+    doc.add_paragraph(f"Probabilité Nul ou Victoire Extérieure: {results.get('Probabilité Nul', 0):.2f}")  
+    doc.add_paragraph(f"Probabilité Domicile ou Victoire Extérieure: {results.get('Probabilité Extérieure', 0):.2f}")  
 
     # Enregistrement du document  
     buffer = BytesIO()  
@@ -249,7 +254,7 @@ if st.button("🔍 Prédire les résultats"):
                 implied_draw_prob * 100,  
                 implied_away_prob * 100,  
                 log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
-                log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
+                log_reg_prob[1] * 100 if log_reg_prob is not None else None
                 log_reg_prob[2] * 100 if log_reg_prob is not None else None  
             ]  
         }  
