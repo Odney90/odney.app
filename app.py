@@ -44,15 +44,17 @@ def create_doc(results):
 # Fonction pour entraîner et prédire avec les modèles  
 @st.cache_resource  
 def train_models():  
+    # Générer des données d'entraînement simulées  
     np.random.seed(42)  
+    data_size = 500  # Réduire la taille des données pour un entraînement plus rapide  
     data = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=1000),  
-        'away_goals': np.random.randint(0, 3, size=1000),  
-        'home_xG': np.random.uniform(0, 2, size=1000),  
-        'away_xG': np.random.uniform(0, 2, size=1000),  
-        'home_encais': np.random.uniform(0, 2, size=1000),  
-        'away_encais': np.random.uniform(0, 2, size=1000),  
-        'result': np.random.choice([0, 1, 2], size=1000)  # 0: D, 1: N, 2: E  
+        'home_goals': np.random.randint(0, 3, size=data_size),  
+        'away_goals': np.random.randint(0, 3, size=data_size),  
+        'home_xG': np.random.uniform(0, 2, size=data_size),  
+        'away_xG': np.random.uniform(0, 2, size=data_size),  
+        'home_encais': np.random.uniform(0, 2, size=data_size),  
+        'away_encais': np.random.uniform(0, 2, size=data_size),  
+        'result': np.random.choice([0, 1, 2], size=data_size)  # 0: D, 1: N, 2: E  
     })  
 
     # Création des cibles pour le paris double chance  
@@ -63,16 +65,14 @@ def train_models():
     X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais']]  
     y = data['double_chance']  
 
-    # Modèle de régression logistique  
-    log_reg = LogisticRegression(max_iter=100, C=1.0, solver='lbfgs')  
+    # Entraînement des modèles  
+    log_reg = LogisticRegression(max_iter=100, solver='lbfgs')  # Utilisation des paramètres par défaut  
+    rf = RandomForestClassifier(n_estimators=10, max_depth=3)  # Réduction du nombre d'estimateurs  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=10, max_depth=3)  # Réduction des paramètres  
+
+    # Entraînement des modèles  
     log_reg.fit(X, y)  
-
-    # Modèle Random Forest  
-    rf = RandomForestClassifier(n_estimators=20, max_depth=3, min_samples_split=2)  
     rf.fit(X, y)  
-
-    # Modèle XGBoost  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=20, max_depth=3, learning_rate=0.1)  
     xgb.fit(X, y)  
 
     return log_reg, rf, xgb  
@@ -91,8 +91,8 @@ else:
 def evaluate_models(X, y):  
     models = {  
         "Régression Logistique": LogisticRegression(max_iter=100, C=1.0, solver='lbfgs'),  
-        "Random Forest": RandomForestClassifier(n_estimators=20, max_depth=3, min_samples_split=2),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=20, max_depth=3, learning_rate=0.1)  
+        "Random Forest": RandomForestClassifier(n_estimators=10, max_depth=3),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=10, max_depth=3)  
     }  
     
     results = {}  
@@ -122,8 +122,9 @@ st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")
 # Saisie des données des équipes  
 st.header("Saisie des données des équipes")  
 
-# Utilisation d'accordéons pour les statistiques des équipes  
-with st.expander("Statistiques de l'équipe à domicile", expanded=True):  
+# Regroupement des statistiques des équipes  
+with st.expander("Statistiques des Équipes", expanded=True):  
+    # Équipe à domicile  
     home_team = st.text_input("Nom de l'équipe à domicile", value="Équipe A")  
     home_goals = st.slider("Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5, step=0.1)  
     home_xG = st.slider("xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0, step=0.1)  
@@ -139,7 +140,7 @@ with st.expander("Statistiques de l'équipe à domicile", expanded=True):
     home_touches_surface = st.slider("Balles touchées dans la surface adverse (domicile)", min_value=0, max_value=50, value=20)  
     home_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=10)  
 
-with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):  
+    # Équipe à l'extérieur  
     away_team = st.text_input("Nom de l'équipe à l'extérieur", value="Équipe B")  
     away_goals = st.slider("Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5, step=0.1)  
     away_xG = st.slider("xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8, step=0.1)  
@@ -155,16 +156,11 @@ with st.expander("Statistiques de l'équipe à l'extérieur", expanded=True):
     away_touches_surface = st.slider("Balles touchées dans la surface adverse (extérieur)", min_value=0, max_value=50, value=15)  
     away_forme_recente = st.slider("Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
 
-# Ajout des nouvelles variables de comparaison  
-st.header("Variables de Comparaison")  
-with st.expander("Statistiques de Victoire", expanded=True):  
+    # Ajout des nouvelles variables de comparaison  
+    st.header("Variables de Comparaison")  
     home_wins = st.number_input("Victoires à domicile", min_value=0, value=5)  
     away_wins = st.number_input("Victoires à l'extérieur", min_value=0, value=3)  
-
-with st.expander("Confrontations Directes", expanded=True):  
     head_to_head = st.number_input("Résultats des confrontations directes (Domicile - Extérieur)", min_value=-10, max_value=10, value=0)  
-
-with st.expander("Buts", expanded=True):  
     home_goals_total = st.number_input("Nombre total de buts à domicile", min_value=0, value=15)  
     away_goals_total = st.number_input("Nombre total de buts à l'extérieur", min_value=0, value=10)  
 
@@ -258,7 +254,7 @@ if st.button("🔍 Prédire les résultats"):
                 implied_away_prob * 100,  
                 log_reg_prob[0] * 100 if log_reg_prob is not None else None,  
                 log_reg_prob[1] * 100 if log_reg_prob is not None else None,  
-                                log_reg_prob[2] * 100 if log_reg_prob is not None else None  
+                log_reg_prob[2] * 100 if log_reg_prob is not None else None  
             ]  
         }  
         comparison_df = pd.DataFrame(comparison_data)  
@@ -266,7 +262,7 @@ if st.button("🔍 Prédire les résultats"):
 
         # Graphique des performances des modèles  
         st.subheader("📈 Comparaison des Modèles")  
-        model_comparison_data = {  
+        model_comparison_data_model_comparison_data = {  
             "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
             "Probabilité Domicile ou Nul (%)": [log_reg_prob[0] * 100 if log_reg_prob is not None else 0,  
                                                  rf_prob[0] * 100 if rf_prob is not None else 0,  
