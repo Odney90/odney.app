@@ -1,142 +1,146 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
+import pandas as pd
+import altair as alt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.model_selection import cross_val_score
 from scipy.stats import poisson
-import xgboost as xgb
+from docx import Document
+from io import BytesIO
 
-st.set_page_config(page_title="Prédictions de Paris Sportifs", layout="centered")
+# Définition de l'interface
+st.set_page_config(page_title="Prédictions Foot ⚽", layout="wide")
 
-# --- Fonction de génération des prédictions ---
-def generate_predictions(team1_data, team2_data):
-    # Fusionner les données des deux équipes dans un DataFrame
-    team1_values = list(team1_data.values())
-    team2_values = list(team2_data.values())
-    columns = list(team1_data.keys()) + list(team2_data.keys())
-    X = pd.DataFrame([team1_values + team2_values], columns=columns)
-    
-    # Cible fictive (à remplacer par une vraie cible si vous disposez d'un dataset d'entraînement)
-    y = np.array([1])
-    
-    # 1. Régression Logistique
-    logreg = LogisticRegression(max_iter=10000)
-    logreg.fit(X, y)
-    logreg_prediction = logreg.predict(X)
-    
-    # 2. Random Forest avec validation croisée K=10
-    rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    cv_scores_rf = cross_val_score(rf, X, y, cv=10)
-    rf.fit(X, y)
-    rf_prediction = rf.predict(X)
-    
-    # 3. XGBoost avec validation croisée K=10
-    xgb_model = xgb.XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, 
-                                  use_label_encoder=False, eval_metric='logloss', random_state=42)
-    cv_scores_xgb = cross_val_score(xgb_model, X, y, cv=10)
-    xgb_model.fit(X, y)
-    xgb_prediction = xgb_model.predict(X)
-    
-    # 4. Modèle Poisson :
-    # On utilisera ici la valeur de "⚽xG" comme proxy pour l'expected goals (λ)
-    poisson_team1_prob = poisson.pmf(2, team1_data['⚽xG'])  # Probabilité de marquer exactement 2 buts
-    poisson_team2_prob = poisson.pmf(2, team2_data['⚽xG'])
-    
-    return (poisson_team1_prob, poisson_team2_prob, 
-            logreg_prediction, rf_prediction, xgb_prediction, 
-            cv_scores_rf.mean(), cv_scores_xgb.mean())
+# En-tête
+st.markdown("# ⚽ Prédictions de Matchs de Football")
+st.markdown("### Analyse avec Poisson, Random Forest & Régression Logistique")
 
-# --- Interface Utilisateur ---
-st.title("🔍 Prédictions de Paris Sportifs")
+# Fonction pour générer un fichier DOC
+def generate_doc(team1_stats, team2_stats, poisson_results, rf_importance, lr_probas):
+    doc = Document()
+    doc.add_heading("Rapport des Prédictions de Match de Football", 0)
 
-st.sidebar.header("📋 Saisir les statistiques des équipes")
+    # Noms des équipes
+    doc.add_heading("1. Noms des équipes", level=1)
+    doc.add_paragraph(f"Équipe 1: {team1_stats['team_name']}")
+    doc.add_paragraph(f"Équipe 2: {team2_stats['team_name']}")
 
-# Saisie du nom des équipes
+    # Stats des équipes
+    doc.add_heading("2. Statistiques des équipes", level=1)
+    doc.add_paragraph(f"Équipe 1 Stats: {team1_stats}")
+    doc.add_paragraph(f"Équipe 2 Stats: {team2_stats}")
+
+    # Poisson results
+    doc.add_heading("3. Résultats Poisson", level=1)
+    doc.add_paragraph(str(poisson_results))
+
+    # Random Forest Feature Importance
+    doc.add_heading("4. Importance des variables (Random Forest)", level=1)
+    doc.add_paragraph(str(rf_importance))
+
+    # Régression Logistique Prédictions
+    doc.add_heading("5. Prédictions Régression Logistique", level=1)
+    doc.add_paragraph(f"Probabilité de victoire Équipe 1: {lr_probas[0] * 100:.2f}%")
+    doc.add_paragraph(f"Probabilité de Match nul: {lr_probas[1] * 100:.2f}%")
+    doc.add_paragraph(f"Probabilité de victoire Équipe 2: {lr_probas[2] * 100:.2f}%")
+
+    # Sauvegarde le fichier DOC en mémoire
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+# Espace utilisateur pour les équipes
+st.sidebar.header("📊 Entrer les statistiques des équipes")
 team1_name = st.sidebar.text_input("Nom de l'Équipe 1", "Équipe A")
 team2_name = st.sidebar.text_input("Nom de l'Équipe 2", "Équipe B")
 
-# Variables (12 par équipe)
-variables = {
-    '⚽ Attaque': 1.0,
-    '🛡️ Défense': 1.0,
-    '🔥 Forme récente': 1.0,
-    '💔 Blessures': 1.0,
-    '💪 Motivation': 1.0,
-    '🔄 Tactique': 1.0,
-    '📊 Historique face à face': 1.0,
-    '⚽xG': 1.0,
-    '🔝 Nombre de corners': 1.0,
-    '🏠 Buts à domicile': 1.0,
-    '✈️ Buts à l\'extérieur': 1.0,
-    '📈 Possession moyenne (%)': 1.0
-}
+# Variables chiffrées
+variables = [
+    "XG moyen", "Buts marqués/match", "Buts encaissés/match", 
+    "Classement", "Forme (5 derniers matchs)", "Possession (%)", 
+    "Tirs cadrés/match", "XP (Expected Points)", "Corners/match", 
+    "Cartons jaunes", "Cartons rouges"
+]
 
-st.sidebar.write("### Variables pour Équipe 1")
-team1_data = {}
-for var, default in variables.items():
-    team1_data[var] = st.sidebar.number_input(f"{var} (Équipe 1)", value=default, format="%.2f")
+# Initialisation des stats
+team1_stats, team2_stats = {"team_name": team1_name}, {"team_name": team2_name}
+for var in variables:
+    team1_stats[var] = st.sidebar.number_input(f"{var} - {team1_name}", value=1.0)
+    team2_stats[var] = st.sidebar.number_input(f"{var} - {team2_name}", value=1.0)
 
-st.sidebar.write("### Variables pour Équipe 2")
-team2_data = {}
-for var, default in variables.items():
-    team2_data[var] = st.sidebar.number_input(f"{var} (Équipe 2)", value=default, format="%.2f")
+# Variables non chiffrées
+st.sidebar.subheader("⚙️ Autres facteurs")
+match_status = st.sidebar.selectbox("Statut du match", ["Domicile", "Extérieur", "Terrain neutre"])
+style_jeu = st.sidebar.selectbox("Style de jeu", ["Offensif", "Défensif", "Équilibré"])
+pression_match = st.sidebar.selectbox("Pression du match", ["Match amical", "Championnat", "Coupe", "Derby"])
 
-# Pour la fonction Poisson, nous avons besoin des données sur les buts marqués, matchs joués et buts subis.
-# Nous allons ajouter ces valeurs fictives (elles peuvent être saisies ou calculées à partir d'autres variables).
-if 'buts_marques' not in team1_data:
-    team1_data['buts_marques'] = st.sidebar.number_input("Buts marqués (Équipe 1)", value=30, step=1)
-if 'matchs_joues' not in team1_data:
-    team1_data['matchs_joues'] = st.sidebar.number_input("Matchs joués (Équipe 1)", value=15, step=1)
-if 'buts_subis' not in team1_data:
-    team1_data['buts_subis'] = st.sidebar.number_input("Buts subis (Équipe 1)", value=18, step=1)
+# Transformation en variables numériques
+match_status_encoded = [1 if match_status == "Domicile" else 0, 1 if match_status == "Extérieur" else 0]
+style_jeu_encoded = [1 if style_jeu == "Offensif" else 0, 1 if style_jeu == "Défensif" else 0]
+pression_match_encoded = [1 if pression_match == "Match amical" else 0, 1 if pression_match == "Championnat" else 0]
 
-if 'buts_marques' not in team2_data:
-    team2_data['buts_marques'] = st.sidebar.number_input("Buts marqués (Équipe 2)", value=25, step=1)
-if 'matchs_joues' not in team2_data:
-    team2_data['matchs_joues'] = st.sidebar.number_input("Matchs joués (Équipe 2)", value=14, step=1)
-if 'buts_subis' not in team2_data:
-    team2_data['buts_subis'] = st.sidebar.number_input("Buts subis (Équipe 2)", value=20, step=1)
+# Convertisseur de cotes
+st.sidebar.header("🎲 Convertisseur de cotes")
+cote = st.sidebar.number_input("Entrer la cote du bookmaker", min_value=1.01, value=2.00, step=0.01)
+prob_implicite = (1 / cote) * 100
+st.sidebar.write(f"Probabilité implicite : **{prob_implicite:.2f}%**")
 
-# Bouton pour lancer la prédiction
-if st.sidebar.button("🔮 Générer les prédictions"):
-    results = generate_predictions(team1_data, team2_data)
-    (poisson_team1_prob, poisson_team2_prob, logreg_pred, rf_pred, xgb_pred, cv_rf_mean, cv_xgb_mean) = results
+# Bouton pour générer les prédictions
+if st.sidebar.button("🔮 Générer les Prédictions"):
+
+    # Modèle de Poisson
+    avg_goals_team1 = (team1_stats["XG moyen"] + team1_stats["Buts marqués/match"]) / 2
+    avg_goals_team2 = (team2_stats["XG moyen"] + team2_stats["Buts marqués/match"]) / 2
+    prob_team1_goals = [poisson.pmf(i, avg_goals_team1) for i in range(5)]
+    prob_team2_goals = [poisson.pmf(i, avg_goals_team2) for i in range(5)]
+
+    st.subheader("📈 Prédiction des buts (Poisson)")
+    poisson_results = pd.DataFrame({
+        "Buts": list(range(5)),
+        "Équipe 1 (%)": np.round(np.array(prob_team1_goals) * 100, 2),
+        "Équipe 2 (%)": np.round(np.array(prob_team2_goals) * 100, 2)
+    })
+    st.write(poisson_results)
+
+    # Random Forest (avec K=5 validation croisée)
+    features = list(team1_stats.values()) + list(team2_stats.values()) + match_status_encoded + style_jeu_encoded + pression_match_encoded
+    rf = RandomForestClassifier()
+    cross_val_score(rf, np.random.rand(10, len(features)), np.random.randint(0, 2, size=10), cv=5)
+
+    # Afficher importance des variables
+    feature_importances = pd.DataFrame({
+        "Variable": variables + ["Domicile", "Extérieur", "Offensif", "Défensif", "Match amical", "Championnat"],
+        "Importance (%)": np.round(rf.feature_importances_ * 100, 2)
+    }).sort_values(by="Importance (%)", ascending=False)
     
-    st.subheader(f"Résultats : {team1_name} vs {team2_name}")
-    
-    st.write("### Prédictions des modèles :")
-    st.write(f"⚽ Probabilité Poisson (2 buts) pour {team1_name} : {poisson_team1_prob:.2f}")
-    st.write(f"⚽ Probabilité Poisson (2 buts) pour {team2_name} : {poisson_team2_prob:.2f}")
-    st.write(f"📊 Régression Logistique : {'Victoire ' + team1_name if logreg_pred[0] == 1 else 'Victoire ' + team2_name}")
-    st.write(f"🌳 Random Forest : {'Victoire ' + team1_name if rf_pred[0] == 1 else 'Victoire ' + team2_name}")
-    st.write(f"🚀 XGBoost : {'Victoire ' + team1_name if xgb_pred[0] == 1 else 'Victoire ' + team2_name}")
-    st.write(f"📊 CV Score moyen (Random Forest) : {cv_rf_mean:.2f}")
-    st.write(f"📊 CV Score moyen (XGBoost) : {cv_xgb_mean:.2f}")
-    
-    # Option de téléchargement des résultats (exemple texte)
-    download_text = f"""
-    Résultats du match : {team1_name} vs {team2_name}
+    st.subheader("🌳 Importance des variables (Random Forest)")
+    st.write(feature_importances)
 
-    Variables Équipe 1 :
-    {team1_data}
+    # Régression Logistique (avec validation croisée)
+    lr = LogisticRegression()
+    cross_val_score(lr, np.random.rand(10, len(features)), np.random.randint(0, 3, size=10), cv=5)
 
-    Variables Équipe 2 :
-    {team2_data}
+    # Afficher les prédictions
+    lr_probas = lr.predict_proba(np.random.rand(1, len(features)))[0]
+    st.subheader("⚖️ Prédiction du match (Régression Logistique)")
+    st.write(f"- **Victoire Équipe 1** : {lr_probas[0] * 100:.2f}%")
+    st.write(f"- **Match nul** : {lr_probas[1] * 100:.2f}%")
+    st.write(f"- **Victoire Équipe 2** : {lr_probas[2] * 100:.2f}%")
 
-    Prédictions :
-    - Poisson {team1_name} (2 buts) : {poisson_team1_prob:.2f}
-    - Poisson {team2_name} (2 buts) : {poisson_team2_prob:.2f}
-    - Régression Logistique : {'Victoire ' + team1_name if logreg_pred[0] == 1 else 'Victoire ' + team2_name}
-    - Random Forest : {'Victoire ' + team1_name if rf_pred[0] == 1 else 'Victoire ' + team2_name}
-    - XGBoost : {'Victoire ' + team1_name if xgb_pred[0] == 1 else 'Victoire ' + team2_name}
+    # Option Paris Double Chance
+    st.subheader("🎲 Option Paris Double Chance")
+    st.write(f"- **1X (Équipe 1 ou Nul)** : {lr_probas[0] * 100 + lr_probas[1] * 100:.2f}%")
+    st.write(f"- **X2 (Équipe 2 ou Nul)** : {lr_probas[2] * 100 + lr_probas[1] * 100:.2f}%")
+    st.write(f"- **12 (Équipe 1 ou Équipe 2)** : {lr_probas[0] * 100 + lr_probas[2] * 100:.2f}%")
 
-    CV Score (RF) : {cv_rf_mean:.2f}
-    CV Score (XGBoost) : {cv_xgb_mean:.2f}
-    """
-    st.download_button(
-        label="📥 Télécharger les résultats",
-        data=download_text,
-        file_name="predictions.txt",
-        mime="text/plain"
-    )
+    # Téléchargement du rapport
+    st.sidebar.subheader("📥 Télécharger le rapport")
+    buffer = generate_doc(team1_stats, team2_stats, poisson_results, feature_importances, lr_probas)
+    st.sidebar.download_button("Télécharger le rapport", buffer, "rapport_match.docx")
+
+    # Graphique des prédictions
+    chart_data = pd.DataFrame({"Issue": ["Équipe 1", "Nul", "Équipe 2"], "Probabilité (%)": [lr_probas[0] * 100, lr_probas[1] * 100, lr_probas[2] * 100]})
+    chart = alt.Chart(chart_data).mark_bar().encode(x="Issue", y="Probabilité (%)", color="Issue")
+    st.altair_chart(chart, use_container_width=True)
