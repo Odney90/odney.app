@@ -40,6 +40,7 @@ def create_doc(results):
     doc.add_paragraph(f"Buts Prédit Domicile: {results['Buts Prédit Domicile']:.2f}")  
     doc.add_paragraph(f"Buts Prédit Extérieur: {results['Buts Prédit Extérieur']:.2f}")  
     doc.add_paragraph(f"Probabilité Domicile: {results['Probabilité Domicile']:.2f}")  
+    doc.add_paragraph(f"Probabilité Nul: {results['Probabilité Nul']:.2f}")  
     doc.add_paragraph(f"Probabilité Extérieure: {results['Probabilité Extérieure']:.2f}")  
 
     # Ajout des probabilités des paris double chance  
