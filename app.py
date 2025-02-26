@@ -122,36 +122,36 @@ with st.expander("📊 Statistiques des Équipes", expanded=True):
     # Équipe à domicile  
     home_team = st.text_input("🏠 Nom de l'équipe à domicile", value="Équipe A")  
     home_goals = st.number_input("⚽ Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5,)  
-    home_xG = st.slider("📈 xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0,)  
+    home_xG = st.number_inpu("📈 xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0,)  
     home_encais = st.number_input("🚫 Moyenne de buts encaissés par match (domicile)", min_value=0.0, max_value=5.0, value=1.0,)  
     home_victories = st.number_input("🏆 Nombre de victoires à domicile", min_value=0, value=5)  # Nouveau champ  
     home_goals_scored = st.number_input("⚽ Nombre de buts marqués à domicile", min_value=0, value=15)  # Nouveau champ  
-    home_xGA = st.slider("📉 xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=1.5,)  
+    home_xGA = st.number_inpu("📉 xGA (Expected Goals Against) (domicile)", min_value=0.0, max_value=5.0, value=1.5,)  
     home_tirs_par_match = st.number_input("🔫 Nombres de tirs par match (domicile)", min_value=0.0, max_value=30.0, value=15.0)  
     home_passes_cles_par_match = st.number_input("📊 Nombres de passes clés par match (domicile)", min_value=0.0, max_value=50.0, value=10.0)  
     home_tirs_cadres = st.number_input("🎯 Tirs cadrés par match (domicile)", min_value=0.0, max_value=15.0, value=5.0)  
     home_tirs_concedes = st.number_input("🚫 Nombres de tirs concédés par match (domicile)", min_value=0.0, max_value=30.0, value=8.0)  
     home_duels_defensifs = st.number_input("🤼 Duels défensifs gagnés (domicile)", min_value=0.0, max_value=100.0, value=60.0)  
-    home_possession = st.slider("📊 Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
-    home_passes_reussies = st.slider("✅ Passes réussies (%) par match (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
+    home_possession = st.number_inpu("📊 Possession moyenne (%) (domicile)", min_value=0.0, max_value=100.0, value=55.0)  
+    home_passes_reussies = st.number_inpu("✅ Passes réussies (%) par match (domicile)", min_value=0.0, max_value=100.0, value=80.0)  
     home_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (domicile)", min_value=0.0, max_value=300.0, value=20.0)  
     home_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=10)  
 
     # Équipe à l'extérieur  
     away_team = st.text_input("🏟️ Nom de l'équipe à l'extérieur", value="Équipe B")  
     away_goals = st.number_input("⚽ Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5,)  
-    away_xG = st.slider("📈 xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8,)  
+    away_xG = st.number_inpu("📈 xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8,)  
     away_encais = st.number_input("🚫 Moyenne de buts encaissés par match (extérieur)", min_value=0.0, max_value=5.0, value=2.0,)  
     away_victories = st.number_input("🏆 Nombre de victoires à l'exterieur", min_value=0, value=3)  # Nouveau champ  
     away_goals_scored = st.number_input("⚽ Nombre de buts marqués à l'extérieur", min_value=0, value=10)  # Nouveau champ  
-    away_xGA = st.slider("📉 xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=1.5,)  
+    away_xGA = st.number_inpu("📉 xGA (Expected Goals Against) (extérieur)", min_value=0.0, max_value=5.0, value=1.5,)  
     away_tirs_par_match = st.number_input("🔫 Nombres de tirs par match (extérieur)", min_value=0.0, max_value=30.0, value=12.0)  
     away_passes_cles_par_match = st.number_input("📊 Nombres de passes clés par match (extérieur)", min_value=0.0, max_value=50.0, value=8.0)  
     away_tirs_cadres = st.number_input("🎯 Tirs cadrés par match (extérieur)", min_value=0.0, max_value=15.0, value=4.0)  
     away_tirs_concedes = st.number_input("🚫 Nombres de tirs concédés par match (extérieur)", min_value=0.0, max_value=30.0, value=10.0)  
-    away_duels_defensifs = st.slider("🤼 Duels défensifs gagnés (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
-    away_possession = st.slider("📊 Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
-    away_passes_reussies = st.slider("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
+    away_duels_defensifs = ("🤼 Duels défensifs gagnés (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
+    away_possession = st.st.number_inpu("📊 Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
+    away_passes_reussies = st.number_inpu("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
     away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (extérieur)", min_value=0.0, max_value=300.0, value=15.0)  
     away_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
 
