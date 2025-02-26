@@ -149,7 +149,7 @@ with st.expander("📊 Statistiques des Équipes", expanded=True):
     away_passes_cles_par_match = st.number_input("📊 Nombres de passes clés par match (extérieur)", min_value=0.0, max_value=50.0, value=8.0)  
     away_tirs_cadres = st.number_input("🎯 Tirs cadrés par match (extérieur)", min_value=0.0, max_value=15.0, value=4.0)  
     away_tirs_concedes = st.number_input("🚫 Nombres de tirs concédés par match (extérieur)", min_value=0.0, max_value=30.0, value=10.0)  
-    away_duels_defensifs = ("🤼 Duels défensifs gagnés (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
+    away_duels_defensifs = st.number_inpu ("🤼 Duels défensifs gagnés (extérieur)", min_value=0.0, max_value=100.0, value=55.0)  
     away_possession = st.st.number_inpu("📊 Possession moyenne (%) (extérieur)", min_value=0.0, max_value=100.0, value=50.0)  
     away_passes_reussies = st.number_inpu("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
     away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (extérieur)", min_value=0.0, max_value=300.0, value=15.0)  
