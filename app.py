@@ -291,7 +291,7 @@ if st.button("🔍 Prédire les résultats"):
                 'Probabilité Domicile ou Victoire Extérieure': log_reg_prob[2] * 100 if log_reg_prob is not None else 0,  
             }  
             doc_buffer = create_doc(results)  
-            st.download_button("📥 Télécharger le document", doc_buffer, "Statistiques_des_Équipe", "Résultats_des_Prédictions/docx")  
+            st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
 
         except Exception as e:  
             st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
