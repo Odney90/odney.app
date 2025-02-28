@@ -354,8 +354,8 @@ if st.button("🔍 Prédire les résultats"):
                 }  
                 plot_team_performance(home_stats, away_stats)  
 
-                # Fonction pour créer un document Word avec les résultats  
-def create_doc(results):  
+     # Fonction pour créer un document Word avec les résultats  
+ def create_doc(results):  
     doc = Document()  
     doc.add_heading('🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs', level=1)  
     doc.add_heading('⚽ Données des Équipes', level=2)  
@@ -370,7 +370,8 @@ def create_doc(results):
     buffer = BytesIO()  
     doc.save(buffer)  
     buffer.seek(0)  
-      return buffer
+    return buffer
+     
       st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
 
         except Exception as e:  
