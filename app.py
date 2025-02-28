@@ -224,9 +224,10 @@ if st.button("🔍 Prédire les résultats"):
                     'away_tirs_par_match': np.random.randint(0, 30, size=500),  
                     'home_passes_cles_par_match': np.random.randint(0, 50, size=500),  
                     'away_passes_cles_par_match': np.random.randint(0, 50, size=500),  
-                    'home_tirs_cadres': np.random.randint(0, 15, size=500),
+                    'home_tirs_cadres': np.random.randint(0, 15, size=500),  
                     'away_tirs_cadres': np.random.randint(0, 15, size=500),  
                     'home_tirs_concedes': np.random.randint(0, 30, size=500),  
+                    'away_tirs_concedes': np.random.randint(0, 30, size=500),  
                     'home_duels_defensifs': np.random.randint(0, 100, size=500),  
                     'away_duels_defensifs': np.random.randint(0, 100, size=500),  
                     'home_possession': np.random.uniform(0, 100, size=500),  
@@ -253,8 +254,8 @@ if st.button("🔍 Prédire les résultats"):
                 away_probabilities = poisson_prediction(away_goals_pred)  
 
                 # Formatage des résultats pour l'affichage  
-                home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
-                away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
+                home_results = {i: home_probabilities[i] * 100 for i in range(len(home_probabilities))}  
+                away_results = {i: away_probabilities[i] * 100 for i in range(len(away_probabilities))}  
 
                 # Calcul des probabilités implicites  
                 implied_home_prob = calculate_implied_prob(odds_home)  
@@ -358,8 +359,8 @@ if st.button("🔍 Prédire les résultats"):
                 results = {  
                     'Équipe Domicile': home_team,  
                     'Équipe Extérieure': away_team,  
-                    'Buts Prédit Domicile': home_results,  
-                    'Buts Prédit Extérieur': away_results,  
+                    'Buts Prédit Domicile': home_results[0],  # Utiliser la probabilité pour 0 but  
+                    'Buts Prédit Extérieur': away_results[0],  # Utiliser la probabilité pour 0 but  
                     'Probabilité Domicile': log_reg_prob[0] * 100,  
                     'Probabilité Nul': log_reg_prob[1] * 100,  
                     'Probabilité Extérieure': log_reg_prob[2] * 100,  
