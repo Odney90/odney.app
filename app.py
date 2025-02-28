@@ -498,8 +498,9 @@ if __name__ == "__main__":
     st.set_page_config(page_title="Prédictions de Matchs de Football", layout="wide")  
     st.write("Bienvenue dans l'application de prédiction de résultats de matchs de football !")  
 
-                                # Affichage des graphiques des performances des équipes  
-                st.subheader("📈 Graphiques des Performances des Équipes")  
+                                
+    # Affichage des graphiques des performances des équipes  
+     st.subheader("📈 Graphiques des Performances des Équipes")  
                 plot_team_performance({  
                     'home_goals_scored': home_goals_scored,  
                     'home_xG': home_xG,  
