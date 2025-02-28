@@ -14,24 +14,26 @@ import matplotlib.pyplot as plt
 def train_models(X_train, y_train):
     models = {
         "Logistic Regression": LogisticRegression(max_iter=1000),
-        "Random Forest": RandomForestClassifier(n_estimators=100),
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'),
+        "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),
         "SVM": SVC(probability=True)
     }
     trained_models = {name: model.fit(X_train, y_train) for name, model in models.items()}
     return trained_models
 
 def poisson_prediction(goals_pred):
-    return [poisson.pmf(i, goals_pred) for i in range(6)]
+    return np.array([poisson.pmf(i, goals_pred) for i in range(6)])
 
 def evaluate_models(X, y):
-    models = {
-        "Logistic Regression": LogisticRegression(max_iter=1000),
-        "Random Forest": RandomForestClassifier(n_estimators=100),
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss'),
-        "SVM": SVC(probability=True)
-    }
-    return {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}
+    if 'model_scores' not in st.session_state:
+        models = {
+            "Logistic Regression": LogisticRegression(max_iter=1000),
+            "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),
+            "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),
+            "SVM": SVC(probability=True)
+        }
+        st.session_state.model_scores = {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}
+    return st.session_state.model_scores
 
 def calculate_implied_prob(odds):
     return 1 / odds
