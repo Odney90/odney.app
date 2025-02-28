@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import altair as alt
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
@@ -8,43 +9,6 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, cross_val_score
 from scipy.stats import poisson
 import matplotlib.pyplot as plt
-
-def generate_synthetic_data():
-    np.random.seed(42)
-    X = pd.DataFrame({
-        'home_goals': np.random.randint(0, 3, size=500),
-        'away_goals': np.random.randint(0, 3, size=500),
-        'home_xG': np.random.uniform(0, 2, size=500),
-        'away_xG': np.random.uniform(0, 2, size=500),
-        'home_encais': np.random.uniform(0, 2, size=500),
-        'away_encais': np.random.uniform(0, 2, size=500),
-        'home_victories': np.random.randint(0, 20, size=500),
-        'away_victories': np.random.randint(0, 20, size=500),
-        'home_goals_scored': np.random.randint(0, 50, size=500),
-        'away_goals_scored': np.random.randint(0, 50, size=500),
-        'home_xGA': np.random.uniform(0, 2, size=500),
-        'away_xGA': np.random.uniform(0, 2, size=500),
-        'home_tirs_par_match': np.random.randint(0, 30, size=500),
-        'away_tirs_par_match': np.random.randint(0, 30, size=500),
-        'home_passes_cles_par_match': np.random.randint(0, 50, size=500),
-        'away_passes_cles_par_match': np.random.randint(0, 50, size=500),
-        'home_tirs_cadres': np.random.randint(0, 15, size=500),
-        'away_tirs_cadres': np.random.randint(0, 15, size=500),
-        'home_tirs_concedes': np.random.randint(0, 30, size=500),
-        'away_tirs_concedes': np.random.randint(0, 30, size=500),
-        'home_duels_defensifs': np.random.randint(0, 100, size=500),
-        'away_duels_defensifs': np.random.randint(0, 100, size=500),
-        'home_possession': np.random.uniform(0, 100, size=500),
-        'away_possession': np.random.uniform(0, 100, size=500),
-        'home_passes_reussies': np.random.uniform(0, 100, size=500),
-        'away_passes_reussies': np.random.uniform(0, 100, size=500),
-        'home_touches_surface': np.random.randint(0, 300, size=500),
-        'away_touches_surface': np.random.randint(0, 300, size=500),
-        'home_forme_recente': np.random.randint(0, 15, size=500),
-        'away_forme_recente': np.random.randint(0, 15, size=500)
-    })
-    y = np.random.choice([0, 1, 2], size=500)
-    return X, y
 
 @st.cache_resource
 def train_models(X_train, y_train):
@@ -72,24 +36,44 @@ def evaluate_models(X, y):
 st.set_page_config(page_title="Prédiction de Matchs", layout="wide")
 st.title("🏆 Analyse et Prédictions Football")
 
-home_team = st.text_input("🏠 Nom de l'équipe à domicile", value="Équipe A")
-away_team = st.text_input("🏟️ Nom de l'équipe à l'extérieur", value="Équipe B")
+st.header("📋 Saisie des données des équipes")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Équipe à Domicile")
+    home_team = st.text_input("🏠 Nom de l'équipe à domicile", value="Équipe A")
+    home_goals = st.number_input("⚽ Moyenne de buts marqués par match", min_value=0.0, max_value=5.0, value=1.5)
+    home_xG = st.number_input("📈 xG (Expected Goals)", min_value=0.0, max_value=5.0, value=1.8)
+    home_encais = st.number_input("🚫 Moyenne de buts encaissés", min_value=0.0, max_value=5.0, value=1.2)
+    home_possession = st.number_input("📊 Possession moyenne (%)", min_value=0.0, max_value=100.0, value=55.0)
+    home_tirs_par_match = st.number_input("🔫 Nombre de tirs par match", min_value=0, max_value=30, value=15)
+    home_passes_cles_par_match = st.number_input("📊 Nombre de passes clés par match", min_value=0, max_value=50, value=10)
+    home_tirs_cadres = st.number_input("🎯 Tirs cadrés par match", min_value=0, max_value=15, value=5)
+    home_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse", min_value=0, max_value=300, value=20)
+    home_duels_defensifs = st.number_input("🤼 Duels défensifs gagnés", min_value=0, max_value=100, value=60)
+    home_passes_reussies = st.number_input("✅ Passes réussies (%)", min_value=0.0, max_value=100.0, value=80.0)
+    home_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs)", min_value=0, max_value=15, value=10)
+    home_victories = st.number_input("🏆 Nombre de victoires à domicile", min_value=0, max_value=20, value=5)
+    home_fautes_commises = st.number_input("⚠️ Fautes commises par match", min_value=0, max_value=30, value=12)
+    home_interceptions = st.number_input("🛑 Interceptions par match", min_value=0, max_value=30, value=8)
+
+with col2:
+    st.subheader("Équipe à Extérieur")
+    away_team = st.text_input("🏟️ Nom de l'équipe à l'extérieur", value="Équipe B")
+    away_goals = st.number_input("⚽ Moyenne de buts marqués par match", min_value=0.0, max_value=5.0, value=1.3)
+    away_xG = st.number_input("📈 xG (Expected Goals)", min_value=0.0, max_value=5.0, value=1.5)
+    away_encais = st.number_input("🚫 Moyenne de buts encaissés", min_value=0.0, max_value=5.0, value=1.7)
+    away_possession = st.number_input("📊 Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0)
+    away_tirs_par_match = st.number_input("🔫 Nombre de tirs par match", min_value=0, max_value=30, value=12)
+    away_passes_cles_par_match = st.number_input("📊 Nombre de passes clés par match", min_value=0, max_value=50, value=8)
+    away_tirs_cadres = st.number_input("🎯 Tirs cadrés par match", min_value=0, max_value=15, value=4)
+    away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse", min_value=0, max_value=300, value=15)
+    away_duels_defensifs = st.number_input("🤼 Duels défensifs gagnés", min_value=0, max_value=100, value=55)
+    away_passes_reussies = st.number_input("✅ Passes réussies (%)", min_value=0.0, max_value=100.0, value=75.0)
+    away_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs)", min_value=0, max_value=15, value=8)
+    away_victories = st.number_input("🏆 Nombre de victoires à l'extérieur", min_value=0, max_value=20, value=3)
+    away_fautes_commises = st.number_input("⚠️ Fautes commises par match", min_value=0, max_value=30, value=14)
+    away_interceptions = st.number_input("🛑 Interceptions par match", min_value=0, max_value=30, value=10)
 
 odds_home = st.number_input("🏠 Cote Domicile", min_value=1.0, value=1.8)
 odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
-
-def calculate_implied_prob(odds):
-    return 1 / odds
-
-def predict_match(models, X_test):
-    return {name: model.predict_proba(X_test) for name, model in models.items()}
-
-if st.button("🔍 Prédire les résultats"):
-    with st.spinner('Calcul en cours...'):
-        X, y = generate_synthetic_data()
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        models = train_models(X_train, y_train)
-        evaluation_results = evaluate_models(X, y)
-        st.write("📊 Résultats Validation Croisée", evaluation_results)
-        predictions = predict_match(models, X_test.iloc[:1])
-        st.write("📊 Prédictions des modèles", predictions)
