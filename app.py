@@ -10,9 +10,21 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from scipy.stats import poisson
 import matplotlib.pyplot as plt
 
+# Initialisation de session_state si non existant
+if 'trained_models' not in st.session_state:
+    st.session_state.trained_models = None
+if 'model_scores' not in st.session_state:
+    st.session_state.model_scores = None
+if 'predictions' not in st.session_state:
+    st.session_state.predictions = None
+if 'poisson_results' not in st.session_state:
+    st.session_state.poisson_results = None
+if 'value_bets' not in st.session_state:
+    st.session_state.value_bets = None
+
 @st.cache_resource
 def train_models(X_train, y_train):
-    if 'trained_models' not in st.session_state:
+    if st.session_state.trained_models is None:
         models = {
             "Logistic Regression": LogisticRegression(max_iter=1000),
             "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),
@@ -26,7 +38,7 @@ def poisson_prediction(goals_pred):
     return np.array([poisson.pmf(i, goals_pred) for i in range(6)])
 
 def evaluate_models(X, y):
-    if 'model_scores' not in st.session_state:
+    if st.session_state.model_scores is None:
         models = {
             "Logistic Regression": LogisticRegression(max_iter=1000),
             "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),
@@ -67,35 +79,36 @@ odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
 
 if st.button("🔍 Lancer les prédictions"):
     with st.spinner("🔄 Calcul en cours..."):
-        model_scores = evaluate_models(np.random.rand(10, 10), np.random.randint(0, 3, 10))
-        st.write("📊 Résultats de la validation croisée:", model_scores)
+        st.session_state.model_scores = evaluate_models(np.random.rand(10, 10), np.random.randint(0, 3, 10))
+        st.write("📊 Résultats de la validation croisée:", st.session_state.model_scores)
         
-        # Prédictions des modèles
         trained_models = train_models(np.random.rand(10, 3), np.random.randint(0, 3, 10))
-        predictions = {name: model.predict_proba([[home_goals, away_goals, home_xG, away_xG, home_encais, away_encais]])[0] for name, model in trained_models.items()}
-        st.write("🎯 Prédictions des modèles:", predictions)
+        st.session_state.predictions = {name: model.predict_proba([[home_goals, away_goals, home_xG, away_xG, home_encais, away_encais]])[0] for name, model in trained_models.items()}
+        st.write("🎯 Prédictions des modèles:", st.session_state.predictions)
         
-        # Prédictions Poisson
         home_goals_pred = home_goals + home_xG - away_encais
         away_goals_pred = away_goals + away_xG - home_encais
-        poisson_home = poisson_prediction(home_goals_pred)
-        poisson_away = poisson_prediction(away_goals_pred)
+        st.session_state.poisson_results = {
+            home_team: poisson_prediction(home_goals_pred),
+            away_team: poisson_prediction(away_goals_pred)
+        }
         st.write("📈 Prédictions du modèle de Poisson:")
-        st.write(f"{home_team} : {[f'{p*100:.2f}%' for p in poisson_home]}")
-        st.write(f"{away_team} : {[f'{p*100:.2f}%' for p in poisson_away]}")
+        st.write(f"{home_team} : {[f'{p*100:.2f}%' for p in st.session_state.poisson_results[home_team]]}")
+        st.write(f"{away_team} : {[f'{p*100:.2f}%' for p in st.session_state.poisson_results[away_team]]}")
         
-        # Détection des value bets
         implied_home_prob = calculate_implied_prob(odds_home)
         implied_away_prob = calculate_implied_prob(odds_away)
-        value_bet_home = detect_value_bet(predictions['Logistic Regression'][0], implied_home_prob)
-        value_bet_away = detect_value_bet(predictions['Logistic Regression'][2], implied_away_prob)
+        st.session_state.value_bets = {
+            home_team: detect_value_bet(st.session_state.predictions['Logistic Regression'][0], implied_home_prob),
+            away_team: detect_value_bet(st.session_state.predictions['Logistic Regression'][2], implied_away_prob)
+        }
         
         st.write("💰 Conseils de paris:")
-        if value_bet_home:
+        if st.session_state.value_bets[home_team]:
             st.success(f"Value Bet détecté sur {home_team}!")
-        if value_bet_away:
+        if st.session_state.value_bets[away_team]:
             st.success(f"Value Bet détecté sur {away_team}!")
-        if not value_bet_home and not value_bet_away:
+        if not any(st.session_state.value_bets.values()):
             st.info("Aucun value bet détecté.")
         
         st.success("✅ Prédictions générées avec succès !")
