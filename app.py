@@ -1,6 +1,7 @@
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
+import matplotlib.pyplot as plt  
 from scipy.special import factorial  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
@@ -189,143 +190,193 @@ odds_away = st.number_input("🏟️ Cote pour l'équipe à l'extérieur", min_v
 def calculate_implied_prob(odds):  
     return 1 / odds  
 
+# Fonction pour afficher les graphiques des performances des équipes  
+def plot_team_performance(home_stats, away_stats):  
+    labels = ['Buts', 'xG', 'Buts Encaissés', 'Tirs', 'Passes Clés', 'Tirs Cadrés', 'Possession']  
+    home_values = [home_stats['home_goals_scored'], home_stats['home_xG'], home_stats['home_encais'],   
+                   home_stats['home_tirs_par_match'], home_stats['home_passes_cles_par_match'],   
+                   home_stats['home_tirs_cadres'], home_stats['home_possession']]  
+    away_values = [away_stats['away_goals_scored'], away_stats['away_xG'], away_stats['away_encais'],   
+                   away_stats['away_tirs_par_match'], away_stats['away_passes_cles_par_match'],   
+                   away_stats['away_tirs_cadres'], away_stats['away_possession']]  
+
+    x = np.arange(len(labels))  
+    width = 0.35  
+
+    fig, ax = plt.subplots()  
+    bars1 = ax.bar(x - width/2, home_values, width, label=home_team)  
+    bars2 = ax.bar(x + width/2, away_values, width, label=away_team)  
+
+    ax.set_ylabel('Valeurs')  
+    ax.set_title('Comparaison des Performances des Équipes')  
+    ax.set_xticks(x)  
+    ax.set_xticklabels(labels)  
+    ax.legend()  
+
+    st.pyplot(fig)  
+
 # Prédictions  
 if st.button("🔍 Prédire les résultats"):  
     with st.spinner('Calcul des résultats...'):  
         try:  
-            # Évaluation des modèles avec validation croisée K-Fold  
-            X = pd.DataFrame({  
-                'home_goals': np.random.randint(0, 3, size=1000),  
-                'away_goals': np.random.randint(0, 3, size=1000),  
-                'home_xG': np.random.uniform(0, 2, size=1000),  
-                'away_xG': np.random.uniform(0, 2, size=1000),  
-                'home_encais': np.random.uniform(0, 2, size=1000),  
-                'away_encais': np.random.uniform(0, 2, size=1000),  
-                'home_victories': np.random.randint(0, 20, size=1000),  
-                'away_victories': np.random.randint(0, 20, size=1000),  
-                'home_goals_scored': np.random.randint(0, 50, size=1000),  
-                'away_goals_scored': np.random.randint(0, 50, size=1000),  
-                'home_xGA': np.random.uniform(0, 2, size=1000),  
-                'away_xGA': np.random.uniform(0, 2, size=1000),  
-                'home_tirs_par_match': np.random.randint(0, 30, size=1000),  
-                'away_tirs_par_match': np.random.randint(0, 30, size=1000),  
-                'home_passes_cles_par_match': np.random.randint(0, 50, size=1000),  
-                'away_passes_cles_par_match': np.random.randint(0, 50, size=1000),  
-                'home_tirs_cadres': np.random.randint(0, 15, size=1000),  
-                'away_tirs_cadres': np.random.randint(0, 15, size=1000),  
-                'home_tirs_concedes': np.random.randint(0, 30, size=1000),  
-                'away_tirs_concedes': np.random.randint(0, 30, size=1000),  
-                'home_duels_defensifs': np.random.randint(0, 100, size=1000),  
-                'away_duels_defensifs': np.random.randint(0, 100, size=1000),  
-                'home_possession': np.random.uniform(0, 100, size=1000),  
-                'away_possession': np.random.uniform(0, 100, size=1000),  
-                'home_passes_reussies': np.random.uniform(0, 100, size=1000),  
-                'away_passes_reussies': np.random.uniform(0, 100, size=1000),  
-                'home_touches_surface': np.random.randint(0, 300, size=1000),  
-                'away_touches_surface': np.random.randint(0, 300, size=1000),  
-                'home_forme_recente': np.random.randint(0, 15, size=1000),  
-                'away_forme_recente': np.random.randint(0, 15, size=1000)  
-            })  
-            y = np.random.choice([0, 1, 2], size=1000)  # 0: Domicile, 1: Nul, 2: Extérieur  
-            results = evaluate_models(X, y)  
-            st.write("📊 Résultats de la validation croisée K-Fold :", results)  
+            # Validation des entrées utilisateur  
+            if home_goals < 0 or away_goals < 0:  
+                st.error("⚠️ Les moyennes de buts ne peuvent pas être négatives.")  
+            else:  
+             # Évaluation des modèles avec validation croisée K-Fold  
+                X = pd.DataFrame({  
+                    'home_goals': np.random.randint(0, 3, size=1000),  
+                    'away_goals': np.random.randint(0, 3, size=1000),  
+                    'home_xG': np.random.uniform(0, 2, size=1000),  
+                    'away_xG': np.random.uniform(0, 2, size=1000),  
+                    'home_encais': np.random.uniform(0, 2, size=1000),  
+                    'away_encais': np.random.uniform(0, 2, size=1000),  
+                    'home_victories': np.random.randint(0, 20, size=1000),  
+                    'away_victories': np.random.randint(0, 20, size=1000),  
+                    'home_goals_scored': np.random.randint(0, 50, size=1000),  
+                    'away_goals_scored': np.random.randint(0, 50, size=1000),  
+                    'home_xGA': np.random.uniform(0, 2, size=1000),  
+                    'away_xGA': np.random.uniform(0, 2, size=1000),  
+                    'home_tirs_par_match': np.random.randint(0, 30, size=1000),  
+                    'away_tirs_par_match': np.random.randint(0, 30, size=1000),  
+                    'home_passes_cles_par_match': np.random.randint(0, 50, size=1000),  
+                    'away_passes_cles_par_match': np.random.randint(0, 50, size=1000),  
+                    'home_tirs_cadres': np.random.randint(0, 15, size=1000),  
+                    'away_tirs_cadres': np.random.randint(0, 15, size=1000),  
+                    'home_tirs_concedes': np.random.randint(0, 30, size=1000),  
+                    'away_tirs_concedes': np.random.randint(0, 30, size=1000),  
+                    'home_duels_defensifs': np.random.randint(0, 100, size=1000),  
+                    'away_duels_defensifs': np.random.randint(0, 100, size=1000),  
+                    'home_possession': np.random.uniform(0, 100, size=1000),  
+                    'away_possession': np.random.uniform(0, 100, size=1000),  
+                    'home_passes_reussies': np.random.uniform(0, 100, size=1000),  
+                    'away_passes_reussies': np.random.uniform(0, 100, size=1000),  
+                    'home_touches_surface': np.random.randint(0, 300, size=1000),  
+                    'away_touches_surface': np.random.randint(0, 300, size=1000),  
+                    'home_forme_recente': np.random.randint(0, 15, size=1000),  
+                    'away_forme_recente': np.random.randint(0, 15, size=1000)  
+                })  
+                y = np.random.choice([0, 1, 2], size=1000)  # 0: Domicile, 1: Nul, 2: Extérieur  
+                results = evaluate_models(X, y)  
+                st.write("📊 Résultats de la validation croisée K-Fold :", results)  
 
-            # Calcul des buts prédit  
-            home_goals_pred = home_goals + home_xG - away_encais  
-            away_goals_pred = away_goals + away_xG - home_encais  
+                # Calcul des buts prédit  
+                home_goals_pred = home_goals + home_xG - away_encais  
+                away_goals_pred = away_goals + away_xG - home_encais  
 
-            # Calcul des probabilités avec le modèle de Poisson  
-            home_probabilities = poisson_prediction(home_goals_pred)  
-            away_probabilities = poisson_prediction(away_goals_pred)  
+                # Calcul des probabilités avec le modèle de Poisson  
+                home_probabilities = poisson_prediction(home_goals_pred)  
+                away_probabilities = poisson_prediction(away_goals_pred)  
 
-            # Formatage des résultats pour l'affichage  
-            home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
-            away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
+                # Formatage des résultats pour l'affichage  
+                home_results = ", ".join([f"{i} but {home_probabilities[i] * 100:.1f}%" for i in range(len(home_probabilities))])  
+                away_results = ", ".join([f"{i} but {away_probabilities[i] * 100:.1f}%" for i in range(len(away_probabilities))])  
 
-            # Calcul des probabilités implicites  
-            implied_home_prob = calculate_implied_prob(odds_home)  
-            implied_away_prob = calculate_implied_prob(odds_away)  
-            implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
+                # Calcul des probabilités implicites  
+                implied_home_prob = calculate_implied_prob(odds_home)  
+                implied_away_prob = calculate_implied_prob(odds_away)  
+                implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
 
-            # Prédictions avec les modèles  
-            input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,   
-                           home_victories, away_victories, home_goals_scored, away_goals_scored,   
-                           home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,   
-                           home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,   
-                           away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,   
-                           home_duels_defensifs, away_duels_defensifs, home_possession,   
-                           away_possession, home_passes_reussies, away_passes_reussies,   
-                           home_touches_surface, away_touches_surface, home_forme_recente,   
-                           away_forme_recente]]  # 26 caractéristiques  
+                # Prédictions avec les modèles  
+                input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,   
+                               home_victories, away_victories, home_goals_scored, away_goals_scored,   
+                               home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,   
+                               home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,   
+                               away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,   
+                               home_duels_defensifs, away_duels_defensifs, home_possession,   
+                               away_possession, home_passes_reussies, away_passes_reussies,   
+                               home_touches_surface, away_touches_surface, home_forme_recente,   
+                               away_forme_recente]]  # 26 caractéristiques  
 
-            log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-            rf_prob = rf_model.predict_proba(input_data)[0]  
-            xgb_prob = xgb_model.predict_proba(input_data)[0]  
+                log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
+                rf_prob = rf_model.predict_proba(input_data)[0]  
+                xgb_prob = xgb_model.predict_proba(input_data)[0]  
 
-            # Affichage des résultats  
-            st.subheader("📊 Résultats des Prédictions")  
+                # Affichage des résultats  
+                st.subheader("📊 Résultats des Prédictions")  
 
-            # Tableau pour le modèle de Poisson  
-            poisson_results = pd.DataFrame({  
-                "Équipe": [home_team, away_team],  
-                "Buts Prédit": [home_results, away_results]  
-            })  
+                # Tableau pour le modèle de Poisson  
+                poisson_results = pd.DataFrame({  
+                    "Équipe": [home_team, away_team],  
+                    "Buts Prédit": [home_results, away_results]  
+                })  
 
-            st.markdown("### Résultats du Modèle de Poisson")  
-            st.dataframe(poisson_results, use_container_width=True)  
+                st.markdown("### Résultats du Modèle de Poisson")  
+                st.dataframe(poisson_results, use_container_width=True)  
 
-            # Détails sur chaque prédiction des modèles  
-            st.markdown("### Détails des Prédictions des Modèles")  
-            model_details = {  
-                "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
-                "Probabilité Domicile (%)": [  
-                    log_reg_prob[0] * 100,  
-                    rf_prob[0] * 100,  
-                    xgb_prob[0] * 100  
-                ],  
-                "Probabilité Nul (%)": [  
-                    log_reg_prob[1] * 100,  
-                    rf_prob[1] * 100,  
-                    xgb_prob[1] * 100  
-                ],  
-                "Probabilité Extérieure (%)": [  
-                    log_reg_prob[2] * 100,  
-                    rf_prob[2] * 100,  
-                    xgb_prob[2] * 100  
-                ]  
-            }  
-            model_details_df = pd.DataFrame(model_details)  
-            st.dataframe(model_details_df, use_container_width=True)  
+                # Détails sur chaque prédiction des modèles  
+                st.markdown("### Détails des Prédictions des Modèles")  
+                model_details = {  
+                    "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+                    "Probabilité Domicile (%)": [  
+                        log_reg_prob[0] * 100,  
+                        rf_prob[0] * 100,  
+                        xgb_prob[0] * 100  
+                    ],  
+                    "Probabilité Nul (%)": [  
+                        log_reg_prob[1] * 100,  
+                        rf_prob[1] * 100,  
+                        xgb_prob[1] * 100  
+                    ],  
+                    "Probabilité Extérieure (%)": [  
+                        log_reg_prob[2] * 100,  
+                        rf_prob[2] * 100,  
+                        xgb_prob[2] * 100  
+                    ]  
+                }  
+                model_details_df = pd.DataFrame(model_details)  
+                st.dataframe(model_details_df, use_container_width=True)  
 
-            # Comparaison des probabilités implicites et prédites  
-            st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
-            comparison_data = {  
-                "Type": ["Implicite Domicile", "Implicite Nul", "Implicite Extérieure",   
-                         "Prédite Domicile", "Prédite Nul", "Prédite Extérieure"],  
-                "Probabilité (%)": [  
-                    implied_home_prob * 100,  
-                    implied_draw_prob * 100,  
-                    implied_away_prob * 100,  
-                    log_reg_prob[0] * 100,  
-                    log_reg_prob[1] * 100,  
-                    log_reg_prob[2] * 100  
-                ]  
-            }  
-            comparison_df = pd.DataFrame(comparison_data)  
-            st.dataframe(comparison_df, use_container_width=True)  
+                # Comparaison des probabilités implicites et prédites  
+                st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
+                comparison_data = {  
+                    "Type": ["Implicite Domicile", "Implicite Nul", "Implicite Extérieure",   
+                             "Prédite Domicile", "Prédite Nul", "Prédite Extérieure"],  
+                    "Probabilité (%)": [  
+                        implied_home_prob * 100,  
+                        implied_draw_prob * 100,  
+                        implied_away_prob * 100,  
+                        log_reg_prob[0] * 100,  
+                        log_reg_prob[1] * 100,  
+                        log_reg_prob[2] * 100  
+                    ]  
+                }  
+                comparison_df = pd.DataFrame(comparison_data)  
+                st.dataframe(comparison_df, use_container_width=True)  
 
-            # Option pour télécharger le document Word avec les résultats  
-            results = {  
-                'Équipe Domicile': home_team,  
-                'Équipe Extérieure': away_team,  
-                'Buts Prédit Domicile': home_results,  
-                'Buts Prédit Extérieur': away_results,  
-                'Probabilité Domicile': log_reg_prob[0] * 100,  
-                'Probabilité Nul': log_reg_prob[1] * 100,  
-                'Probabilité Extérieure': log_reg_prob[2] * 100,  
-            }  
-            doc_buffer = create_doc(results)  
-            st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
+                # Affichage des graphiques des performances des équipes  
+                home_stats = {  
+                    'home_goals_scored': home_goals_scored,  
+                    'home_xG': home_xG,  
+                    'home_encais': home_encais,  
+                    'home_tirs_par_match': home_tirs_par_match,  
+                    'home_passes_cles_par_match': home_passes_cles_par_match,  
+                    'home_tirs_cadres': home_tirs_cadres,  
+                    'home_possession': home_possession  
+                }  
+                away_stats = {  
+                    'away_goals_scored': away_goals_scored,  
+                    'away_xG': away_xG,  
+                    'away_encais': away_encais,  
+                    'away_tirs_par_match': away_tirs_par_match,  
+                    'away_passes_cles_par_match': away_passes_cles_par_match,  
+                    'away_tirs_cadres': away_tirs_cadres,  
+                    'away_possession': away_possession  
+                }  
+                plot_team_performance(home_stats, away_stats)  
+
+                # Option pour télécharger le document Word avec les résultats  
+                results = {  
+                    'Équipe Domicile': home_team,  
+                    'Équipe Extérieure': away_team,  
+                    'Buts Prédit Domicile': home_results,  
+                    'Buts Prédit Extérieur': away_results,  
+                    'Probabilité Domicile': log_reg_prob[0] * 100,  
+                    'Probabilité Nul': log_reg_prob[1] * 100,  
+                    'Probabilité Extérieure': log_reg_prob[2] * 100,  
+                }  
+                doc_buffer = create_doc(results)  
+                st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
 
         except Exception as e:  
             st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
