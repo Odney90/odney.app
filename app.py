@@ -1,11 +1,10 @@
 import pandas as pd  
 import numpy as np  
-from sklearn.model_selection import train_test_split, cross_val_score  
+from sklearn.model_selection import train_test_split  
 from sklearn.svm import SVC  
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier  
 from sklearn.linear_model import LogisticRegression  
 from xgboost import XGBClassifier  
-from sklearn.metrics import accuracy_score, classification_report  
 import streamlit as st  
 
 # Fixer la graine pour la reproductibilité  
@@ -32,6 +31,16 @@ data = {
     'away_yellow_cards': np.random.poisson(lam=1.5, size=n_samples),  
     'home_red_cards': np.random.poisson(lam=0.2, size=n_samples),  
     'away_red_cards': np.random.poisson(lam=0.1, size=n_samples),  
+    'home_defense': np.random.uniform(low=0.5, high=1.0, size=n_samples),  
+    'away_defense': np.random.uniform(low=0.5, high=1.0, size=n_samples),  
+    'home_attack': np.random.uniform(low=0.5, high=1.0, size=n_samples),  
+    'away_attack': np.random.uniform(low=0.5, high=1.0, size=n_samples),  
+    'home_injuries': np.random.randint(0, 5, size=n_samples),  
+    'away_injuries': np.random.randint(0, 5, size=n_samples),  
+    'home_recent_form': np.random.uniform(low=0, high=1, size=n_samples),  
+    'away_recent_form': np.random.uniform(low=0, high=1, size=n_samples),  
+    'home_fans': np.random.randint(1000, 50000, size=n_samples),  
+    'away_fans': np.random.randint(1000, 50000, size=n_samples),  
 }  
 
 # Créer le DataFrame  
@@ -69,20 +78,44 @@ stacking_model.fit(X_train, y_train_class)
 st.title("Prédiction de Matchs de Football")  
 
 # Saisie des données des équipes  
-home_xG = st.number_input("xG (Expected Goals) de l'équipe à domicile", min_value=0.0, value=1.5)  
-away_xG = st.number_input("xG (Expected Goals) de l'équipe à l'extérieur", min_value=0.0, value=1.2)  
-home_possession = st.number_input("Possession moyenne (%) de l'équipe à domicile", min_value=0.0, value=55.0)  
-away_possession = st.number_input("Possession moyenne (%) de l'équipe à l'extérieur", min_value=0.0, value=45.0)  
-home_shots = st.number_input("Nombre de tirs de l'équipe à domicile", min_value=0, value=10)  
-away_shots = st.number_input("Nombre de tirs de l'équipe à l'extérieur", min_value=0, value=8)  
-home_passes = st.number_input("Nombre de passes réussies de l'équipe à domicile", min_value=0, value=300)  
-away_passes = st.number_input("Nombre de passes réussies de l'équipe à l'extérieur", min_value=0, value=250)  
-home_fouls = st.number_input("Nombre de fautes de l'équipe à domicile", min_value=0, value=12)  
-away_fouls = st.number_input("Nombre de fautes de l'équipe à l'extérieur", min_value=0, value=10)  
-home_corners = st.number_input("Nombre de corners de l'équipe à domicile", min_value=0, value=5)  
-away_corners = st.number_input("Nombre de corners de l'équipe à l'extérieur", min_value=0, value=4)  
-home_yellow_cards = st.number_input("Cartons jaunes de l'équipe à domicile", min_value=0, value=2)  
-away_yellow_cards = st.number_input("Cartons jaunes de l'équipe à l'extérieur", min_value=0, value=1)  
+col1, col2 = st.columns(2)  
+
+with col1:  
+    st.header("Équipe à Domicile")  
+    home_xG = st.number_input("xG (Expected Goals)", min_value=0.0, value=1.5)  
+    home_possession = st.number_input("Possession moyenne (%)", min_value=0.0, value=55.0)  
+    home_shots = st.number_input("Nombre de tirs", min_value=0, value=10)  
+    home_passes = st.number_input("Nombre de passes réussies", min_value=0, value=300)  
+    home_fouls = st.number_input("Nombre de fautes", min_value=0, value=12)  
+    home_corners = st.number_input("Nombre de corners", min_value=0, value=5)  
+    home_yellow_cards = st.number_input("Cartons jaunes", min_value=0, value=2)  
+    home_red_cards = st.number_input("Cartons rouges", min_value=0, value=0)  
+    home_defense = st.number_input("Qualité de la défense (0.0 à 1.0)", min_value=0.0, max_value=1.0, value=0.8)  
+    home_attack = st.number_input("Qualité de l'attaque (0.0 à 1.0)", min_value=0.0, max_value=1.0, value=0.8)  
+    home_injuries = st.number_input("Nombre de blessures", min_value=0, value=0)  
+    home_recent_form = st.number_input("Forme récente (0.0 à 1.0)", min_value=0.0, max_value=1.0, value=0.5)  
+    home_fans = st.number_input("Nombre de fans", min_value=1000, value=10000)  
+
+with col2:  
+    st.header("Équipe à l'Extérieur")  
+    away_xG = st.number_input("xG (Expected Goals)", min_value=0.0, value=1.2)  
+    away_possession = st.number_input("Possession moyenne (%)", min_value=0.0, value=45.0)  
+    away_shots = st.number_input("Nombre de tirs", min_value=0, value=8)  
+    away_passes = st.number_input("Nombre de passes réussies", min_value=0, value=250)  
+    away_fouls = st.number_input("Nombre de fautes", min_value=0, value=10)  
+    away_corners = st.number_input("Nombre de corners", min_value=0, value=4)  
+    away_yellow_cards = st.number_input("Cartons jaunes", min_value=0, value=1)  
+    away_red_cards = st.number_input("Cartons rouges", min_value=0, value=0)  
+    away_defense = st.number_input("Qualité de la défense (0.0 à 1.0)", min_value=0.0, max_value=1.0, value=0.7)  
+    away_attack = st.number_input("Qualité de l'attaque (0.0 à 1.0)", min_value=0.0, max_value=1.0, value=0.7)  
+    away_injuries = st.number_input("Nombre de blessures", min_value=0, value=0)  
+    away_recent_form = st.number_input("Forme récente (0.0 à 1.0)", min_value=0.0, max_value=1.0, value=0.5)  
+    away_fans = st.number_input("Nombre de fans", min_value=1000, value=10000)  
+
+# Saisie des cotes des bookmakers  
+st.header("Cotes des Bookmakers")  
+home_odds = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=2.0)  
+away_odds = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.0)  
 
 # Bouton pour prédire  
 if st.button("Prédire l'issue du match"):  
@@ -90,16 +123,33 @@ if st.button("Prédire l'issue du match"):
     new_data = np.array([[home_xG, away_xG, home_possession, away_possession,  
                           home_shots, away_shots, home_passes, away_passes,  
                           home_fouls, away_fouls, home_corners, away_corners,  
-                          home_yellow_cards, away_yellow_cards]])  
-    
+                          home_yellow_cards, away_yellow_cards, home_red_cards, away_red_cards,  
+                          home_defense, away_defense, home_attack, away_attack,  
+                          home_injuries, away_injuries, home_recent_form, away_recent_form,  
+                          home_fans, away_fans]])  
+
     # Prédiction de l'issue du match  
     prediction_class = stacking_model.predict(new_data)  
-    result = "Victoire de l'équipe à domicile" if prediction_class[0] == 1 else "Victoire de l'équipe à l'extérieur"  
-    
-    st.write("Résultat prédit :", result)  
+    prediction_prob = stacking_model.predict_proba(new_data)[0]  
 
-    # Prédiction du nombre total de buts avec la méthode de Poisson  
-    poisson_model = LogisticRegression()  # Utiliser un modèle de régression pour prédire les buts  
-    poisson_model.fit(X_train, y_train_class)  # Entraîner le modèle sur les données d'entraînement  
-    predicted_goals = poisson_model.predict(new_data)  # Prédire le nombre de buts  
-    st.write("Nombre total de buts prédit :", predicted_goals[0])  
+    # Calculer les probabilités  
+    home_win_prob = prediction_prob[1]  # Probabilité de victoire de l'équipe à domicile  
+    away_win_prob = prediction_prob[0]  # Probabilité de victoire de l'équipe à l'extérieur  
+
+    # Affichage des résultats  
+    result = "Victoire de l'équipe à domicile" if prediction_class[0] == 1 else "Victoire de l'équipe à l'extérieur"  
+    st.write("Résultat prédit :", result)  
+    st.write(f"Probabilité de victoire de l'équipe à domicile : {home_win_prob:.2%}")  
+    st.write(f"Probabilité de victoire de l'équipe à l'extérieur : {away_win_prob:.2%}")  
+
+    # Détection de value bet  
+    st.header("Détection de Value Bet")  
+    if home_win_prob > (1 / home_odds):  
+        st.write("Paris de valeur détecté pour l'équipe à domicile.")  
+    else:  
+        st.write("Pas de paris de valeur pour l'équipe à domicile.")  
+
+    if away_win_prob > (1 / away_odds):  
+        st.write("Paris de valeur détecté pour l'équipe à l'extérieur.")  
+    else:  
+        st.write("Pas de paris de valeur pour l'équipe à l'extérieur.")  
