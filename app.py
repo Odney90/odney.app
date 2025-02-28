@@ -88,6 +88,7 @@ odds_home = st.number_input("🏠 Cote Domicile", min_value=1.0, value=1.8)
 odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
 
 if st.button("🔍 Lancer les prédictions"):
-    st.write("⚡ Prédictions en cours...")
-    model_scores = evaluate_models(np.random.rand(10, 10), np.random.randint(0, 3, 10))
-    st.write("📊 Résultats de la validation croisée:", model_scores)
+    with st.spinner("🔄 Calcul en cours..."):
+        model_scores = evaluate_models(np.random.rand(10, 10), np.random.randint(0, 3, 10))
+        st.write("📊 Résultats de la validation croisée:", model_scores)
+        st.success("✅ Prédictions générées avec succès !")
