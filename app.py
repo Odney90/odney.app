@@ -370,7 +370,6 @@ def create_doc(results):
     buffer = BytesIO()  
     doc.save(buffer)  
     buffer.seek(0)  
-    }
 
       return buffer
       st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
