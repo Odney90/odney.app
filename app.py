@@ -433,7 +433,7 @@ if st.button("🔍 Prédire les résultats"):
                                                        home_touches_surface, away_touches_surface, home_forme_recente,  
                                                        away_forme_recente]])
                         
-                                            ][0][2] * 100  
+                                         [0][2] * 100  
                     ]  
                 }  
                 comparison_df = pd.DataFrame(comparison_data)  
