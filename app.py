@@ -12,14 +12,15 @@ import matplotlib.pyplot as plt
 
 @st.cache_resource
 def train_models(X_train, y_train):
-    models = {
-        "Logistic Regression": LogisticRegression(max_iter=1000),
-        "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),
-        "SVM": SVC(probability=True)
-    }
-    trained_models = {name: model.fit(X_train, y_train) for name, model in models.items()}
-    return trained_models
+    if 'trained_models' not in st.session_state:
+        models = {
+            "Logistic Regression": LogisticRegression(max_iter=1000),
+            "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),
+            "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),
+            "SVM": SVC(probability=True)
+        }
+        st.session_state.trained_models = {name: model.fit(X_train, y_train) for name, model in models.items()}
+    return st.session_state.trained_models
 
 def poisson_prediction(goals_pred):
     return np.array([poisson.pmf(i, goals_pred) for i in range(6)])
@@ -88,5 +89,5 @@ odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
 
 if st.button("🔍 Lancer les prédictions"):
     st.write("⚡ Prédictions en cours...")
-    model_scores = evaluate_models(np.random.rand(50, 10), np.random.randint(0, 3, 50))
+    model_scores = evaluate_models(np.random.rand(10, 10), np.random.randint(0, 3, 10))
     st.write("📊 Résultats de la validation croisée:", model_scores)
