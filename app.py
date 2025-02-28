@@ -25,29 +25,25 @@ if 'history' not in st.session_state:
 
 @st.cache_resource  
 def train_models(X_train, y_train):  
-    if st.session_state.trained_models is None:  
-        models = {  
-            "Logistic Regression": LogisticRegression(max_iter=1000),  
-            "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),  
-            "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),  
-            "SVM": SVC(probability=True)  
-        }  
-        st.session_state.trained_models = {name: model.fit(X_train, y_train) for name, model in models.items()}  
-    return st.session_state.trained_models  
+    models = {  
+        "Logistic Regression": LogisticRegression(max_iter=1000),  
+        "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),  
+        "SVM": SVC(probability=True)  
+    }  
+    return {name: model.fit(X_train, y_train) for name, model in models.items()}  
 
 def poisson_prediction(goals_pred):  
     return np.array([poisson.pmf(i, goals_pred) for i in range(6)])  
 
 def evaluate_models(X, y):  
-    if st.session_state.model_scores is None:  
-        models = {  
-            "Logistic Regression": LogisticRegression(max_iter=1000),  
-            "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),  
-            "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),  
-            "SVM": SVC(probability=True)  
-        }  
-        st.session_state.model_scores = {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}  
-    return st.session_state.model_scores  
+    models = {  
+        "Logistic Regression": LogisticRegression(max_iter=1000),  
+        "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),  
+        "SVM": SVC(probability=True)  
+    }  
+    return {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}  
 
 def calculate_implied_prob(odds):  
     return 1 / odds  
@@ -148,78 +144,84 @@ if st.button("🔍 Prédire les résultats"):
 
     # Convertir les données en DataFrame pour l'entraînement  
     X = pd.DataFrame([home_data, away_data])  
-    y = np.random.choice([0, 1, 2], size=2)  # Remplacez par vos vraies étiquettes  
 
-    # Entraînez les modèles  
-    trained_models = train_models(X, y)  
+    # Vérifiez les valeurs manquantes  
+    if X.isnull().values.any():  
+        st.error("Les données contiennent des valeurs manquantes.")  
+    else:  
+        # Générer les étiquettes y  
+        y = np.random.choice([0, 1, 2], size=X.shape[0])  # Assurez-vous que y a la même longueur que X  
 
-    # Évaluez les modèles  
-    model_scores = evaluate_models(X, y)  
+        # Entraînez les modèles  
+        trained_models = train_models(X, y)  
 
-    # Affichez les résultats  
-    st.write("Scores des modèles :", model_scores)  
+        # Évaluez les modèles  
+        model_scores = evaluate_models(X, y)  
 
-    # Prédictions avec le modèle de Poisson  
-    poisson_results_home = poisson_prediction(home_goals)  # Exemple pour l'équipe à domicile  
-    poisson_results_away = poisson_prediction(away_goals)  # Exemple pour l'équipe à l'extérieur  
-    st.write("Résultats de Poisson pour l'équipe à domicile :", poisson_results_home)  
-    st.write("Résultats de Poisson pour l'équipe à l'extérieur :", poisson_results_away)  
+        # Affichez les résultats  
+        st.write("Scores des modèles :", model_scores)  
 
-    # Détection des paris de valeur (exemple)  
-    implied_prob_home = calculate_implied_prob(1.8)  # Remplacez par la cote réelle  
-    implied_prob_away = calculate_implied_prob(2.2)  # Remplacez par la cote réelle  
-    value_bet_home = detect_value_bet(poisson_results_home[1], implied_prob_home)  # Exemple pour 1 but  
-    value_bet_away = detect_value_bet(poisson_results_away[1], implied_prob_away)  # Exemple pour 1 but  
+        # Prédictions avec le modèle de Poisson  
+        poisson_results_home = poisson_prediction(home_goals)  # Exemple pour l'équipe à domicile  
+        poisson_results_away = poisson_prediction(away_goals)  # Exemple pour l'équipe à l'extérieur  
+        st.write("Résultats de Poisson pour l'équipe à domicile :", poisson_results_home)  
+        st.write("Résultats de Poisson pour l'équipe à l'extérieur :", poisson_results_away)  
 
-    st.write("Paris de valeur pour l'équipe à domicile :", value_bet_home)  
-    st.write("Paris de valeur pour l'équipe à l'extérieur :", value_bet_away)  
+        # Détection des paris de valeur (exemple)  
+        implied_prob_home = calculate_implied_prob(1.8)  # Remplacez par la cote réelle  
+        implied_prob_away = calculate_implied_prob(2.2)  # Remplacez par la cote réelle  
+        value_bet_home = detect_value_bet(poisson_results_home[1], implied_prob_home)  # Exemple pour 1 but  
+        value_bet_away = detect_value_bet(poisson_results_away[1], implied_prob_away)  # Exemple pour 1 but  
 
-    # Prédiction des résultats du match  
-    match_results = predict_match_result(poisson_results_home, poisson_results_away)  
-    st.subheader("📊 Prédictions des Résultats du Match")  
-    st.write(match_results)  
+        st.write("Paris de valeur pour l'équipe à domicile :", value_bet_home)  
+        st.write("Paris de valeur pour l'équipe à l'extérieur :", value_bet_away)  
 
-    # Visualisation des résultats de Poisson  
-    st.subheader("📊 Visualisation des Résultats de Poisson")  
-    poisson_df_home = pd.DataFrame({  
-        'Buts': range(6),  
-        'Probabilité': poisson_results_home  
-    })  
-    poisson_df_away = pd.DataFrame({  
-        'Buts': range(6),  
-        'Probabilité': poisson_results_away  
-    })  
+        # Prédiction des résultats du match  
+        match_results = predict_match_result(poisson_results_home, poisson_results_away)  
+        st.subheader("📊 Prédictions des Résultats du Match")  
+        st.write(match_results)  
 
-    # Graphique pour l'équipe à domicile  
-    st.write(f"Distribution des buts pour {home_team}")  
-    chart_home = alt.Chart(poisson_df_home).mark_bar().encode(  
-        x='Buts:O',  
-        y='Probabilité:Q',  
-        tooltip=['Buts', 'Probabilité']  
-    ).properties(title=f"Distribution des buts pour {home_team}")  
-    st.altair_chart(chart_home, use_container_width=True)  
+        # Visualisation des résultats de Poisson  
+        st.subheader("📊 Visualisation des Résultats de Poisson")  
+        poisson_df_home = pd.DataFrame({  
+            'Buts': range(6),  
+            'Probabilité': poisson_results_home  
+        })  
+        poisson_df_away = pd.DataFrame({  
+            'Buts': range(6),  
+            'Probabilité': poisson_results_away  
+        })  
 
-    # Graphique pour l'équipe à l'extérieur  
-    st.write(f"Distribution des buts pour {away_team}")  
-    chart_away = alt.Chart(poisson_df_away).mark_bar().encode(  
-        x='Buts:O',  
-        y='Probabilité:Q',  
-        tooltip=['Buts', 'Probabilité']  
-    ).properties(title=f"Distribution des buts pour {away_team}")  
-    st.altair_chart(chart_away, use_container_width=True)  
+        # Graphique pour l'équipe à domicile  
+        st.write(f"Distribution des buts pour {home_team}")  
+        chart_home = alt.Chart(poisson_df_home).mark_bar().encode(  
+            x='Buts:O',  
+            y='Probabilité:Q',  
+            tooltip=['Buts', 'Probabilité']  
+        ).properties(title=f"Distribution des buts pour {home_team}")  
+        st.altair_chart(chart_home, use_container_width=True)  
 
-    # Ajouter l'historique des prédictions  
-    st.session_state.history.append({  
-        'Home Team': home_team,  
-        'Away Team': away_team,  
-        'Predictions': match_results  
-    })  
+        # Graphique pour l'équipe à l'extérieur  
+        st.write(f"Distribution des buts pour {away_team}")  
+        chart_away = alt.Chart(poisson_df_away).mark_bar().encode(  
+            x='Buts:O',  
+            y='Probabilité:Q',  
+            tooltip=['Buts', 'Probabilité']  
+        ).properties(title=f"Distribution des buts pour {away_team}")  
+        st.altair_chart(chart_away, use_container_width=True)  
 
-    # Afficher l'historique des prédictions  
-    st.subheader("📝 Historique des Prédictions")  
-    history_df = pd.DataFrame(st.session_state.history)  
-    st.write(history_df)  
+        # Ajouter l'historique des prédictions  
+        st.session_state.history.append({  
+            'Home Team': home_team,  
+            'Away Team': away_team,  
+            'Predictions': match_results  
+        })  
 
-    # Option pour télécharger les résultats  
-    csv = history_df.to_csv(index=False)  
-    st.download_button("📥 Télécharger l'historique des prédictions", csv, "predictions_history.csv", "text/csv")  
+        # Afficher l'historique des prédictions  
+        st.subheader("📝 Historique des Prédictions")  
+        history_df = pd.DataFrame(st.session_state.history)  
+        st.write(history_df)  
+
+        # Option pour télécharger les résultats  
+        csv = history_df.to_csv(index=False)  
+        st.download_button("📥 Télécharger l'historique des prédictions", csv, "predictions_history.csv", "text/csv")  
