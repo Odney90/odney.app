@@ -6,25 +6,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
 from sklearn.svm import SVC  
-from sklearn.model_selection import cross_val_score, train_test_split  
+from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
 from scipy.stats import poisson  
 
 # Initialisation de session_state si non existant  
-if 'trained_models' not in st.session_state:  
-    st.session_state.trained_models = None  
-if 'model_scores' not in st.session_state:  
-    st.session_state.model_scores = None  
-if 'predictions' not in st.session_state:  
-    st.session_state.predictions = None  
-if 'poisson_results' not in st.session_state:  
-    st.session_state.poisson_results = None  
-if 'value_bets' not in st.session_state:  
-    st.session_state.value_bets = None  
 if 'history' not in st.session_state:  
     st.session_state.history = []  
 
-@st.cache_resource  
+# Fonction pour entraîner les modèles  
 def train_models(X_train, y_train):  
     models = {  
         "Logistic Regression": LogisticRegression(max_iter=1000),  
@@ -34,73 +24,12 @@ def train_models(X_train, y_train):
     }  
     return {name: model.fit(X_train, y_train) for name, model in models.items()}  
 
+# Fonction pour prédire les résultats avec le modèle de Poisson  
 def poisson_prediction(goals_pred):  
     return np.array([poisson.pmf(i, goals_pred) for i in range(6)])  
 
-def evaluate_models(X, y):  
-    # Vérifiez la taille de l'échantillon  
-    if len(X) < 3:  # Nombre minimal d'échantillons pour cv=3  
-        st.warning("Pas assez d'échantillons pour effectuer une validation croisée. Utilisation d'une validation simple.")  
-        return evaluate_models_simple(X, y)  
-
-    # Vérifiez la distribution des classes  
-    unique_classes, counts = np.unique(y, return_counts=True)  
-    class_distribution = dict(zip(unique_classes, counts))  
-    st.write("Distribution des classes :", class_distribution)  
-
-    if len(unique_classes) < 2:  
-        st.error("Les données doivent contenir au moins deux classes différentes.")  
-        return None  
-
-    # Vérifiez les valeurs manquantes  
-    if X.isnull().values.any():  
-        st.error("Les données contiennent des valeurs manquantes.")  
-        return None  
-
-    # Vérifiez que toutes les colonnes sont de type numérique  
-    if not np.issubdtype(X.dtypes, np.number):  
-        st.error("Toutes les colonnes de X doivent être numériques.")  
-        return None  
-
-    models = {  
-        "Logistic Regression": LogisticRegression(max_iter=1000),  
-        "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),  
-        "SVM": SVC(probability=True)  
-    }  
-    
-    return {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}  
-
+# Fonction pour évaluer les modèles avec une validation simple  
 def evaluate_models_simple(X, y):  
-    # Vérifiez que X et y ne sont pas vides  
-    if len(X) == 0 or len(y) == 0:  
-        st.error("Les données d'entrée sont vides.")  
-        return None  
-
-    # Vérifiez que X est un DataFrame ou un tableau numérique  
-    if not isinstance(X, (pd.DataFrame, np.ndarray)):  
-        st.error("Les données d'entrée doivent être un DataFrame ou un tableau numpy.")  
-        return None  
-
-    # Vérifiez que y est un tableau numérique  
-    if not isinstance(y, (pd.Series, np.ndarray)):  
-        st.error("Les étiquettes doivent être un tableau numpy ou une série pandas.")  
-        return None  
-
-    # Vérifiez les valeurs manquantes dans X et y  
-    if isinstance(X, pd.DataFrame) and X.isnull().values.any():  
-        st.error("Les données d'entrée contiennent des valeurs manquantes.")  
-        return None  
-    if isinstance(y, pd.Series) and y.isnull().values.any():  
-        st.error("Les étiquettes contiennent des valeurs manquantes.")  
-        return None  
-
-    # Vérifiez que y contient au moins deux classes  
-    unique_classes = np.unique(y)  
-    if len(unique_classes) < 2:  
-        st.error("Les étiquettes doivent contenir au moins deux classes.")  
-        return None  
-
     # Divisez les données en ensembles d'entraînement et de test  
     try:  
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
@@ -127,12 +56,15 @@ def evaluate_models_simple(X, y):
 
     return scores  
 
+# Fonction pour calculer la probabilité implicite  
 def calculate_implied_prob(odds):  
     return 1 / odds  
 
+# Fonction pour détecter les paris de valeur  
 def detect_value_bet(predicted_prob, implied_prob, threshold=0.05):  
     return predicted_prob > (implied_prob + threshold)  
 
+# Fonction pour prédire les résultats du match  
 def predict_match_result(poisson_home, poisson_away):  
     home_goals = np.arange(len(poisson_home))  
     away_goals = np.arange(len(poisson_away))  
@@ -145,13 +77,7 @@ def predict_match_result(poisson_home, poisson_away):
     results_df = pd.DataFrame(results, columns=['Home Goals', 'Away Goals', 'Probability'])  
     return results_df  
 
-def validate_input(data):  
-    for key, value in data.items():  
-        if isinstance(value, (int, float)) and value < 0:  
-            st.error(f"La valeur de {key} ne peut pas être négative.")  
-            return False  
-    return True  
-
+# Interface utilisateur  
 st.set_page_config(page_title="Prédiction de Matchs", layout="wide")  
 st.title("🏆 Analyse et Prédictions Football")  
 
@@ -254,15 +180,12 @@ if st.button("🔍 Prédire les résultats"):
             st.error("Impossible de générer deux classes distinctes. Vérifiez les données.")  
             st.stop()  
 
-        # Entraînez les modèles  
-        try:  
-            trained_models = train_models(X, y)  
-        except Exception as e:  
-            st.error(f"Erreur lors de l'entraînement des modèles: {e}")  
-            st.stop()  
-
-        # Évaluez les modèles  
-        model_scores = evaluate_models(X, y)  
+        # Évaluez les modèles avec une validation simple si les données sont trop petites  
+        if len(X) < 3:  # Nombre minimal d'échantillons pour cv=3  
+            st.warning("Pas assez d'échantillons pour effectuer une validation croisée. Utilisation d'une validation simple.")  
+            model_scores = evaluate_models_simple(X, y)  
+        else:  
+            model_scores = evaluate_models_simple(X, y)  
 
         # Affichez les résultats  
         if model_scores is not None:  
