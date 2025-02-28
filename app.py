@@ -149,13 +149,14 @@ if st.button("🔍 Prédire les résultats"):
     if X.isnull().values.any():  
         st.error("Les données contiennent des valeurs manquantes.")  
     else:  
-        # Générer les étiquettes y avec au moins 2 classes  
-        y = np.random.choice([0, 1, 2], size=X.shape[0], p=[0.33, 0.33, 0.34])  # Probabilités pour chaque classe  
+        # Générer les étiquettes y avec seulement 2 classes  
+        y = np.random.choice([0, 1], size=X.shape[0])  # Assurez-vous que seules les classes 0 et 1 sont présentes  
 
         # Vérifiez la forme des données  
         unique_classes = np.unique(y)  
-        if len(unique_classes) < 2:  
-            st.error("Les données doivent contenir au moins deux classes différentes.")  
+        expected_classes = [0, 1]  # Classes attendues  
+        if not all(cls in expected_classes for cls in unique_classes):  
+            st.error(f"Classes inattendues dans y: {unique_classes}. Attendu: {expected_classes}.")  
             st.stop()  
 
         # Entraînez les modèles  
