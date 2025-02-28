@@ -117,6 +117,10 @@ st.header("Cotes des Bookmakers")
 home_odds = st.number_input("Cote pour l'équipe à domicile", min_value=1.0, value=2.0)  
 away_odds = st.number_input("Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.0)  
 
+# Initialiser les résultats dans le session state  
+if 'results' not in st.session_state:  
+    st.session_state.results = None  
+
 # Bouton pour prédire  
 if st.button("Prédire l'issue du match"):  
     # Préparer les données pour la prédiction  
@@ -138,18 +142,28 @@ if st.button("Prédire l'issue du match"):
 
     # Affichage des résultats  
     result = "Victoire de l'équipe à domicile" if prediction_class[0] == 1 else "Victoire de l'équipe à l'extérieur"  
-    st.write("Résultat prédit :", result)  
-    st.write(f"Probabilité de victoire de l'équipe à domicile : {home_win_prob:.2%}")  
-    st.write(f"Probabilité de victoire de l'équipe à l'extérieur : {away_win_prob:.2%}")  
+    st.session_state.results = {  
+        'result': result,  
+        'home_win_prob': home_win_prob,  
+        'away_win_prob': away_win_prob,  
+        'home_odds': home_odds,  
+        'away_odds': away_odds  
+    }  
+
+# Afficher les résultats si disponibles  
+if st.session_state.results:  
+    st.write("Résultat prédit :", st.session_state.results['result'])  
+    st.write(f"Probabilité de victoire de l'équipe à domicile : {st.session_state.results['home_win_prob']:.2%}")  
+    st.write(f"Probabilité de victoire de l'équipe à l'extérieur : {st.session_state.results['away_win_prob']:.2%}")  
 
     # Détection de value bet  
     st.header("Détection de Value Bet")  
-    if home_win_prob > (1 / home_odds):  
+    if st.session_state.results['home_win_prob'] > (1 / st.session_state.results['home_odds']):  
         st.write("Paris de valeur détecté pour l'équipe à domicile.")  
     else:  
         st.write("Pas de paris de valeur pour l'équipe à domicile.")  
 
-    if away_win_prob > (1 / away_odds):  
+    if st.session_state.results['away_win_prob'] > (1 / st.session_state.results['away_odds']):  
         st.write("Paris de valeur détecté pour l'équipe à l'extérieur.")  
     else:  
         st.write("Pas de paris de valeur pour l'équipe à l'extérieur.")  
