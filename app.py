@@ -143,9 +143,12 @@ st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")
 # Saisie des données des équipes  
 st.header("📋 Saisie des données des équipes")  
 
-# Regroupement des statistiques des équipes  
-with st.expander("📊 Statistiques des Équipes", expanded=True):  
-    # Équipe à domicile  
+# Création de deux colonnes pour les équipes  
+col1, col2 = st.columns(2)  
+
+# Équipe à domicile  
+with col1:  
+    st.subheader("Équipe à Domicile")  
     home_team = st.text_input("🏠 Nom de l'équipe à domicile", value="Équipe A")  
     home_goals = st.number_input("⚽ Moyenne de buts marqués par match (domicile)", min_value=0.0, max_value=5.0, value=2.5)  
     home_xG = st.number_input("📈 xG (Expected Goals) (domicile)", min_value=0.0, max_value=5.0, value=2.0)  
@@ -163,7 +166,9 @@ with st.expander("📊 Statistiques des Équipes", expanded=True):
     home_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (domicile)", min_value=0.0, max_value=300.0, value=20.0)  
     home_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs) (domicile)", min_value=0, max_value=15, value=10)  
 
-    # Équipe à l'extérieur  
+# Équipe à l'extérieur  
+with col2:  
+    st.subheader("Équipe à Extérieur")  
     away_team = st.text_input("🏟️ Nom de l'équipe à l'extérieur", value="Équipe B")  
     away_goals = st.number_input("⚽ Moyenne de buts marqués par match (extérieur)", min_value=0.0, max_value=5.0, value=1.5)  
     away_xG = st.number_input("📈 xG (Expected Goals) (extérieur)", min_value=0.0, max_value=5.0, value=1.8)  
@@ -180,7 +185,6 @@ with st.expander("📊 Statistiques des Équipes", expanded=True):
     away_passes_reussies = st.number_input("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
     away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (extérieur)", min_value=0.0, max_value=300.0, value=15.0)  
     away_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
-
 # Saisie des cotes des bookmakers (non utilisées par les modèles)  
 st.header("💰 Cotes des Équipes")  
 odds_home = st.number_input("🏠 Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
