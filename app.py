@@ -66,6 +66,17 @@ with col1:
     home_goals = st.number_input("⚽ Moyenne de buts marqués par match", min_value=0.0, max_value=5.0, value=1.5)
     home_xG = st.number_input("📈 xG (Expected Goals)", min_value=0.0, max_value=5.0, value=1.8)
     home_encais = st.number_input("🚫 Moyenne de buts encaissés", min_value=0.0, max_value=5.0, value=1.2)
+    home_possession = st.number_input("📊 Possession moyenne (%)", min_value=0.0, max_value=100.0, value=55.0)
+    home_tirs_par_match = st.number_input("🔫 Nombre de tirs par match", min_value=0, max_value=30, value=15)
+    home_passes_cles_par_match = st.number_input("📊 Nombre de passes clés par match", min_value=0, max_value=50, value=10)
+    home_tirs_cadres = st.number_input("🎯 Tirs cadrés par match", min_value=0, max_value=15, value=5)
+    home_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse", min_value=0, max_value=300, value=20)
+    home_duels_defensifs = st.number_input("🤼 Duels défensifs gagnés", min_value=0, max_value=100, value=60)
+    home_passes_reussies = st.number_input("✅ Passes réussies (%)", min_value=0.0, max_value=100.0, value=80.0)
+    home_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs)", min_value=0, max_value=15, value=10)
+    home_victories = st.number_input("🏆 Nombre de victoires à domicile", min_value=0, max_value=20, value=5)
+    home_fautes_commises = st.number_input("⚠️ Fautes commises par match", min_value=0, max_value=30, value=12)
+    home_interceptions = st.number_input("🛑 Interceptions par match", min_value=0, max_value=30, value=8)
 
 with col2:
     st.subheader("Équipe à Extérieur")
@@ -73,42 +84,14 @@ with col2:
     away_goals = st.number_input("⚽ Moyenne de buts marqués par match", min_value=0.0, max_value=5.0, value=1.3)
     away_xG = st.number_input("📈 xG (Expected Goals)", min_value=0.0, max_value=5.0, value=1.5)
     away_encais = st.number_input("🚫 Moyenne de buts encaissés", min_value=0.0, max_value=5.0, value=1.7)
-
-odds_home = st.number_input("🏠 Cote Domicile", min_value=1.0, value=1.8)
-odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
-
-if st.button("🔍 Lancer les prédictions"):
-    with st.spinner("🔄 Calcul en cours..."):
-        st.session_state.model_scores = evaluate_models(np.random.rand(10, 10), np.random.randint(0, 3, 10))
-        st.write("📊 Résultats de la validation croisée:", st.session_state.model_scores)
-        
-        trained_models = train_models(np.random.rand(10, 3), np.random.randint(0, 3, 10))
-        st.session_state.predictions = {name: model.predict_proba([[home_goals, away_goals, home_xG, away_xG, home_encais, away_encais]])[0] for name, model in trained_models.items()}
-        st.write("🎯 Prédictions des modèles:", st.session_state.predictions)
-        
-        home_goals_pred = home_goals + home_xG - away_encais
-        away_goals_pred = away_goals + away_xG - home_encais
-        st.session_state.poisson_results = {
-            home_team: poisson_prediction(home_goals_pred),
-            away_team: poisson_prediction(away_goals_pred)
-        }
-        st.write("📈 Prédictions du modèle de Poisson:")
-        st.write(f"{home_team} : {[f'{p*100:.2f}%' for p in st.session_state.poisson_results[home_team]]}")
-        st.write(f"{away_team} : {[f'{p*100:.2f}%' for p in st.session_state.poisson_results[away_team]]}")
-        
-        implied_home_prob = calculate_implied_prob(odds_home)
-        implied_away_prob = calculate_implied_prob(odds_away)
-        st.session_state.value_bets = {
-            home_team: detect_value_bet(st.session_state.predictions['Logistic Regression'][0], implied_home_prob),
-            away_team: detect_value_bet(st.session_state.predictions['Logistic Regression'][2], implied_away_prob)
-        }
-        
-        st.write("💰 Conseils de paris:")
-        if st.session_state.value_bets[home_team]:
-            st.success(f"Value Bet détecté sur {home_team}!")
-        if st.session_state.value_bets[away_team]:
-            st.success(f"Value Bet détecté sur {away_team}!")
-        if not any(st.session_state.value_bets.values()):
-            st.info("Aucun value bet détecté.")
-        
-        st.success("✅ Prédictions générées avec succès !")
+    away_possession = st.number_input("📊 Possession moyenne (%)", min_value=0.0, max_value=100.0, value=50.0)
+    away_tirs_par_match = st.number_input("🔫 Nombre de tirs par match", min_value=0, max_value=30, value=12)
+    away_passes_cles_par_match = st.number_input("📊 Nombre de passes clés par match", min_value=0, max_value=50, value=8)
+    away_tirs_cadres = st.number_input("🎯 Tirs cadrés par match", min_value=0, max_value=15, value=4)
+    away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse", min_value=0, max_value=300, value=15)
+    away_duels_defensifs = st.number_input("🤼 Duels défensifs gagnés", min_value=0, max_value=100, value=55)
+    away_passes_reussies = st.number_input("✅ Passes réussies (%)", min_value=0.0, max_value=100.0, value=75.0)
+    away_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs)", min_value=0, max_value=15, value=8)
+    away_victories = st.number_input("🏆 Nombre de victoires à l'extérieur", min_value=0, max_value=20, value=3)
+    away_fautes_commises = st.number_input("⚠️ Fautes commises par match", min_value=0, max_value=30, value=14)
+    away_interceptions = st.number_input("🛑 Interceptions par match", min_value=0, max_value=30, value=10)
