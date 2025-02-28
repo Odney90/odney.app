@@ -1,104 +1,95 @@
+# Importation des bibliothèques nécessaires  
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
-import matplotlib.pyplot as plt  
-from scipy.special import factorial  
 from sklearn.linear_model import LogisticRegression  
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
-from sklearn.model_selection import cross_val_score  
-from sklearn.svm import SVC  # Importation du SVM  
+from sklearn.svm import SVC  
+from sklearn.model_selection import train_test_split, cross_val_score  
+from scipy.stats import poisson  
+import matplotlib.pyplot as plt  
 
-# Configuration de la page (doit être la première commande)  
-st.set_page_config(page_title="Prédictions de Matchs de Football", layout="wide")  
-
-# Fonction pour prédire avec le modèle Poisson  
-@st.cache_data  
-def poisson_prediction(goals):  
-    probabilities = np.exp(-goals) * (goals ** np.arange(6)) / factorial(np.arange(6))  
-    return probabilities  
-
-# Fonction pour entraîner et prédire avec les modèles  
-@st.cache_resource  
+# Fonction pour entraîner les modèles  
 def train_models():  
-    np.random.seed(42)  
-    data_size = 500  # Réduire la taille des données pour l'entraînement  
-    data = pd.DataFrame({  
-        'home_goals': np.random.randint(0, 3, size=data_size),  
-        'away_goals': np.random.randint(0, 3, size=data_size),  
-        'home_xG': np.random.uniform(0, 2, size=data_size),  
-        'away_xG': np.random.uniform(0, 2, size=data_size),  
-        'home_encais': np.random.uniform(0, 2, size=data_size),  
-        'away_encais': np.random.uniform(0, 2, size=data_size),  
-        'home_victories': np.random.randint(0, 20, size=data_size),  
-        'away_victories': np.random.randint(0, 20, size=data_size),  
-        'home_goals_scored': np.random.randint(0, 50, size=data_size),  
-        'away_goals_scored': np.random.randint(0, 50, size=data_size),  
-        'home_xGA': np.random.uniform(0, 2, size=data_size),  
-        'away_xGA': np.random.uniform(0, 2, size=data_size),  
-        'home_tirs_par_match': np.random.randint(0, 30, size=data_size),  
-        'away_tirs_par_match': np.random.randint(0, 30, size=data_size),  
-        'home_passes_cles_par_match': np.random.randint(0, 50, size=data_size),  
-        'away_passes_cles_par_match': np.random.randint(0, 50, size=data_size),  
-        'home_tirs_cadres': np.random.randint(0, 15, size=data_size),  
-        'away_tirs_cadres': np.random.randint(0, 15, size=data_size),  
-        'home_tirs_concedes': np.random.randint(0, 30, size=data_size),  
-        'away_tirs_concedes': np.random.randint(0, 30, size=data_size),  
-        'home_duels_defensifs': np.random.randint(0, 100, size=data_size),  
-        'away_duels_defensifs': np.random.randint(0, 100, size=data_size),  
-        'home_possession': np.random.uniform(0, 100, size=data_size),  
-        'away_possession': np.random.uniform(0, 100, size=data_size),  
-        'home_passes_reussies': np.random.uniform(0, 100, size=data_size),  
-        'away_passes_reussies': np.random.uniform(0, 100, size=data_size),  
-        'home_touches_surface': np.random.randint(0, 300, size=data_size),  
-        'away_touches_surface': np.random.randint(0, 300, size=data_size),  
-        'home_forme_recente': np.random.randint(0, 15, size=data_size),  
-        'away_forme_recente': np.random.randint(0, 15, size=data_size),  
-        'result': np.random.choice([0, 1, 2], size=data_size)  
+    # Exemple de données fictives pour l'entraînement  
+    X = pd.DataFrame({  
+        'home_goals': np.random.randint(0, 3, size=500),  
+        'away_goals': np.random.randint(0, 3, size=500),  
+        'home_xG': np.random.uniform(0, 2, size=500),  
+        'away_xG': np.random.uniform(0, 2, size=500),  
+        'home_encais': np.random.uniform(0, 2, size=500),  
+        'away_encais': np.random.uniform(0, 2, size=500),  
+        'home_victories': np.random.randint(0, 20, size=500),  
+        'away_victories': np.random.randint(0, 20, size=500),  
+        'home_goals_scored': np.random.randint(0, 50, size=500),  
+        'away_goals_scored': np.random.randint(0, 50, size=500),  
+        'home_xGA': np.random.uniform(0, 2, size=500),  
+        'away_xGA': np.random.uniform(0, 2, size=500),  
+        'home_tirs_par_match': np.random.randint(0, 30, size=500),  
+        'away_tirs_par_match': np.random.randint(0, 30, size=500),  
+        'home_passes_cles_par_match': np.random.randint(0, 50, size=500),  
+        'away_passes_cles_par_match': np.random.randint(0, 50, size=500),  
+        'home_tirs_cadres': np.random.randint(0, 15, size=500),  
+        'away_tirs_cadres': np.random.randint(0, 15, size=500),  
+        'home_tirs_concedes': np.random.randint(0, 30, size=500),  
+        'away_tirs_concedes': np.random.randint(0, 30, size=500),  
+        'home_duels_defensifs': np.random.randint(0, 100, size=500),  
+        'away_duels_defensifs': np.random.randint(0, 100, size=500),  
+        'home_possession': np.random.uniform(0, 100, size=500),  
+        'away_possession': np.random.uniform(0, 100, size=500),  
+        'home_passes_reussies': np.random.uniform(0, 100, size=500),  
+        'away_passes_reussies': np.random.uniform(0, 100, size=500),  
+        'home_touches_surface': np.random.randint(0, 300, size=500),  
+        'away_touches_surface': np.random.randint(0, 300, size=500),  
+        'home_forme_recente': np.random.randint(0, 15, size=500),  
+        'away_forme_recente': np.random.randint(0, 15, size=500)  
     })  
+    
+    y = np.random.choice([0, 1, 2], size=500)  # 0: Domicile, 1: Nul, 2: Extérieur  
 
-    X = data.drop(columns='result')  
-    y = data['result']  
+    # Division des données en ensembles d'entraînement et de test  
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
 
-    log_reg = LogisticRegression(max_iter=100, C=0.5, solver='lbfgs')  
-    rf = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
-    svm = SVC(probability=True)  # Ajout du SVM  
+    # Entraînement des modèles  
+    log_reg_model = LogisticRegression()  
+    log_reg_model.fit(X_train, y_train)  
 
-    log_reg.fit(X, y)  
-    rf.fit(X, y)  
-    xgb.fit(X, y)  
-    svm.fit(X, y)  
+    rf_model = RandomForestClassifier()  
+    rf_model.fit(X_train, y_train)  
 
-    return log_reg, rf, xgb, svm  
+    xgb_model = XGBClassifier()  
+    xgb_model.fit(X_train, y_train)  
 
-# Vérifier si les modèles sont déjà chargés dans l'état de session  
-if 'models' not in st.session_state:  
-    st.session_state.models = train_models()  
+    svm_model = SVC(probability=True)  
+    svm_model.fit(X_train, y_train)  
 
-# Assurez-vous que les modèles sont bien chargés  
-if st.session_state.models is not None:  
-    log_reg_model, rf_model, xgb_model, svm_model = st.session_state.models  
-else:  
-    st.error("⚠️ Les modèles n'ont pas pu être chargés.")  
+    return log_reg_model, rf_model, xgb_model, svm_model  
 
-# Fonction pour évaluer les modèles avec validation croisée K-Fold  
-@st.cache_data  
+# Fonction pour calculer les probabilités implicites à partir des cotes  
+def calculate_implied_prob(odds):  
+    return 1 / odds  
+
+# Fonction pour prédire les résultats avec le modèle de Poisson  
+def poisson_prediction(goals_pred):  
+    return [poisson.pmf(i, goals_pred) for i in range(6)]  # Prédire jusqu'à 5 buts  
+
+# Fonction pour évaluer les modèles avec validation croisée  
 def evaluate_models(X, y):  
     models = {  
-        "Régression Logistique": LogisticRegression(max_iter=100, C=0.5, solver='lbfgs'),  
-        "Random Forest": RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1),  
-        "SVM": SVC(probability=True)  # Ajout du SVM ici  
+        "Logistic Regression": LogisticRegression(),  
+        "Random Forest": RandomForestClassifier(),  
+        "XGBoost": XGBClassifier(),  
+        "SVM": SVC(probability=True)  
     }  
-    
     results = {}  
     for name, model in models.items():  
-        scores = cross_val_score(model, X, y, cv=3, scoring='accuracy')  # K=3 pour une évaluation plus précise  
+        scores = cross_val_score(model, X, y, cv=3)  
         results[name] = scores.mean()  
-    
     return results  
 
+# Configuration de l'application Streamlit  
+st.set_page_config(page_title="Prédiction de Matchs de Football", layout="wide")  
 # Interface utilisateur  
 st.title("🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs")  
 
@@ -153,36 +144,7 @@ st.header("💰 Cotes des Équipes")
 odds_home = st.number_input("🏠 Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
 odds_away = st.number_input("🏟️ Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
 
-# Calcul des probabilités implicites  
-def calculate_implied_prob(odds):  
-    return 1 / odds  
-
-# Fonction pour afficher les graphiques des performances des équipes  
-def plot_team_performance(home_stats, away_stats):  
-    labels = ['Buts', 'xG', 'Buts Encaissés', 'Tirs', 'Passes Clés', 'Tirs Cadrés', 'Possession']  
-    home_values = [home_stats['home_goals_scored'], home_stats['home_xG'], home_stats['home_encais'],   
-                   home_stats['home_tirs_par_match'], home_stats['home_passes_cles_par_match'],   
-                   home_stats['home_tirs_cadres'], home_stats['home_possession']]  
-    away_values = [away_stats['away_goals_scored'], away_stats['away_xG'], away_stats['away_encais'],   
-                   away_stats['away_tirs_par_match'], away_stats['away_passes_cles_par_match'],   
-                   away_stats['away_tirs_cadres'], away_stats['away_possession']]  
-
-    x = np.arange(len(labels))  
-    width = 0.35  
-
-    fig, ax = plt.subplots()  
-    bars1 = ax.bar(x - width/2, home_values, width, label=home_team)  
-    bars2 = ax.bar(x + width/2, away_values, width, label=away_team)  
-
-    ax.set_ylabel('Valeurs')  
-    ax.set_title('Comparaison des Performances des Équipes')  
-    ax.set_xticks(x)  
-    ax.set_xticklabels(labels)  
-    ax.legend()  
-
-    st.pyplot(fig)  
-
-# Prédictions  
+# Bouton pour déclencher les calculs  
 if st.button("🔍 Prédire les résultats"):  
     with st.spinner('Calcul des résultats...'):  
         try:  
@@ -310,9 +272,7 @@ if st.button("🔍 Prédire les résultats"):
                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
-                                                  away_possession, home_passes_reussies, away_passes_reussies,  
-                                                  home_touches_surface, away_touches_surface, home_forme_recente,  
-                                                  away_forme_recente]])[0][1] * 100,  
+                                                  away_passes_reussies, home_touches_surface, away_touches_surface, home_forme_recente, away_forme_recente]])[0][1] * 100,  
                         xgb_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
                                                    home_victories, away_victories, home_goals_scored, away_goals_scored,  
                                                    home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
@@ -445,3 +405,4 @@ if st.button("🔍 Prédire les résultats"):
 # Fin de l'application  
 if __name__ == "__main__":  
     st.write("Merci d'utiliser notre application de prédiction de matchs de football !")  
+                                                  
