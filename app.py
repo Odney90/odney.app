@@ -184,6 +184,7 @@ if st.button("🔍 Prédire les résultats"):
             st.warning("Pas assez d'échantillons pour effectuer une validation croisée. Utilisation d'une validation simple.")  
             model_scores = evaluate_models_simple(X, y)  
         else:  
+            # Utiliser la validation croisée si suffisamment d'échantillons  
             model_scores = evaluate_models_simple(X, y)  
 
         # Affichez les résultats  
