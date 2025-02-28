@@ -10,6 +10,7 @@ from scipy.stats import poisson
 import matplotlib.pyplot as plt  
 
 # Fonction pour entraîner les modèles  
+@st.cache_resource  
 def train_models():  
     # Exemple de données fictives pour l'entraînement  
     X = pd.DataFrame({  
@@ -87,6 +88,23 @@ def evaluate_models(X, y):
         results[name] = scores.mean()  
     return results  
 
+# Fonction pour afficher les graphiques des performances des équipes  
+def plot_team_performance(home_stats, away_stats):  
+    fig, ax = plt.subplots(2, 1, figsize=(10, 8))  
+
+    # Graphique des buts marqués  
+    ax[0].bar(['Domicile', 'Extérieur'], [home_stats['home_goals_scored'], away_stats['away_goals_scored']], color=['blue', 'orange'])  
+    ax[0].set_title("Buts Marqués")  
+    ax[0].set_ylabel("Nombre de Buts")  
+
+    # Graphique des xG  
+    ax[1].bar(['Domicile', 'Extérieur'], [home_stats['home_xG'], away_stats['away_xG']], color=['blue', 'orange'])  
+    ax[1].set_title("Expected Goals (xG)")  
+    ax[1].set_ylabel("xG")  
+
+    plt.tight_layout()  
+    st.pyplot(fig)  
+
 # Configuration de l'application Streamlit  
 st.set_page_config(page_title="Prédiction de Matchs de Football", layout="wide")  
 # Interface utilisateur  
@@ -138,7 +156,7 @@ with col2:
     away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (extérieur)", min_value=0.0, max_value=300.0, value=15.0)  
     away_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
 
-# Saisie des cotes des bookmakers (non utilisées par les modèles)  
+# Saisie des cotes des bookmakers  
 st.header("💰 Cotes des Équipes")  
 odds_home = st.number_input("🏠 Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
 odds_away = st.number_input("🏟️ Cote pour l'équipe à l'extérieur", min_value=1.0, value=2.2)  
@@ -194,7 +212,8 @@ if st.button("🔍 Prédire les résultats"):
                 home_goals_pred = home_goals + home_xG - away_encais  
                 away_goals_pred = away_goals + away_xG - home_encais  
 
-                # Calcul des probabilités avec le modèle de Poisson  
+                # Calcul des probabilités avec le modèle de Poisson
+
                 home_probabilities = poisson_prediction(home_goals_pred)  
                 away_probabilities = poisson_prediction(away_goals_pred)  
 
@@ -221,12 +240,12 @@ if st.button("🔍 Prédire les résultats"):
                         log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
                                                        home_victories, away_victories, home_goals_scored, away_goals_scored,  
                                                        home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
-                                                       home_passes_cles_par_match, away_passes_cles_par_match,
-                                                       home_tirs_cadres, away_tirs_cadres, home_tirs_concedes,  
-                                                       away_tirs_concedes, home_duels_defensifs, away_duels_defensifs,  
-                                                       home_possession, away_possession, home_passes_reussies,  
-                                                       away_passes_reussies, home_touches_surface, away_touches_surface,  
-                                                       home_forme_recente, away_forme_recente]])[0][0] * 100,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][0] * 100,  
                         rf_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
@@ -409,4 +428,3 @@ log_reg_model, rf_model, xgb_model, svm_model = train_models()
 # Fin de l'application  
 if __name__ == "__main__":  
     st.write("Merci d'utiliser notre application de prédiction de matchs de football !")  
-                
