@@ -174,8 +174,8 @@ if st.button("🔍 Prédire les résultats"):
     if X.isnull().values.any():  
         st.error("Les données contiennent des valeurs manquantes.")  
     else:  
-        # Générer les étiquettes y avec seulement 2 classes  
-        y = np.random.choice([0, 1], size=X.shape[0])  # Assurez-vous que seules les classes 0 et 1 sont présentes  
+        # Générer les étiquettes y avec une probabilité d'obtenir deux classes  
+        y = np.random.choice([0, 1], size=X.shape[0], p=[0.5, 0.5])  # Assurez-vous que les classes 0 et 1 sont présentes  
 
         # Vérifiez la forme des données  
         unique_classes = np.unique(y)  
