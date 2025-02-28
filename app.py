@@ -6,7 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
 from sklearn.svm import SVC  
-from sklearn.model_selection import cross_val_score  
+from sklearn.model_selection import cross_val_score, train_test_split  
+from sklearn.metrics import accuracy_score  
 from scipy.stats import poisson  
 
 # Initialisation de session_state si non existant  
@@ -38,9 +39,9 @@ def poisson_prediction(goals_pred):
 
 def evaluate_models(X, y):  
     # Vérifiez la taille de l'échantillon  
-    if len(X) < 3:  
-        st.error("Pas assez d'échantillons pour effectuer une validation croisée.")  
-        return None  
+    if len(X) < 3:  # Nombre minimal d'échantillons pour cv=3  
+        st.warning("Pas assez d'échantillons pour effectuer une validation croisée. Utilisation d'une validation simple.")  
+        return evaluate_models_simple(X, y)  
 
     # Vérifiez la distribution des classes  
     unique_classes, counts = np.unique(y, return_counts=True)  
@@ -69,6 +70,25 @@ def evaluate_models(X, y):
     }  
     
     return {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}  
+
+def evaluate_models_simple(X, y):  
+    # Divisez les données en ensembles d'entraînement et de test  
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+
+    models = {  
+        "Logistic Regression": LogisticRegression(max_iter=1000),  
+        "Random Forest": RandomForestClassifier(n_estimators=100, n_jobs=-1),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', n_jobs=-1),  
+        "SVM": SVC(probability=True)  
+    }  
+
+    scores = {}  
+    for name, model in models.items():  
+        model.fit(X_train, y_train)  
+        y_pred = model.predict(X_test)  
+        scores[name] = accuracy_score(y_test, y_pred)  
+
+    return scores  
 
 def calculate_implied_prob(odds):  
     return 1 / odds  
