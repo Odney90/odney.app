@@ -24,12 +24,12 @@ def create_doc(results):
     doc.add_heading('⚽ Données des Équipes', level=2)  
     doc.add_paragraph(f"🏠 Équipe Domicile: {results.get('Équipe Domicile', 'Inconnu')}")  
     doc.add_paragraph(f"🏟️ Équipe Extérieure: {results.get('Équipe Extérieure', 'Inconnu')}")  
-    doc.add_paragraph(f"⚽ Buts Prédit Domicile: {results.get('Buts Prédit Domicile', 0):.2f}")  
-    doc.add_paragraph(f"⚽ Buts Prédit Extérieur: {results.get('Buts Prédit Extérieur', 0):.2f}")  
+    doc.add_paragraph(f"⚽ Buts Prédit Domicile: {float(results.get('Buts Prédit Domicile', 0)):.2f}")  
+    doc.add_paragraph(f"⚽ Buts Prédit Extérieur: {float(results.get('Buts Prédit Extérieur', 0)):.2f}")  
     doc.add_heading('📊 Probabilités des Modèles', level=2)  
-    doc.add_paragraph(f"🏠 Probabilité Domicile: {results.get('Probabilité Domicile', 0):.2f}")  
-    doc.add_paragraph(f"🤝 Probabilité Nul: {results.get('Probabilité Nul', 0):.2f}")  
-    doc.add_paragraph(f"🏟️ Probabilité Extérieure: {results.get('Probabilité Extérieure', 0):.2f}")  
+    doc.add_paragraph(f"🏠 Probabilité Domicile: {float(results.get('Probabilité Domicile', 0)):.2f}")  
+    doc.add_paragraph(f"🤝 Probabilité Nul: {float(results.get('Probabilité Nul', 0)):.2f}")  
+    doc.add_paragraph(f"🏟️ Probabilité Extérieure: {float(results.get('Probabilité Extérieure', 0)):.2f}")  
     buffer = BytesIO()  
     doc.save(buffer)  
     buffer.seek(0)  
@@ -219,14 +219,14 @@ if st.button("🔍 Prédire les résultats"):
                     'home_goals_scored': np.random.randint(0, 50, size=500),  
                     'away_goals_scored': np.random.randint(0, 50, size=500),  
                     'home_xGA': np.random.uniform(0, 2, size=500),  
-                    'away_xGA': np.random.uniform(0, 2, size=500),
+                    'away_xGA': np.random.uniform(0, 2, size=500),  
+                    'home_tirs_par_match': np.random.randint(0, 30, size=500),  
                     'away_tirs_par_match': np.random.randint(0, 30, size=500),  
                     'home_passes_cles_par_match': np.random.randint(0, 50, size=500),  
                     'away_passes_cles_par_match': np.random.randint(0, 50, size=500),  
-                    'home_tirs_cadres': np.random.randint(0, 15, size=500),  
+                    'home_tirs_cadres': np.random.randint(0, 15, size=500),
                     'away_tirs_cadres': np.random.randint(0, 15, size=500),  
                     'home_tirs_concedes': np.random.randint(0, 30, size=500),  
-                    'away_tirs_concedes': np.random.randint(0, 30, size=500),  
                     'home_duels_defensifs': np.random.randint(0, 100, size=500),  
                     'away_duels_defensifs': np.random.randint(0, 100, size=500),  
                     'home_possession': np.random.uniform(0, 100, size=500),  
@@ -354,28 +354,20 @@ if st.button("🔍 Prédire les résultats"):
                 }  
                 plot_team_performance(home_stats, away_stats)  
 
-     # Fonction pour créer un document Word avec les résultats  
- def create_doc(results):  
-    doc = Document()  
-    doc.add_heading('🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs', level=1)  
-    doc.add_heading('⚽ Données des Équipes', level=2)  
-    doc.add_paragraph(f"🏠 Équipe Domicile: {results.get('Équipe Domicile', 'Inconnu')}")  
-    doc.add_paragraph(f"🏟️ Équipe Extérieure: {results.get('Équipe Extérieure', 'Inconnu')}")  
-    doc.add_paragraph(f"⚽ Buts Prédit Domicile: {float(results.get('Buts Prédit Domicile', 0)):.2f}")  
-    doc.add_paragraph(f"⚽ Buts Prédit Extérieur: {float(results.get('Buts Prédit Extérieur', 0)):.2f}")  
-    doc.add_heading('📊 Probabilités des Modèles', level=2)  
-    doc.add_paragraph(f"🏠 Probabilité Domicile: {float(results.get('Probabilité Domicile', 0)):.2f}")  
-    doc.add_paragraph(f"🤝 Probabilité Nul: {float(results.get('Probabilité Nul', 0)):.2f}")  
-    doc.add_paragraph(f"🏟️ Probabilité Extérieure: {float(results.get('Probabilité Extérieure', 0)):.2f}")  
-    buffer = BytesIO()  
-    doc.save(buffer)  
-    buffer.seek(0)  
-    return buffer
-     
-      st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
+                # Option pour télécharger le document Word avec les résultats  
+                results = {  
+                    'Équipe Domicile': home_team,  
+                    'Équipe Extérieure': away_team,  
+                    'Buts Prédit Domicile': home_results,  
+                    'Buts Prédit Extérieur': away_results,  
+                    'Probabilité Domicile': log_reg_prob[0] * 100,  
+                    'Probabilité Nul': log_reg_prob[1] * 100,  
+                    'Probabilité Extérieure': log_reg_prob[2] * 100,  
+                }  
+                doc_buffer = create_doc(results)  
+                st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
 
         except Exception as e:  
             st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
 
 # Fin de l'application  
-                                                  
