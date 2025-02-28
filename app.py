@@ -432,6 +432,134 @@ if st.button("🔍 Prédire les résultats"):
                     ]  
                 }  
                 comparison_df = pd.DataFrame(comparison_data)  
-                st.dataframe(comparison_df, use_container_width=True)  
+                st.dataframe(comparison_df, use_container_width=True)                  # Affichage des graphiques des performances des équipes  
+                st.subheader("📈 Graphiques des Performances des Équipes")  
+                plot_team_performance({  
+                    'home_goals_scored': home_goals_scored,  
+                    'home_xG': home_xG,  
+                    'home_encais': home_encais,  
+                    'home_tirs_par_match': home_tirs_par_match,  
+                    'home_passes_cles_par_match': home_passes_cles_par_match,  
+                    'home_tirs_cadres': home_tirs_cadres,  
+                    'home_possession': home_possession  
+                }, {  
+                    'away_goals_scored': away_goals_scored,  
+                    'away_xG': away_xG,  
+                    'away_encais': away_encais,  
+                    'away_tirs_par_match': away_tirs_par_match,  
+                    'away_passes_cles_par_match': away_passes_cles_par_match,  
+                    'away_tirs_cadres': away_tirs_cadres,  
+                    'away_possession': away_possession  
+                })  
 
-                # Affichage des graphiques des performances des
+                # Création d'un document Word avec les résultats  
+                if st.button("📄 Télécharger le Rapport"):  
+                    results = {  
+                        'Équipe Domicile': home_team,  
+                        'Équipe Extérieure': away_team,  
+                        'Buts Prédit Domicile': home_goals_pred,  
+                        'Buts Prédit Extérieur': away_goals_pred,  
+                        'Probabilité Domicile': log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                                            home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                                            home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                                            home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                                            away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                                            home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                                            away_possession, home_passes_reussies, away_passes_reussies,  
+                                                                            home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                                            away_forme_recente]])[0][0] * 100,  
+                        'Probabilité Nul': log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                                        home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                                        home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                                        home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                                        away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                                        home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                                        away_possession, home_passes_reussies, away_passes_reussies,  
+                                                                        home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                                        away_forme_recente]])[0][1] * 100,  
+                        'Probabilité Extérieure': log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                                                home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                                                home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                                                home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                                                away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                                                home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                                                away_possession, home_passes_reussies, away_passes_reussies,  
+                                                                                home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                                                away_forme_recente]])[0][2] * 100  
+                    }  
+                    doc_buffer = create_doc(results)  
+                    st.download_button("Télécharger le rapport", doc_buffer, "rapport_match.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")  
+
+        except Exception as e:  
+            st.error(f"Une erreur s'est produite : {e}")  
+
+# Exécution de l'application  
+if __name__ == "__main__":  
+    st.set_page_config(page_title="Prédictions de Matchs de Football", layout="wide")  
+    st.write("Bienvenue dans l'application de prédiction de résultats de matchs de football !")  
+
+                                # Affichage des graphiques des performances des équipes  
+                st.subheader("📈 Graphiques des Performances des Équipes")  
+                plot_team_performance({  
+                    'home_goals_scored': home_goals_scored,  
+                    'home_xG': home_xG,  
+                    'home_encais': home_encais,  
+                    'home_tirs_par_match': home_tirs_par_match,  
+                    'home_passes_cles_par_match': home_passes_cles_par_match,  
+                    'home_tirs_cadres': home_tirs_cadres,  
+                    'home_possession': home_possession  
+                }, {  
+                    'away_goals_scored': away_goals_scored,  
+                    'away_xG': away_xG,  
+                    'away_encais': away_encais,  
+                    'away_tirs_par_match': away_tirs_par_match,  
+                    'away_passes_cles_par_match': away_passes_cles_par_match,  
+                    'away_tirs_cadres': away_tirs_cadres,  
+                    'away_possession': away_possession  
+                })  
+
+                # Création d'un document Word avec les résultats  
+                if st.button("📄 Télécharger le Rapport"):  
+                    results = {  
+                        'Équipe Domicile': home_team,  
+                        'Équipe Extérieure': away_team,  
+                        'Buts Prédit Domicile': home_goals_pred,  
+                        'Buts Prédit Extérieur': away_goals_pred,  
+                        'Probabilité Domicile': log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                                            home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                                            home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                                            home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                                            away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                                            home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                                            away_possession, home_passes_reussies, away_passes_reussies,  
+                                                                            home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                                            away_forme_recente]])[0][0] * 100,  
+                        'Probabilité Nul': log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                                        home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                                        home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                                        home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                                        away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                                        home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                                        away_possession, home_passes_reussies, away_passes_reussies,  
+                                                                        home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                                        away_forme_recente]])[0][1] * 100,  
+                        'Probabilité Extérieure': log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                                                home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                                                home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                                                home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                                                away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                                                home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                                                away_possession, home_passes_reussies, away_passes_reussies,  
+                                                                                home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                                                away_forme_recente]])[0][2] * 100  
+                    }  
+                    doc_buffer = create_doc(results)  
+                    st.download_button("Télécharger le rapport", doc_buffer, "rapport_match.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")  
+
+        except Exception as e:  
+            st.error(f"Une erreur s'est produite : {e}")  
+
+# Exécution de l'application  
+if __name__ == "__main__":  
+    st.set_page_config(page_title="Prédictions de Matchs de Football", layout="wide")  
+    st.write("Bienvenue dans l'application de prédiction de résultats de matchs de football !")  
