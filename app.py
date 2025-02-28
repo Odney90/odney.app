@@ -224,7 +224,6 @@ if st.button("🔍 Prédire les résultats"):
                     'away_tirs_par_match': np.random.randint(0, 30, size=500),  
                     'home_passes_cles_par_match': np.random.randint(0, 50, size=500),  
                     'away_passes_cles_par_match': np.random.randint(0, 50, size=500),  
-                    'home_tirs_cadres': np.random.randint(0, 15, size=500),  
                     'away_tirs_cadres': np.random.randint(0, 15, size=500),  
                     'home_tirs_concedes': np.random.randint(0, 30, size=500),  
                     'away_tirs_concedes': np.random.randint(0, 30, size=500),  
@@ -257,37 +256,14 @@ if st.button("🔍 Prédire les résultats"):
                 home_results = {i: home_probabilities[i] * 100 for i in range(len(home_probabilities))}  
                 away_results = {i: away_probabilities[i] * 100 for i in range(len(away_probabilities))}  
 
-                # Calcul des probabilités implicites  
-                implied_home_prob = calculate_implied_prob(odds_home)  
-                implied_away_prob = calculate_implied_prob(odds_away)  
-                implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
-
-                # Prédictions avec les modèles  
-                input_data = [[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,   
-                               home_victories, away_victories, home_goals_scored, away_goals_scored,   
-                               home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,   
-                               home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,   
-                               away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,   
-                               home_duels_defensifs, away_duels_defensifs, home_possession,   
-                               away_possession, home_passes_reussies, away_passes_reussies,   
-                               home_touches_surface, away_touches_surface, home_forme_recente,   
-                               away_forme_recente]]  # 26 caractéristiques  
-
-                # Prédictions des modèles  
-                log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
-                rf_prob = rf_model.predict_proba(input_data)[0]  
-                xgb_prob = xgb_model.predict_proba(input_data)[0]  
-                svm_prob = svm_model.predict_proba(input_data)[0]  # Prédiction avec le modèle SVM  
-
-                # Affichage des résultats  
-                st.subheader("📊 Résultats des Prédictions")  
-
-                # Tableau pour le modèle de Poisson  
+                # Création d'un DataFrame pour les résultats de Poisson  
                 poisson_results = pd.DataFrame({  
-                    "Équipe": [home_team, away_team],  
-                    "Buts Prédit": [home_results, away_results]  
+                    "Nombre de Buts": range(len(home_probabilities)),  
+                    f"Probabilités {home_team} (%)": [f"{home_results[i]:.2f}" for i in range(len(home_results))],  
+                    f"Probabilités {away_team} (%)": [f"{away_results[i]:.2f}" for i in range(len(away_results))]  
                 })  
 
+                # Affichage des résultats du modèle de Poisson  
                 st.markdown("### Résultats du Modèle de Poisson")  
                 st.dataframe(poisson_results, use_container_width=True)  
 
@@ -296,22 +272,118 @@ if st.button("🔍 Prédire les résultats"):
                 model_details = {  
                     "Modèle": ["Régression Logistique", "Random Forest", "XGBoost", "SVM"],  
                     "Probabilité Domicile (%)": [  
-                        log_reg_prob[0] * 100,  
-                        rf_prob[0] * 100,  
-                        xgb_prob[0] * 100,  
-                        svm_prob[0] * 100  # Probabilité Domicile pour SVM  
+                        log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                       home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                       home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][0] * 100,  
+                        rf_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                  home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                  home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                  home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                  away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                  home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                  away_possession, home_passes_reussies, away_passes_reussies,  
+                                                  home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                  away_forme_recente]])[0][0] * 100,  
+                        xgb_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                   away_possession, home_passes_reussies, away_passes_reussies,  
+                                                   home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                   away_forme_recente]])[0][0] * 100,  
+                        svm_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                   away_possession, home_passes_reussies, away_passes_reussies,  
+                                                   home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                   away_forme_recente]])[0][0] * 100  
                     ],  
                     "Probabilité Nul (%)": [  
-                        log_reg_prob[1] * 100,  
-                        rf_prob[1] * 100,  
-                        xgb_prob[1] * 100,  
-                        svm_prob[1] * 100  # Probabilité Nul pour SVM  
+                        log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                       home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                       home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][1] * 100,  
+                        rf_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                  home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                  home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                  home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                  away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                  home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                  away_possession, home_passes_reussies, away_passes_reussies,  
+                                                  home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                  away_forme_recente]])[0][1] * 100,  
+                        xgb_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                   away_possession, home_passes_reussies, away_passes_reussies,  
+                                                   home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                   away_forme_recente]])[0][1] * 100,  
+                        svm_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                   away_possession, home_passes_reussies, away_passes_reussies,  
+                                                   home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                   away_forme_recente]])[0][1] * 100  
                     ],  
                     "Probabilité Extérieure (%)": [  
-                        log_reg_prob[2] * 100,  
-                        rf_prob[2] * 100,  
-                        xgb_prob[2] * 100,  
-                        svm_prob[2] * 100  # Probabilité Extérieure pour SVM  
+                        log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                       home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                       home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][2] * 100,  
+                        rf_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                  home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                  home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                  home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                  away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                  home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                  away_possession, home_passes_reussies, away_passes_reussies,  
+                                                  home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                  away_forme_recente]])[0][2] * 100,  
+                        xgb_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                   away_possession, home_passes_reussies, away_passes_reussies,  
+                                                   home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                   away_forme_recente]])[0][2] * 100,  
+                        svm_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                   away_possession, home_passes_reussies, away_passes_reussies,  
+                                                   home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                   away_forme_recente]])[0][2] * 100  
                     ]  
                 }  
                 model_details_df = pd.DataFrame(model_details)  
@@ -319,6 +391,10 @@ if st.button("🔍 Prédire les résultats"):
 
                 # Comparaison des probabilités implicites et prédites  
                 st.subheader("📊 Comparaison des Probabilités Implicites et Prédites")  
+                implied_home_prob = calculate_implied_prob(odds_home)  
+                implied_away_prob = calculate_implied_prob(odds_away)  
+                implied_draw_prob = 1 - (implied_home_prob + implied_away_prob)  
+
                 comparison_data = {  
                     "Type": ["Implicite Domicile", "Implicite Nul", "Implicite Extérieure",   
                              "Prédite Domicile", "Prédite Nul", "Prédite Extérieure"],  
@@ -326,49 +402,36 @@ if st.button("🔍 Prédire les résultats"):
                         implied_home_prob * 100,  
                         implied_draw_prob * 100,  
                         implied_away_prob * 100,  
-                        log_reg_prob[0] * 100,  
-                        log_reg_prob[1] * 100,  
-                        log_reg_prob[2] * 100  
+                        log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                       home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                       home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][0] * 100,  
+                        log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                       home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                       home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][1] * 100,  
+                        log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
+                                                       home_victories, away_victories, home_goals_scored, away_goals_scored,  
+                                                       home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
+                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
+                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
+                                                       away_possession, home_passes_reussies, away_passes_reussies,  
+                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                       away_forme_recente]])[0][2] * 100  
                     ]  
                 }  
                 comparison_df = pd.DataFrame(comparison_data)  
                 st.dataframe(comparison_df, use_container_width=True)  
 
-                # Affichage des graphiques des performances des équipes  
-                home_stats = {  
-                    'home_goals_scored': home_goals_scored,  
-                    'home_xG': home_xG,  
-                    'home_encais': home_encais,  
-                    'home_tirs_par_match': home_tirs_par_match,  
-                    'home_passes_cles_par_match': home_passes_cles_par_match,  
-                    'home_tirs_cadres': home_tirs_cadres,  
-                    'home_possession': home_possession  
-                }  
-                away_stats = {  
-                    'away_goals_scored': away_goals_scored,  
-                    'away_xG': away_xG,  
-                    'away_encais': away_encais,  
-                    'away_tirs_par_match': away_tirs_par_match,  
-                    'away_passes_cles_par_match': away_passes_cles_par_match,  
-                    'away_tirs_cadres': away_tirs_cadres,  
-                    'away_possession': away_possession  
-                }  
-                plot_team_performance(home_stats, away_stats)  
-
-                # Option pour télécharger le document Word avec les résultats  
-                results = {  
-                    'Équipe Domicile': home_team,  
-                    'Équipe Extérieure': away_team,  
-                    'Buts Prédit Domicile': home_results[0],  # Utiliser la probabilité pour 0 but  
-                    'Buts Prédit Extérieur': away_results[0],  # Utiliser la probabilité pour 0 but  
-                    'Probabilité Domicile': log_reg_prob[0] * 100,  
-                    'Probabilité Nul': log_reg_prob[1] * 100,  
-                    'Probabilité Extérieure': log_reg_prob[2] * 100,  
-                }  
-                doc_buffer = create_doc(results)  
-                st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
-
-        except Exception as e:  
-            st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
-
-# Fin de l'application  
+                # Affichage des graphiques des performances des
