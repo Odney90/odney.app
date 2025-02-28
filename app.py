@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
 from sklearn.model_selection import cross_val_score  
-from sklearn.svm import SVC  
+from sklearn.svm import SVC  # Importation du SVM  
 
 # Configuration de la page (doit être la première commande)  
 st.set_page_config(page_title="Prédictions de Matchs de Football", layout="wide")  
@@ -63,7 +63,7 @@ def train_models():
     log_reg = LogisticRegression(max_iter=100, C=0.5, solver='lbfgs')  
     rf = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)  
     xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
-    svm = SVC(probability=True)  
+    svm = SVC(probability=True)  # Ajout du SVM  
 
     log_reg.fit(X, y)  
     rf.fit(X, y)  
@@ -88,7 +88,8 @@ def evaluate_models(X, y):
     models = {  
         "Régression Logistique": LogisticRegression(max_iter=100, C=0.5, solver='lbfgs'),  
         "Random Forest": RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1),  
+        "SVM": SVC(probability=True)  # Ajout du SVM ici  
     }  
     
     results = {}  
@@ -427,9 +428,8 @@ if st.button("🔍 Prédire les résultats"):
                     'home_tirs_par_match': home_tirs_par_match,  
                     'home_passes_cles_par_match': home_passes_cles_par_match,  
                     'home_tirs_cadres': home_tirs_cadres,  
-                    'home_possession': home_possession
-                                }, 
-                                      {  
+                    'home_possession': home_possession  
+                }, {  
                     'away_goals_scored': away_goals_scored,  
                     'away_xG': away_xG,  
                     'away_encais': away_encais,  
@@ -443,5 +443,4 @@ if st.button("🔍 Prédire les résultats"):
             st.error(f"Une erreur s'est produite : {e}")  
 
 # Fin de l'application  
-if __name__ == "__main__":  
-    st.write("Merci d'utiliser notre application de prédiction de matchs de football !")  
+if __name
