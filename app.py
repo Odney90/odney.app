@@ -107,7 +107,7 @@ def evaluate_models(X, y):
     
     results = {}  
     for name, model in models.items():  
-        scores = cross_val_score(model, X, y, cv=3, scoring='accuracy')  # K=3 pour une évaluation plus rapide  
+        scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')  # K=5 pour une évaluation plus précise  
         results[name] = scores.mean()  
     
     return results  
