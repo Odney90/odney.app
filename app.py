@@ -13,36 +13,22 @@ from docx import Document
 # Fonction pour prédire avec le modèle Poisson  
 @st.cache_data  
 def poisson_prediction(goals):  
-    probabilities = []  
-    for k in range(6):  # Calculer pour 0 à 5 buts  
-        prob = np.exp(-goals) * (goals ** k) / factorial(k)  
-        probabilities.append(prob)  
+    probabilities = np.exp(-goals) * (goals ** np.arange(6)) / factorial(np.arange(6))  
     return probabilities  
 
 # Fonction pour créer un document Word avec les résultats  
 def create_doc(results):  
     doc = Document()  
     doc.add_heading('🏆 Analyse de Matchs de Football et Prédictions de Paris Sportifs', level=1)  
-
-    # Ajout des données des équipes  
     doc.add_heading('⚽ Données des Équipes', level=2)  
     doc.add_paragraph(f"🏠 Équipe Domicile: {results.get('Équipe Domicile', 'Inconnu')}")  
     doc.add_paragraph(f"🏟️ Équipe Extérieure: {results.get('Équipe Extérieure', 'Inconnu')}")  
-
-    # Vérification et ajout des buts prédits  
-    buts_domicile = results.get('Buts Prédit Domicile', 0)  
-    buts_exterieur = results.get('Buts Prédit Extérieur', 0)  
-    
-    doc.add_paragraph(f"⚽ Buts Prédit Domicile: {buts_domicile:.2f}" if isinstance(buts_domicile, (int, float)) else "⚽ Buts Prédit Domicile: Non disponible")  
-    doc.add_paragraph(f"⚽ Buts Prédit Extérieur: {buts_exterieur:.2f}" if isinstance(buts_exterieur, (int, float)) else "⚽ Buts Prédit Extérieur: Non disponible")  
-
-    # Ajout des probabilités des modèles  
+    doc.add_paragraph(f"⚽ Buts Prédit Domicile: {results.get('Buts Prédit Domicile', 0):.2f}")  
+    doc.add_paragraph(f"⚽ Buts Prédit Extérieur: {results.get('Buts Prédit Extérieur', 0):.2f}")  
     doc.add_heading('📊 Probabilités des Modèles', level=2)  
     doc.add_paragraph(f"🏠 Probabilité Domicile: {results.get('Probabilité Domicile', 0):.2f}")  
     doc.add_paragraph(f"🤝 Probabilité Nul: {results.get('Probabilité Nul', 0):.2f}")  
     doc.add_paragraph(f"🏟️ Probabilité Extérieure: {results.get('Probabilité Extérieure', 0):.2f}")  
-
-    # Enregistrement du document  
     buffer = BytesIO()  
     doc.save(buffer)  
     buffer.seek(0)  
@@ -51,9 +37,8 @@ def create_doc(results):
 # Fonction pour entraîner et prédire avec les modèles  
 @st.cache_resource  
 def train_models():  
-    # Générer des données d'entraînement simulées  
     np.random.seed(42)  
-    data_size = 1000  # Augmenter la taille des données pour un meilleur entraînement  
+    data_size = 1000  
     data = pd.DataFrame({  
         'home_goals': np.random.randint(0, 3, size=data_size),  
         'away_goals': np.random.randint(0, 3, size=data_size),  
@@ -85,26 +70,16 @@ def train_models():
         'away_touches_surface': np.random.randint(0, 300, size=data_size),  
         'home_forme_recente': np.random.randint(0, 15, size=data_size),  
         'away_forme_recente': np.random.randint(0, 15, size=data_size),  
-        'result': np.random.choice([0, 1, 2], size=data_size)  # 0: Domicile, 1: Nul, 2: Extérieur  
+        'result': np.random.choice([0, 1, 2], size=data_size)  
     })  
 
-    X = data[['home_goals', 'away_goals', 'home_xG', 'away_xG', 'home_encais', 'away_encais',   
-               'home_victories', 'away_victories', 'home_goals_scored', 'away_goals_scored',   
-               'home_xGA', 'away_xGA', 'home_tirs_par_match', 'away_tirs_par_match',   
-               'home_passes_cles_par_match', 'away_passes_cles_par_match', 'home_tirs_cadres',   
-               'away_tirs_cadres', 'home_tirs_concedes', 'away_tirs_concedes',   
-               'home_duels_defensifs', 'away_duels_defensifs', 'home_possession',   
-               'away_possession', 'home_passes_reussies', 'away_passes_reussies',   
-               'home_touches_surface', 'away_touches_surface', 'home_forme_recente',   
-               'away_forme_recente']]  
+    X = data.drop(columns='result')  
     y = data['result']  
 
-    # Entraînement des modèles avec des hyperparamètres optimisés  
-    log_reg = LogisticRegression(max_iter=200, C=0.5, solver='lbfgs')  
-    rf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)  
-    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100, max_depth=5, learning_rate=0.1)  
+    log_reg = LogisticRegression(max_iter=100, C=0.5, solver='lbfgs')  
+    rf = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
 
-    # Entraînement des modèles  
     log_reg.fit(X, y)  
     rf.fit(X, y)  
     xgb.fit(X, y)  
@@ -125,14 +100,14 @@ else:
 @st.cache_data  
 def evaluate_models(X, y):  
     models = {  
-        "Régression Logistique": LogisticRegression(max_iter=200, C=0.5, solver='lbfgs'),  
-        "Random Forest": RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42),  
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=100, max_depth=5, learning_rate=0.1)  
+        "Régression Logistique": LogisticRegression(max_iter=100, C=0.5, solver='lbfgs'),  
+        "Random Forest": RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42),  
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
     }  
     
     results = {}  
     for name, model in models.items():  
-        scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')  # K=5 pour une évaluation plus robuste  
+        scores = cross_val_score(model, X, y, cv=3, scoring='accuracy')  # K=3 pour une évaluation plus rapide  
         results[name] = scores.mean()  
     
     return results  
@@ -185,6 +160,7 @@ with col2:
     away_passes_reussies = st.number_input("✅ Passes réussies (%) (extérieur)", min_value=0.0, max_value=100.0, value=75.0)  
     away_touches_surface = st.number_input("⚽ Balles touchées dans la surface adverse par match (extérieur)", min_value=0.0, max_value=300.0, value=15.0)  
     away_forme_recente = st.number_input("📈 Forme récente (points sur les 5 derniers matchs) (extérieur)", min_value=0, max_value=15, value=8)  
+
 # Saisie des cotes des bookmakers (non utilisées par les modèles)  
 st.header("💰 Cotes des Équipes")  
 odds_home = st.number_input("🏠 Cote pour l'équipe à domicile", min_value=1.0, value=1.8)  
@@ -227,7 +203,7 @@ if st.button("🔍 Prédire les résultats"):
             if home_goals < 0 or away_goals < 0:  
                 st.error("⚠️ Les moyennes de buts ne peuvent pas être négatives.")  
             else:  
-             # Évaluation des modèles avec validation croisée K-Fold  
+                # Évaluation des modèles avec validation croisée K-Fold  
                 X = pd.DataFrame({  
                     'home_goals': np.random.randint(0, 3, size=1000),  
                     'away_goals': np.random.randint(0, 3, size=1000),  
