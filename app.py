@@ -171,8 +171,7 @@ if st.button("🔍 Prédire les résultats"):
         unique_classes = np.unique(y)  
         if len(unique_classes) < 2:  
             st.warning("Les étiquettes ne contiennent qu'une seule classe. Ajout d'une deuxième classe manuellement.")  
-            y[0] = 0  # Forcer la première étiquette à 0  
-            y[1] = 1  # Forcer la deuxième étiquette à 1  
+            y = np.array([0, 1])  # Forcer les classes à 0 et 1  
 
         # Vérifiez à nouveau la distribution des classes  
         unique_classes = np.unique(y)  
