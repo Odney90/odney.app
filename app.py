@@ -39,7 +39,7 @@ def create_doc(results):
 @st.cache_resource  
 def train_models():  
     np.random.seed(42)  
-    data_size = 1000  
+    data_size = 500  # Réduire la taille des données pour l'entraînement  
     data = pd.DataFrame({  
         'home_goals': np.random.randint(0, 3, size=data_size),  
         'away_goals': np.random.randint(0, 3, size=data_size),  
@@ -77,21 +77,17 @@ def train_models():
     X = data.drop(columns='result')  
     y = data['result']  
 
-    try:  
-        log_reg = LogisticRegression(max_iter=100, C=0.5, solver='lbfgs')  
-        rf = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)  
-        xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
-        svm = SVC(probability=True)  
+    log_reg = LogisticRegression(max_iter=100, C=0.5, solver='lbfgs')  
+    rf = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)  
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
+    svm = SVC(probability=True)  
 
-        log_reg.fit(X, y)  
-        rf.fit(X, y)  
-        xgb.fit(X, y)  
-        svm.fit(X, y)  
+    log_reg.fit(X, y)  
+    rf.fit(X, y)  
+    xgb.fit(X, y)  
+    svm.fit(X, y)  
 
-        return log_reg, rf, xgb, svm  
-    except Exception as e:  
-        st.error(f"Erreur lors de l'entraînement des modèles : {e}")  
-        return None  # Retourne None si une erreur se produit  
+    return log_reg, rf, xgb, svm  
 
 # Vérifier si les modèles sont déjà chargés dans l'état de session  
 if 'models' not in st.session_state:  
@@ -212,38 +208,37 @@ if st.button("🔍 Prédire les résultats"):
             else:  
                 # Évaluation des modèles avec validation croisée K-Fold  
                 X = pd.DataFrame({  
-                    'home_goals': np.random.randint(0, 3, size=1000),  
-                    'away_goals': np.random.randint(0, 3, size=1000),  
-                    'home_xG': np.random.uniform(0, 2, size=1000),  
-                    'away_xG': np.random.uniform(0, 2, size=1000),  
-                    'home_encais': np.random.uniform(0, 2, size=1000),  
-                    'away_encais': np.random.uniform(0, 2, size=1000),  
-                    'home_victories': np.random.randint(0, 20, size=1000),  
-                    'away_victories': np.random.randint(0, 20, size=1000),  
-                    'home_goals_scored': np.random.randint(0, 50, size=1000),  
-                    'away_goals_scored': np.random.randint(0, 50, size=1000),  
-                    'home_xGA': np.random.uniform(0, 2, size=1000),  
-                    'away_xGA': np.random.uniform(0, 2, size=1000),  
-                    'home_tirs_par_match': np.random.randint(0, 30, size=1000),  
-                    'away_tirs_par_match': np.random.randint(0, 30, size=1000),  
-                    'home_passes_cles_par_match': np.random.randint(0, 50, size=1000),  
-                    'away_passes_cles_par_match': np.random.randint(0, 50, size=1000),  
-                    'home_tirs_cadres': np.random.randint(0, 15, size=1000),  
-                    'away_tirs_cadres': np.random.randint(0, 15, size=1000),  
-                    'home_tirs_concedes': np.random.randint(0, 30, size=1000),  
-                    'away_tirs_concedes': np.random.randint(0, 30, size=1000),  
-                    'home_duels_defensifs': np.random.randint(0, 100, size=1000),  
-                    'away_duels_defensifs': np.random.randint(0, 100, size=1000),  
-                    'home_possession': np.random.uniform(0, 100, size=1000),  
-                    'away_possession': np.random.uniform(0, 100, size=1000),  
-                    'home_passes_reussies': np.random.uniform(0, 100, size=1000),  
-                    'away_passes_reussies': np.random.uniform(0, 100, size=1000),  
-                    'home_touches_surface': np.random.randint(0, 300, size=1000),  
-                    'away_touches_surface': np.random.randint(0, 300, size=1000),  
-                    'home_forme_recente': np.random.randint(0, 15, size=1000),  
-                    'away_forme_recente': np.random.randint(0, 15, size=1000)  
+                    'home_goals': np.random.randint(0, 3, size=500),  
+                    'away_goals': np.random.randint(0, 3, size=500),  
+                    'home_xG': np.random.uniform(0, 2, size=500),  
+                    'away_xG': np.random.uniform(0, 2, size=500),  
+                    'home_encais': np.random.uniform(0, 2, size=500),  
+                    'away_encais': np.random.uniform(0, 2, size=500),  
+                    'home_victories': np.random.randint(0, 20, size=500),  
+                    'away_victories': np.random.randint(0, 20, size=500),  
+                    'home_goals_scored': np.random.randint(0, 50, size=500),  
+                    'away_goals_scored': np.random.randint(0, 50, size=500),  
+                    'home_xGA': np.random.uniform(0, 2, size=500),  
+                    'away_xGA': np.random.uniform(0, 2, size=500),
+                    'away_tirs_par_match': np.random.randint(0, 30, size=500),  
+                    'home_passes_cles_par_match': np.random.randint(0, 50, size=500),  
+                    'away_passes_cles_par_match': np.random.randint(0, 50, size=500),  
+                    'home_tirs_cadres': np.random.randint(0, 15, size=500),  
+                    'away_tirs_cadres': np.random.randint(0, 15, size=500),  
+                    'home_tirs_concedes': np.random.randint(0, 30, size=500),  
+                    'away_tirs_concedes': np.random.randint(0, 30, size=500),  
+                    'home_duels_defensifs': np.random.randint(0, 100, size=500),  
+                    'away_duels_defensifs': np.random.randint(0, 100, size=500),  
+                    'home_possession': np.random.uniform(0, 100, size=500),  
+                    'away_possession': np.random.uniform(0, 100, size=500),  
+                    'home_passes_reussies': np.random.uniform(0, 100, size=500),  
+                    'away_passes_reussies': np.random.uniform(0, 100, size=500),  
+                    'home_touches_surface': np.random.randint(0, 300, size=500),  
+                    'away_touches_surface': np.random.randint(0, 300, size=500),  
+                    'home_forme_recente': np.random.randint(0, 15, size=500),  
+                    'away_forme_recente': np.random.randint(0, 15, size=500)  
                 })  
-                y = np.random.choice([0, 1, 2], size=1000)  # 0: Domicile, 1: Nul, 2: Extérieur  
+                y = np.random.choice([0, 1, 2], size=500)  # 0: Domicile, 1: Nul, 2: Extérieur  
                 
                 # Évaluation des modèles avec validation croisée K=3  
                 results = evaluate_models(X, y)  
@@ -376,3 +371,4 @@ if st.button("🔍 Prédire les résultats"):
             st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
 
 # Fin de l'application  
+                                                  
