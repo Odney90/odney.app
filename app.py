@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier  
 from xgboost import XGBClassifier  
 from sklearn.model_selection import cross_val_score  
+from sklearn.svm import SVC  # Importation du modèle SVM  
 from io import BytesIO  
 from docx import Document  
 
@@ -79,12 +80,14 @@ def train_models():
     log_reg = LogisticRegression(max_iter=100, C=0.5, solver='lbfgs')  
     rf = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)  
     xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', n_estimators=50, max_depth=5, learning_rate=0.1)  
+    svm = SVC(probability=True)  # Modèle SVM avec probabilités activées  
 
     log_reg.fit(X, y)  
     rf.fit(X, y)  
     xgb.fit(X, y)  
+    svm.fit(X, y)  # Entraînement du modèle SVM  
 
-    return log_reg, rf, xgb  
+    return log_reg, rf, xgb, svm  
 
 # Vérifier si les modèles sont déjà chargés dans l'état de session  
 if 'models' not in st.session_state:  
@@ -92,7 +95,7 @@ if 'models' not in st.session_state:
 
 # Assurez-vous que les modèles sont bien chargés  
 if st.session_state.models is not None:  
-    log_reg_model, rf_model, xgb_model = st.session_state.models  
+    log_reg_model, rf_model, xgb_model, svm_model = st.session_state.models  
 else:  
     st.error("⚠️ Les modèles n'ont pas pu être chargés.")  
 
@@ -107,7 +110,7 @@ def evaluate_models(X, y):
     
     results = {}  
     for name, model in models.items():  
-        scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')  # K=5 pour une évaluation plus précise  
+        scores = cross_val_score(model, X, y, cv=3, scoring='accuracy')  # K=3 pour une évaluation plus précise  
         results[name] = scores.mean()  
     
     return results  
@@ -237,6 +240,8 @@ if st.button("🔍 Prédire les résultats"):
                     'away_forme_recente': np.random.randint(0, 15, size=1000)  
                 })  
                 y = np.random.choice([0, 1, 2], size=1000)  # 0: Domicile, 1: Nul, 2: Extérieur  
+                
+                # Évaluation des modèles avec validation croisée K=3  
                 results = evaluate_models(X, y)  
                 st.write("📊 Résultats de la validation croisée K-Fold :", results)  
 
@@ -268,9 +273,11 @@ if st.button("🔍 Prédire les résultats"):
                                home_touches_surface, away_touches_surface, home_forme_recente,   
                                away_forme_recente]]  # 26 caractéristiques  
 
+                # Prédictions des modèles  
                 log_reg_prob = log_reg_model.predict_proba(input_data)[0]  
                 rf_prob = rf_model.predict_proba(input_data)[0]  
                 xgb_prob = xgb_model.predict_proba(input_data)[0]  
+                svm_prob = svm_model.predict_proba(input_data)[0]  # Prédiction avec le modèle SVM  
 
                 # Affichage des résultats  
                 st.subheader("📊 Résultats des Prédictions")  
@@ -287,21 +294,24 @@ if st.button("🔍 Prédire les résultats"):
                 # Détails sur chaque prédiction des modèles  
                 st.markdown("### Détails des Prédictions des Modèles")  
                 model_details = {  
-                    "Modèle": ["Régression Logistique", "Random Forest", "XGBoost"],  
+                    "Modèle": ["Régression Logistique", "Random Forest", "XGBoost", "SVM"],  
                     "Probabilité Domicile (%)": [  
                         log_reg_prob[0] * 100,  
                         rf_prob[0] * 100,  
-                        xgb_prob[0] * 100  
+                        xgb_prob[0] * 100,  
+                        svm_prob[0] * 100  # Probabilité Domicile pour SVM  
                     ],  
                     "Probabilité Nul (%)": [  
                         log_reg_prob[1] * 100,  
                         rf_prob[1] * 100,  
-                        xgb_prob[1] * 100  
+                        xgb_prob[1] * 100,  
+                        svm_prob[1] * 100  # Probabilité Nul pour SVM  
                     ],  
                     "Probabilité Extérieure (%)": [  
                         log_reg_prob[2] * 100,  
                         rf_prob[2] * 100,  
-                        xgb_prob[2] * 100  
+                        xgb_prob[2] * 100,  
+                        svm_prob[2] * 100  # Probabilité Extérieure pour SVM  
                     ]  
                 }  
                 model_details_df = pd.DataFrame(model_details)  
@@ -362,3 +372,4 @@ if st.button("🔍 Prédire les résultats"):
             st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
 
 # Fin de l'application  
+                    
