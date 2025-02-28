@@ -72,8 +72,41 @@ def evaluate_models(X, y):
     return {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}  
 
 def evaluate_models_simple(X, y):  
+    # Vérifiez que X et y ne sont pas vides  
+    if len(X) == 0 or len(y) == 0:  
+        st.error("Les données d'entrée sont vides.")  
+        return None  
+
+    # Vérifiez que X est un DataFrame ou un tableau numérique  
+    if not isinstance(X, (pd.DataFrame, np.ndarray)):  
+        st.error("Les données d'entrée doivent être un DataFrame ou un tableau numpy.")  
+        return None  
+
+    # Vérifiez que y est un tableau numérique  
+    if not isinstance(y, (pd.Series, np.ndarray)):  
+        st.error("Les étiquettes doivent être un tableau numpy ou une série pandas.")  
+        return None  
+
+    # Vérifiez les valeurs manquantes dans X et y  
+    if isinstance(X, pd.DataFrame) and X.isnull().values.any():  
+        st.error("Les données d'entrée contiennent des valeurs manquantes.")  
+        return None  
+    if isinstance(y, pd.Series) and y.isnull().values.any():  
+        st.error("Les étiquettes contiennent des valeurs manquantes.")  
+        return None  
+
+    # Vérifiez que y contient au moins deux classes  
+    unique_classes = np.unique(y)  
+    if len(unique_classes) < 2:  
+        st.error("Les étiquettes doivent contenir au moins deux classes.")  
+        return None  
+
     # Divisez les données en ensembles d'entraînement et de test  
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+    try:  
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+    except Exception as e:  
+        st.error(f"Erreur lors de la division des données : {e}")  
+        return None  
 
     models = {  
         "Logistic Regression": LogisticRegression(max_iter=1000),  
@@ -84,9 +117,13 @@ def evaluate_models_simple(X, y):
 
     scores = {}  
     for name, model in models.items():  
-        model.fit(X_train, y_train)  
-        y_pred = model.predict(X_test)  
-        scores[name] = accuracy_score(y_test, y_pred)  
+        try:  
+            model.fit(X_train, y_train)  
+            y_pred = model.predict(X_test)  
+            scores[name] = accuracy_score(y_test, y_pred)  
+        except Exception as e:  
+            st.error(f"Erreur lors de l'entraînement du modèle {name}: {e}")  
+            scores[name] = None  
 
     return scores  
 
@@ -263,8 +300,7 @@ if st.button("🔍 Prédire les résultats"):
                 y='Probabilité:Q',  
                 tooltip=['Buts', 'Probabilité']  
             ).properties(title=f"Distribution des buts pour {home_team}")  
-            st.altair_chart(chart_home, use_container_width=True)  
-
+            st.altair
             # Graphique pour l'équipe à l'extérieur  
             st.write(f"Distribution des buts pour {away_team}")  
             chart_away = alt.Chart(poisson_df_away).mark_bar().encode(  
