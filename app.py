@@ -88,3 +88,5 @@ odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
 
 if st.button("🔍 Lancer les prédictions"):
     st.write("⚡ Prédictions en cours...")
+    model_scores = evaluate_models(np.random.rand(50, 10), np.random.randint(0, 3, 50))
+    st.write("📊 Résultats de la validation croisée:", model_scores)
