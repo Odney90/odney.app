@@ -239,13 +239,19 @@ if st.button("🔍 Prédire les résultats"):
         st.error("Les données contiennent des valeurs manquantes.")  
     else:  
         # Générer les étiquettes y avec une probabilité d'obtenir deux classes  
-        y = np.random.choice([0, 1], size=X.shape[0], p=[0.5, 0.5])  # Assurez-vous que les classes 0 et 1 sont présentes  
+        y = np.random.choice([0, 1], size=X.shape[0], p=[0.5, 0.5])  
 
-        # Vérifiez la forme des données  
+        # Vérifier la distribution des classes  
         unique_classes = np.unique(y)  
-        expected_classes = [0, 1]  # Classes attendues  
-        if not all(cls in expected_classes for cls in unique_classes):  
-            st.error(f"Classes inattendues dans y: {unique_classes}. Attendu: {expected_classes}.")  
+        if len(unique_classes) < 2:  
+            st.warning("Les étiquettes ne contiennent qu'une seule classe. Ajout d'une deuxième classe manuellement.")  
+            y[0] = 0  # Forcer la première étiquette à 0  
+            y[1] = 1  # Forcer la deuxième étiquette à 1  
+
+        # Vérifiez à nouveau la distribution des classes  
+        unique_classes = np.unique(y)  
+        if len(unique_classes) < 2:  
+            st.error("Impossible de générer deux classes distinctes. Vérifiez les données.")  
             st.stop()  
 
         # Entraînez les modèles  
@@ -300,7 +306,8 @@ if st.button("🔍 Prédire les résultats"):
                 y='Probabilité:Q',  
                 tooltip=['Buts', 'Probabilité']  
             ).properties(title=f"Distribution des buts pour {home_team}")  
-            st.altair
+            st.altair_chart(chart_home, use_container_width=True)  
+
             # Graphique pour l'équipe à l'extérieur  
             st.write(f"Distribution des buts pour {away_team}")  
             chart_away = alt.Chart(poisson_df_away).mark_bar().encode(  
