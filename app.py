@@ -443,4 +443,5 @@ if st.button("🔍 Prédire les résultats"):
             st.error(f"Une erreur s'est produite : {e}")  
 
 # Fin de l'application  
-if __name
+if __name__ == "__main__":  
+    st.write("Merci d'utiliser notre application de prédiction de matchs de football !")  
