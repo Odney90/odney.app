@@ -33,6 +33,12 @@ def evaluate_models(X, y):
     }
     return {name: cross_val_score(model, X, y, cv=3).mean() for name, model in models.items()}
 
+def calculate_implied_prob(odds):
+    return 1 / odds
+
+def detect_value_bet(predicted_prob, implied_prob, threshold=0.05):
+    return predicted_prob > (implied_prob + threshold)
+
 st.set_page_config(page_title="Prédiction de Matchs", layout="wide")
 st.title("🏆 Analyse et Prédictions Football")
 
@@ -77,3 +83,6 @@ with col2:
 
 odds_home = st.number_input("🏠 Cote Domicile", min_value=1.0, value=1.8)
 odds_away = st.number_input("🏟️ Cote Extérieur", min_value=1.0, value=2.2)
+
+if st.button("🔍 Lancer les prédictions"):
+    st.write("⚡ Prédictions en cours...")
