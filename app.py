@@ -1,4 +1,3 @@
-# Importation des bibliothèques nécessaires  
 import streamlit as st  
 import pandas as pd  
 import numpy as np  
@@ -222,12 +221,12 @@ if st.button("🔍 Prédire les résultats"):
                         log_reg_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
                                                        home_victories, away_victories, home_goals_scored, away_goals_scored,  
                                                        home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
-                                                       home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
-                                                       away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
-                                                       home_duels_defensifs, away_duels_defensifs, home_possession,  
-                                                       away_possession, home_passes_reussies, away_passes_reussies,  
-                                                       home_touches_surface, away_touches_surface, home_forme_recente,  
-                                                       away_forme_recente]])[0][0] * 100,  
+                                                       home_passes_cles_par_match, away_passes_cles_par_match,
+                                                       home_tirs_cadres, away_tirs_cadres, home_tirs_concedes,  
+                                                       away_tirs_concedes, home_duels_defensifs, away_duels_defensifs,  
+                                                       home_possession, away_possession, home_passes_reussies,  
+                                                       away_passes_reussies, home_touches_surface, away_touches_surface,  
+                                                       home_forme_recente, away_forme_recente]])[0][0] * 100,  
                         rf_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
                                                   home_victories, away_victories, home_goals_scored, away_goals_scored,  
                                                   home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
@@ -272,7 +271,9 @@ if st.button("🔍 Prédire les résultats"):
                                                   home_passes_cles_par_match, away_passes_cles_par_match, home_tirs_cadres,  
                                                   away_tirs_cadres, home_tirs_concedes, away_tirs_concedes,  
                                                   home_duels_defensifs, away_duels_defensifs, home_possession,  
-                                                  away_passes_reussies, home_touches_surface, away_touches_surface, home_forme_recente, away_forme_recente]])[0][1] * 100,  
+                                                  away_possession, home_passes_reussies, away_passes_reussies,  
+                                                  home_touches_surface, away_touches_surface, home_forme_recente,  
+                                                  away_forme_recente]])[0][1] * 100,  
                         xgb_model.predict_proba([[home_goals_pred, away_goals_pred, home_xG, away_xG, home_encais, away_encais,  
                                                    home_victories, away_victories, home_goals_scored, away_goals_scored,  
                                                    home_xGA, away_xGA, home_tirs_par_match, away_tirs_par_match,  
@@ -402,7 +403,10 @@ if st.button("🔍 Prédire les résultats"):
         except Exception as e:  
             st.error(f"Une erreur s'est produite : {e}")  
 
+# Entraînement des modèles au démarrage de l'application  
+log_reg_model, rf_model, xgb_model, svm_model = train_models()  
+
 # Fin de l'application  
 if __name__ == "__main__":  
     st.write("Merci d'utiliser notre application de prédiction de matchs de football !")  
-                                                  
+                
