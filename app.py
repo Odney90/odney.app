@@ -370,9 +370,10 @@ def create_doc(results):
     buffer = BytesIO()  
     doc.save(buffer)  
     buffer.seek(0)  
-    return buffer  
     }
-                st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
+
+      return buffer
+      st.download_button("📥 Télécharger le document", doc_buffer, "resultats_match.docx")  
 
         except Exception as e:  
             st.error(f"⚠️ Erreur lors de la prédiction : {e}")  
