@@ -14,7 +14,7 @@ altair
 plotly
 statsmodels
 xgboost
-showxgboost  
+
 
 
 
