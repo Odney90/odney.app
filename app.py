@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
 from xgboost import XGBClassifier  
-import math  # Importation de la bibliothèque math  
+import math  
 
 # Exemple de données d'entraînement (remplacez ceci par vos données réelles)  
 data = {  
@@ -20,7 +20,7 @@ data = {
     'recent_form_home': [10, 12, 8, 9, 15],  
     'home_goals': [2, 3, 1, 2, 4],  
     'home_goals_against': [1, 2, 1, 0, 3],  
-    'injuries_home': [1, 0, 2, 1, 0],  # Nombre de joueurs blessés  
+    'injuries_home': [1, 0, 2, 1, 0],  
     'away_goals': [1, 2, 1, 0, 3],  
     
     'xG_away': [1.0, 1.5, 1.3, 1.2, 2.0],  
@@ -34,14 +34,14 @@ data = {
     'recent_form_away': [8, 7, 9, 6, 10],  
     'away_goals': [1, 2, 1, 0, 3],  
     'away_goals_against': [2, 1, 3, 1, 2],  
-    'injuries_away': [0, 1, 1, 0, 2],  # Nombre de joueurs blessés  
-    'result': [1, 1, 0, 1, 1]  # 1 = victoire à domicile, 0 = défaite  
+    'injuries_away': [0, 1, 1, 0, 2],  
+    'result': [1, 1, 0, 1, 1]  
 }  
 
 df = pd.DataFrame(data)  
 
 # Préparation des données  
-X = df.drop('result', axis=1)  # Exclure la colonne 'result' pour les variables  
+X = df.drop('result', axis=1)  
 y = df['result']  
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
 
@@ -78,7 +78,7 @@ key_passes_home = st.number_input("Passes Clés (Domicile)", value=st.session_st
 recent_form_home = st.number_input("Forme Récente (Domicile)", value=st.session_state.input_data.get('recent_form_home', 10))  
 home_goals = st.number_input("Buts Marqués à Domicile", value=st.session_state.input_data.get('home_goals', 2))  
 home_goals_against = st.number_input("Buts Encaissés à Domicile", value=st.session_state.input_data.get('home_goals_against', 1))  
-injuries_home = st.number_input("Blessures (Domicile)", value=st.session_state.input_data.get('injuries_home', 1))  # Nombre de joueurs blessés  
+injuries_home = st.number_input("Blessures (Domicile)", value=st.session_state.input_data.get('injuries_home', 1))  
 
 # Entrée des données de l'utilisateur pour l'équipe extérieure  
 st.header("Données de l'Équipe Extérieure")  
@@ -93,11 +93,7 @@ key_passes_away = st.number_input("Passes Clés (Extérieur)", value=st.session_
 recent_form_away = st.number_input("Forme Récente (Extérieur)", value=st.session_state.input_data.get('recent_form_away', 8))  
 away_goals = st.number_input("Buts Marqués à l'Extérieur", value=st.session_state.input_data.get('away_goals', 1))  
 away_goals_against = st.number_input("Buts Encaissés à l'Extérieur", value=st.session_state.input_data.get('away_goals_against', 1))  
-injuries_away = st.number_input("Blessures (Extérieur)", value=st.session_state.input_data.get('injuries_away', 0))  # Nombre de joueurs blessés  
-
-# Entrée des cotes (ne pas les inclure dans les variables du modèle)  
-odds_home = st.number_input("Cote (Domicile)", value=st.session_state.input_data.get('odds_home', 1.5))  
-odds_away = st.number_input("Cote (Extérieur)", value=st.session_state.input_data.get('odds_away', 1.5))  
+injuries_away = st.number_input("Blessures (Extérieur)", value=st.session_state.input_data.get('injuries_away', 0))  
 
 # Bouton de prédiction  
 if st.button("Prédire le Résultat"):  
@@ -116,21 +112,35 @@ if st.button("Prédire le Résultat"):
     # Méthode de Poisson pour prédire les buts  
     lambda_home = xG_home  
     lambda_away = xG_away  
-    prob_home_win = np.exp(-lambda_home) * (lambda_home ** 1) / math.factorial(1)  # Correction ici  
-    prob_away_win = np.exp(-lambda_away) * (lambda_away ** 1) / math.factorial(1)  # Correction ici  
 
-    # Comparaison des cotes  
-    value_bet_home = (1 / odds_home) < prob_home_win  
-    value_bet_away = (1 / odds_away) < prob_away_win  
+    # Calcul des probabilités de buts pour chaque équipe  
+    def poisson_prob(lam, k):  
+        return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
+
+    # Calcul des probabilités pour 0 à 5 buts  
+    max_goals = 5  
+    home_probs = [poisson_prob(lambda_home, i) for i in range(max_goals + 1)]  
+    away_probs = [poisson_prob(lambda_away, i) for i in range(max_goals + 1)]  
+
+    # Calcul des résultats possibles  
+    win_home = 0  
+    win_away = 0  
+    draw = 0  
+
+    for home_goals in range(max_goals + 1):  
+        for away_goals in range(max_goals + 1):  
+            if home_goals > away_goals:  
+                win_home += home_probs[home_goals] * away_probs[away_goals]  
+            elif home_goals < away_goals:  
+                win_away += home_probs[home_goals] * away_probs[away_goals]  
+            else:  
+                draw += home_probs[home_goals] * away_probs[away_goals]  
 
     # Affichage des résultats  
     st.write(f"Prédiction du résultat : {'Victoire Domicile' if prediction == 1 else 'Victoire Extérieure'}")  
-    st.write(f"Probabilité de victoire Domicile (prédite) : {prob_home_win:.2f}")  
-    st.write(f"Probabilité de victoire Domicile (implicite) : {1 / odds_home:.2f}")  
-    st.write(f"Probabilité de victoire Extérieure (prédite) : {prob_away_win:.2f}")  
-    st.write(f"Probabilité de victoire Extérieure (implicite) : {1 / odds_away:.2f}")  
-    st.write(f"Value Bet Domicile : {'Oui' if value_bet_home else 'Non'}")  
-    st.write(f"Value Bet Extérieur : {'Oui' if value_bet_away else 'Non'}")  
+    st.write(f"Probabilité de victoire Domicile : {win_home:.2%}")  
+    st.write(f"Probabilité de victoire Extérieure : {win_away:.2%}")  
+    st.write(f"Probabilité de match nul : {draw:.2%}")  
 
     # Sauvegarde des données dans l'état de session  
     st.session_state.input_data = {  
@@ -157,8 +167,5 @@ if st.button("Prédire le Résultat"):
         'recent_form_away': recent_form_away,  
         'away_goals': away_goals,  
         'away_goals_against': away_goals_against,  
-        'injuries_away': injuries_away,  
-        'odds_home': odds_home,  
-        'odds_away': odds_away  
-    }
-    
+        'injuries_away': injuries_away  
+    }  
