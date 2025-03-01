@@ -2,11 +2,11 @@ import streamlit as st
 import numpy as np  
 import pandas as pd  
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier  
-from sklearn.model_selection import train_test_split  
-from sklearn.metrics import accuracy_score  
+from sklearn.model_selection import train_test_split, cross_val_score  
+from sklearn.metrics import accuracy_score, classification_report  
 from xgboost import XGBClassifier  
 import math  
-import altair as alt  # Importation de la bibliothèque Altair  
+import altair as alt  
 
 # Exemple de données d'entraînement (remplacez ceci par vos données réelles)  
 data = {  
@@ -41,26 +41,48 @@ data = {
 
 df = pd.DataFrame(data)  
 
+# Fonction pour entraîner le modèle et calculer la précision  
+@st.cache  
+def train_models(X, y):  
+    model1 = RandomForestClassifier(n_estimators=100, random_state=42)  
+    model2 = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
+    
+    # Entraînement des modèles  
+    model1.fit(X, y)  
+    model2.fit(X, y)  
+    
+    # Prédictions  
+    y_pred_rf = model1.predict(X)  
+    y_pred_xgb = model2.predict(X)  
+    
+    # Calcul de la précision  
+    accuracy_rf = accuracy_score(y, y_pred_rf)  
+    accuracy_xgb = accuracy_score(y, y_pred_xgb)  
+    
+    # Validation croisée  
+    cv_scores_rf = cross_val_score(model1, X, y, cv=5)  
+    cv_scores_xgb = cross_val_score(model2, X, y, cv=5)  
+    
+    return model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb  
+
 # Préparation des données  
 X = df.drop('result', axis=1)  
 y = df['result']  
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-
-# Modèles  
-model1 = RandomForestClassifier(n_estimators=100, random_state=42)  
-model2 = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
-voting_clf = VotingClassifier(estimators=[('rf', model1), ('xgb', model2)], voting='hard')  
-
-# Entraînement du modèle  
-voting_clf.fit(X_train, y_train)  
-
-# Évaluation du modèle  
-y_pred = voting_clf.predict(X_test)  
-accuracy = accuracy_score(y_test, y_pred)  
+model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(X, y)  
 
 # Interface Streamlit  
 st.title("⚽ Prédiction de Match de Football")  
-st.write(f"📊 Précision du modèle : {accuracy:.2f}")  
+st.write(f"📊 Précision du Modèle Random Forest : {accuracy_rf:.2f}")  
+st.write(f"📊 Précision du Modèle XGBoost : {accuracy_xgb:.2f}")  
+
+# Affichage des résultats de validation croisée  
+st.write("📈 Validation Croisée - Random Forest :")  
+st.write(cv_scores_rf)  
+st.write(f"📊 Précision Moyenne : {np.mean(cv_scores_rf):.2f}")  
+
+st.write("📈 Validation Croisée - XGBoost :")  
+st.write(cv_scores_xgb)  
+st.write(f"📊 Précision Moyenne : {np.mean(cv_scores_xgb):.2f}")  
 
 # Gestion de l'état de session  
 if 'input_data' not in st.session_state:  
@@ -108,7 +130,8 @@ if st.button("🔮 Prédire le Résultat"):
                             injuries_away]])  
 
     # Prédiction  
-    prediction = voting_clf.predict(input_data)[0]  
+    prediction_rf = model1.predict(input_data)[0]  
+    prediction_xgb = model2.predict(input_data)[0]  
 
     # Méthode de Poisson pour prédire les buts  
     lambda_home = xG_home  
@@ -138,7 +161,8 @@ if st.button("🔮 Prédire le Résultat"):
                 draw += home_probs[home_goals] * away_probs[away_goals]  
 
     # Affichage des résultats  
-    st.write(f"🔮 Prédiction du résultat : {'Victoire Domicile' if prediction == 1 else 'Victoire Extérieure'}")  
+    st.write(f"🔮 Prédiction du résultat (Random Forest) : {'Victoire Domicile' if prediction_rf == 1 else 'Victoire Extérieure'}")  
+    st.write(f"🔮 Prédiction du résultat (XGBoost) : {'Victoire Domicile' if prediction_xgb == 1 else 'Victoire Extérieure'}")  
     st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
     st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
     st.write(f"🤝 Probabilité de match nul : {draw:.2%}")  
