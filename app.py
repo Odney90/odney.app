@@ -231,3 +231,5 @@ if st.button("🔮 Prédire le Résultat"):
             'xGA_away': xGA_away,  
             'interceptions_away': interceptions_away,  
             'defensive_duels_away': defensive_duels_away
+            }
+            
