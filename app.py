@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score  
 import math  
 import altair as alt  
-import requests  
 
 # Exemple de données d'entraînement (remplacez ceci par vos données réelles)  
 data = {  
@@ -65,6 +64,15 @@ def train_models(X, y):
     
     return model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb  
 
+# Vérification des données avant l'entraînement  
+def validate_data(X, y):  
+    if np.any(np.isnan(X)) or np.any(np.isnan(y)):  
+        raise ValueError("Les données d'entrée ou les cibles contiennent des valeurs manquantes.")  
+    if np.any(np.isinf(X)) or np.any(np.isinf(y)):  
+        raise ValueError("Les données d'entrée ou les cibles contiennent des valeurs infinies.")  
+    if X.shape[0] != y.shape[0]:  
+        raise ValueError("Le nombre de lignes dans X et y ne correspond pas.")  
+
 # Interface Streamlit  
 st.title("⚽ Prédiction de Match de Football")  
 
@@ -117,8 +125,11 @@ if st.button("🔮 Prédire le Résultat"):
     new_data = pd.DataFrame(input_data, columns=df.columns[:-1])  # Exclure la colonne 'result'  
     df = pd.concat([df, new_data], ignore_index=True)  
 
-    # Préparation des nouvelles cibles (vous pouvez ajuster cela selon vos besoins)  
+    # Préparation des nouvelles cibles  
     y = df['result']  # Assurez-vous que cela correspond à vos nouvelles données  
+
+    # Validation des données  
+    validate_data(df.drop('result', axis=1), y)  
 
     # Entraînement des modèles avec les nouvelles données  
     model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(df.drop('result', axis=1), y)  
