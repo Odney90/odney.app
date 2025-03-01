@@ -41,6 +41,10 @@ data = {
 
 df = pd.DataFrame(data)  
 
+# Vérification des valeurs manquantes dans le DataFrame initial  
+if df.isnull().values.any():  
+    st.error("Les données d'entraînement contiennent des valeurs manquantes.")  
+
 # Fonction pour entraîner le modèle et calculer la précision  
 def train_models(X, y):  
     model1 = RandomForestClassifier(n_estimators=100, random_state=42)  
@@ -67,7 +71,8 @@ def train_models(X, y):
 # Vérification des données avant l'entraînement  
 def validate_data(X, y):  
     if np.any(np.isnan(X)) or np.any(np.isnan(y)):  
-        raise ValueError("Les données d'entrée ou les cibles contiennent des valeurs manquantes.")  
+        missing_indices = np.where(np.isnan(X) | np.isnan(y))  
+        raise ValueError(f"Les données d'entrée ou les cibles contiennent des valeurs manquantes aux indices : {missing_indices}.")  
     if np.any(np.isinf(X)) or np.any(np.isinf(y)):  
         raise ValueError("Les données d'entrée ou les cibles contiennent des valeurs infinies.")  
     if X.shape[0] != y.shape[0]:  
@@ -121,97 +126,101 @@ if st.button("🔮 Prédire le Résultat"):
                             key_passes_away, recent_form_away, away_goals, away_goals_against,  
                             injuries_away]])  
 
-    # Ajout des nouvelles données à l'ensemble de données d'entraînement  
-    new_data = pd.DataFrame(input_data, columns=df.columns[:-1])  # Exclure la colonne 'result'  
-    df = pd.concat([df, new_data], ignore_index=True)  
+    # Vérification des valeurs manquantes dans les données saisies par l'utilisateur  
+    if np.any(np.isnan(input_data)):  
+        st.error("Les données saisies contiennent des valeurs manquantes.")  
+    else:  
+        # Ajout des nouvelles données à l'ensemble de données d'entraînement  
+        new_data = pd.DataFrame(input_data, columns=df.columns[:-1])  # Exclure la colonne 'result'  
+        df = pd.concat([df, new_data], ignore_index=True)  
 
-    # Préparation des nouvelles cibles  
-    y = df['result']  # Assurez-vous que cela correspond à vos nouvelles données  
+        # Préparation des nouvelles cibles  
+        y = df['result']  # Assurez-vous que cela correspond à vos nouvelles données  
 
-    # Validation des données  
-    validate_data(df.drop('result', axis=1), y)  
+        # Validation des données  
+        validate_data(df.drop('result', axis=1), y)  
 
-    # Entraînement des modèles avec les nouvelles données  
-    model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(df.drop('result', axis=1), y)  
+        # Entraînement des modèles avec les nouvelles données  
+        model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(df.drop('result', axis=1), y)  
 
-    # Prédiction  
-    prediction_rf = model1.predict(input_data)[0]  
-    prediction_xgb = model2.predict(input_data)[0]  
+        # Prédiction  
+        prediction_rf = model1.predict(input_data)[0]  
+        prediction_xgb = model2.predict(input_data)[0]  
 
-    # Méthode de Poisson pour prédire les buts  
-    lambda_home = xG_home  
-    lambda_away = xG_away  
+        # Méthode de Poisson pour prédire les buts  
+        lambda_home = xG_home  
+        lambda_away = xG_away  
 
-    # Calcul des probabilités de buts pour chaque équipe  
-    def poisson_prob(lam, k):  
-        return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
+        # Calcul des probabilités de buts pour chaque équipe  
+        def poisson_prob(lam, k):  
+            return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
 
-    # Calcul des probabilités pour 0 à 5 buts  
-    max_goals = 5  
-    home_probs = [poisson_prob(lambda_home, i) for i in range(max_goals + 1)]  
-    away_probs = [poisson_prob(lambda_away, i) for i in range(max_goals + 1)]  
+        # Calcul des probabilités pour 0 à 5 buts  
+        max_goals = 5  
+        home_probs = [poisson_prob(lambda_home, i) for i in range(max_goals + 1)]  
+        away_probs = [poisson_prob(lambda_away, i) for i in range(max_goals + 1)]  
 
-    # Calcul des résultats possibles  
-    win_home = 0  
-    win_away = 0  
-    draw = 0  
+        # Calcul des résultats possibles  
+        win_home = 0  
+        win_away = 0  
+        draw = 0  
 
-    for home_goals in range(max_goals + 1):  
-        for away_goals in range(max_goals + 1):  
-            if home_goals > away_goals:  
-                win_home += home_probs[home_goals] * away_probs[away_goals]  
-            elif home_goals < away_goals:  
-                win_away += home_probs[home_goals] * away_probs[away_goals]  
-            else:  
-                draw += home_probs[home_goals] * away_probs[away_goals]  
+        for home_goals in range(max_goals + 1):  
+            for away_goals in range(max_goals + 1):  
+                if home_goals > away_goals:  
+                    win_home += home_probs[home_goals] * away_probs[away_goals]  
+                elif home_goals < away_goals:  
+                    win_away += home_probs[home_goals] * away_probs[away_goals]  
+                else:  
+                    draw += home_probs[home_goals] * away_probs[away_goals]  
 
-    # Affichage des résultats  
-    st.write(f"🔮 Prédiction du résultat (Random Forest) : {'Victoire Domicile' if prediction_rf == 1 else 'Victoire Extérieure'}")  
-    st.write(f"🔮 Prédiction du résultat (XGBoost) : {'Victoire Domicile' if prediction_xgb == 1 else 'Victoire Extérieure'}")  
-    st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
-    st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
-    st.write(f"🤝 Probabilité de match nul : {draw:.2%}")  
+        # Affichage des résultats  
+        st.write(f"🔮 Prédiction du résultat (Random Forest) : {'Victoire Domicile' if prediction_rf == 1 else 'Victoire Extérieure'}")  
+        st.write(f"🔮 Prédiction du résultat (XGBoost) : {'Victoire Domicile' if prediction_xgb == 1 else 'Victoire Extérieure'}")  
+        st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
+        st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
+        st.write(f"🤝 Probabilité de match nul : {draw:.2%}")  
 
-    # Visualisation des résultats avec Altair  
-    results_df = pd.DataFrame({  
-        'Résultat': ['Victoire Domicile', 'Victoire Extérieure', 'Match Nul'],  
-        'Probabilité': [win_home, win_away, draw]  
-    })  
+        # Visualisation des résultats avec Altair  
+        results_df = pd.DataFrame({  
+            'Résultat': ['Victoire Domicile', 'Victoire Extérieure', 'Match Nul'],  
+            'Probabilité': [win_home, win_away, draw]  
+        })  
 
-    chart = alt.Chart(results_df).mark_bar().encode(  
-        x='Résultat',  
-        y='Probabilité',  
-        color='Résultat'  
-    ).properties(  
-        title='Probabilités des Résultats'  
-    )  
+        chart = alt.Chart(results_df).mark_bar().encode(  
+            x='Résultat',  
+            y='Probabilité',  
+            color='Résultat'  
+        ).properties(  
+            title='Probabilités des Résultats'  
+        )  
 
-    st.altair_chart(chart, use_container_width=True)  
+        st.altair_chart(chart, use_container_width=True)  
 
-    # Sauvegarde des données dans l'état de session  
-    st.session_state.input_data = {  
-        'xG_home': xG_home,  
-        'shots_on_target_home': shots_on_target_home,  
-        'touches_in_box_home': touches_in_box_home,  
-        'xGA_home': xGA_home,  
-        'interceptions_home': interceptions_home,  
-        'defensive_duels_home': defensive_duels_home,  
-        'possession_home': possession_home,  
-        'key_passes_home': key_passes_home,  
-        'recent_form_home': recent_form_home,  
-        'home_goals': home_goals,  
-        'home_goals_against': home_goals_against,  
-        'injuries_home': injuries_home,  
-        'xG_away': xG_away,  
-        'shots_on_target_away': shots_on_target_away,  
-        'touches_in_box_away': touches_in_box_away,  
-        'xGA_away': xGA_away,  
-        'interceptions_away': interceptions_away,  
-        'defensive_duels_away': defensive_duels_away,  
-        'possession_away': possession_away,  
-        'key_passes_away': key_passes_away,  
-        'recent_form_away': recent_form_away,  
-        'away_goals': away_goals,  
-        'away_goals_against': away_goals_against,  
-        'injuries_away': injuries_away  
-    }  
+        # Sauvegarde des données dans l'état de session  
+        st.session_state.input_data = {  
+            'xG_home': xG_home,  
+            'shots_on_target_home': shots_on_target_home,  
+            'touches_in_box_home': touches_in_box_home,  
+            'xGA_home': xGA_home,  
+            'interceptions_home': interceptions_home,  
+            'defensive_duels_home': defensive_duels_home,  
+            'possession_home': possession_home,  
+            'key_passes_home': key_passes_home,  
+            'recent_form_home': recent_form_home,  
+            'home_goals': home_goals,  
+            'home_goals_against': home_goals_against,  
+            'injuries_home': injuries_home,  
+            'xG_away': xG_away,  
+            'shots_on_target_away': shots_on_target_away,  
+            'touches_in_box_away': touches_in_box_away,  
+            'xGA_away': xGA_away,  
+            'interceptions_away': interceptions_away,  
+            'defensive_duels_away': defensive_duels_away,  
+            'possession_away': possession_away,  
+            'key_passes_away': key_passes_away,  
+            'recent_form_away': recent_form_away,  
+            'away_goals': away_goals,  
+            'away_goals_against': away_goals_against,  
+            'injuries_away': injuries_away  
+        }  
