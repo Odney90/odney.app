@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
 from xgboost import XGBClassifier  
+import math  # Importation de la bibliothèque math  
 
 # Exemple de données d'entraînement (remplacez ceci par vos données réelles)  
 data = {  
@@ -40,7 +41,7 @@ data = {
 df = pd.DataFrame(data)  
 
 # Préparation des données  
-X = df.drop('result', axis=1)  
+X = df.drop('result', axis=1)  # Exclure la colonne 'result' pour les variables  
 y = df['result']  
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
 
@@ -94,7 +95,7 @@ away_goals = st.number_input("Buts Marqués à l'Extérieur", value=st.session_s
 away_goals_against = st.number_input("Buts Encaissés à l'Extérieur", value=st.session_state.input_data.get('away_goals_against', 1))  
 injuries_away = st.number_input("Blessures (Extérieur)", value=st.session_state.input_data.get('injuries_away', 0))  # Nombre de joueurs blessés  
 
-# Entrée des cotes  
+# Entrée des cotes (ne pas les inclure dans les variables du modèle)  
 odds_home = st.number_input("Cote (Domicile)", value=st.session_state.input_data.get('odds_home', 1.5))  
 odds_away = st.number_input("Cote (Extérieur)", value=st.session_state.input_data.get('odds_away', 1.5))  
 
@@ -115,8 +116,8 @@ if st.button("Prédire le Résultat"):
     # Méthode de Poisson pour prédire les buts  
     lambda_home = xG_home  
     lambda_away = xG_away  
-    prob_home_win = np.exp(-lambda_home) * (lambda_home ** 1) / np.math.factorial(1)  
-    prob_away_win = np.exp(-lambda_away) * (lambda_away ** 1) / np.math.factorial(1)  
+    prob_home_win = np.exp(-lambda_home) * (lambda_home ** 1) / math.factorial(1)  # Correction ici  
+    prob_away_win = np.exp(-lambda_away) * (lambda_away ** 1) / math.factorial(1)  # Correction ici  
 
     # Comparaison des cotes  
     value_bet_home = (1 / odds_home) < prob_home_win  
