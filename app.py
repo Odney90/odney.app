@@ -1,10 +1,9 @@
 import streamlit as st  
 import numpy as np  
 import pandas as pd  
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier  
-from sklearn.model_selection import train_test_split, cross_val_score  
-from sklearn.metrics import accuracy_score, classification_report  
-from xgboost import XGBClassifier  
+from sklearn.ensemble import RandomForestClassifier, XGBClassifier  
+from sklearn.model_selection import cross_val_score  
+from sklearn.metrics import accuracy_score  
 import math  
 import altair as alt  
 
@@ -42,7 +41,6 @@ data = {
 df = pd.DataFrame(data)  
 
 # Fonction pour entraîner le modèle et calculer la précision  
-@st.cache_data  
 def train_models(X, y):  
     model1 = RandomForestClassifier(n_estimators=100, random_state=42)  
     model2 = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
@@ -65,24 +63,8 @@ def train_models(X, y):
     
     return model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb  
 
-# Préparation des données  
-X = df.drop('result', axis=1)  
-y = df['result']  
-model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(X, y)  
-
 # Interface Streamlit  
 st.title("⚽ Prédiction de Match de Football")  
-st.write(f"📊 Précision du Modèle Random Forest : {accuracy_rf:.2f}")  
-st.write(f"📊 Précision du Modèle XGBoost : {accuracy_xgb:.2f}")  
-
-# Affichage des résultats de validation croisée  
-st.write("📈 Validation Croisée - Random Forest :")  
-st.write(cv_scores_rf)  
-st.write(f"📊 Précision Moyenne : {np.mean(cv_scores_rf):.2f}")  
-
-st.write("📈 Validation Croisée - XGBoost :")  
-st.write(cv_scores_xgb)  
-st.write(f"📊 Précision Moyenne : {np.mean(cv_scores_xgb):.2f}")  
 
 # Gestion de l'état de session  
 if 'input_data' not in st.session_state:  
@@ -128,6 +110,16 @@ if st.button("🔮 Prédire le Résultat"):
                             xGA_away, interceptions_away, defensive_duels_away, possession_away,  
                             key_passes_away, recent_form_away, away_goals, away_goals_against,  
                             injuries_away]])  
+
+    # Ajout des nouvelles données à l'ensemble de données d'entraînement  
+    new_data = pd.DataFrame(input_data, columns=X.columns)  
+    df = pd.concat([df, new_data], ignore_index=True)  
+
+    # Préparation des nouvelles cibles (vous pouvez ajuster cela selon vos besoins)  
+    y = df['result']  # Assurez-vous que cela correspond à vos nouvelles données  
+
+    # Entraînement des modèles avec les nouvelles données  
+    model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(df.drop('result', axis=1), y)  
 
     # Prédiction  
     prediction_rf = model1.predict(input_data)[0]  
