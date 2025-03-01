@@ -211,4 +211,47 @@ if st.button("🔮 Prédire le Résultat"):
             'Probabilité': [win_home, win_away, draw]  
         })  
 
-        chart = alt.Chart(results_df).mark_bar
+        chart = alt.Chart(results_df).mark_bar()
+                # Visualisation des résultats avec Altair  
+        results_df = pd.DataFrame({  
+            'Résultat': ['Victoire Domicile', 'Victoire Extérieure', 'Match Nul'],  
+            'Probabilité': [win_home, win_away, draw]  
+        })  
+
+        chart = alt.Chart(results_df).mark_bar().encode(  
+            x='Résultat',  
+            y='Probabilité',  
+            color='Résultat'  
+        ).properties(  
+            title='Probabilités des Résultats'  
+        )  
+
+        st.altair_chart(chart, use_container_width=True)  
+
+        # Sauvegarde des données dans l'état de session  
+        st.session_state.input_data = {  
+            'xG_home': xG_home,  
+            'shots_on_target_home': shots_on_target_home,  
+            'touches_in_box_home': touches_in_box_home,  
+            'xGA_home': xGA_home,  
+            'interceptions_home': interceptions_home,  
+            'defensive_duels_home': defensive_duels_home,  
+            'possession_home': possession_home,  
+            'key_passes_home': key_passes_home,  
+            'recent_form_home': recent_form_home,  
+            'home_goals': home_goals,  
+            'home_goals_against': home_goals_against,  
+            'injuries_home': injuries_home,  
+            'xG_away': xG_away,  
+            'shots_on_target_away': shots_on_target_away,  
+            'touches_in_box_away': touches_in_box_away,  
+            'xGA_away': xGA_away,  
+            'interceptions_away': interceptions_away,  
+            'defensive_duels_away': defensive_duels_away,  
+            'possession_away': possession_away,  
+            'key_passes_away': key_passes_away,  
+            'recent_form_away': recent_form_away,  
+            'away_goals': away_goals,  
+            'away_goals_against': away_goals_against,  
+            'injuries_away': injuries_away  
+        }  
