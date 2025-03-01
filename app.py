@@ -42,7 +42,7 @@ data = {
 df = pd.DataFrame(data)  
 
 # Fonction pour entraîner le modèle et calculer la précision  
-@st.cache  
+@st.cache_data  
 def train_models(X, y):  
     model1 = RandomForestClassifier(n_estimators=100, random_state=42)  
     model2 = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
