@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score  
 from xgboost import XGBClassifier  
 import math  
+import altair as alt  # Importation de la bibliothèque Altair  
 
 # Exemple de données d'entraînement (remplacez ceci par vos données réelles)  
 data = {  
@@ -58,45 +59,45 @@ y_pred = voting_clf.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)  
 
 # Interface Streamlit  
-st.title("Prédiction de Match de Football")  
-st.write(f"Précision du modèle : {accuracy:.2f}")  
+st.title("⚽ Prédiction de Match de Football")  
+st.write(f"📊 Précision du modèle : {accuracy:.2f}")  
 
 # Gestion de l'état de session  
 if 'input_data' not in st.session_state:  
     st.session_state.input_data = {}  
 
 # Entrée des données de l'utilisateur pour l'équipe domicile  
-st.header("Données de l'Équipe Domicile")  
-xG_home = st.number_input("xG (Domicile)", value=st.session_state.input_data.get('xG_home', 1.5))  
-shots_on_target_home = st.number_input("Tirs Cadrés (Domicile)", value=st.session_state.input_data.get('shots_on_target_home', 5))  
-touches_in_box_home = st.number_input("Balles Touchées dans la Surface Adverse (Domicile)", value=st.session_state.input_data.get('touches_in_box_home', 15))  
-xGA_home = st.number_input("xGA (Domicile)", value=st.session_state.input_data.get('xGA_home', 1.0))  
-interceptions_home = st.number_input("Interceptions (Domicile)", value=st.session_state.input_data.get('interceptions_home', 10))  
-defensive_duels_home = st.number_input("Duels Défensifs Gagnés (Domicile)", value=st.session_state.input_data.get('defensive_duels_home', 20))  
-possession_home = st.number_input("Possession (%) (Domicile)", value=st.session_state.input_data.get('possession_home', 55))  
-key_passes_home = st.number_input("Passes Clés (Domicile)", value=st.session_state.input_data.get('key_passes_home', 3))  
-recent_form_home = st.number_input("Forme Récente (Domicile)", value=st.session_state.input_data.get('recent_form_home', 10))  
-home_goals = st.number_input("Buts Marqués à Domicile", value=st.session_state.input_data.get('home_goals', 2))  
-home_goals_against = st.number_input("Buts Encaissés à Domicile", value=st.session_state.input_data.get('home_goals_against', 1))  
-injuries_home = st.number_input("Blessures (Domicile)", value=st.session_state.input_data.get('injuries_home', 1))  
+st.header("🏠 Données de l'Équipe Domicile")  
+xG_home = st.number_input("xG (Domicile) 🏆", value=st.session_state.input_data.get('xG_home', 1.5))  
+shots_on_target_home = st.number_input("Tirs Cadrés (Domicile) 🎯", value=st.session_state.input_data.get('shots_on_target_home', 5))  
+touches_in_box_home = st.number_input("Balles Touchées dans la Surface Adverse (Domicile) ⚽", value=st.session_state.input_data.get('touches_in_box_home', 15))  
+xGA_home = st.number_input("xGA (Domicile) 🚫", value=st.session_state.input_data.get('xGA_home', 1.0))  
+interceptions_home = st.number_input("Interceptions (Domicile) 🛡️", value=st.session_state.input_data.get('interceptions_home', 10))  
+defensive_duels_home = st.number_input("Duels Défensifs Gagnés (Domicile) 💪", value=st.session_state.input_data.get('defensive_duels_home', 20))  
+possession_home = st.number_input("Possession (%) (Domicile) 📈", value=st.session_state.input_data.get('possession_home', 55))  
+key_passes_home = st.number_input("Passes Clés (Domicile) 🔑", value=st.session_state.input_data.get('key_passes_home', 3))  
+recent_form_home = st.number_input("Forme Récente (Domicile) 📅", value=st.session_state.input_data.get('recent_form_home', 10))  
+home_goals = st.number_input("Buts Marqués à Domicile ⚽", value=st.session_state.input_data.get('home_goals', 2))  
+home_goals_against = st.number_input("Buts Encaissés à Domicile 🚫", value=st.session_state.input_data.get('home_goals_against', 1))  
+injuries_home = st.number_input("Blessures (Domicile) 🚑", value=st.session_state.input_data.get('injuries_home', 1))  
 
 # Entrée des données de l'utilisateur pour l'équipe extérieure  
-st.header("Données de l'Équipe Extérieure")  
-xG_away = st.number_input("xG (Extérieur)", value=st.session_state.input_data.get('xG_away', 1.0))  
-shots_on_target_away = st.number_input("Tirs Cadrés (Extérieur)", value=st.session_state.input_data.get('shots_on_target_away', 3))  
-touches_in_box_away = st.number_input("Balles Touchées dans la Surface Adverse (Extérieur)", value=st.session_state.input_data.get('touches_in_box_away', 10))  
-xGA_away = st.number_input("xGA (Extérieur)", value=st.session_state.input_data.get('xGA_away', 1.5))  
-interceptions_away = st.number_input("Interceptions (Extérieur)", value=st.session_state.input_data.get('interceptions_away', 8))  
-defensive_duels_away = st.number_input("Duels Défensifs Gagnés (Extérieur)", value=st.session_state.input_data.get('defensive_duels_away', 15))  
-possession_away = st.number_input("Possession (%) (Extérieur)", value=st.session_state.input_data.get('possession_away', 45))  
-key_passes_away = st.number_input("Passes Clés (Extérieur)", value=st.session_state.input_data.get('key_passes_away', 2))  
-recent_form_away = st.number_input("Forme Récente (Extérieur)", value=st.session_state.input_data.get('recent_form_away', 8))  
-away_goals = st.number_input("Buts Marqués à l'Extérieur", value=st.session_state.input_data.get('away_goals', 1))  
-away_goals_against = st.number_input("Buts Encaissés à l'Extérieur", value=st.session_state.input_data.get('away_goals_against', 1))  
-injuries_away = st.number_input("Blessures (Extérieur)", value=st.session_state.input_data.get('injuries_away', 0))  
+st.header("🏟️ Données de l'Équipe Extérieure")  
+xG_away = st.number_input("xG (Extérieur) 🏆", value=st.session_state.input_data.get('xG_away', 1.0))  
+shots_on_target_away = st.number_input("Tirs Cadrés (Extérieur) 🎯", value=st.session_state.input_data.get('shots_on_target_away', 3))  
+touches_in_box_away = st.number_input("Balles Touchées dans la Surface Adverse (Extérieur) ⚽", value=st.session_state.input_data.get('touches_in_box_away', 10))  
+xGA_away = st.number_input("xGA (Extérieur) 🚫", value=st.session_state.input_data.get('xGA_away', 1.5))  
+interceptions_away = st.number_input("Interceptions (Extérieur) 🛡️", value=st.session_state.input_data.get('interceptions_away', 8))  
+defensive_duels_away = st.number_input("Duels Défensifs Gagnés (Extérieur) 💪", value=st.session_state.input_data.get('defensive_duels_away', 15))  
+possession_away = st.number_input("Possession (%) (Extérieur) 📈", value=st.session_state.input_data.get('possession_away', 45))  
+key_passes_away = st.number_input("Passes Clés (Extérieur) 🔑", value=st.session_state.input_data.get('key_passes_away', 2))  
+recent_form_away = st.number_input("Forme Récente (Extérieur) 📅", value=st.session_state.input_data.get('recent_form_away', 8))  
+away_goals = st.number_input("Buts Marqués à l'Extérieur ⚽", value=st.session_state.input_data.get('away_goals', 1))  
+away_goals_against = st.number_input("Buts Encaissés à l'Extérieur 🚫", value=st.session_state.input_data.get('away_goals_against', 1))  
+injuries_away = st.number_input("Blessures (Extérieur) 🚑", value=st.session_state.input_data.get('injuries_away', 0))  
 
 # Bouton de prédiction  
-if st.button("Prédire le Résultat"):  
+if st.button("🔮 Prédire le Résultat"):  
     # Préparation des données pour la prédiction  
     input_data = np.array([[xG_home, shots_on_target_home, touches_in_box_home, xGA_home,  
                             interceptions_home, defensive_duels_home, possession_home,  
@@ -137,10 +138,26 @@ if st.button("Prédire le Résultat"):
                 draw += home_probs[home_goals] * away_probs[away_goals]  
 
     # Affichage des résultats  
-    st.write(f"Prédiction du résultat : {'Victoire Domicile' if prediction == 1 else 'Victoire Extérieure'}")  
-    st.write(f"Probabilité de victoire Domicile : {win_home:.2%}")  
-    st.write(f"Probabilité de victoire Extérieure : {win_away:.2%}")  
-    st.write(f"Probabilité de match nul : {draw:.2%}")  
+    st.write(f"🔮 Prédiction du résultat : {'Victoire Domicile' if prediction == 1 else 'Victoire Extérieure'}")  
+    st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
+    st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
+    st.write(f"🤝 Probabilité de match nul : {draw:.2%}")  
+
+    # Visualisation des résultats avec Altair  
+    results_df = pd.DataFrame({  
+        'Résultat': ['Victoire Domicile', 'Victoire Extérieure', 'Match Nul'],  
+        'Probabilité': [win_home, win_away, draw]  
+    })  
+
+    chart = alt.Chart(results_df).mark_bar().encode(  
+        x='Résultat',  
+        y='Probabilité',  
+        color='Résultat'  
+    ).properties(  
+        title='Probabilités des Résultats'  
+    )  
+
+    st.altair_chart(chart, use_container_width=True)  
 
     # Sauvegarde des données dans l'état de session  
     st.session_state.input_data = {  
