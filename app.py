@@ -8,62 +8,45 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score  
 import math  
 
-# Exemple de données d'entraînement  
+# Exemple de données d'entraînement ajustées  
 data = {  
-    'xG_home': [1.5, 2.0, 1.2, 1.8, 2.5],  
-    'shots_on_target_home': [5, 6, 4, 7, 8],  
-    'touches_in_box_home': [15, 20, 10, 18, 25],  
-    'xGA_home': [1.0, 1.5, 1.3, 1.2, 2.0],  
-    'interceptions_home': [10, 12, 8, 9, 15],  
-    'defensive_duels_home': [20, 25, 15, 18, 30],  
-    'possession_home': [55, 60, 50, 58, 62],  
-    'key_passes_home': [3, 4, 2, 5, 6],  
-    'recent_form_home': [10, 12, 8, 9, 15],  
-    'home_goals': [2, 3, 1, 2, 4],  
-    'home_goals_against': [1, 2, 1, 0, 3],  
-    'injuries_home': [1, 0, 2, 1, 0],  
-    'xG_away': [1.0, 1.5, 1.3, 1.2, 2.0],  
-    'shots_on_target_away': [3, 4, 5, 2, 6],  
-    'touches_in_box_away': [10, 15, 12, 8, 20],  
-    'xGA_away': [1.2, 1.0, 1.5, 1.3, 2.1],  
-    'interceptions_away': [8, 10, 9, 7, 12],  
-    'defensive_duels_away': [15, 20, 18, 12, 25],  
-    'possession_away': [45, 40, 50, 42, 38],  
-    'key_passes_away': [2, 3, 4, 1, 5],  
-    'recent_form_away': [8, 7, 9, 6, 10],  
-    'away_goals': [1, 2, 1, 0, 3],  
-    'away_goals_against': [2, 1, 3, 1, 2],  
-    'injuries_away': [0, 1, 1, 0, 2],  
-    'result': [1, 1, 0, 1, 1]  # 1 = Victoire Domicile, 0 = Victoire Extérieure  
+    'xG_domicile': [1.5, 2.0, 1.2, 1.8, 2.5],  
+    'tirs_cadres_domicile': [5, 6, 4, 7, 8],  
+    'touches_surface_domicile': [15, 20, 10, 18, 25],  
+    'xGA_domicile': [1.0, 1.5, 1.3, 1.2, 2.0],  
+    'interceptions_domicile': [10, 12, 8, 9, 15],  
+    'duels_defensifs_domicile': [20, 25, 15, 18, 30],  
+    'possession_domicile': [55, 60, 50, 58, 62],  
+    'passes_cles_domicile': [3, 4, 2, 5, 6],  
+    'forme_recente_domicile': [10, 12, 8, 9, 15],  
+    'buts_domicile': [2, 3, 1, 2, 4],  
+    'buts_encais_domicile': [1, 2, 1, 0, 3],  
+    'blessures_domicile': [1, 0, 2, 1, 0],  
+    'xG_exterieur': [1.0, 1.5, 1.3, 1.2, 2.0],  
+    'tirs_cadres_exterieur': [3, 4, 5, 2, 6],  
+    'touches_surface_exterieur': [10, 15, 12, 8, 20],  
+    'xGA_exterieur': [1.2, 1.0, 1.5, 1.3, 2.1],  
+    'interceptions_exterieur': [8, 10, 9, 7, 12],  
+    'duels_defensifs_exterieur': [15, 20, 18, 12, 25],  
+    'possession_exterieur': [45, 40, 50, 42, 38],  
+    'passes_cles_exterieur': [2, 3, 4, 1, 5],  
+    'forme_recente_exterieur': [8, 7, 9, 6, 10],  
+    'buts_exterieur': [1, 2, 1, 0, 3],  
+    'buts_encais_exterieur': [2, 1, 3, 1, 2],  
+    'blessures_exterieur': [0, 1, 1, 0, 2],  
+    'resultat': [1, 1, 0, 1, 1]  # 1 = Victoire Domicile, 0 = Victoire Extérieure  
 }  
 
 df = pd.DataFrame(data)  
-
-# Séparation en train/test  
-X = df.drop('result', axis=1)  
-y = df['result']  
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
-
-# Entraînement des modèles  
-rf_model = RandomForestClassifier(n_estimators=100, random_state=42)  
-rf_model.fit(X_train, y_train)  
-xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
-xgb_model.fit(X_train, y_train)  
-
-# Précision des modèles  
-y_pred_rf = rf_model.predict(X_test)  
-y_pred_xgb = xgb_model.predict(X_test)  
-accuracy_rf = accuracy_score(y_test, y_pred_rf)  
-accuracy_xgb = accuracy_score(y_test, y_pred_xgb)  
 
 # Fonction pour calculer les probabilités de buts avec la méthode de Poisson  
 def poisson_prob(lam, k):  
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
 
 # Fonction pour prédire les buts  
-def predict_goals(xG_home, xG_away, max_goals=5):  
-    home_probs = [poisson_prob(xG_home, i) for i in range(max_goals + 1)]  
-    away_probs = [poisson_prob(xG_away, i) for i in range(max_goals + 1)]  
+def predict_goals(xG_domicile, xG_exterieur, max_goals=5):  
+    home_probs = [poisson_prob(xG_domicile, i) for i in range(max_goals + 1)]  
+    away_probs = [poisson_prob(xG_exterieur, i) for i in range(max_goals + 1)]  
     
     win_home = 0  
     win_away = 0  
@@ -82,13 +65,28 @@ def predict_goals(xG_home, xG_away, max_goals=5):
 
 # Interface Streamlit  
 st.title("⚽ Prédiction de Match de Football")  
-st.subheader(f"🎯 Précision des Modèles: RandomForest {accuracy_rf*100:.2f}%, XGBoost {accuracy_xgb*100:.2f}%")  
+
+# Initialisation de session_state  
+if 'model_trained' not in st.session_state:  
+    st.session_state.model_trained = False  
+    st.session_state.rf_model = None  
+    st.session_state.xgb_model = None  
 
 # Entrée des données utilisateur  
 st.sidebar.header("🔢 Entrer les données du match")  
 user_input = {}  
-for column in X.columns:  
-    user_input[column] = st.sidebar.number_input(column, value=float(df[column].mean()))  
+for column in df.columns[:-1]:  # Exclure la colonne 'resultat'  
+    user_input[column] = st.sidebar.number_input(column.replace('_', ' ').capitalize(), value=float(df[column].mean()))  
+
+# Entraînement des modèles si ce n'est pas déjà fait  
+if not st.session_state.model_trained:  
+    X = df.drop('resultat', axis=1)  
+    y = df['resultat']  
+    st.session_state.rf_model = RandomForestClassifier(n_estimators=100, random_state=42)  
+    st.session_state.rf_model.fit(X, y)  
+    st.session_state.xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
+    st.session_state.xgb_model.fit(X, y)  
+    st.session_state.model_trained = True  
 
 # Bouton de prédiction  
 if st.sidebar.button("🔮 Prédire le Résultat"):  
@@ -98,8 +96,8 @@ if st.sidebar.button("🔮 Prédire le Résultat"):
     if np.any(np.isnan(input_data)) or np.any(np.isinf(input_data)):  
         st.error("Les données saisies contiennent des valeurs manquantes ou infinies.")  
     else:  
-        proba_rf = rf_model.predict_proba(input_data)[0][1]  
-        proba_xgb = xgb_model.predict_proba(input_data)[0][1]  
+        proba_rf = st.session_state.rf_model.predict_proba(input_data)[0][1]  
+        proba_xgb = st.session_state.xgb_model.predict_proba(input_data)[0][1]  
 
         result_rf = "Victoire Domicile" if proba_rf > 0.5 else "Victoire Extérieure"  
         result_xgb = "Victoire Domicile" if proba_xgb > 0.5 else "Victoire Extérieure"  
@@ -108,9 +106,9 @@ if st.sidebar.button("🔮 Prédire le Résultat"):
         st.write(f"🔮 Résultat (XGBoost): {result_xgb} avec {proba_xgb*100:.2f}% de confiance")  
 
         # Prédiction des buts  
-        xG_home = user_input['xG_home']  
-        xG_away = user_input['xG_away']  
-        win_home, win_away, draw = predict_goals(xG_home, xG_away)  
+        xG_domicile = user_input['xG_domicile']  
+        xG_exterieur = user_input['xG_exterieur']  
+        win_home, win_away, draw = predict_goals(xG_domicile, xG_exterieur)  
 
         st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
         st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
