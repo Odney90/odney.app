@@ -160,7 +160,5 @@ if st.button("Prédire le Résultat"):
         'injuries_away': injuries_away,  
         'odds_home': odds_home,  
         'odds_away': odds_away  
-    }  
-
-if __name__ == '__main__':  
-    st.run()  
+    }
+    
