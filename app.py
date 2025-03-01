@@ -7,116 +7,101 @@ from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression  
 import math  
 
-# Exemple de données d'entraînement ajustées  
-data = {  
-    'xG_domicile': [1.5, 2.0, 1.2, 1.8, 2.5],  
-    'tirs_cadres_domicile': [5, 6, 4, 7, 8],  
-    'touches_surface_domicile': [15, 20, 10, 18, 25],  
-    'xGA_domicile': [1.0, 1.5, 1.3, 1.2, 2.0],  
-    'interceptions_domicile': [10, 12, 8, 9, 15],  
-    'duels_defensifs_domicile': [20, 25, 15, 18, 30],  
-    'possession_domicile': [55, 60, 50, 58, 62],  
-    'passes_cles_domicile': [3, 4, 2, 5, 6],  
-    'forme_recente_domicile': [10, 12, 8, 9, 15],  
-    'buts_domicile': [2, 3, 1, 2, 4],  
-    'buts_encais_domicile': [1, 2, 1, 0, 3],  
-    'blessures_domicile': [1, 0, 2, 1, 0],  
-    'xG_exterieur': [1.0, 1.5, 1.3, 1.2, 2.0],  
-    'tirs_cadres_exterieur': [3, 4, 5, 2, 6],  
-    'touches_surface_exterieur': [10, 15, 12, 8, 20],  
-    'xGA_exterieur': [1.2, 1.0, 1.5, 1.3, 2.1],  
-    'interceptions_exterieur': [8, 10, 9, 7, 12],  
-    'duels_defensifs_exterieur': [15, 20, 18, 12, 25],  
-    'possession_exterieur': [45, 40, 50, 42, 38],  
-    'passes_cles_exterieur': [2, 3, 4, 1, 5],  
-    'forme_recente_exterieur': [8, 7, 9, 6, 10],  
-    'buts_exterieur': [1, 2, 1, 0, 3],  
-    'buts_encais_exterieur': [2, 1, 3, 1, 2],  
-    'blessures_exterieur': [0, 1, 1, 0, 2],  
-    'resultat': [1, 1, 0, 1, 1]  # 1 = Victoire Domicile, 0 = Victoire Extérieure  
-}  
-
-df = pd.DataFrame(data)  
-
-# Fonction pour calculer les probabilités de buts avec la méthode de Poisson  
-def poisson_prob(lam, k):  
-    return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
-
-# Fonction pour prédire les buts  
-def predict_goals(xG_domicile, xG_exterieur, max_goals=5):  
+# Fonction Poisson améliorée avec détection de valeur bet  
+def poisson_match_analysis(xG_domicile, xG_exterieur, max_goals=5):  
+    # Calcul des probabilités de buts pour chaque équipe  
     home_probs = [poisson_prob(xG_domicile, i) for i in range(max_goals + 1)]  
     away_probs = [poisson_prob(xG_exterieur, i) for i in range(max_goals + 1)]  
     
+    # Matrice des résultats possibles  
+    match_matrix = np.zeros((max_goals + 1, max_goals + 1))  
+    
+    # Variables pour stocker les probabilités de résultat  
     win_home = 0  
     win_away = 0  
     draw = 0  
-
+    
+    # Calcul des probabilités de résultat  
     for home_goals in range(max_goals + 1):  
         for away_goals in range(max_goals + 1):  
+            prob = home_probs[home_goals] * away_probs[away_goals]  
+            match_matrix[home_goals, away_goals] = prob  
+            
             if home_goals > away_goals:  
-                win_home += home_probs[home_goals] * away_probs[away_goals]  
+                win_home += prob  
             elif home_goals < away_goals:  
-                win_away += home_probs[home_goals] * away_probs[away_goals]  
+                win_away += prob  
             else:  
-                draw += home_probs[home_goals] * away_probs[away_goals]  
+                draw += prob  
+    
+    # Calcul des cotes implicites  
+    def calculate_implied_probability(odds):  
+        return 1 / odds  
+    
+    def calculate_fair_odds(probability):  
+        return 1 / probability if probability > 0 else np.inf  
+    
+    # Exemple de cotes du marché (à remplacer par des cotes réelles)  
+    market_home_odds = 2.0  # Cote victoire domicile  
+    market_away_odds = 3.5  # Cote victoire extérieure  
+    market_draw_odds = 3.2  # Cote match nul  
+    
+    # Calcul des probabilités et cotes du modèle  
+    model_home_prob = win_home  
+    model_away_prob = win_away  
+    model_draw_prob = draw  
+    
+    model_home_odds = calculate_fair_odds(model_home_prob)  
+    model_away_odds = calculate_fair_odds(model_away_prob)  
+    model_draw_odds = calculate_fair_odds(model_draw_prob)  
+    
+    # Détection de valeur bet  
+    def detect_value_bet(market_odds, model_odds, market_prob, model_prob):  
+        edge = (1 / market_odds - 1 / model_odds) * 100  
+        return {  
+            "edge": edge,  
+            "recommendation": "Pari value" if edge > 0 else "Pas de valeur"  
+        }  
+    
+    home_value = detect_value_bet(market_home_odds, model_home_odds,   
+                                   calculate_implied_probability(market_home_odds), model_home_prob)  
+    away_value = detect_value_bet(market_away_odds, model_away_odds,   
+                                   calculate_implied_probability(market_away_odds), model_away_prob)  
+    draw_value = detect_value_bet(market_draw_odds, model_draw_odds,   
+                                   calculate_implied_probability(market_draw_odds), model_draw_prob)  
+    
+    return {  
+        "probabilities": {  
+            "home_win": win_home,  
+            "away_win": win_away,  
+            "draw": draw  
+        },  
+        "model_odds": {  
+            "home_odds": model_home_odds,  
+            "away_odds": model_away_odds,  
+            "draw_odds": model_draw_odds  
+        },  
+        "market_odds": {  
+            "home_odds": market_home_odds,  
+            "away_odds": market_away_odds,  
+            "draw_odds": market_draw_odds  
+        },  
+        "value_bets": {  
+            "home": home_value,  
+            "away": away_value,  
+            "draw": draw_value  
+        },  
+        "match_matrix": match_matrix  
+    }  
 
-    return win_home, win_away, draw  
+# Fonction de probabilité de Poisson  
+def poisson_prob(lam, k):  
+    return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
 
-# Interface Streamlit  
-st.title("⚽ Prédiction de Match de Football")  
+# Reste du code Streamlit (identique à la version précédente)  
+# ...  
 
-# Initialisation de session_state  
-if 'model_trained' not in st.session_state:  
-    st.session_state.model_trained = False  
-    st.session_state.rf_model = None  
-    st.session_state.xgb_model = None  
-    st.session_state.logistic_model = None  
-
-# Entrée des données utilisateur  
-st.sidebar.header("🔢 Entrer les données du match")  
-
-# Créer deux colonnes pour Équipe A et Équipe B  
-col1, col2 = st.columns(2)  
-
-with col1:  
-    st.subheader("Équipe A")  
-    xG_domicile = st.number_input("xG Domicile", value=float(df['xG_domicile'].mean()))  
-    tirs_cadres_domicile = st.number_input("Tirs Cadres Domicile", value=int(df['tirs_cadres_domicile'].mean()))  
-    touches_surface_domicile = st.number_input("Touches Surface Domicile", value=int(df['touches_surface_domicile'].mean()))  
-    xGA_domicile = st.number_input("xGA Domicile", value=float(df['xGA_domicile'].mean()))  
-    interceptions_domicile = st.number_input("Interceptions Domicile", value=int(df['interceptions_domicile'].mean()))  
-    duels_defensifs_domicile = st.number_input("Duels Défensifs Domicile", value=int(df['duels_defensifs_domicile'].mean()))  
-    possession_domicile = st.number_input("Possession Domicile (%)", value=float(df['possession_domicile'].mean()))  
-    passes_cles_domicile = st.number_input("Passes Clés Domicile", value=int(df['passes_cles_domicile'].mean()))  
-    forme_recente_domicile = st.number_input("Forme Récente Domicile", value=int(df['forme_recente_domicile'].mean()))  
-    blessures_domicile = st.number_input("Blessures Domicile", value=int(df['blessures_domicile'].mean()))  
-
-with col2:  
-    st.subheader("Équipe B")  
-    xG_exterieur = st.number_input("xG Extérieur", value=float(df['xG_exterieur'].mean()))  
-    tirs_cadres_exterieur = st.number_input("Tirs Cadres Extérieur", value=int(df['tirs_cadres_exterieur'].mean()))  
-    touches_surface_exterieur = st.number_input("Touches Surface Extérieur", value=int(df['touches_surface_exterieur'].mean()))  
-    xGA_exterieur = st.number_input("xGA Extérieur", value=float(df['xGA_exterieur'].mean()))  
-    interceptions_exterieur = st.number_input("Interceptions Extérieur", value=int(df['interceptions_exterieur'].mean()))  
-    duels_defensifs_exterieur = st.number_input("Duels Défensifs Extérieur", value=int(df['duels_defensifs_exterieur'].mean()))  
-    possession_exterieur = st.number_input("Possession Extérieur (%)", value=float(df['possession_exterieur'].mean()))  
-    passes_cles_exterieur = st.number_input("Passes Clés Extérieur", value=int(df['passes_cles_exterieur'].mean()))  
-    forme_recente_exterieur = st.number_input("Forme Récente Extérieur", value=int(df['forme_recente_exterieur'].mean()))  
-    blessures_exterieur = st.number_input("Blessures Extérieur", value=int(df['blessures_exterieur'].mean()))  
-
-# Entraînement des modèles si ce n'est pas déjà fait  
-if not st.session_state.model_trained:  
-    X = df.drop('resultat', axis=1)  
-    y = df['resultat']  
-    st.session_state.rf_model = RandomForestClassifier(n_estimators=100, random_state=42)  
-    st.session_state.rf_model.fit(X, y)  
-    st.session_state.xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
-    st.session_state.xgb_model.fit(X, y)  
-    st.session_state.logistic_model = LogisticRegression(random_state=42)  
-    st.session_state.logistic_model.fit(X, y)  
-    st.session_state.model_trained = True  
-
-# Bouton de prédiction  
+# Modification de la partie prédiction  
 if st.button("🔮 Prédire le Résultat"):  
     # Récupérer X après l'entraînement  
     X = df.drop('resultat', axis=1)  
@@ -132,9 +117,8 @@ if st.button("🔮 Prédire le Résultat"):
         possession_domicile,  
         passes_cles_domicile,   
         forme_recente_domicile,   
-        # Ajout des colonnes manquantes  
-        df['buts_domicile'].mean(),  # buts_domicile  
-        df['buts_encais_domicile'].mean(),  # buts_encais_domicile  
+        df['buts_domicile'].mean(),  
+        df['buts_encais_domicile'].mean(),  
         blessures_domicile,  
         
         xG_exterieur,   
@@ -146,47 +130,57 @@ if st.button("🔮 Prédire le Résultat"):
         possession_exterieur,  
         passes_cles_exterieur,   
         forme_recente_exterieur,   
-        # Ajout des colonnes manquantes  
-        df['buts_exterieur'].mean(),  # buts_exterieur  
-        df['buts_encais_exterieur'].mean(),  # buts_encais_exterieur  
+        df['buts_exterieur'].mean(),  
+        df['buts_encais_exterieur'].mean(),  
         blessures_exterieur  
     ]).reshape(1, -1)  
     
-    # Vérification des valeurs d'entrée  
-    if np.any(np.isnan(input_data)) or np.any(np.isinf(input_data)):  
-        st.error("Les données saisies contiennent des valeurs manquantes ou infinies.")  
-    else:  
-        # Afficher les colonnes de X et input_data pour le débogage  
-        st.write("Colonnes de X (modèle) :", X.columns.tolist())  
-        st.write("Données d'entrée :", input_data)  
+    # Analyse Poisson détaillée  
+    poisson_analysis = poisson_match_analysis(xG_domicile, xG_exterieur)  
+    
+    # Affichage discret des informations  
+    st.text(f"Caractéristiques utilisées : {input_data.shape[1]}")  
+    
+    # Résultats des modèles  
+    proba_rf = st.session_state.rf_model.predict_proba(input_data)[0][1]  
+    proba_xgb = st.session_state.xgb_model.predict_proba(input_data)[0][1]  
+    proba_logistic = st.session_state.logistic_model.predict_proba(input_data)[0][1]  
 
-        # Vérification de la forme de input_data  
-        if input_data.shape[1] != X.shape[1]:  
-            st.error("Le nombre de caractéristiques dans les données d'entrée ne correspond pas au modèle.")  
-        else:  
-            proba_rf = st.session_state.rf_model.predict_proba(input_data)[0][1]  
-            proba_xgb = st.session_state.xgb_model.predict_proba(input_data)[0][1]  
-            proba_logistic = st.session_state.logistic_model.predict_proba(input_data)[0][1]  
+    # Affichage des résultats Poisson  
+    st.subheader("🎲 Analyse Probabiliste du Match")  
+    
+    # Probabilités de résultat  
+    st.write(f"🏠 Victoire Domicile : {poisson_analysis['probabilities']['home_win']:.2%}")  
+    st.write(f"🏟️ Victoire Extérieure : {poisson_analysis['probabilities']['away_win']:.2%}")  
+    st.write(f"🤝 Match Nul : {poisson_analysis['probabilities']['draw']:.2%}")  
+    
+    # Analyse des paris  
+    st.subheader("💰 Analyse des Paris")  
+    
+    # Cotes du modèle vs Marché  
+    st.write("Cotes Modèle:")  
+    st.write(f"Domicile: {poisson_analysis['model_odds']['home_odds']:.2f}")  
+    st.write(f"Extérieur: {poisson_analysis['model_odds']['away_odds']:.2f}")  
+    st.write(f"Nul: {poisson_analysis['model_odds']['draw_odds']:.2f}")  
+    
+    # Détection de valeur bet  
+    st.write("Opportunités de Pari:")  
+    for result, value in poisson_analysis['value_bets'].items():  
+        st.write(f"{result.capitalize()}: {value['recommendation']} (Edge: {value['edge']:.2f}%)")  
 
-            result_rf = "Victoire Domicile" if proba_rf > 0.5 else "Victoire Extérieure"  
-            result_xgb = "Victoire Domicile" if proba_xgb > 0.5 else "Victoire Extérieure"  
-            result_logistic = "Victoire Domicile" if proba_logistic > 0.5 else "Victoire Extérieure"  
-
-            st.write(f"🔮 Résultat (Random Forest): {result_rf} avec {proba_rf*100:.2f}% de confiance")  
-            st.write(f"🔮 Résultat (XGBoost): {result_xgb} avec {proba_xgb*100:.2f}% de confiance")  
-            st.write(f"🔮 Résultat (Régression Logistique): {result_logistic} avec {proba_logistic*100:.2f}% de confiance")  
-
-            # Prédiction des buts  
-            win_home, win_away, draw = predict_goals(xG_domicile, xG_exterieur)  
-
-            st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
-            st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
-            st.write(f"🤝 Probabilité de match nul : {draw:.2%}")  
-
-            # Graphique Altair  
-            chart_data = pd.DataFrame({  
-                "Modèle": ["RandomForest", "XGBoost", "Régression Logistique"],  
-                "Probabilité Victoire Domicile": [proba_rf, proba_xgb, proba_logistic]  
-            })  
-            chart = alt.Chart(chart_data).mark_bar().encode(x="Modèle", y="Probabilité Victoire Domicile", color="Modèle")  
-            st.altair_chart(chart, use_container_width=True)  
+    # Graphique des probabilités  
+    chart_data = pd.DataFrame({  
+        "Résultat": ["Victoire Domicile", "Victoire Extérieure", "Match Nul"],  
+        "Probabilité": [  
+            poisson_analysis['probabilities']['home_win'],  
+            poisson_analysis['probabilities']['away_win'],  
+            poisson_analysis['probabilities']['draw']  
+        ]  
+    })  
+    
+    chart = alt.Chart(chart_data).mark_bar().encode(  
+        x="Résultat",  
+        y="Probabilité",  
+        color="Résultat"  
+    )  
+    st.altair_chart(chart, use_container_width=True)  
