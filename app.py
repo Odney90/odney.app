@@ -132,20 +132,34 @@ if st.button("🔮 Prédire le Résultat"):
     else:  
         # Ajout des nouvelles données à l'ensemble de données d'entraînement  
         new_data = pd.DataFrame(input_data, columns=df.columns[:-1])  # Exclure la colonne 'result'  
+        
+        # Ajouter une valeur par défaut pour 'result' (par exemple, 0)  
+        new_data['result'] = 0  # Vous pouvez ajuster cette valeur par défaut  
+        
         df = pd.concat([df, new_data], ignore_index=True)  
 
         # Préparation des nouvelles cibles  
         y = df['result']  # Assurez-vous que cela correspond à vos nouvelles données  
 
         # Validation des données  
-        validate_data(df.drop('result', axis=1), y)  
+        X = df.drop('result', axis=1)  
+        
+        # Remplacer les valeurs manquantes par la moyenne  
+        X = X.fillna(X.mean())  
+        y = pd.Series(y).fillna(pd.Series(y).mean())  # Convertir y en Series pour utiliser fillna  
+        
+        st.write("X (Données d'entrée) :", X)  
+        st.write("y (Cibles) :", y)  
+        
+        validate_data(X, y)  
 
         # Entraînement des modèles avec les nouvelles données  
-        model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(df.drop('result', axis=1), y)  
+        model1, model2, accuracy_rf, accuracy_xgb, cv_scores_rf, cv_scores_xgb = train_models(X, y)  
 
         # Prédiction  
-        prediction_rf = model1.predict(input_data)[0]  
-        prediction_xgb = model2.predict(input_data)[0]  
+        input_data_filled = np.nan_to_num(input_data)  # Remplacer NaN par 0 pour la prédiction  
+        prediction_rf = model1.predict(input_data_filled)[0]  
+        prediction_xgb = model2.predict(input_data_filled)[0]  
 
         # Méthode de Poisson pour prédire les buts  
         lambda_home = xG_home  
@@ -216,11 +230,4 @@ if st.button("🔮 Prédire le Résultat"):
             'touches_in_box_away': touches_in_box_away,  
             'xGA_away': xGA_away,  
             'interceptions_away': interceptions_away,  
-            'defensive_duels_away': defensive_duels_away,  
-            'possession_away': possession_away,  
-            'key_passes_away': key_passes_away,  
-            'recent_form_away': recent_form_away,  
-            'away_goals': away_goals,  
-            'away_goals_against': away_goals_against,  
-            'injuries_away': injuries_away  
-        }  
+            'defensive_duels_away': defensive_duels_away
