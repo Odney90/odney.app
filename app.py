@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier  
 from sklearn.model_selection import train_test_split  
 from sklearn.metrics import accuracy_score  
+import math  
 
 # Exemple de données d'entraînement  
 data = {  
@@ -55,6 +56,30 @@ y_pred_xgb = xgb_model.predict(X_test)
 accuracy_rf = accuracy_score(y_test, y_pred_rf)  
 accuracy_xgb = accuracy_score(y_test, y_pred_xgb)  
 
+# Fonction pour calculer les probabilités de buts avec la méthode de Poisson  
+def poisson_prob(lam, k):  
+    return (np.exp(-lam) * (lam ** k)) / math.factorial(k)  
+
+# Fonction pour prédire les buts  
+def predict_goals(xG_home, xG_away, max_goals=5):  
+    home_probs = [poisson_prob(xG_home, i) for i in range(max_goals + 1)]  
+    away_probs = [poisson_prob(xG_away, i) for i in range(max_goals + 1)]  
+    
+    win_home = 0  
+    win_away = 0  
+    draw = 0  
+
+    for home_goals in range(max_goals + 1):  
+        for away_goals in range(max_goals + 1):  
+            if home_goals > away_goals:  
+                win_home += home_probs[home_goals] * away_probs[away_goals]  
+            elif home_goals < away_goals:  
+                win_away += home_probs[home_goals] * away_probs[away_goals]  
+            else:  
+                draw += home_probs[home_goals] * away_probs[away_goals]  
+
+    return win_home, win_away, draw  
+
 # Interface Streamlit  
 st.title("⚽ Prédiction de Match de Football")  
 st.subheader(f"🎯 Précision des Modèles: RandomForest {accuracy_rf*100:.2f}%, XGBoost {accuracy_xgb*100:.2f}%")  
@@ -68,16 +93,30 @@ for column in X.columns:
 # Bouton de prédiction  
 if st.sidebar.button("🔮 Prédire le Résultat"):  
     input_data = np.array(list(user_input.values())).reshape(1, -1)  
-    proba_rf = rf_model.predict_proba(input_data)[0][1]  
-    proba_xgb = xgb_model.predict_proba(input_data)[0][1]  
     
-    result_rf = "Victoire Domicile" if proba_rf > 0.5 else "Victoire Extérieure"  
-    result_xgb = "Victoire Domicile" if proba_xgb > 0.5 else "Victoire Extérieure"  
-    
-    st.write(f"🔮 Résultat (Random Forest): {result_rf} avec {proba_rf*100:.2f}% de confiance")  
-    st.write(f"🔮 Résultat (XGBoost): {result_xgb} avec {proba_xgb*100:.2f}% de confiance")  
-    
-    # Graphique Altair  
-    chart_data = pd.DataFrame({"Modèle": ["RandomForest", "XGBoost"], "Probabilité Victoire Domicile": [proba_rf, proba_xgb]})  
-    chart = alt.Chart(chart_data).mark_bar().encode(x="Modèle", y="Probabilité Victoire Domicile", color="Modèle")  
-    st.altair_chart(chart, use_container_width=True)  
+    # Vérification des valeurs d'entrée  
+    if np.any(np.isnan(input_data)) or np.any(np.isinf(input_data)):  
+        st.error("Les données saisies contiennent des valeurs manquantes ou infinies.")  
+    else:  
+        proba_rf = rf_model.predict_proba(input_data)[0][1]  
+        proba_xgb = xgb_model.predict_proba(input_data)[0][1]  
+
+        result_rf = "Victoire Domicile" if proba_rf > 0.5 else "Victoire Extérieure"  
+        result_xgb = "Victoire Domicile" if proba_xgb > 0.5 else "Victoire Extérieure"  
+
+        st.write(f"🔮 Résultat (Random Forest): {result_rf} avec {proba_rf*100:.2f}% de confiance")  
+        st.write(f"🔮 Résultat (XGBoost): {result_xgb} avec {proba_xgb*100:.2f}% de confiance")  
+
+        # Prédiction des buts  
+        xG_home = user_input['xG_home']  
+        xG_away = user_input['xG_away']  
+        win_home, win_away, draw = predict_goals(xG_home, xG_away)  
+
+        st.write(f"🏠 Probabilité de victoire Domicile : {win_home:.2%}")  
+        st.write(f"🏟️ Probabilité de victoire Extérieure : {win_away:.2%}")  
+        st.write(f"🤝 Probabilité de match nul : {draw:.2%}")  
+
+        # Graphique Altair  
+        chart_data = pd.DataFrame({"Modèle": ["RandomForest", "XGBoost"], "Probabilité Victoire Domicile": [proba_rf, proba_xgb]})  
+        chart = alt.Chart(chart_data).mark_bar().encode(x="Modèle", y="Probabilité Victoire Domicile", color="Modèle")  
+        st.altair_chart(chart, use_container_width=True)  
