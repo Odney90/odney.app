@@ -47,6 +47,16 @@ if df.isnull().values.any():
 
 # Fonction pour entraîner le modèle et calculer la précision  
 def train_models(X, y):  
+    # Vérifier les dimensions de X et y  
+    if X.shape[0] != y.shape[0]:  
+        st.error(f"Les dimensions de X ({X.shape[0]}) et y ({y.shape[0]}) ne correspondent pas.")  
+        return None, None, None, None, None, None  
+    
+    # Vérifier que y contient au moins deux classes  
+    if len(np.unique(y)) < 2:  
+        st.error("La cible 'y' doit contenir au moins deux classes pour la validation croisée.")  
+        return None, None, None, None, None, None  
+    
     model1 = RandomForestClassifier(n_estimators=100, random_state=42)  
     model2 = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)  
     
@@ -201,35 +211,4 @@ if st.button("🔮 Prédire le Résultat"):
             'Probabilité': [win_home, win_away, draw]  
         })  
 
-        chart = alt.Chart(results_df).mark_bar().encode(  
-            x='Résultat',  
-            y='Probabilité',  
-            color='Résultat'  
-        ).properties(  
-            title='Probabilités des Résultats'  
-        )  
-
-        st.altair_chart(chart, use_container_width=True)  
-
-        # Sauvegarde des données dans l'état de session  
-        st.session_state.input_data = {  
-            'xG_home': xG_home,  
-            'shots_on_target_home': shots_on_target_home,  
-            'touches_in_box_home': touches_in_box_home,  
-            'xGA_home': xGA_home,  
-            'interceptions_home': interceptions_home,  
-            'defensive_duels_home': defensive_duels_home,  
-            'possession_home': possession_home,  
-            'key_passes_home': key_passes_home,  
-            'recent_form_home': recent_form_home,  
-            'home_goals': home_goals,  
-            'home_goals_against': home_goals_against,  
-            'injuries_home': injuries_home,  
-            'xG_away': xG_away,  
-            'shots_on_target_away': shots_on_target_away,  
-            'touches_in_box_away': touches_in_box_away,  
-            'xGA_away': xGA_away,  
-            'interceptions_away': interceptions_away,  
-            'defensive_duels_away': defensive_duels_away
-            }
-            
+        chart = alt.Chart(results_df).mark_bar
