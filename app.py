@@ -1,11 +1,13 @@
 import streamlit as st  
 import numpy as np  
 import pandas as pd  
-from sklearn.ensemble import RandomForestClassifier, XGBClassifier  
-from sklearn.model_selection import cross_val_score  
+from sklearn.ensemble import RandomForestClassifier  
+from xgboost import XGBClassifier  
+from sklearn.model_selection import train_test_split, cross_val_score  
 from sklearn.metrics import accuracy_score  
 import math  
 import altair as alt  
+import requests  
 
 # Exemple de données d'entraînement (remplacez ceci par vos données réelles)  
 data = {  
@@ -112,7 +114,7 @@ if st.button("🔮 Prédire le Résultat"):
                             injuries_away]])  
 
     # Ajout des nouvelles données à l'ensemble de données d'entraînement  
-    new_data = pd.DataFrame(input_data, columns=X.columns)  
+    new_data = pd.DataFrame(input_data, columns=df.columns[:-1])  # Exclure la colonne 'result'  
     df = pd.concat([df, new_data], ignore_index=True)  
 
     # Préparation des nouvelles cibles (vous pouvez ajuster cela selon vos besoins)  
