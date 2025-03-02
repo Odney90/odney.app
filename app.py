@@ -4,6 +4,8 @@ import pandas as pd
 import math
 import random
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
@@ -65,7 +67,7 @@ def calculer_value_bet(prob, cote):
 # Titre de l'application
 st.title("Prédiction de Match de Football et Analyse Value Bet")
 
-# Chargement optionnel des données historiques
+# Chargement optionnel des données historiques via un fichier CSV
 st.sidebar.header("Données Historiques")
 fichier_historique = st.sidebar.file_uploader("Charger le fichier CSV des données historiques", type=["csv"])
 if fichier_historique is not None:
@@ -134,7 +136,7 @@ with col2:
         forme_recente_B = st.number_input("Forme récente (points cumulés) (Équipe B)", value=8)
         points_5_matchs_B = st.number_input("Points sur les 5 derniers matchs (Équipe B)", value=6)
 
-# Saisie des cotes bookmaker pour l'analyse Value Bet
+# Saisie des cotes bookmakers pour l'analyse Value Bet
 st.subheader("Analyse Value Bet")
 col_odds1, col_odds2, col_odds3 = st.columns(3)
 with col_odds1:
@@ -165,15 +167,15 @@ if st.button("🔮 Prédire le Résultat"):
     df_poisson = pd.DataFrame(data_poisson)
     st.table(df_poisson)
     
-    # Entraînement du modèle de régression logistique avec des données fictives
+    # Entraînement des modèles de classification sur des données fictives
     X_data = np.random.rand(200, 22)
     y_data = np.random.randint(0, 2, 200)
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
+    
+    # --- Régression Logistique ---
     logistic_model = LogisticRegression()
     logistic_model.fit(X_train, y_train)
-    accuracy = accuracy_score(y_test, logistic_model.predict(X_test))
-    
-    # Prédiction via régression logistique sur les variables saisies
+    accuracy_logistic = accuracy_score(y_test, logistic_model.predict(X_test))
     input_features = np.array([[
         xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
@@ -183,13 +185,30 @@ if st.button("🔮 Prédire le Résultat"):
     proba_logistic = logistic_model.predict_proba(input_features)[0][1]
     prediction_logistic = "Victoire Équipe A" if proba_logistic > 0.5 else "Victoire Équipe B"
     
-    st.write("### Modèle de Régression Logistique")
-    data_logistic = {
-        "Mesure": ["Prédiction", "Probabilité Prédite", "Précision du Modèle"],
-        "Valeur": [prediction_logistic, f"{proba_logistic*100:.2f}%", f"{accuracy*100:.2f}%"]
+    # --- XGBoost Classifier ---
+    xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    xgb_model.fit(X_train, y_train)
+    accuracy_xgb = accuracy_score(y_test, xgb_model.predict(X_test))
+    proba_xgb = xgb_model.predict_proba(input_features)[0][1]
+    prediction_xgb = "Victoire Équipe A" if proba_xgb > 0.5 else "Victoire Équipe B"
+    
+    # --- Random Forest Classifier ---
+    rf_model = RandomForestClassifier(random_state=42)
+    rf_model.fit(X_train, y_train)
+    accuracy_rf = accuracy_score(y_test, rf_model.predict(X_test))
+    proba_rf = rf_model.predict_proba(input_features)[0][1]
+    prediction_rf = "Victoire Équipe A" if proba_rf > 0.5 else "Victoire Équipe B"
+    
+    # Affichage des résultats des modèles de classification dans un tableau
+    st.write("### Modèles de Classification")
+    data_classif = {
+        "Modèle": ["Régression Logistique", "XGBoost Classifier", "Random Forest"],
+        "Prédiction": [prediction_logistic, prediction_xgb, prediction_rf],
+        "Probabilité Prédite": [f"{proba_logistic*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
+        "Précision du Modèle": [f"{accuracy_logistic*100:.2f}%", f"{accuracy_xgb*100:.2f}%", f"{accuracy_rf*100:.2f}%"]
     }
-    df_logistic = pd.DataFrame(data_logistic)
-    st.table(df_logistic)
+    df_classif = pd.DataFrame(data_classif)
+    st.table(df_classif)
     
     # Analyse Value Bet pour chaque issue (en utilisant les probabilités issues du modèle de Poisson)
     st.write("### Analyse Value Bet")
