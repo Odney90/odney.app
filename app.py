@@ -36,7 +36,7 @@ def poisson_prob(lam, k):
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
 
 def load_training_data(file):
-    """Charge le fichier CSV d'entraînement et vérifie que toutes les colonnes requises sont présentes."""
+    """Charge le fichier CSV d'entraînement, nettoie les données et vérifie que toutes les colonnes requises sont présentes."""
     required_columns = [
         "xG_A", "Tirs_cadrés_A", "Taux_conversion_A", "Touches_surface_A", "Passes_clés_A",
         "Interceptions_A", "Duels_defensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
@@ -51,6 +51,16 @@ def load_training_data(file):
         st.error("Erreur lors du chargement du fichier CSV.")
         return None
     
+    # Supprimer les lignes avec des valeurs manquantes
+    df = df.dropna()
+    
+    # Convertir la colonne "resultat" en entier
+    try:
+        df["resultat"] = df["resultat"].astype(int)
+    except Exception as e:
+        st.error("Erreur lors de la conversion de la colonne 'resultat' en entier.")
+        return None
+    
     missing = [col for col in required_columns if col not in df.columns]
     if missing:
         st.error(f"Les colonnes suivantes sont manquantes dans le fichier CSV : {', '.join(missing)}")
@@ -58,7 +68,7 @@ def load_training_data(file):
     return df
 
 def validate_numeric_input(value, min_val, max_val, var_name):
-    """Vérifie si la valeur est dans l'intervalle [min_val, max_val] et affiche un avertissement le cas échéant."""
+    """Vérifie si la valeur est dans l'intervalle [min_val, max_val] et affiche une alerte le cas échéant."""
     if not (min_val <= value <= max_val):
         st.warning(f"⚠️ La valeur de '{var_name}' ({value}) doit être comprise entre {min_val} et {max_val}.")
     return value
@@ -185,7 +195,7 @@ st.sidebar.markdown(
     - **Colonne cible** :
       `resultat` (1 = victoire de l'Équipe A, 0 = victoire de l'Équipe B)
 
-    **Remarque :** Les statistiques doivent être des moyennes par match ou sur une période récente.
+    **Remarque :** Les statistiques doivent être des moyennes par match.
     """
 )
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
@@ -311,7 +321,7 @@ with col_odds3:
     cote_B = st.number_input("💰 Cote Bookmaker - Victoire Équipe B", value=2.50, format="%.2f")
 
 # ===============================
-# Chargement des données d'entraînement (ou utilisation du jeu par défaut)
+# Chargement des données d'entraînement (ou utilisation par défaut)
 # ===============================
 st.sidebar.header("📊 Données d'Entraînement")
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
