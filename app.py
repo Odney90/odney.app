@@ -29,7 +29,7 @@ def predire_resultat_match(
     possession_B, corners_B,
     max_buts=5
 ):
-    # Pour l'équipe A, on définit l'indice offensif en intégrant les nouvelles variables
+    # Calcul de l'indice offensif pour l'équipe A (domicile)
     note_offensive_A = (
         xG_A * 0.2 +
         tirs_cadres_A * 0.15 +
@@ -39,7 +39,7 @@ def predire_resultat_match(
         (possession_A / 100) * 0.1 +
         (corners_A / 10) * 0.15
     )
-    # Pour l'équipe B, on considère les éléments défensifs que doit affronter l'équipe A
+    # L'indice défensif à affronter par l'équipe A est basé sur les stats de l'équipe B (en déplacement)
     note_defensive_B = (
         xGA_B * 0.2 +
         arrets_gardien_B * 0.15 +
@@ -51,7 +51,7 @@ def predire_resultat_match(
     multiplicateur_A = 1 + (forme_recente_A / 10) + (points_5_matchs_A / 15)
     adj_xG_A = (note_offensive_A * multiplicateur_A) / (note_defensive_B + 1)
     
-    # Pour l'équipe B (en déplacement), on effectue un calcul similaire
+    # Même démarche pour l'équipe B (en déplacement)
     note_offensive_B = (
         xG_B * 0.2 +
         tirs_cadres_B * 0.15 +
@@ -93,7 +93,7 @@ def predire_resultat_match(
     return victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B
 
 def calculer_value_bet(prob, cote):
-    """Calcule la valeur espérée et donne une recommandation de value bet."""
+    """Calcule la valeur espérée et fournit une recommandation de pari."""
     ev = (prob * cote) - 1
     recommendation = "✅ Value Bet" if ev > 0 else "❌ Pas de Value Bet"
     return ev, recommendation
@@ -112,7 +112,7 @@ if fichier_entrainement is not None:
         "Interceptions_A", "Duels_defensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
         "possession_A", "corners_A",
         "xG_B", "Tirs_cadrés_B", "Taux_conversion_B", "Touches_surface_B", "Passes_clés_B",
-        "Interceptions_B", "Duels_defensifs_B", "xGA_B", "Arrêts_gardien_B", "Forme_recente_B", "Points_5_matchs_B",
+        "Interceptions_B", "Duels_defensifs_B", "xGA_B", "Arrêts_du_gardien_B", "Forme_recente_B", "Points_5_matchs_B",
         "possession_B", "corners_B"
     ]
     X_reel = df_entrainement[features]
@@ -230,7 +230,6 @@ with col2:
         possession_B = st.number_input("Possession moyenne (%) (Équipe B)", value=50)
         corners_B = st.number_input("Nombre de corners (Équipe B)", value=4)
 
-# Saisie des cotes bookmakers pour l'analyse Value Bet
 st.markdown("### 🎲 Analyse Value Bet")
 col_odds1, col_odds2, col_odds3 = st.columns(3)
 with col_odds1:
@@ -245,7 +244,7 @@ with col_odds3:
 # -------------------------------
 
 if st.button("🔮 Prédire le Résultat"):
-    # Modèle de Poisson
+    # Prédiction via le modèle de Poisson
     victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B = predire_resultat_match(
         xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
@@ -277,8 +276,8 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf = modele_rf
         prec_rf = precision_rf
     else:
-        # Entraînement sur données fictives si pas de données réelles
-        X_data = np.random.rand(200, 24)
+        # Génération de données fictives pour l'entraînement avec 26 colonnes
+        X_data = np.random.rand(200, 26)
         y_data = np.random.randint(0, 2, 200)
         X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
         model_log = LogisticRegression()
@@ -291,7 +290,6 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf.fit(X_train, y_train)
         prec_rf = accuracy_score(y_test, model_rf.predict(X_test))
     
-    # Préparation des variables pour les modèles de classification
     input_features = np.array([[
         xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
@@ -339,15 +337,15 @@ if st.button("🔮 Prédire le Résultat"):
         value_bet_data["Value Bet ?"].append(recommendation)
     st.table(pd.DataFrame(value_bet_data))
     
-    # Exemple de graphique pour visualiser la distribution des buts attendus (modèle de Poisson)
+    # Exemple de graphique pour visualiser la distribution des buts attendus pour l'équipe A
     buts_data = pd.DataFrame({
         "Buts": list(range(0, 6)),
         "Prob Équipe A": [poisson_prob(expected_buts_A, i) for i in range(6)],
         "Prob Équipe B": [poisson_prob(expected_buts_B, i) for i in range(6)]
     })
     chart = alt.Chart(buts_data).mark_bar().encode(
-        x="Buts:O",
-        y="Prob Équipe A:Q",
+        x=alt.X("Buts:O", title="Nombre de buts"),
+        y=alt.Y("Prob Équipe A:Q", title="Probabilité"),
         color=alt.value("#4CAF50")
     ).properties(title="Distribution des buts attendus - Équipe A")
     st.altair_chart(chart, use_container_width=True)
