@@ -20,7 +20,7 @@ def poisson_prob(lam, k):
 
 def predire_resultat_match(
     # Variables Équipe A (Domicile)
-    xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
+    xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
     interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
     possession_A, corners_A,
     # Variables Équipe B (Extérieur)
@@ -32,7 +32,7 @@ def predire_resultat_match(
     # Calcul de l'indice offensif pour l'équipe A (domicile)
     note_offensive_A = (
         xG_A * 0.2 +
-        tirs_cadres_A * 0.15 +
+        tirs_cadrés_A * 0.15 +
         touches_surface_A * 0.1 +
         (taux_conversion_A / 100) * 0.15 +
         passes_cles_A * 0.15 +
@@ -297,7 +297,7 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf = modele_rf
         prec_rf = precision_rf
     else:
-        # Génération de données fictives pour l'entraînement avec 26 caractéristiques
+        # Génération de données fictives pour l'entraînement avec 26 colonnes
         X_data = np.random.rand(200, 26)
         y_data = np.random.randint(0, 2, 200)
         X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
@@ -311,6 +311,7 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf.fit(X_train, y_train)
         prec_rf = accuracy_score(y_test, model_rf.predict(X_test))
     
+    # Préparation des variables pour la prédiction (vérification de la forme)
     input_features = np.array([[
         xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
@@ -319,6 +320,8 @@ if st.button("🔮 Prédire le Résultat"):
         interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
         possession_B, corners_B
     ]])
+    
+    st.write("Forme de l'input pour la prédiction :", input_features.shape)
     
     # Régression Logistique
     proba_log = model_log.predict_proba(input_features)[0][1]
