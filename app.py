@@ -9,6 +9,10 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
+# -------------------------------
+# Fonctions de base
+# -------------------------------
+
 # Fonction de probabilité de Poisson
 def poisson_prob(lam, k):
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
@@ -64,17 +68,70 @@ def calculer_value_bet(prob, cote):
     recommendation = "Value Bet" if ev > 0 else "Pas de Value Bet"
     return ev, recommendation
 
-# Titre de l'application
+# -------------------------------
+# Chargement des données d'entraînement réelles
+# -------------------------------
+
+st.sidebar.header("Données d'Entraînement")
+fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
+if fichier_entrainement is not None:
+    df_entrainement = pd.read_csv(fichier_entrainement)
+    st.sidebar.write("Aperçu des données d'entraînement :", df_entrainement.head())
+    
+    # Sélection des variables explicatives et de la cible
+    features = [
+        "xG_A", "Tirs_cadrés_A", "Taux_conversion_A", "Touches_surface_A", "Passes_clés_A",
+        "Interceptions_A", "Duels_défensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
+        "xG_B", "Tirs_cadrés_B", "Taux_conversion_B", "Touches_surface_B", "Passes_clés_B",
+        "Interceptions_B", "Duels_défensifs_B", "xGA_B", "Arrêts_gardien_B", "Forme_recente_B", "Points_5_matchs_B"
+    ]
+    # La colonne "resultat" doit contenir la cible (0 ou 1)
+    X_reel = df_entrainement[features]
+    y_reel = df_entrainement["resultat"]
+
+# -------------------------------
+# Entraînement des modèles avec les données réelles (mise en cache)
+# -------------------------------
+
+@st.cache_resource(show_spinner=False)
+def entrainer_modele_logistique(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    accuracy = accuracy_score(y_test, model.predict(X_test))
+    return model, accuracy
+
+@st.cache_resource(show_spinner=False)
+def entrainer_modele_xgb(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    model.fit(X_train, y_train)
+    accuracy = accuracy_score(y_test, model.predict(X_test))
+    return model, accuracy
+
+@st.cache_resource(show_spinner=False)
+def entrainer_modele_rf(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model = RandomForestClassifier(random_state=42)
+    model.fit(X_train, y_train)
+    accuracy = accuracy_score(y_test, model.predict(X_test))
+    return model, accuracy
+
+if fichier_entrainement is not None:
+    modele_logistique, precision_logistique = entrainer_modele_logistique(X_reel, y_reel)
+    modele_xgb, precision_xgb = entrainer_modele_xgb(X_reel, y_reel)
+    modele_rf, precision_rf = entrainer_modele_rf(X_reel, y_reel)
+    st.sidebar.write(f"Précision Régression Logistique : {precision_logistique*100:.2f}%")
+    st.sidebar.write(f"Précision XGBoost : {precision_xgb*100:.2f}%")
+    st.sidebar.write(f"Précision Random Forest : {precision_rf*100:.2f}%")
+
+# -------------------------------
+# Interface principale pour la saisie des données de match
+# -------------------------------
+
 st.title("Prédiction de Match de Football et Analyse Value Bet")
 
-# Chargement optionnel des données historiques via un fichier CSV
-st.sidebar.header("Données Historiques")
-fichier_historique = st.sidebar.file_uploader("Charger le fichier CSV des données historiques", type=["csv"])
-if fichier_historique is not None:
-    df_historique = pd.read_csv(fichier_historique)
-    st.sidebar.write("Aperçu des données historiques :", df_historique.head())
-
-# Option pour utiliser des données fictives
+# Option pour utiliser des données fictives (si pas de données réelles)
 use_fictives = st.checkbox("Utiliser des données fictives pour tester le code", value=False)
 
 # Saisie des données pour l'Équipe A (Domicile) et l'Équipe B (Extérieur)
@@ -146,7 +203,10 @@ with col_odds2:
 with col_odds3:
     cote_B = st.number_input("Cote Bookmaker - Victoire Équipe B", value=2.5)
 
-# Bouton de prédiction
+# -------------------------------
+# Prédictions et affichage des résultats
+# -------------------------------
+
 if st.button("🔮 Prédire le Résultat"):
     # Prédiction via le modèle de Poisson
     victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B = predire_resultat_match(
@@ -167,45 +227,58 @@ if st.button("🔮 Prédire le Résultat"):
     df_poisson = pd.DataFrame(data_poisson)
     st.table(df_poisson)
     
-    # Entraînement des modèles de classification sur des données fictives
-    X_data = np.random.rand(200, 22)
-    y_data = np.random.randint(0, 2, 200)
-    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
+    # Si des données d'entraînement réelles ont été chargées, utiliser les modèles entraînés sur celles-ci ;
+    # sinon, utiliser des données fictives pour l'entraînement.
+    if fichier_entrainement is not None:
+        # Les modèles sont déjà entraînés et mis en cache
+        model_log = modele_logistique
+        prec_log = precision_logistique
+        model_xgb = modele_xgb
+        prec_xgb = precision_xgb
+        model_rf = modele_rf
+        prec_rf = precision_rf
+    else:
+        # Génération de données fictives pour l'entraînement
+        X_data = np.random.rand(200, 22)
+        y_data = np.random.randint(0, 2, 200)
+        X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
+        model_log = LogisticRegression()
+        model_log.fit(X_train, y_train)
+        prec_log = accuracy_score(y_test, model_log.predict(X_test))
+        model_xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+        model_xgb.fit(X_train, y_train)
+        prec_xgb = accuracy_score(y_test, model_xgb.predict(X_test))
+        model_rf = RandomForestClassifier(random_state=42)
+        model_rf.fit(X_train, y_train)
+        prec_rf = accuracy_score(y_test, model_rf.predict(X_test))
     
-    # --- Régression Logistique ---
-    logistic_model = LogisticRegression()
-    logistic_model.fit(X_train, y_train)
-    accuracy_logistic = accuracy_score(y_test, logistic_model.predict(X_test))
+    # Préparation des variables saisies pour la prédiction des modèles de classification
     input_features = np.array([[
         xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
         xG_B, tirs_cadres_B, taux_conversion_B, touches_surface_B, passes_cles_B,
         interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B
     ]])
-    proba_logistic = logistic_model.predict_proba(input_features)[0][1]
-    prediction_logistic = "Victoire Équipe A" if proba_logistic > 0.5 else "Victoire Équipe B"
     
-    # --- XGBoost Classifier ---
-    xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-    xgb_model.fit(X_train, y_train)
-    accuracy_xgb = accuracy_score(y_test, xgb_model.predict(X_test))
-    proba_xgb = xgb_model.predict_proba(input_features)[0][1]
+    # Prédiction via Régression Logistique
+    proba_log = model_log.predict_proba(input_features)[0][1]
+    prediction_log = "Victoire Équipe A" if proba_log > 0.5 else "Victoire Équipe B"
+    
+    # Prédiction via XGBoost
+    proba_xgb = model_xgb.predict_proba(input_features)[0][1]
     prediction_xgb = "Victoire Équipe A" if proba_xgb > 0.5 else "Victoire Équipe B"
     
-    # --- Random Forest Classifier ---
-    rf_model = RandomForestClassifier(random_state=42)
-    rf_model.fit(X_train, y_train)
-    accuracy_rf = accuracy_score(y_test, rf_model.predict(X_test))
-    proba_rf = rf_model.predict_proba(input_features)[0][1]
+    # Prédiction via Random Forest
+    proba_rf = model_rf.predict_proba(input_features)[0][1]
     prediction_rf = "Victoire Équipe A" if proba_rf > 0.5 else "Victoire Équipe B"
     
     # Affichage des résultats des modèles de classification dans un tableau
     st.write("### Modèles de Classification")
     data_classif = {
         "Modèle": ["Régression Logistique", "XGBoost Classifier", "Random Forest"],
-        "Prédiction": [prediction_logistic, prediction_xgb, prediction_rf],
-        "Probabilité Prédite": [f"{proba_logistic*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
-        "Précision du Modèle": [f"{accuracy_logistic*100:.2f}%", f"{accuracy_xgb*100:.2f}%", f"{accuracy_rf*100:.2f}%"]
+        "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
+        "Probabilité Prédite": [f"{proba_log*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
+        "Précision du Modèle": [f"{prec_log*100:.2f}%", f"{prec_xgb*100:.2f}%", f"{prec_rf*100:.2f}%"]
     }
     df_classif = pd.DataFrame(data_classif)
     st.table(df_classif)
