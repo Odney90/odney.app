@@ -36,7 +36,6 @@ def predire_resultat_match(
     possession_B, corners_B,
     max_buts=5
 ):
-    # Calcul de l'indice offensif pour l'équipe A
     note_offensive_A = (
         xG_A * 0.2 +
         tirs_cadrés_A * 0.15 +
@@ -46,7 +45,6 @@ def predire_resultat_match(
         (possession_A / 100) * 0.1 +
         (corners_A / 10) * 0.15
     )
-    # Calcul de l'indice défensif à affronter par l'équipe A (basé sur l'équipe B)
     note_defensive_B = (
         xGA_B * 0.2 +
         arrets_gardien_B * 0.15 +
@@ -58,7 +56,6 @@ def predire_resultat_match(
     multiplicateur_A = 1 + (forme_recente_A / 10) + (points_5_matchs_A / 15)
     adj_xG_A = (note_offensive_A * multiplicateur_A) / (note_defensive_B + 1)
     
-    # Pour l'équipe B (en déplacement)
     note_offensive_B = (
         xG_B * 0.2 +
         tirs_cadrés_B * 0.15 +
@@ -79,7 +76,6 @@ def predire_resultat_match(
     multiplicateur_B = 1 + (forme_recente_B / 10) + (points_5_matchs_B / 15)
     adj_xG_B = (note_offensive_B * multiplicateur_B) / (note_defensive_A + 1)
     
-    # Distribution des buts via la loi de Poisson
     prob_A = [poisson_prob(adj_xG_A, i) for i in range(max_buts+1)]
     prob_B = [poisson_prob(adj_xG_B, i) for i in range(max_buts+1)]
     
@@ -193,74 +189,74 @@ with col1:
     st.header("🏠 Équipe A (Domicile)")
     if use_fictives:
         xG_A = round(random.uniform(0.5, 2.5), 2)
-        tirs_cadrés_A = random.randint(2, 10)
-        taux_conversion_A = round(random.uniform(20, 40), 1)
-        touches_surface_A = random.randint(15, 40)
-        passes_cles_A = random.randint(3, 8)
-        interceptions_A = random.randint(5, 15)
-        duels_defensifs_A = random.randint(10, 30)
+        tirs_cadrés_A = float(random.randint(2, 10))
+        taux_conversion_A = round(random.uniform(20, 40), 2)
+        touches_surface_A = float(random.randint(15, 40))
+        passes_cles_A = float(random.randint(3, 8))
+        interceptions_A = float(random.randint(5, 15))
+        duels_defensifs_A = float(random.randint(10, 30))
         xGA_A = round(random.uniform(1, 2.5), 2)
-        arrets_gardien_A = random.randint(3, 7)
-        forme_recente_A = random.randint(5, 15)
-        points_5_matchs_A = random.randint(5, 15)
-        possession_A = random.randint(45, 70)
-        corners_A = random.randint(3, 10)
+        arrets_gardien_A = float(random.randint(3, 7))
+        forme_recente_A = float(random.randint(5, 15))
+        points_5_matchs_A = float(random.randint(5, 15))
+        possession_A = round(random.uniform(45, 70), 2)
+        corners_A = float(random.randint(3, 10))
         st.markdown("**Données fictives générées pour l'Équipe A**")
     else:
-        xG_A = st.number_input("xG (Équipe A, par match)", value=1.5, format="%.2f")
-        tirs_cadrés_A = st.number_input("Tirs cadrés (Équipe A, par match)", value=5, step=1)
-        taux_conversion_A = st.number_input("Taux de conversion (%) (Équipe A, par match)", value=30.0, format="%.2f")
-        touches_surface_A = st.number_input("Touches dans la surface (Équipe A, par match)", value=25, step=1)
-        passes_cles_A = st.number_input("Passes clés (Équipe A, par match)", value=5, step=1)
-        interceptions_A = st.number_input("Interceptions (Équipe A, par match)", value=8, step=1)
-        duels_defensifs_A = st.number_input("Duels défensifs gagnés (Équipe A, par match)", value=18, step=1)
-        xGA_A = st.number_input("xGA (Équipe A, par match)", value=1.2, format="%.2f")
-        arrets_gardien_A = st.number_input("Arrêts du gardien (Équipe A, par match)", value=4, step=1)
-        forme_recente_A = st.number_input("Forme récente (points cumulés, Équipe A)", value=10, step=1)
-        points_5_matchs_A = st.number_input("Points sur les 5 derniers matchs (Équipe A)", value=8, step=1)
-        possession_A = st.number_input("Possession moyenne (%) (Équipe A)", value=55, format="%.2f")
-        corners_A = st.number_input("Nombre de corners (Équipe A, par match)", value=5, step=1)
+        xG_A = st.number_input("xG (Équipe A, par match)", value=1.50, format="%.2f")
+        tirs_cadrés_A = st.number_input("Tirs cadrés (Équipe A, par match)", value=5.00, format="%.2f")
+        taux_conversion_A = st.number_input("Taux de conversion (%) (Équipe A, par match)", value=30.00, format="%.2f")
+        touches_surface_A = st.number_input("Touches dans la surface (Équipe A, par match)", value=25.00, format="%.2f")
+        passes_cles_A = st.number_input("Passes clés (Équipe A, par match)", value=5.00, format="%.2f")
+        interceptions_A = st.number_input("Interceptions (Équipe A, par match)", value=8.00, format="%.2f")
+        duels_defensifs_A = st.number_input("Duels défensifs gagnés (Équipe A, par match)", value=18.00, format="%.2f")
+        xGA_A = st.number_input("xGA (Équipe A, par match)", value=1.20, format="%.2f")
+        arrets_gardien_A = st.number_input("Arrêts du gardien (Équipe A, par match)", value=4.00, format="%.2f")
+        forme_recente_A = st.number_input("Forme récente (points cumulés, Équipe A)", value=10.00, format="%.2f")
+        points_5_matchs_A = st.number_input("Points sur les 5 derniers matchs (Équipe A)", value=8.00, format="%.2f")
+        possession_A = st.number_input("Possession moyenne (%) (Équipe A)", value=55.00, format="%.2f")
+        corners_A = st.number_input("Nombre de corners (Équipe A, par match)", value=5.00, format="%.2f")
 
 with col2:
     st.header("🏟️ Équipe B (Extérieur)")
     if use_fictives:
         xG_B = round(random.uniform(0.5, 2.5), 2)
-        tirs_cadrés_B = random.randint(2, 10)
-        taux_conversion_B = round(random.uniform(20, 40), 1)
-        touches_surface_B = random.randint(15, 40)
-        passes_cles_B = random.randint(3, 8)
-        interceptions_B = random.randint(5, 15)
-        duels_defensifs_B = random.randint(10, 30)
+        tirs_cadrés_B = float(random.randint(2, 10))
+        taux_conversion_B = round(random.uniform(20, 40), 2)
+        touches_surface_B = float(random.randint(15, 40))
+        passes_cles_B = float(random.randint(3, 8))
+        interceptions_B = float(random.randint(5, 15))
+        duels_defensifs_B = float(random.randint(10, 30))
         xGA_B = round(random.uniform(1, 2.5), 2)
-        arrets_gardien_B = random.randint(3, 7)
-        forme_recente_B = random.randint(5, 15)
-        points_5_matchs_B = random.randint(5, 15)
-        possession_B = random.randint(45, 70)
-        corners_B = random.randint(3, 10)
+        arrets_gardien_B = float(random.randint(3, 7))
+        forme_recente_B = float(random.randint(5, 15))
+        points_5_matchs_B = float(random.randint(5, 15))
+        possession_B = round(random.uniform(45, 70), 2)
+        corners_B = float(random.randint(3, 10))
         st.markdown("**Données fictives générées pour l'Équipe B**")
     else:
-        xG_B = st.number_input("xG (Équipe B, par match)", value=1.0, format="%.2f")
-        tirs_cadrés_B = st.number_input("Tirs cadrés (Équipe B, par match)", value=3, step=1)
-        taux_conversion_B = st.number_input("Taux de conversion (%) (Équipe B, par match)", value=25.0, format="%.2f")
-        touches_surface_B = st.number_input("Touches dans la surface (Équipe B, par match)", value=20, step=1)
-        passes_cles_B = st.number_input("Passes clés (Équipe B, par match)", value=4, step=1)
-        interceptions_B = st.number_input("Interceptions (Équipe B, par match)", value=7, step=1)
-        duels_defensifs_B = st.number_input("Duels défensifs gagnés (Équipe B, par match)", value=15, step=1)
-        xGA_B = st.number_input("xGA (Équipe B, par match)", value=1.5, format="%.2f")
-        arrets_gardien_B = st.number_input("Arrêts du gardien (Équipe B, par match)", value=5, step=1)
-        forme_recente_B = st.number_input("Forme récente (points cumulés, Équipe B)", value=8, step=1)
-        points_5_matchs_B = st.number_input("Points sur les 5 derniers matchs (Équipe B)", value=6, step=1)
-        possession_B = st.number_input("Possession moyenne (%) (Équipe B)", value=50, format="%.2f")
-        corners_B = st.number_input("Nombre de corners (Équipe B, par match)", value=4, step=1)
+        xG_B = st.number_input("xG (Équipe B, par match)", value=1.00, format="%.2f")
+        tirs_cadrés_B = st.number_input("Tirs cadrés (Équipe B, par match)", value=3.00, format="%.2f")
+        taux_conversion_B = st.number_input("Taux de conversion (%) (Équipe B, par match)", value=25.00, format="%.2f")
+        touches_surface_B = st.number_input("Touches dans la surface (Équipe B, par match)", value=20.00, format="%.2f")
+        passes_cles_B = st.number_input("Passes clés (Équipe B, par match)", value=4.00, format="%.2f")
+        interceptions_B = st.number_input("Interceptions (Équipe B, par match)", value=7.00, format="%.2f")
+        duels_defensifs_B = st.number_input("Duels défensifs gagnés (Équipe B, par match)", value=15.00, format="%.2f")
+        xGA_B = st.number_input("xGA (Équipe B, par match)", value=1.50, format="%.2f")
+        arrets_gardien_B = st.number_input("Arrêts du gardien (Équipe B, par match)", value=5.00, format="%.2f")
+        forme_recente_B = st.number_input("Forme récente (points cumulés, Équipe B)", value=8.00, format="%.2f")
+        points_5_matchs_B = st.number_input("Points sur les 5 derniers matchs (Équipe B)", value=6.00, format="%.2f")
+        possession_B = st.number_input("Possession moyenne (%) (Équipe B)", value=50.00, format="%.2f")
+        corners_B = st.number_input("Nombre de corners (Équipe B, par match)", value=4.00, format="%.2f")
 
 st.markdown("### 🎲 Analyse Value Bet")
 col_odds1, col_odds2, col_odds3 = st.columns(3)
 with col_odds1:
-    cote_A = st.number_input("Cote Bookmaker - Victoire Équipe A", value=2.0, format="%.2f")
+    cote_A = st.number_input("Cote Bookmaker - Victoire Équipe A", value=2.00, format="%.2f")
 with col_odds2:
-    cote_N = st.number_input("Cote Bookmaker - Match Nul", value=3.0, format="%.2f")
+    cote_N = st.number_input("Cote Bookmaker - Match Nul", value=3.00, format="%.2f")
 with col_odds3:
-    cote_B = st.number_input("Cote Bookmaker - Victoire Équipe B", value=2.5, format="%.2f")
+    cote_B = st.number_input("Cote Bookmaker - Victoire Équipe B", value=2.50, format="%.2f")
 
 # -------------------------------
 # Prédictions et affichage des résultats
@@ -311,7 +307,6 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf.fit(X_train, y_train)
         prec_rf = accuracy_score(y_test, model_rf.predict(X_test))
     
-    # Préparation des variables d'entrée (vérification de la forme)
     input_features = np.array([[
         xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
@@ -361,7 +356,7 @@ if st.button("🔮 Prédire le Résultat"):
         value_bet_data["Value Bet ?"].append(recommendation)
     st.table(pd.DataFrame(value_bet_data))
     
-    # Exemple de graphique pour visualiser la distribution des buts attendus pour l'équipe A
+    # Graphique pour visualiser la distribution des buts attendus pour l'équipe A
     buts_data = pd.DataFrame({
         "Buts": list(range(0, 6)),
         "Prob Équipe A": [poisson_prob(expected_buts_A, i) for i in range(6)],
