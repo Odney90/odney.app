@@ -11,9 +11,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 # -------------------------------
+# Initialisation du session state
+# -------------------------------
+if 'trained_models' not in st.session_state:
+    st.session_state.trained_models = {}
+if 'prediction_results' not in st.session_state:
+    st.session_state.prediction_results = {}
+
+# -------------------------------
 # Fonctions de base
 # -------------------------------
-
 def poisson_prob(lam, k):
     """Calcule la probabilité d'obtenir k buts selon la loi de Poisson."""
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
@@ -29,7 +36,6 @@ def predire_resultat_match(
     possession_B, corners_B,
     max_buts=5
 ):
-    # Calcul de l'indice offensif pour l'équipe A (domicile)
     note_offensive_A = (
         xG_A * 0.2 +
         tirs_cadrés_A * 0.15 +
@@ -39,7 +45,6 @@ def predire_resultat_match(
         (possession_A / 100) * 0.1 +
         (corners_A / 10) * 0.15
     )
-    # Indice défensif que l'équipe A doit affronter (basé sur l'équipe B en déplacement)
     note_defensive_B = (
         xGA_B * 0.2 +
         arrets_gardien_B * 0.15 +
@@ -51,7 +56,6 @@ def predire_resultat_match(
     multiplicateur_A = 1 + (forme_recente_A / 10) + (points_5_matchs_A / 15)
     adj_xG_A = (note_offensive_A * multiplicateur_A) / (note_defensive_B + 1)
     
-    # Pour l'équipe B (en déplacement)
     note_offensive_B = (
         xG_B * 0.2 +
         tirs_cadrés_B * 0.15 +
@@ -72,7 +76,6 @@ def predire_resultat_match(
     multiplicateur_B = 1 + (forme_recente_B / 10) + (points_5_matchs_B / 15)
     adj_xG_B = (note_offensive_B * multiplicateur_B) / (note_defensive_A + 1)
     
-    # Calcul de la distribution des buts via la loi de Poisson pour chaque équipe
     prob_A = [poisson_prob(adj_xG_A, i) for i in range(max_buts+1)]
     prob_B = [poisson_prob(adj_xG_B, i) for i in range(max_buts+1)]
     
@@ -99,9 +102,8 @@ def calculer_value_bet(prob, cote):
     return ev, recommendation
 
 # -------------------------------
-# Section d'entrée des données d'entraînement
+# Chargement des données d'entraînement (avec explications)
 # -------------------------------
-
 st.sidebar.header("📊 Données d'Entraînement")
 st.sidebar.markdown(
     """
@@ -127,7 +129,7 @@ st.sidebar.markdown(
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
 if fichier_entrainement is not None:
     df_entrainement = pd.read_csv(fichier_entrainement)
-    st.sidebar.write("Aperçu des données d'entraînement :", df_entrainement.head())
+    st.sidebar.write("Aperçu :", df_entrainement.head())
     features = [
         "xG_A", "Tirs_cadrés_A", "Taux_conversion_A", "Touches_surface_A", "Passes_clés_A",
         "Interceptions_A", "Duels_defensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
@@ -142,7 +144,6 @@ if fichier_entrainement is not None:
 # -------------------------------
 # Entraînement des modèles (avec mise en cache)
 # -------------------------------
-
 @st.cache_resource(show_spinner=False)
 def entrainer_modele_logistique(X, y):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -178,15 +179,12 @@ if fichier_entrainement is not None:
 # -------------------------------
 # Interface principale pour la saisie des données de match
 # -------------------------------
-
 st.title("⚽ Prédiction de Match de Football & Analyse Value Bet")
 st.markdown("### Entrez les statistiques du match pour chaque équipe")
 
-# Option pour utiliser des données fictives (au cas où)
 use_fictives = st.checkbox("Utiliser des données fictives", value=False)
 
 col1, col2 = st.columns(2)
-
 with col1:
     st.header("🏠 Équipe A (Domicile)")
     if use_fictives:
@@ -263,7 +261,6 @@ with col_odds3:
 # -------------------------------
 # Prédictions et affichage des résultats
 # -------------------------------
-
 if st.button("🔮 Prédire le Résultat"):
     # Prédiction via le modèle de Poisson
     victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B = predire_resultat_match(
@@ -288,7 +285,7 @@ if st.button("🔮 Prédire le Résultat"):
     }
     st.table(pd.DataFrame(data_poisson))
     
-    # Entraînement ou utilisation des modèles de classification
+    # Utilisation ou entraînement des modèles de classification
     if fichier_entrainement is not None:
         model_log = modele_logistique
         prec_log = precision_logistique
@@ -297,7 +294,6 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf = modele_rf
         prec_rf = precision_rf
     else:
-        # Génération de données fictives pour l'entraînement avec 26 colonnes
         X_data = np.random.rand(200, 26)
         y_data = np.random.randint(0, 2, 200)
         X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
@@ -311,7 +307,7 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf.fit(X_train, y_train)
         prec_rf = accuracy_score(y_test, model_rf.predict(X_test))
     
-    # Préparation des variables pour la prédiction (vérification de la forme)
+    # Préparation des données d'entrée pour la prédiction
     input_features = np.array([[
         xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
