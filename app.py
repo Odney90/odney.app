@@ -24,7 +24,7 @@ def predire_resultat_match(
     interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
     possession_A, corners_A,
     # Variables Équipe B (Extérieur)
-    xG_B, tirs_cadres_B, taux_conversion_B, touches_surface_B, passes_cles_B,
+    xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
     interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
     possession_B, corners_B,
     max_buts=5
@@ -39,7 +39,7 @@ def predire_resultat_match(
         (possession_A / 100) * 0.1 +
         (corners_A / 10) * 0.15
     )
-    # L'indice défensif à affronter par l'équipe A est basé sur les stats de l'équipe B (en déplacement)
+    # Indice défensif que l'équipe A doit affronter (basé sur l'équipe B en déplacement)
     note_defensive_B = (
         xGA_B * 0.2 +
         arrets_gardien_B * 0.15 +
@@ -51,10 +51,10 @@ def predire_resultat_match(
     multiplicateur_A = 1 + (forme_recente_A / 10) + (points_5_matchs_A / 15)
     adj_xG_A = (note_offensive_A * multiplicateur_A) / (note_defensive_B + 1)
     
-    # Même démarche pour l'équipe B (en déplacement)
+    # Pour l'équipe B (en déplacement)
     note_offensive_B = (
         xG_B * 0.2 +
-        tirs_cadres_B * 0.15 +
+        tirs_cadrés_B * 0.15 +
         touches_surface_B * 0.1 +
         (taux_conversion_B / 100) * 0.15 +
         passes_cles_B * 0.15 +
@@ -99,14 +99,35 @@ def calculer_value_bet(prob, cote):
     return ev, recommendation
 
 # -------------------------------
-# Chargement des données d'entraînement réelles
+# Section d'entrée des données d'entraînement
 # -------------------------------
 
 st.sidebar.header("📊 Données d'Entraînement")
+st.sidebar.markdown(
+    """
+    **Format du fichier CSV attendu :**
+
+    Votre fichier doit contenir les colonnes suivantes dans cet ordre :
+
+    - Pour l'Équipe A (Domicile) :  
+      `xG_A`, `Tirs_cadrés_A`, `Taux_conversion_A`, `Touches_surface_A`, `Passes_clés_A`,  
+      `Interceptions_A`, `Duels_defensifs_A`, `xGA_A`, `Arrêts_gardien_A`, `Forme_recente_A`, `Points_5_matchs_A`,  
+      `possession_A`, `corners_A`
+
+    - Pour l'Équipe B (Extérieur) :  
+      `xG_B`, `Tirs_cadrés_B`, `Taux_conversion_B`, `Touches_surface_B`, `Passes_clés_B`,  
+      `Interceptions_B`, `Duels_defensifs_B`, `xGA_B`, `Arrêts_du_gardien_B`, `Forme_recente_B`, `Points_5_matchs_B`,  
+      `possession_B`, `corners_B`
+
+    - Et la colonne cible : `resultat` (0 pour victoire de l'Équipe B, 1 pour victoire de l'Équipe A).
+
+    Veuillez vérifier que votre fichier respecte ce format.
+    """
+)
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
 if fichier_entrainement is not None:
     df_entrainement = pd.read_csv(fichier_entrainement)
-    st.sidebar.write("Aperçu :", df_entrainement.head())
+    st.sidebar.write("Aperçu des données d'entraînement :", df_entrainement.head())
     features = [
         "xG_A", "Tirs_cadrés_A", "Taux_conversion_A", "Touches_surface_A", "Passes_clés_A",
         "Interceptions_A", "Duels_defensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
@@ -119,7 +140,7 @@ if fichier_entrainement is not None:
     y_reel = df_entrainement["resultat"]
 
 # -------------------------------
-# Entraînement des modèles avec mise en cache
+# Entraînement des modèles (avec mise en cache)
 # -------------------------------
 
 @st.cache_resource(show_spinner=False)
@@ -170,7 +191,7 @@ with col1:
     st.header("🏠 Équipe A (Domicile)")
     if use_fictives:
         xG_A = round(random.uniform(0.5, 2.5), 2)
-        tirs_cadres_A = random.randint(2, 10)
+        tirs_cadrés_A = random.randint(2, 10)
         taux_conversion_A = round(random.uniform(20, 40), 1)
         touches_surface_A = random.randint(15, 40)
         passes_cles_A = random.randint(3, 8)
@@ -180,12 +201,12 @@ with col1:
         arrets_gardien_A = random.randint(3, 7)
         forme_recente_A = random.randint(5, 15)
         points_5_matchs_A = random.randint(5, 15)
-        possession_A = random.randint(45, 70)  # en pourcentage
+        possession_A = random.randint(45, 70)
         corners_A = random.randint(3, 10)
         st.markdown("**Données fictives générées pour l'Équipe A**")
     else:
         xG_A = st.number_input("xG (Équipe A)", value=1.5)
-        tirs_cadres_A = st.number_input("Tirs cadrés (Équipe A)", value=5)
+        tirs_cadrés_A = st.number_input("Tirs cadrés (Équipe A)", value=5)
         taux_conversion_A = st.number_input("Taux de conversion (%) (Équipe A)", value=30.0)
         touches_surface_A = st.number_input("Touches dans la surface (Équipe A)", value=25)
         passes_cles_A = st.number_input("Passes clés (Équipe A)", value=5)
@@ -202,7 +223,7 @@ with col2:
     st.header("🏟️ Équipe B (Extérieur)")
     if use_fictives:
         xG_B = round(random.uniform(0.5, 2.5), 2)
-        tirs_cadres_B = random.randint(2, 10)
+        tirs_cadrés_B = random.randint(2, 10)
         taux_conversion_B = round(random.uniform(20, 40), 1)
         touches_surface_B = random.randint(15, 40)
         passes_cles_B = random.randint(3, 8)
@@ -217,7 +238,7 @@ with col2:
         st.markdown("**Données fictives générées pour l'Équipe B**")
     else:
         xG_B = st.number_input("xG (Équipe B)", value=1.0)
-        tirs_cadres_B = st.number_input("Tirs cadrés (Équipe B)", value=3)
+        tirs_cadrés_B = st.number_input("Tirs cadrés (Équipe B)", value=3)
         taux_conversion_B = st.number_input("Taux de conversion (%) (Équipe B)", value=25.0)
         touches_surface_B = st.number_input("Touches dans la surface (Équipe B)", value=20)
         passes_cles_B = st.number_input("Passes clés (Équipe B)", value=4)
@@ -246,10 +267,10 @@ with col_odds3:
 if st.button("🔮 Prédire le Résultat"):
     # Prédiction via le modèle de Poisson
     victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B = predire_resultat_match(
-        xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
+        xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
         possession_A, corners_A,
-        xG_B, tirs_cadres_B, taux_conversion_B, touches_surface_B, passes_cles_B,
+        xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
         interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
         possession_B, corners_B
     )
@@ -267,7 +288,7 @@ if st.button("🔮 Prédire le Résultat"):
     }
     st.table(pd.DataFrame(data_poisson))
     
-    # Utilisation des modèles de classification
+    # Entraînement ou utilisation des modèles de classification
     if fichier_entrainement is not None:
         model_log = modele_logistique
         prec_log = precision_logistique
@@ -276,7 +297,7 @@ if st.button("🔮 Prédire le Résultat"):
         model_rf = modele_rf
         prec_rf = precision_rf
     else:
-        # Génération de données fictives pour l'entraînement avec 26 colonnes
+        # Génération de données fictives pour l'entraînement avec 26 caractéristiques
         X_data = np.random.rand(200, 26)
         y_data = np.random.randint(0, 2, 200)
         X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.3, random_state=42)
@@ -291,10 +312,10 @@ if st.button("🔮 Prédire le Résultat"):
         prec_rf = accuracy_score(y_test, model_rf.predict(X_test))
     
     input_features = np.array([[
-        xG_A, tirs_cadres_A, taux_conversion_A, touches_surface_A, passes_cles_A,
+        xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
         possession_A, corners_A,
-        xG_B, tirs_cadres_B, taux_conversion_B, touches_surface_B, passes_cles_B,
+        xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
         interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
         possession_B, corners_B
     ]])
