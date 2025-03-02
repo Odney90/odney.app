@@ -54,12 +54,10 @@ def load_training_data(file):
     # Supprimer les lignes avec des valeurs manquantes
     df = df.dropna()
     
-    # Convertir la colonne "resultat" en entier
-    try:
-        df["resultat"] = df["resultat"].astype(int)
-    except Exception as e:
-        st.error("Erreur lors de la conversion de la colonne 'resultat' en entier.")
-        return None
+    # Convertir la colonne "resultat" en numérique et supprimer les lignes non converties
+    df["resultat"] = pd.to_numeric(df["resultat"], errors="coerce")
+    df = df.dropna(subset=["resultat"])
+    df["resultat"] = df["resultat"].astype(int)
     
     missing = [col for col in required_columns if col not in df.columns]
     if missing:
@@ -109,7 +107,6 @@ def predict_match(
     possession_B, corners_B,
     max_buts=5
 ):
-    # Optimisation des pondérations (à ajuster si besoin)
     note_offensive_A = (
         xG_A * 0.2 +
         tirs_cadrés_A * 0.15 +
