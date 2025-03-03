@@ -80,7 +80,7 @@ def predire_resultat_match(
     
     adj_xG_home = Ro_home / (Rd_away + 1)
     
-    # Pour l'équipe Away
+    # Calcul de la note offensive pour Away (à l'extérieur)
     Ro_away = (0.25 * xG_away +
                0.20 * tirs_cadrés_away +
                0.10 * (taux_conversion_away / 100) +
@@ -90,6 +90,7 @@ def predire_resultat_match(
                0.05 * (possession_away / 100) +
                0.05 * (corners_away / 10))
     
+    # Calcul de la note défensive pour Home
     Rd_home = (0.25 * xGA_home +
                0.20 * arrets_gardien_home +
                0.10 * interceptions_home +
@@ -166,7 +167,7 @@ def generer_donnees_foot(n_samples=200):
     data["Fautes_commises_away"] = np.random.randint(8, 21, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat' : victoire Home si prob Home >= prob Away, sinon victoire Away
+    # Génération de la cible 'resultat'
     results = []
     for _, row in df.iterrows():
         victoire_home, victoire_away, match_nul, _, _ = predire_resultat_match(
@@ -228,6 +229,11 @@ y_reel = df_entrainement["resultat"]
 @st.cache_resource(show_spinner=False)
 def load_models(X, y):
     saved = load_models_from_disk()
+    # Vérification du nombre de caractéristiques pour le modèle logistique
+    if saved is not None:
+        if hasattr(saved["log"][0], "n_features_in_") and saved["log"][0].n_features_in_ != len(features):
+            os.remove("trained_models.pkl")
+            saved = None
     if saved is not None:
         return saved
     else:
@@ -380,31 +386,8 @@ with col_odds3:
 # Prédictions et affichage des résultats
 # =====================================
 if st.button("🔮 Prédire le Résultat"):
-    # Prédiction via le modèle de Poisson en passant 26 variables
-    victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away = predire_resultat_match(
-        xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
-        interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
-        possession_home, corners_home, fautes_commises_home,
-        xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_decisives_away,
-        interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away,
-        possession_away, corners_away, fautes_commises_away
-    )
-    
-    st.markdown("## 📊 Résultats du Modèle de Poisson")
-    data_poisson = {
-        "Mesure": [
-            "🏆 Prob. Victoire Home", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire Away",
-            "⚽ Buts attendus Home", "⚽ Buts attendus Away"
-        ],
-        "Valeur": [
-            f"{victoire_home*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_away*100:.2f}%",
-            f"{expected_buts_home:.2f}", f"{expected_buts_away:.2f}"
-        ]
-    }
-    st.table(pd.DataFrame(data_poisson))
-    
-    st.markdown("## 🔍 Résultats des Modèles de Classification")
-    input_features = np.array([[ 
+    # Préparation de l'input_features (doit être de forme (1, 26))
+    input_features = np.array([[
         xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
         interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
         possession_home, corners_home, fautes_commises_home,
@@ -412,79 +395,108 @@ if st.button("🔮 Prédire le Résultat"):
         interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away,
         possession_away, corners_away, fautes_commises_away
     ]])
-    st.write("**📐 Forme de l'input :**", input_features.shape)
     
-    proba_log = modele_logistique.predict_proba(input_features)[0][1]
-    prediction_log = "🏆 Victoire Home" if proba_log > 0.5 else "🏟️ Victoire Away"
-    
-    proba_xgb = modele_xgb.predict_proba(input_features)[0][1]
-    prediction_xgb = "🏆 Victoire Home" if proba_xgb > 0.5 else "🏟️ Victoire Away"
-    
-    proba_rf = modele_rf.predict_proba(input_features)[0][1]
-    prediction_rf = "🏆 Victoire Home" if proba_rf > 0.5 else "🏟️ Victoire Away"
-    
-    data_classif = {
-        "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
-        "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
-        "Probabilité": [f"{proba_log*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
-        "Précision (moyenne / Best Params)": [
-            f"{precision_logistique*100:.2f}% / {get_best_params(cv_results_log)}",
-            f"{precision_xgb*100:.2f}% / {get_best_params(cv_results_xgb)}",
-            f"{precision_rf*100:.2f}% / {get_best_params(cv_results_rf)}"
-        ]
-    }
-    st.table(pd.DataFrame(data_classif))
-    
-    st.markdown("## 🎲 Analyse Value Bet")
-    outcomes = ["🏆 Victoire Home", "🤝 Match Nul", "🏟️ Victoire Away"]
-    bookmaker_cotes = [cote_A, cote_N, cote_B]
-    predicted_probs = [victoire_home, match_nul, victoire_away]
-    
-    value_bet_data = {"Issue": [], "Cote Bookmaker": [], "Prob. Impliquée": [], "Prob. Prédite": [], "Valeur Espérée": [], "Value Bet ?": []}
-    for outcome, cote, prob in zip(outcomes, bookmaker_cotes, predicted_probs):
-        prob_implied = 1 / cote
-        ev, recommendation = calculer_value_bet(prob, cote)
-        value_bet_data["Issue"].append(outcome)
-        value_bet_data["Cote Bookmaker"].append(cote)
-        value_bet_data["Prob. Impliquée"].append(f"{prob_implied*100:.2f}%")
-        value_bet_data["Prob. Prédite"].append(f"{prob*100:.2f}%")
-        value_bet_data["Valeur Espérée"].append(f"{ev:.2f}")
-        value_bet_data["Value Bet ?"].append(recommendation)
-    st.table(pd.DataFrame(value_bet_data))
-    
-    st.markdown("## 🎯 Analyse Double Chance")
-    dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
-    if dc_option == "1X (🏠 ou 🤝)":
-        dc_odds = number_input_locale("💰 Cote - Double Chance 1X", 1.50, key="dc1")
-        dc_prob = victoire_home + match_nul
-    elif dc_option == "X2 (🤝 ou 🏟️)":
-        dc_odds = number_input_locale("💰 Cote - Double Chance X2", 1.60, key="dc2")
-        dc_prob = match_nul + victoire_away
+    # Vérifier la cohérence des dimensions
+    if input_features.shape[1] != modele_logistique.n_features_in_:
+        st.error(f"Erreur: Le modèle attend {modele_logistique.n_features_in_} caractéristiques, mais l'input possède {input_features.shape[1]}. Veuillez supprimer le fichier 'trained_models.pkl' pour réentraîner les modèles.")
     else:
-        dc_odds = number_input_locale("💰 Cote - Double Chance 12", 1.40, key="dc3")
-        dc_prob = victoire_home + victoire_away
-
-    dc_implied = 1 / dc_odds
-    dc_ev, dc_recommendation = calculer_value_bet(dc_prob, dc_odds)
+        st.write("**📐 Forme de l'input :**", input_features.shape)
     
-    dc_data = {
-        "Option": [dc_option],
-        "Cote": [dc_odds],
-        "Prob. Impliquée": [f"{dc_implied*100:.2f}%"],
-        "Prob. Prédite": [f"{dc_prob*100:.2f}%"],
-        "Valeur Espérée": [f"{dc_ev:.2f}"],
-        "Double Chance": [dc_recommendation]
-    }
-    st.table(pd.DataFrame(dc_data))
+        # Prédiction via le modèle de Poisson
+        victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away = predire_resultat_match(
+            xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
+            interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
+            possession_home, corners_home, fautes_commises_home,
+            xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_decisives_away,
+            interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away,
+            possession_away, corners_away, fautes_commises_away
+        )
     
-    buts_data = pd.DataFrame({
-        "Buts": list(range(0, 6)),
-        "Prob Équipe Home": [poisson_prob(expected_buts_home, i) for i in range(6)],
-        "Prob Équipe Away": [poisson_prob(expected_buts_away, i) for i in range(6)]
-    })
-    chart = alt.Chart(buts_data).mark_bar().encode(
-        x=alt.X("Buts:O", title="Nombre de buts"),
-        y=alt.Y("Prob Équipe Home:Q", title="Probabilité"),
-        color=alt.value("#4CAF50")
-    ).properties(title="Distribution des buts attendus - Équipe Home")
-    st.altair_chart(chart, use_container_width=True)
+        st.markdown("## 📊 Résultats du Modèle de Poisson")
+        data_poisson = {
+            "Mesure": [
+                "🏆 Prob. Victoire Home", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire Away",
+                "⚽ Buts attendus Home", "⚽ Buts attendus Away"
+            ],
+            "Valeur": [
+                f"{victoire_home*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_away*100:.2f}%",
+                f"{expected_buts_home:.2f}", f"{expected_buts_away:.2f}"
+            ]
+        }
+        st.table(pd.DataFrame(data_poisson))
+    
+        st.markdown("## 🔍 Résultats des Modèles de Classification")
+        proba_log = modele_logistique.predict_proba(input_features)[0][1]
+        prediction_log = "🏆 Victoire Home" if proba_log > 0.5 else "🏟️ Victoire Away"
+    
+        proba_xgb = modele_xgb.predict_proba(input_features)[0][1]
+        prediction_xgb = "🏆 Victoire Home" if proba_xgb > 0.5 else "🏟️ Victoire Away"
+    
+        proba_rf = modele_rf.predict_proba(input_features)[0][1]
+        prediction_rf = "🏆 Victoire Home" if proba_rf > 0.5 else "🏟️ Victoire Away"
+    
+        data_classif = {
+            "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
+            "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
+            "Probabilité": [f"{proba_log*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
+            "Précision (moyenne / Best Params)": [
+                f"{precision_logistique*100:.2f}% / {get_best_params(cv_results_log)}",
+                f"{precision_xgb*100:.2f}% / {get_best_params(cv_results_xgb)}",
+                f"{precision_rf*100:.2f}% / {get_best_params(cv_results_rf)}"
+            ]
+        }
+        st.table(pd.DataFrame(data_classif))
+    
+        st.markdown("## 🎲 Analyse Value Bet")
+        outcomes = ["🏆 Victoire Home", "🤝 Match Nul", "🏟️ Victoire Away"]
+        bookmaker_cotes = [cote_A, cote_N, cote_B]
+        predicted_probs = [victoire_home, match_nul, victoire_away]
+    
+        value_bet_data = {"Issue": [], "Cote Bookmaker": [], "Prob. Impliquée": [], "Prob. Prédite": [], "Valeur Espérée": [], "Value Bet ?": []}
+        for outcome, cote, prob in zip(outcomes, bookmaker_cotes, predicted_probs):
+            prob_implied = 1 / cote
+            ev, recommendation = calculer_value_bet(prob, cote)
+            value_bet_data["Issue"].append(outcome)
+            value_bet_data["Cote Bookmaker"].append(cote)
+            value_bet_data["Prob. Impliquée"].append(f"{prob_implied*100:.2f}%")
+            value_bet_data["Prob. Prédite"].append(f"{prob*100:.2f}%")
+            value_bet_data["Valeur Espérée"].append(f"{ev:.2f}")
+            value_bet_data["Value Bet ?"].append(recommendation)
+        st.table(pd.DataFrame(value_bet_data))
+    
+        st.markdown("## 🎯 Analyse Double Chance")
+        dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
+        if dc_option == "1X (🏠 ou 🤝)":
+            dc_odds = number_input_locale("💰 Cote - Double Chance 1X", 1.50, key="dc1")
+            dc_prob = victoire_home + match_nul
+        elif dc_option == "X2 (🤝 ou 🏟️)":
+            dc_odds = number_input_locale("💰 Cote - Double Chance X2", 1.60, key="dc2")
+            dc_prob = match_nul + victoire_away
+        else:
+            dc_odds = number_input_locale("💰 Cote - Double Chance 12", 1.40, key="dc3")
+            dc_prob = victoire_home + victoire_away
+    
+        dc_implied = 1 / dc_odds
+        dc_ev, dc_recommendation = calculer_value_bet(dc_prob, dc_odds)
+    
+        dc_data = {
+            "Option": [dc_option],
+            "Cote": [dc_odds],
+            "Prob. Impliquée": [f"{dc_implied*100:.2f}%"],
+            "Prob. Prédite": [f"{dc_prob*100:.2f}%"],
+            "Valeur Espérée": [f"{dc_ev:.2f}"],
+            "Double Chance": [dc_recommendation]
+        }
+        st.table(pd.DataFrame(dc_data))
+    
+        buts_data = pd.DataFrame({
+            "Buts": list(range(0, 6)),
+            "Prob Équipe Home": [poisson_prob(expected_buts_home, i) for i in range(6)],
+            "Prob Équipe Away": [poisson_prob(expected_buts_away, i) for i in range(6)]
+        })
+        chart = alt.Chart(buts_data).mark_bar().encode(
+            x=alt.X("Buts:O", title="Nombre de buts"),
+            y=alt.Y("Prob Équipe Home:Q", title="Probabilité"),
+            color=alt.value("#4CAF50")
+        ).properties(title="Distribution des buts attendus - Équipe Home")
+        st.altair_chart(chart, use_container_width=True)
