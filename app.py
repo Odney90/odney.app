@@ -37,81 +37,83 @@ def poisson_prob(lam, k):
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
 
 def predire_resultat_match(
-    # Variables Équipe A (Domicile) – 18 variables (13 initiales + 5 nouvelles)
-    xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
-    interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
-    possession_A, corners_A,
-    fautes_commises_A, cartons_jaunes_A, passes_decisives_A, taux_reussite_passes_A, coups_frais_A,
-    # Variables Équipe B (Extérieur) – 18 variables (13 initiales + 5 nouvelles)
-    xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
-    interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
-    possession_B, corners_B,
-    fautes_commises_B, cartons_jaunes_B, passes_decisives_B, taux_reussite_passes_B, coups_frais_B,
+    # Variables Équipe Home (Domicile) – 18 variables
+    xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_cles_home,
+    interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home, points_5_matchs_home,
+    possession_home, corners_home,
+    fautes_commises_home, cartons_jaunes_home, passes_decisives_home, taux_reussite_passes_home, coups_frais_home,
+    # Variables Équipe Away (Extérieur) – 18 variables
+    xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_cles_away,
+    interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away, points_5_matchs_away,
+    possession_away, corners_away,
+    fautes_commises_away, cartons_jaunes_away, passes_decisives_away, taux_reussite_passes_away, coups_frais_away,
     max_buts=5
 ):
-    # Calcul du score offensif pour l'Équipe A
-    note_offensive_A = (
-        xG_A * 0.2 +
-        tirs_cadrés_A * 0.15 +
-        touches_surface_A * 0.1 +
-        (taux_conversion_A / 100) * 0.15 +
-        passes_cles_A * 0.15 +
-        passes_decisives_A * 0.1 +
-        (taux_reussite_passes_A / 100) * 0.1 +
-        coups_frais_A * 0.05 +
-        (possession_A / 100) * 0.1 +
-        (corners_A / 10) * 0.15
+    # Calcul du score offensif pour l'équipe Home (en jouant à domicile)
+    note_offensive_home = (
+        xG_home * 0.2 +
+        tirs_cadrés_home * 0.15 +
+        touches_surface_home * 0.1 +
+        (taux_conversion_home / 100) * 0.15 +
+        passes_cles_home * 0.15 +
+        passes_decisives_home * 0.1 +
+        (taux_reussite_passes_home / 100) * 0.1 +
+        coups_frais_home * 0.05 +
+        (possession_home / 100) * 0.1 +
+        (corners_home / 10) * 0.15
     )
-    note_defensive_B = (
-        xGA_B * 0.2 +
-        arrets_gardien_B * 0.15 +
-        interceptions_B * 0.15 +
-        duels_defensifs_B * 0.15 +
-        fautes_commises_B * 0.05 +
-        cartons_jaunes_B * 0.05 +
-        ((100 - possession_B) / 100) * 0.1 +
-        (corners_B / 10) * 0.15
+    # Pour l'adversaire, on utilisera ses stats à l'extérieur
+    note_defensive_away = (
+        xGA_away * 0.2 +
+        arrets_gardien_away * 0.15 +
+        interceptions_away * 0.15 +
+        duels_defensifs_away * 0.15 +
+        fautes_commises_away * 0.05 +
+        cartons_jaunes_away * 0.05 +
+        ((100 - possession_away) / 100) * 0.1 +
+        (corners_away / 10) * 0.15
     )
-    multiplicateur_A = 1 + (forme_recente_A / 10) + (points_5_matchs_A / 15)
-    adj_xG_A = (note_offensive_A * multiplicateur_A) / (note_defensive_B + 1)
+    multiplicateur_home = 1 + (forme_recente_home / 10) + (points_5_matchs_home / 15)
+    adj_xG_home = (note_offensive_home * multiplicateur_home) / (note_defensive_away + 1)
     
-    # Calcul du score offensif pour l'Équipe B
-    note_offensive_B = (
-        xG_B * 0.2 +
-        tirs_cadrés_B * 0.15 +
-        touches_surface_B * 0.1 +
-        (taux_conversion_B / 100) * 0.15 +
-        passes_cles_B * 0.15 +
-        passes_decisives_B * 0.1 +
-        (taux_reussite_passes_B / 100) * 0.1 +
-        coups_frais_B * 0.05 +
-        (possession_B / 100) * 0.1 +
-        (corners_B / 10) * 0.15
+    # Calcul du score offensif pour l'équipe Away (en jouant à l'extérieur)
+    note_offensive_away = (
+        xG_away * 0.2 +
+        tirs_cadrés_away * 0.15 +
+        touches_surface_away * 0.1 +
+        (taux_conversion_away / 100) * 0.15 +
+        passes_cles_away * 0.15 +
+        passes_decisives_away * 0.1 +
+        (taux_reussite_passes_away / 100) * 0.1 +
+        coups_frais_away * 0.05 +
+        (possession_away / 100) * 0.1 +
+        (corners_away / 10) * 0.15
     )
-    note_defensive_A = (
-        xGA_A * 0.2 +
-        arrets_gardien_A * 0.15 +
-        interceptions_A * 0.15 +
-        duels_defensifs_A * 0.15 +
-        fautes_commises_A * 0.05 +
-        cartons_jaunes_A * 0.05 +
-        ((100 - possession_A) / 100) * 0.1 +
-        (corners_A / 10) * 0.15
+    # Pour l'équipe adverse (Home), on utilise ses stats à domicile
+    note_defensive_home = (
+        xGA_home * 0.2 +
+        arrets_gardien_home * 0.15 +
+        interceptions_home * 0.15 +
+        duels_defensifs_home * 0.15 +
+        fautes_commises_home * 0.05 +
+        cartons_jaunes_home * 0.05 +
+        ((100 - possession_home) / 100) * 0.1 +
+        (corners_home / 10) * 0.15
     )
-    multiplicateur_B = 1 + (forme_recente_B / 10) + (points_5_matchs_B / 15)
-    adj_xG_B = (note_offensive_B * multiplicateur_B) / (note_defensive_A + 1)
+    multiplicateur_away = 1 + (forme_recente_away / 10) + (points_5_matchs_away / 15)
+    adj_xG_away = (note_offensive_away * multiplicateur_away) / (note_defensive_home + 1)
     
     # Calcul vectorisé de la distribution de buts via np.outer
-    prob_A = np.array([poisson_prob(adj_xG_A, i) for i in range(max_buts+1)])
-    prob_B = np.array([poisson_prob(adj_xG_B, i) for i in range(max_buts+1)])
-    matrice = np.outer(prob_A, prob_B)
-    victoire_A = np.sum(np.triu(matrice, k=1))
-    victoire_B = np.sum(np.tril(matrice, k=-1))
+    prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
+    prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
+    matrice = np.outer(prob_home, prob_away)
+    victoire_home = np.sum(np.triu(matrice, k=1))
+    victoire_away = np.sum(np.tril(matrice, k=-1))
     match_nul = np.sum(np.diag(matrice))
-    expected_buts_A = np.sum(np.arange(max_buts+1) * prob_A)
-    expected_buts_B = np.sum(np.arange(max_buts+1) * prob_B)
+    expected_buts_home = np.sum(np.arange(max_buts+1) * prob_home)
+    expected_buts_away = np.sum(np.arange(max_buts+1) * prob_away)
     
-    return victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B
+    return victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away
 
 def calculer_value_bet(prob, cote):
     """Calcule la valeur espérée et fournit une recommandation de pari."""
@@ -137,63 +139,61 @@ def load_models_from_disk():
 # =====================================
 def generer_donnees_foot(n_samples=200):
     data = {}
-    # Variables initiales pour l'Équipe A (Domicile)
-    data["xG_A"] = np.random.uniform(0.5, 2.5, n_samples)
-    data["Tirs_cadrés_A"] = np.random.randint(2, 11, n_samples)
-    data["Taux_conversion_A"] = np.random.uniform(20, 40, n_samples)
-    data["Touches_surface_A"] = np.random.randint(15, 41, n_samples)
-    data["Passes_clés_A"] = np.random.randint(3, 9, n_samples)
-    data["Interceptions_A"] = np.random.randint(5, 16, n_samples)
-    data["Duels_defensifs_A"] = np.random.randint(10, 31, n_samples)
-    data["xGA_A"] = np.random.uniform(1.0, 2.5, n_samples)
-    data["Arrêts_gardien_A"] = np.random.randint(3, 8, n_samples)
-    data["Forme_recente_A"] = np.random.randint(5, 16, n_samples)
-    data["Points_5_matchs_A"] = np.random.randint(5, 16, n_samples)
-    data["possession_A"] = np.random.uniform(45, 70, n_samples)
-    data["corners_A"] = np.random.randint(3, 11, n_samples)
-    # Nouvelles variables pour l'Équipe A
-    data["Fautes_commises_A"] = np.random.randint(8, 21, n_samples)
-    data["Cartons_jaunes_A"] = np.random.randint(0, 4, n_samples)
-    data["Passes_decisives_A"] = np.random.randint(0, 6, n_samples)
-    data["Taux_reussite_passes_A"] = np.random.uniform(70, 90, n_samples)
-    data["Coups_frais_A"] = np.random.randint(0, 6, n_samples)
+    # Variables pour l'équipe Home (Domicile)
+    data["xG_home"] = np.random.uniform(0.5, 2.5, n_samples)
+    data["Tirs_cadrés_home"] = np.random.randint(2, 11, n_samples)
+    data["Taux_conversion_home"] = np.random.uniform(20, 40, n_samples)
+    data["Touches_surface_home"] = np.random.randint(15, 41, n_samples)
+    data["Passes_clés_home"] = np.random.randint(3, 9, n_samples)
+    data["Interceptions_home"] = np.random.randint(5, 16, n_samples)
+    data["Duels_defensifs_home"] = np.random.randint(10, 31, n_samples)
+    data["xGA_home"] = np.random.uniform(1.0, 2.5, n_samples)
+    data["Arrêts_gardien_home"] = np.random.randint(3, 8, n_samples)
+    data["Forme_recente_home"] = np.random.randint(5, 16, n_samples)
+    data["Points_5_matchs_home"] = np.random.randint(5, 16, n_samples)
+    data["possession_home"] = np.random.uniform(45, 70, n_samples)
+    data["corners_home"] = np.random.randint(3, 11, n_samples)
+    data["Fautes_commises_home"] = np.random.randint(8, 21, n_samples)
+    data["Cartons_jaunes_home"] = np.random.randint(0, 4, n_samples)
+    data["Passes_decisives_home"] = np.random.randint(0, 6, n_samples)
+    data["Taux_reussite_passes_home"] = np.random.uniform(70, 90, n_samples)
+    data["Coups_frais_home"] = np.random.randint(0, 6, n_samples)
     
-    # Variables initiales pour l'Équipe B (Extérieur)
-    data["xG_B"] = np.random.uniform(0.5, 2.5, n_samples)
-    data["Tirs_cadrés_B"] = np.random.randint(2, 11, n_samples)
-    data["Taux_conversion_B"] = np.random.uniform(20, 40, n_samples)
-    data["Touches_surface_B"] = np.random.randint(15, 41, n_samples)
-    data["Passes_clés_B"] = np.random.randint(3, 9, n_samples)
-    data["Interceptions_B"] = np.random.randint(5, 16, n_samples)
-    data["Duels_defensifs_B"] = np.random.randint(10, 31, n_samples)
-    data["xGA_B"] = np.random.uniform(1.0, 2.5, n_samples)
-    data["arrets_gardien_B"] = np.random.randint(3, 8, n_samples)
-    data["Forme_recente_B"] = np.random.randint(5, 16, n_samples)
-    data["Points_5_matchs_B"] = np.random.randint(5, 16, n_samples)
-    data["possession_B"] = np.random.uniform(45, 70, n_samples)
-    data["corners_B"] = np.random.randint(3, 11, n_samples)
-    # Nouvelles variables pour l'Équipe B
-    data["Fautes_commises_B"] = np.random.randint(8, 21, n_samples)
-    data["Cartons_jaunes_B"] = np.random.randint(0, 4, n_samples)
-    data["Passes_decisives_B"] = np.random.randint(0, 6, n_samples)
-    data["Taux_reussite_passes_B"] = np.random.uniform(70, 90, n_samples)
-    data["Coups_frais_B"] = np.random.randint(0, 6, n_samples)
+    # Variables pour l'équipe Away (Extérieur)
+    data["xG_away"] = np.random.uniform(0.5, 2.5, n_samples)
+    data["Tirs_cadrés_away"] = np.random.randint(2, 11, n_samples)
+    data["Taux_conversion_away"] = np.random.uniform(20, 40, n_samples)
+    data["Touches_surface_away"] = np.random.randint(15, 41, n_samples)
+    data["Passes_clés_away"] = np.random.randint(3, 9, n_samples)
+    data["Interceptions_away"] = np.random.randint(5, 16, n_samples)
+    data["Duels_defensifs_away"] = np.random.randint(10, 31, n_samples)
+    data["xGA_away"] = np.random.uniform(1.0, 2.5, n_samples)
+    data["arrets_gardien_away"] = np.random.randint(3, 8, n_samples)
+    data["Forme_recente_away"] = np.random.randint(5, 16, n_samples)
+    data["Points_5_matchs_away"] = np.random.randint(5, 16, n_samples)
+    data["possession_away"] = np.random.uniform(45, 70, n_samples)
+    data["corners_away"] = np.random.randint(3, 11, n_samples)
+    data["Fautes_commises_away"] = np.random.randint(8, 21, n_samples)
+    data["Cartons_jaunes_away"] = np.random.randint(0, 4, n_samples)
+    data["Passes_decisives_away"] = np.random.randint(0, 6, n_samples)
+    data["Taux_reussite_passes_away"] = np.random.uniform(70, 90, n_samples)
+    data["Coups_frais_away"] = np.random.randint(0, 6, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat'
+    # Génération de la cible 'resultat' en comparant les performances de Home vs Away
     results = []
     for _, row in df.iterrows():
-        victoire_A, victoire_B, match_nul, _, _ = predire_resultat_match(
-            row["xG_A"], row["Tirs_cadrés_A"], row["Taux_conversion_A"], row["Touches_surface_A"], row["Passes_clés_A"],
-            row["Interceptions_A"], row["Duels_defensifs_A"], row["xGA_A"], row["Arrêts_gardien_A"], row["Forme_recente_A"], row["Points_5_matchs_A"],
-            row["possession_A"], row["corners_A"],
-            row["Fautes_commises_A"], row["Cartons_jaunes_A"], row["Passes_decisives_A"], row["Taux_reussite_passes_A"], row["Coups_frais_A"],
-            row["xG_B"], row["Tirs_cadrés_B"], row["Taux_conversion_B"], row["Touches_surface_B"], row["Passes_clés_B"],
-            row["Interceptions_B"], row["Duels_defensifs_B"], row["xGA_B"], row["arrets_gardien_B"], row["Forme_recente_B"], row["Points_5_matchs_B"],
-            row["possession_B"], row["corners_B"],
-            row["Fautes_commises_B"], row["Cartons_jaunes_B"], row["Passes_decisives_B"], row["Taux_reussite_passes_B"], row["Coups_frais_B"]
+        victoire_home, victoire_away, match_nul, _, _ = predire_resultat_match(
+            row["xG_home"], row["Tirs_cadrés_home"], row["Taux_conversion_home"], row["Touches_surface_home"], row["Passes_clés_home"],
+            row["Interceptions_home"], row["Duels_defensifs_home"], row["xGA_home"], row["Arrêts_gardien_home"], row["Forme_recente_home"], row["Points_5_matchs_home"],
+            row["possession_home"], row["corners_home"],
+            row["Fautes_commises_home"], row["Cartons_jaunes_home"], row["Passes_decisives_home"], row["Taux_reussite_passes_home"], row["Coups_frais_home"],
+            row["xG_away"], row["Tirs_cadrés_away"], row["Taux_conversion_away"], row["Touches_surface_away"], row["Passes_clés_away"],
+            row["Interceptions_away"], row["Duels_defensifs_away"], row["xGA_away"], row["arrets_gardien_away"], row["Forme_recente_away"], row["Points_5_matchs_away"],
+            row["possession_away"], row["corners_away"],
+            row["Fautes_commises_away"], row["Cartons_jaunes_away"], row["Passes_decisives_away"], row["Taux_reussite_passes_away"], row["Coups_frais_away"]
         )
-        results.append(1 if victoire_A >= victoire_B else 0)
+        results.append(1 if victoire_home >= victoire_away else 0)
     df["resultat"] = results
     return df
 
@@ -205,19 +205,19 @@ st.sidebar.markdown(
     """
     **Format du CSV attendu :**
 
-    - Pour l'Équipe A (Domicile) (18 variables) :
-      `xG_A`, `Tirs_cadrés_A`, `Taux_conversion_A`, `Touches_surface_A`, `Passes_clés_A`,
-      `Interceptions_A`, `Duels_defensifs_A`, `xGA_A`, `Arrêts_gardien_A`, `Forme_recente_A`, `Points_5_matchs_A`,
-      `possession_A`, `corners_A`,
-      `Fautes_commises_A`, `Cartons_jaunes_A`, `Passes_decisives_A`, `Taux_reussite_passes_A`, `Coups_frais_A`
+    - Pour l'équipe Home (Domicile) (18 variables) :
+      `xG_home`, `Tirs_cadrés_home`, `Taux_conversion_home`, `Touches_surface_home`, `Passes_clés_home`,
+      `Interceptions_home`, `Duels_defensifs_home`, `xGA_home`, `Arrêts_gardien_home`, `Forme_recente_home`, `Points_5_matchs_home`,
+      `possession_home`, `corners_home`,
+      `Fautes_commises_home`, `Cartons_jaunes_home`, `Passes_decisives_home`, `Taux_reussite_passes_home`, `Coups_frais_home`
       
-    - Pour l'Équipe B (Extérieur) (18 variables) :
-      `xG_B`, `Tirs_cadrés_B`, `Taux_conversion_B`, `Touches_surface_B`, `Passes_clés_B`,
-      `Interceptions_B`, `Duels_defensifs_B`, `xGA_B`, `arrets_gardien_B`, `Forme_recente_B`, `Points_5_matchs_B`,
-      `possession_B`, `corners_B`,
-      `Fautes_commises_B`, `Cartons_jaunes_B`, `Passes_decisives_B`, `Taux_reussite_passes_B`, `Coups_frais_B`
+    - Pour l'équipe Away (Extérieur) (18 variables) :
+      `xG_away`, `Tirs_cadrés_away`, `Taux_conversion_away`, `Touches_surface_away`, `Passes_clés_away`,
+      `Interceptions_away`, `Duels_defensifs_away`, `xGA_away`, `arrets_gardien_away`, `Forme_recente_away`, `Points_5_matchs_away`,
+      `possession_away`, `corners_away`,
+      `Fautes_commises_away`, `Cartons_jaunes_away`, `Passes_decisives_away`, `Taux_reussite_passes_away`, `Coups_frais_away`
       
-    - Colonne cible : `resultat` (0 = victoire B, 1 = victoire A)
+    - Colonne cible : `resultat` (0 = victoire Away, 1 = victoire Home)
     """
 )
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
@@ -230,12 +230,12 @@ else:
 
 # Liste complète des features
 features = [
-    "xG_A", "Tirs_cadrés_A", "Taux_conversion_A", "Touches_surface_A", "Passes_clés_A",
-    "Interceptions_A", "Duels_defensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
-    "possession_A", "corners_A", "Fautes_commises_A", "Cartons_jaunes_A", "Passes_decisives_A", "Taux_reussite_passes_A", "Coups_frais_A",
-    "xG_B", "Tirs_cadrés_B", "Taux_conversion_B", "Touches_surface_B", "Passes_clés_B",
-    "Interceptions_B", "Duels_defensifs_B", "xGA_B", "arrets_gardien_B", "Forme_recente_B", "Points_5_matchs_B",
-    "possession_B", "corners_B", "Fautes_commises_B", "Cartons_jaunes_B", "Passes_decisives_B", "Taux_reussite_passes_B", "Coups_frais_B"
+    "xG_home", "Tirs_cadrés_home", "Taux_conversion_home", "Touches_surface_home", "Passes_clés_home",
+    "Interceptions_home", "Duels_defensifs_home", "xGA_home", "Arrêts_gardien_home", "Forme_recente_home", "Points_5_matchs_home",
+    "possession_home", "corners_home", "Fautes_commises_home", "Cartons_jaunes_home", "Passes_decisives_home", "Taux_reussite_passes_home", "Coups_frais_home",
+    "xG_away", "Tirs_cadrés_away", "Taux_conversion_away", "Touches_surface_away", "Passes_clés_away",
+    "Interceptions_away", "Duels_defensifs_away", "xGA_away", "arrets_gardien_away", "Forme_recente_away", "Points_5_matchs_away",
+    "possession_away", "corners_away", "Fautes_commises_away", "Cartons_jaunes_away", "Passes_decisives_away", "Taux_reussite_passes_away", "Coups_frais_away"
 ]
 X_reel = df_entrainement[features]
 y_reel = df_entrainement["resultat"]
@@ -308,146 +308,146 @@ use_fictives = st.checkbox("Utiliser des données fictives", value=False)
 
 col1, col2 = st.columns(2)
 with col1:
-    st.header("🏠 Équipe A (Domicile)")
+    st.header("🏠 Équipe Home (Domicile)")
     if use_fictives:
-        xG_A = round(random.uniform(0.5, 2.5), 2)
-        tirs_cadrés_A = float(random.randint(2, 10))
-        taux_conversion_A = round(random.uniform(20, 40), 2)
-        touches_surface_A = float(random.randint(15, 40))
-        passes_cles_A = float(random.randint(3, 8))
-        interceptions_A = float(random.randint(5, 15))
-        duels_defensifs_A = float(random.randint(10, 30))
-        xGA_A = round(random.uniform(1, 2.5), 2)
-        arrets_gardien_A = float(random.randint(3, 7))
-        forme_recente_A = float(random.randint(5, 15))
-        points_5_matchs_A = float(random.randint(5, 15))
-        possession_A = round(random.uniform(45, 70), 2)
-        corners_A = float(random.randint(3, 10))
-        fautes_commises_A = float(random.randint(8, 20))
-        cartons_jaunes_A = float(random.randint(0, 3))
-        passes_decisives_A = float(random.randint(0, 5))
-        taux_reussite_passes_A = round(random.uniform(70, 90), 2)
-        coups_frais_A = float(random.randint(0, 5))
-        st.markdown("**🧪 Données fictives générées pour l'Équipe A**")
+        xG_home = round(random.uniform(0.5, 2.5), 2)
+        tirs_cadrés_home = float(random.randint(2, 10))
+        taux_conversion_home = round(random.uniform(20, 40), 2)
+        touches_surface_home = float(random.randint(15, 40))
+        passes_cles_home = float(random.randint(3, 8))
+        interceptions_home = float(random.randint(5, 15))
+        duels_defensifs_home = float(random.randint(10, 30))
+        xGA_home = round(random.uniform(1, 2.5), 2)
+        arrets_gardien_home = float(random.randint(3, 7))
+        forme_recente_home = float(random.randint(5, 15))
+        points_5_matchs_home = float(random.randint(5, 15))
+        possession_home = round(random.uniform(45, 70), 2)
+        corners_home = float(random.randint(3, 10))
+        fautes_commises_home = float(random.randint(8, 20))
+        cartons_jaunes_home = float(random.randint(0, 3))
+        passes_decisives_home = float(random.randint(0, 5))
+        taux_reussite_passes_home = round(random.uniform(70, 90), 2)
+        coups_frais_home = float(random.randint(0, 5))
+        st.markdown("**🧪 Données fictives générées pour l'équipe Home**")
     else:
-        xG_A = number_input_locale("⚽ xG (Équipe A)", 1.50, key="xg_a")
-        tirs_cadrés_A = number_input_locale("🎯 Tirs cadrés (Équipe A)", 5.00, key="tc_a")
-        taux_conversion_A = number_input_locale("🔥 Taux de conversion (Équipe A)", 30.00, key="tcvt_a")
-        touches_surface_A = number_input_locale("🤾‍♂️ Touches dans la surface (Équipe A)", 25.00, key="ts_a")
-        passes_cles_A = number_input_locale("🔑 Passes clés (Équipe A)", 5.00, key="pc_a")
-        interceptions_A = number_input_locale("🛡️ Interceptions (Équipe A)", 8.00, key="int_a")
-        duels_defensifs_A = number_input_locale("⚔️ Duels défensifs (Équipe A)", 18.00, key="dd_a")
-        xGA_A = number_input_locale("🚫 xGA (Équipe A)", 1.20, key="xga_a")
-        arrets_gardien_A = number_input_locale("🧤 Arrêts du gardien (Équipe A)", 4.00, key="ag_a")
-        forme_recente_A = number_input_locale("💪 Forme récente (Équipe A)", 10.00, key="fr_a")
-        points_5_matchs_A = number_input_locale("📊 Points 5 derniers matchs (A)", 8.00, key="p5_a")
-        possession_A = number_input_locale("📈 Possession (Équipe A)", 55.00, key="pos_a")
-        corners_A = number_input_locale("⚽ Corners (Équipe A)", 5.00, key="corners_a")
-        fautes_commises_A = number_input_locale("⚽ Fautes commises (Équipe A)", 12, key="fc_a")
-        cartons_jaunes_A = number_input_locale("🟡 Cartons jaunes (Équipe A)", 1, key="cj_a")
-        passes_decisives_A = number_input_locale("🎯 Passes décisives (Équipe A)", 2, key="pd_a")
-        taux_reussite_passes_A = number_input_locale("✅ Taux réussite passes (Équipe A)", 80.00, key="trp_a")
-        coups_frais_A = number_input_locale("🎯 Coups francs (Équipe A)", 1, key="cf_a")
+        xG_home = number_input_locale("⚽ xG (Home)", 1.50, key="xg_home")
+        tirs_cadrés_home = number_input_locale("🎯 Tirs cadrés (Home)", 5.00, key="tc_home")
+        taux_conversion_home = number_input_locale("🔥 Taux de conversion (Home)", 30.00, key="tcvt_home")
+        touches_surface_home = number_input_locale("🤾‍♂️ Touches dans la surface (Home)", 25.00, key="ts_home")
+        passes_cles_home = number_input_locale("🔑 Passes clés (Home)", 5.00, key="pc_home")
+        interceptions_home = number_input_locale("🛡️ Interceptions (Home)", 8.00, key="int_home")
+        duels_defensifs_home = number_input_locale("⚔️ Duels défensifs (Home)", 18.00, key="dd_home")
+        xGA_home = number_input_locale("🚫 xGA (Home)", 1.20, key="xga_home")
+        arrets_gardien_home = number_input_locale("🧤 Arrêts du gardien (Home)", 4.00, key="ag_home")
+        forme_recente_home = number_input_locale("💪 Forme récente (Home)", 10.00, key="fr_home")
+        points_5_matchs_home = number_input_locale("📊 Points 5 derniers matchs (Home)", 8.00, key="p5_home")
+        possession_home = number_input_locale("📈 Possession (Home)", 55.00, key="pos_home")
+        corners_home = number_input_locale("⚽ Corners (Home)", 5.00, key="corners_home")
+        fautes_commises_home = number_input_locale("⚽ Fautes commises (Home)", 12, key="fc_home")
+        cartons_jaunes_home = number_input_locale("🟡 Cartons jaunes (Home)", 1, key="cj_home")
+        passes_decisives_home = number_input_locale("🎯 Passes décisives (Home)", 2, key="pd_home")
+        taux_reussite_passes_home = number_input_locale("✅ Taux réussite passes (Home)", 80.00, key="trp_home")
+        coups_frais_home = number_input_locale("🎯 Coups francs (Home)", 1, key="cf_home")
 
 with col2:
-    st.header("🏟️ Équipe B (Extérieur)")
+    st.header("🏟️ Équipe Away (Extérieur)")
     if use_fictives:
-        xG_B = round(random.uniform(0.5, 2.5), 2)
-        tirs_cadrés_B = float(random.randint(2, 10))
-        taux_conversion_B = round(random.uniform(20, 40), 2)
-        touches_surface_B = float(random.randint(15, 40))
-        passes_cles_B = float(random.randint(3, 8))
-        interceptions_B = float(random.randint(5, 15))
-        duels_defensifs_B = float(random.randint(10, 30))
-        xGA_B = round(random.uniform(1, 2.5), 2)
-        arrets_gardien_B = float(random.randint(3, 7))
-        forme_recente_B = float(random.randint(5, 15))
-        points_5_matchs_B = float(random.randint(5, 15))
-        possession_B = round(random.uniform(45, 70), 2)
-        corners_B = float(random.randint(3, 10))
-        fautes_commises_B = float(random.randint(8, 20))
-        cartons_jaunes_B = float(random.randint(0, 3))
-        passes_decisives_B = float(random.randint(0, 5))
-        taux_reussite_passes_B = round(random.uniform(70, 90), 2)
-        coups_frais_B = float(random.randint(0, 5))
-        st.markdown("**🧪 Données fictives générées pour l'Équipe B**")
+        xG_away = round(random.uniform(0.5, 2.5), 2)
+        tirs_cadrés_away = float(random.randint(2, 10))
+        taux_conversion_away = round(random.uniform(20, 40), 2)
+        touches_surface_away = float(random.randint(15, 40))
+        passes_cles_away = float(random.randint(3, 8))
+        interceptions_away = float(random.randint(5, 15))
+        duels_defensifs_away = float(random.randint(10, 30))
+        xGA_away = round(random.uniform(1, 2.5), 2)
+        arrets_gardien_away = float(random.randint(3, 7))
+        forme_recente_away = float(random.randint(5, 15))
+        points_5_matchs_away = float(random.randint(5, 15))
+        possession_away = round(random.uniform(45, 70), 2)
+        corners_away = float(random.randint(3, 10))
+        fautes_commises_away = float(random.randint(8, 20))
+        cartons_jaunes_away = float(random.randint(0, 3))
+        passes_decisives_away = float(random.randint(0, 5))
+        taux_reussite_passes_away = round(random.uniform(70, 90), 2)
+        coups_frais_away = float(random.randint(0, 5))
+        st.markdown("**🧪 Données fictives générées pour l'équipe Away**")
     else:
-        xG_B = number_input_locale("⚽ xG (Équipe B)", 1.00, key="xg_b")
-        tirs_cadrés_B = number_input_locale("🎯 Tirs cadrés (Équipe B)", 3.00, key="tc_b")
-        taux_conversion_B = number_input_locale("🔥 Taux de conversion (Équipe B)", 25.00, key="tcvt_b")
-        touches_surface_B = number_input_locale("🤾‍♂️ Touches dans la surface (Équipe B)", 20.00, key="ts_b")
-        passes_cles_B = number_input_locale("🔑 Passes clés (Équipe B)", 4.00, key="pc_b")
-        interceptions_B = number_input_locale("🛡️ Interceptions (Équipe B)", 7.00, key="int_b")
-        duels_defensifs_B = number_input_locale("⚔️ Duels défensifs (Équipe B)", 15.00, key="dd_b")
-        xGA_B = number_input_locale("🚫 xGA (Équipe B)", 1.50, key="xga_b")
-        arrets_gardien_B = number_input_locale("🧤 Arrêts du gardien (Équipe B)", 5.00, key="ag_b")
-        forme_recente_B = number_input_locale("💪 Forme récente (Équipe B)", 8.00, key="fr_b")
-        points_5_matchs_B = number_input_locale("📊 Points 5 derniers matchs (B)", 6.00, key="p5_b")
-        possession_B = number_input_locale("📈 Possession (Équipe B)", 50.00, key="pos_b")
-        corners_B = number_input_locale("⚽ Corners (Équipe B)", 4.00, key="corners_b")
-        fautes_commises_B = number_input_locale("⚽ Fautes commises (Équipe B)", 12, key="fc_b")
-        cartons_jaunes_B = number_input_locale("🟡 Cartons jaunes (Équipe B)", 1, key="cj_b")
-        passes_decisives_B = number_input_locale("🎯 Passes décisives (Équipe B)", 2, key="pd_b")
-        taux_reussite_passes_B = number_input_locale("✅ Taux réussite passes (Équipe B)", 80.00, key="trp_b")
-        coups_frais_B = number_input_locale("🎯 Coups francs (Équipe B)", 1, key="cf_b")
+        xG_away = number_input_locale("⚽ xG (Away)", 1.00, key="xg_away")
+        tirs_cadrés_away = number_input_locale("🎯 Tirs cadrés (Away)", 3.00, key="tc_away")
+        taux_conversion_away = number_input_locale("🔥 Taux de conversion (Away)", 25.00, key="tcvt_away")
+        touches_surface_away = number_input_locale("🤾‍♂️ Touches dans la surface (Away)", 20.00, key="ts_away")
+        passes_cles_away = number_input_locale("🔑 Passes clés (Away)", 4.00, key="pc_away")
+        interceptions_away = number_input_locale("🛡️ Interceptions (Away)", 7.00, key="int_away")
+        duels_defensifs_away = number_input_locale("⚔️ Duels défensifs (Away)", 15.00, key="dd_away")
+        xGA_away = number_input_locale("🚫 xGA (Away)", 1.50, key="xga_away")
+        arrets_gardien_away = number_input_locale("🧤 Arrêts du gardien (Away)", 5.00, key="ag_away")
+        forme_recente_away = number_input_locale("💪 Forme récente (Away)", 8.00, key="fr_away")
+        points_5_matchs_away = number_input_locale("📊 Points 5 derniers matchs (Away)", 6.00, key="p5_away")
+        possession_away = number_input_locale("📈 Possession (Away)", 50.00, key="pos_away")
+        corners_away = number_input_locale("⚽ Corners (Away)", 4.00, key="corners_away")
+        fautes_commises_away = number_input_locale("⚽ Fautes commises (Away)", 12, key="fc_away")
+        cartons_jaunes_away = number_input_locale("🟡 Cartons jaunes (Away)", 1, key="cj_away")
+        passes_decisives_away = number_input_locale("🎯 Passes décisives (Away)", 2, key="pd_away")
+        taux_reussite_passes_away = number_input_locale("✅ Taux réussite passes (Away)", 80.00, key="trp_away")
+        coups_frais_away = number_input_locale("🎯 Coups francs (Away)", 1, key="cf_away")
 
 st.markdown("### 🎲 Analyse Value Bet")
 col_odds1, col_odds2, col_odds3 = st.columns(3)
 with col_odds1:
-    cote_A = number_input_locale("🏆 Cote - Victoire A", 2.00, key="cote_a")
+    cote_A = number_input_locale("🏆 Cote - Victoire Home", 2.00, key="cote_home")
 with col_odds2:
     cote_N = number_input_locale("🤝 Cote - Match Nul", 3.00, key="cote_n")
 with col_odds3:
-    cote_B = number_input_locale("🏟️ Cote - Victoire B", 2.50, key="cote_b")
+    cote_B = number_input_locale("🏟️ Cote - Victoire Away", 2.50, key="cote_away")
 
 # =====================================
 # Prédictions et affichage des résultats
 # =====================================
 if st.button("🔮 Prédire le Résultat"):
-    # Prédiction via le modèle de Poisson (en passant 36 variables)
-    victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B = predire_resultat_match(
-        xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
-        interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
-        possession_A, corners_A,
-        fautes_commises_A, cartons_jaunes_A, passes_decisives_A, taux_reussite_passes_A, coups_frais_A,
-        xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
-        interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
-        possession_B, corners_B,
-        fautes_commises_B, cartons_jaunes_B, passes_decisives_B, taux_reussite_passes_B, coups_frais_B
+    # Prédiction via le modèle de Poisson en passant 36 variables
+    victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away = predire_resultat_match(
+        xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_cles_home,
+        interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home, points_5_matchs_home,
+        possession_home, corners_home,
+        fautes_commises_home, cartons_jaunes_home, passes_decisives_home, taux_reussite_passes_home, coups_frais_home,
+        xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_cles_away,
+        interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away, points_5_matchs_away,
+        possession_away, corners_away,
+        fautes_commises_away, cartons_jaunes_away, passes_decisives_away, taux_reussite_passes_away, coups_frais_away
     )
     
     st.markdown("## 📊 Résultats du Modèle de Poisson")
     data_poisson = {
         "Mesure": [
-            "🏆 Prob. Victoire A", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire B",
-            "⚽ Buts attendus A", "⚽ Buts attendus B"
+            "🏆 Prob. Victoire Home", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire Away",
+            "⚽ Buts attendus Home", "⚽ Buts attendus Away"
         ],
         "Valeur": [
-            f"{victoire_A*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_B*100:.2f}%",
-            f"{expected_buts_A:.2f}", f"{expected_buts_B:.2f}"
+            f"{victoire_home*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_away*100:.2f}%",
+            f"{expected_buts_home:.2f}", f"{expected_buts_away:.2f}"
         ]
     }
     st.table(pd.DataFrame(data_poisson))
     
     st.markdown("## 🔍 Résultats des Modèles de Classification")
     input_features = np.array([[ 
-        xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
-        interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
-        possession_A, corners_A, fautes_commises_A, cartons_jaunes_A, passes_decisives_A, taux_reussite_passes_A, coups_frais_A,
-        xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
-        interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
-        possession_B, corners_B, fautes_commises_B, cartons_jaunes_B, passes_decisives_B, taux_reussite_passes_B, coups_frais_B
+        xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_cles_home,
+        interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home, points_5_matchs_home,
+        possession_home, corners_home, fautes_commises_home, cartons_jaunes_home, passes_decisives_home, taux_reussite_passes_home, coups_frais_home,
+        xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_cles_away,
+        interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away, points_5_matchs_away,
+        possession_away, corners_away, fautes_commises_away, cartons_jaunes_away, passes_decisives_away, taux_reussite_passes_away, coups_frais_away
     ]])
     st.write("**📐 Forme de l'input :**", input_features.shape)
     
     proba_log = modele_logistique.predict_proba(input_features)[0][1]
-    prediction_log = "🏆 Victoire A" if proba_log > 0.5 else "🏟️ Victoire B"
+    prediction_log = "🏆 Victoire Home" if proba_log > 0.5 else "🏟️ Victoire Away"
     
     proba_xgb = modele_xgb.predict_proba(input_features)[0][1]
-    prediction_xgb = "🏆 Victoire A" if proba_xgb > 0.5 else "🏟️ Victoire B"
+    prediction_xgb = "🏆 Victoire Home" if proba_xgb > 0.5 else "🏟️ Victoire Away"
     
     proba_rf = modele_rf.predict_proba(input_features)[0][1]
-    prediction_rf = "🏆 Victoire A" if proba_rf > 0.5 else "🏟️ Victoire B"
+    prediction_rf = "🏆 Victoire Home" if proba_rf > 0.5 else "🏟️ Victoire Away"
     
     data_classif = {
         "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
@@ -462,9 +462,9 @@ if st.button("🔮 Prédire le Résultat"):
     st.table(pd.DataFrame(data_classif))
     
     st.markdown("## 🎲 Analyse Value Bet")
-    outcomes = ["🏆 Victoire A", "🤝 Match Nul", "🏟️ Victoire B"]
+    outcomes = ["🏆 Victoire Home", "🤝 Match Nul", "🏟️ Victoire Away"]
     bookmaker_cotes = [cote_A, cote_N, cote_B]
-    predicted_probs = [victoire_A, match_nul, victoire_B]
+    predicted_probs = [victoire_home, match_nul, victoire_away]
     
     value_bet_data = {"Issue": [], "Cote Bookmaker": [], "Prob. Impliquée": [], "Prob. Prédite": [], "Valeur Espérée": [], "Value Bet ?": []}
     for outcome, cote, prob in zip(outcomes, bookmaker_cotes, predicted_probs):
@@ -482,13 +482,13 @@ if st.button("🔮 Prédire le Résultat"):
     dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
     if dc_option == "1X (🏠 ou 🤝)":
         dc_odds = number_input_locale("💰 Cote - Double Chance 1X", 1.50, key="dc1")
-        dc_prob = victoire_A + match_nul
+        dc_prob = victoire_home + match_nul
     elif dc_option == "X2 (🤝 ou 🏟️)":
         dc_odds = number_input_locale("💰 Cote - Double Chance X2", 1.60, key="dc2")
-        dc_prob = match_nul + victoire_B
+        dc_prob = match_nul + victoire_away
     else:
         dc_odds = number_input_locale("💰 Cote - Double Chance 12", 1.40, key="dc3")
-        dc_prob = victoire_A + victoire_B
+        dc_prob = victoire_home + victoire_away
 
     dc_implied = 1 / dc_odds
     dc_ev, dc_recommendation = calculer_value_bet(dc_prob, dc_odds)
@@ -505,12 +505,12 @@ if st.button("🔮 Prédire le Résultat"):
     
     buts_data = pd.DataFrame({
         "Buts": list(range(0, 6)),
-        "Prob Équipe A": [poisson_prob(expected_buts_A, i) for i in range(6)],
-        "Prob Équipe B": [poisson_prob(expected_buts_B, i) for i in range(6)]
+        "Prob Équipe Home": [poisson_prob(expected_buts_home, i) for i in range(6)],
+        "Prob Équipe Away": [poisson_prob(expected_buts_away, i) for i in range(6)]
     })
     chart = alt.Chart(buts_data).mark_bar().encode(
         x=alt.X("Buts:O", title="Nombre de buts"),
-        y=alt.Y("Prob Équipe A:Q", title="Probabilité"),
+        y=alt.Y("Prob Équipe Home:Q", title="Probabilité"),
         color=alt.value("#4CAF50")
-    ).properties(title="Distribution des buts attendus - Équipe A")
+    ).properties(title="Distribution des buts attendus - Équipe Home")
     st.altair_chart(chart, use_container_width=True)
