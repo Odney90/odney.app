@@ -301,6 +301,7 @@ cv_data = pd.DataFrame({
         f"{precision_xgb*100:.2f}%", 
         f"{precision_rf*100:.2f}%"
     ],  
+}
     
 def get_best_params(cv_results):
     """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score' si disponible."""
