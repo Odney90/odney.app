@@ -100,7 +100,7 @@ def predire_resultat_match(
     
     adj_xG_away = Ro_away / (Rd_home + 1)
     
-    # Calcul vectorisé de la distribution des buts via np.outer
+    # Utilisation de np.outer pour calculer la matrice des probabilités
     prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
     prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
     matrice = np.outer(prob_home, prob_away)
@@ -386,7 +386,7 @@ with col_odds3:
 # Prédictions et affichage des résultats
 # =====================================
 if st.button("🔮 Prédire le Résultat"):
-    # Préparation de l'input_features (doit être de forme (1, 26))
+    # Préparation de l'input_features (forme (1, 26))
     input_features = np.array([[
         xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
         interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
