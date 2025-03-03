@@ -15,8 +15,6 @@ from sklearn.metrics import accuracy_score
 # -------------------------------
 if 'trained_models' not in st.session_state:
     st.session_state.trained_models = {}
-if 'prediction_results' not in st.session_state:
-    st.session_state.prediction_results = {}
 
 # -------------------------------
 # Fonctions de base
@@ -148,7 +146,6 @@ def generer_donnees_foot(n_samples=200):
             row["Interceptions_B"], row["Duels_defensifs_B"], row["xGA_B"], row["arrets_gardien_B"], row["Forme_recente_B"], row["Points_5_matchs_B"],
             row["possession_B"], row["corners_B"]
         )
-        # On attribue 1 si la probabilité de victoire de l'Équipe A est supérieure ou égale à celle de l'Équipe B, sinon 0.
         label = 1 if victoire_A >= victoire_B else 0
         results.append(label)
     df["resultat"] = results
@@ -160,31 +157,27 @@ def generer_donnees_foot(n_samples=200):
 st.sidebar.header("📊 Données d'Entraînement")
 st.sidebar.markdown(
     """
-    **Format du fichier CSV attendu (données par match ou moyennes par match) :**
-
-    Votre fichier doit contenir les colonnes suivantes dans cet ordre :
+    **Format du CSV attendu :**
 
     - Pour l'Équipe A (Domicile) :
       `xG_A`, `Tirs_cadrés_A`, `Taux_conversion_A`, `Touches_surface_A`, `Passes_clés_A`,
       `Interceptions_A`, `Duels_defensifs_A`, `xGA_A`, `Arrêts_gardien_A`, `Forme_recente_A`, `Points_5_matchs_A`,
       `possession_A`, `corners_A`
-
+      
     - Pour l'Équipe B (Extérieur) :
       `xG_B`, `Tirs_cadrés_B`, `Taux_conversion_B`, `Touches_surface_B`, `Passes_clés_B`,
       `Interceptions_B`, `Duels_defensifs_B`, `xGA_B`, `Arrêts_du_gardien_B`, `Forme_recente_B`, `Points_5_matchs_B`,
       `possession_B`, `corners_B`
-
-    - Et la colonne cible : `resultat` (0 pour victoire de l'Équipe B, 1 pour victoire de l'Équipe A).
-
-    **Remarque :** Les statistiques doivent être des moyennes par match ou par période récente.
+      
+    - Colonne cible : `resultat` (0 = victoire Équipe B, 1 = victoire Équipe A)
     """
 )
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
 if fichier_entrainement is not None:
     df_entrainement = pd.read_csv(fichier_entrainement)
-    st.sidebar.write("📝 Aperçu des données d'entraînement :", df_entrainement.head())
+    st.sidebar.write("📝 Aperçu :", df_entrainement.head())
 else:
-    st.sidebar.info("Aucun fichier chargé, utilisation de données d'entraînement synthétiques réalistes pour le foot.")
+    st.sidebar.info("Aucun fichier chargé, utilisation de données synthétiques.")
     df_entrainement = generer_donnees_foot(n_samples=200)
 
 features = [
@@ -199,8 +192,19 @@ X_reel = df_entrainement[features]
 y_reel = df_entrainement["resultat"]
 
 # -------------------------------
-# Entraînement des modèles avec validation croisée
+# Entraînement des modèles dès le démarrage via une fonction de pré-chargement
 # -------------------------------
+@st.cache_resource(show_spinner=False)
+def load_models(X, y):
+    model_log, prec_log = entrainer_modele_logistique(X, y)
+    model_xgb, prec_xgb = entrainer_modele_xgb(X, y)
+    model_rf, prec_rf = entrainer_modele_rf(X, y)
+    return {
+        "log": (model_log, prec_log),
+        "xgb": (model_xgb, prec_xgb),
+        "rf": (model_rf, prec_rf)
+    }
+
 @st.cache_resource(show_spinner=False)
 def entrainer_modele_logistique(X, y):
     model = LogisticRegression(max_iter=1000)
@@ -225,18 +229,20 @@ def entrainer_modele_rf(X, y):
     model.fit(X, y)
     return model, np.mean(scores)
 
-modele_logistique, precision_logistique = entrainer_modele_logistique(X_reel, y_reel)
-modele_xgb, precision_xgb = entrainer_modele_xgb(X_reel, y_reel)
-modele_rf, precision_rf = entrainer_modele_rf(X_reel, y_reel)
-st.sidebar.markdown(f"**📈 Précision Régression Logistique :** {precision_logistique*100:.2f}%")
-st.sidebar.markdown(f"**📈 Précision XGBoost :** {precision_xgb*100:.2f}%")
-st.sidebar.markdown(f"**📈 Précision Random Forest :** {precision_rf*100:.2f}%")
+models = load_models(X_reel, y_reel)
+modele_logistique, precision_logistique = models["log"]
+modele_xgb, precision_xgb = models["xgb"]
+modele_rf, precision_rf = models["rf"]
+
+st.sidebar.markdown(f"**📈 Régression Logistique :** {precision_logistique*100:.2f}%")
+st.sidebar.markdown(f"**📈 XGBoost :** {precision_xgb*100:.2f}%")
+st.sidebar.markdown(f"**📈 Random Forest :** {precision_rf*100:.2f}%")
 
 # -------------------------------
 # Interface principale pour la saisie des données de match
 # -------------------------------
 st.title("⚽ Prédiction de Match de Football & Analyse Value Bet")
-st.markdown("### Entrez les statistiques du match (moyennes par match) pour chaque équipe")
+st.markdown("### Entrez les statistiques du match pour chaque équipe")
 
 use_fictives = st.checkbox("Utiliser des données fictives", value=False)
 
@@ -259,19 +265,19 @@ with col1:
         corners_A = float(random.randint(3, 10))
         st.markdown("**🧪 Données fictives générées pour l'Équipe A**")
     else:
-        xG_A = st.number_input("⚽ xG (Équipe A, par match)", value=1.50, format="%.2f")
-        tirs_cadrés_A = st.number_input("🎯 Tirs cadrés (Équipe A, par match)", value=5.00, format="%.2f")
-        taux_conversion_A = st.number_input("🔥 Taux de conversion (%) (Équipe A, par match)", value=30.00, format="%.2f")
-        touches_surface_A = st.number_input("🤾‍♂️ Touches dans la surface (Équipe A, par match)", value=25.00, format="%.2f")
-        passes_cles_A = st.number_input("🔑 Passes clés (Équipe A, par match)", value=5.00, format="%.2f")
-        interceptions_A = st.number_input("🛡️ Interceptions (Équipe A, par match)", value=8.00, format="%.2f")
-        duels_defensifs_A = st.number_input("⚔️ Duels défensifs (Équipe A, par match)", value=18.00, format="%.2f")
-        xGA_A = st.number_input("🚫 xGA (Équipe A, par match)", value=1.20, format="%.2f")
-        arrets_gardien_A = st.number_input("🧤 Arrêts du gardien (Équipe A, par match)", value=4.00, format="%.2f")
-        forme_recente_A = st.number_input("💪 Forme récente (points cumulés, Équipe A)", value=10.00, format="%.2f")
-        points_5_matchs_A = st.number_input("📊 Points 5 derniers matchs (Équipe A)", value=8.00, format="%.2f")
-        possession_A = st.number_input("📈 Possession (%) (Équipe A)", value=55.00, format="%.2f")
-        corners_A = st.number_input("⚽ Corners (Équipe A, par match)", value=5.00, format="%.2f")
+        xG_A = st.number_input("⚽ xG (Équipe A)", value=1.50, format="%.2f")
+        tirs_cadrés_A = st.number_input("🎯 Tirs cadrés (Équipe A)", value=5.00, format="%.2f")
+        taux_conversion_A = st.number_input("🔥 Taux de conversion (Équipe A)", value=30.00, format="%.2f")
+        touches_surface_A = st.number_input("🤾‍♂️ Touches surface (Équipe A)", value=25.00, format="%.2f")
+        passes_cles_A = st.number_input("🔑 Passes clés (Équipe A)", value=5.00, format="%.2f")
+        interceptions_A = st.number_input("🛡️ Interceptions (Équipe A)", value=8.00, format="%.2f")
+        duels_defensifs_A = st.number_input("⚔️ Duels défensifs (Équipe A)", value=18.00, format="%.2f")
+        xGA_A = st.number_input("🚫 xGA (Équipe A)", value=1.20, format="%.2f")
+        arrets_gardien_A = st.number_input("🧤 Arrêts gardien (Équipe A)", value=4.00, format="%.2f")
+        forme_recente_A = st.number_input("💪 Forme récente (Équipe A)", value=10.00, format="%.2f")
+        points_5_matchs_A = st.number_input("📊 Points 5 derniers matchs (A)", value=8.00, format="%.2f")
+        possession_A = st.number_input("📈 Possession (Équipe A)", value=55.00, format="%.2f")
+        corners_A = st.number_input("⚽ Corners (Équipe A)", value=5.00, format="%.2f")
 
 with col2:
     st.header("🏟️ Équipe B (Extérieur)")
@@ -291,28 +297,28 @@ with col2:
         corners_B = float(random.randint(3, 10))
         st.markdown("**🧪 Données fictives générées pour l'Équipe B**")
     else:
-        xG_B = st.number_input("⚽ xG (Équipe B, par match)", value=1.00, format="%.2f")
-        tirs_cadrés_B = st.number_input("🎯 Tirs cadrés (Équipe B, par match)", value=3.00, format="%.2f")
-        taux_conversion_B = st.number_input("🔥 Taux de conversion (%) (Équipe B, par match)", value=25.00, format="%.2f")
-        touches_surface_B = st.number_input("🤾‍♂️ Touches dans la surface (Équipe B, par match)", value=20.00, format="%.2f")
-        passes_cles_B = st.number_input("🔑 Passes clés (Équipe B, par match)", value=4.00, format="%.2f")
-        interceptions_B = st.number_input("🛡️ Interceptions (Équipe B, par match)", value=7.00, format="%.2f")
-        duels_defensifs_B = st.number_input("⚔️ Duels défensifs (Équipe B, par match)", value=15.00, format="%.2f")
-        xGA_B = st.number_input("🚫 xGA (Équipe B, par match)", value=1.50, format="%.2f")
-        arrets_gardien_B = st.number_input("🧤 Arrêts du gardien (Équipe B, par match)", value=5.00, format="%.2f")
-        forme_recente_B = st.number_input("💪 Forme récente (points cumulés, Équipe B)", value=8.00, format="%.2f")
-        points_5_matchs_B = st.number_input("📊 Points 5 derniers matchs (Équipe B)", value=6.00, format="%.2f")
-        possession_B = st.number_input("📈 Possession (%) (Équipe B)", value=50.00, format="%.2f")
-        corners_B = st.number_input("⚽ Corners (Équipe B, par match)", value=4.00, format="%.2f")
+        xG_B = st.number_input("⚽ xG (Équipe B)", value=1.00, format="%.2f")
+        tirs_cadrés_B = st.number_input("🎯 Tirs cadrés (Équipe B)", value=3.00, format="%.2f")
+        taux_conversion_B = st.number_input("🔥 Taux de conversion (Équipe B)", value=25.00, format="%.2f")
+        touches_surface_B = st.number_input("🤾‍♂️ Touches surface (Équipe B)", value=20.00, format="%.2f")
+        passes_cles_B = st.number_input("🔑 Passes clés (Équipe B)", value=4.00, format="%.2f")
+        interceptions_B = st.number_input("🛡️ Interceptions (Équipe B)", value=7.00, format="%.2f")
+        duels_defensifs_B = st.number_input("⚔️ Duels défensifs (Équipe B)", value=15.00, format="%.2f")
+        xGA_B = st.number_input("🚫 xGA (Équipe B)", value=1.50, format="%.2f")
+        arrets_gardien_B = st.number_input("🧤 Arrêts gardien (Équipe B)", value=5.00, format="%.2f")
+        forme_recente_B = st.number_input("💪 Forme récente (Équipe B)", value=8.00, format="%.2f")
+        points_5_matchs_B = st.number_input("📊 Points 5 derniers matchs (B)", value=6.00, format="%.2f")
+        possession_B = st.number_input("📈 Possession (Équipe B)", value=50.00, format="%.2f")
+        corners_B = st.number_input("⚽ Corners (Équipe B)", value=4.00, format="%.2f")
 
 st.markdown("### 🎲 Analyse Value Bet")
 col_odds1, col_odds2, col_odds3 = st.columns(3)
 with col_odds1:
-    cote_A = st.number_input("🏆 Cote Bookmaker - Victoire Équipe A", value=2.00, format="%.2f")
+    cote_A = st.number_input("🏆 Cote - Victoire A", value=2.00, format="%.2f")
 with col_odds2:
-    cote_N = st.number_input("🤝 Cote Bookmaker - Match Nul", value=3.00, format="%.2f")
+    cote_N = st.number_input("🤝 Cote - Match Nul", value=3.00, format="%.2f")
 with col_odds3:
-    cote_B = st.number_input("🏟️ Cote Bookmaker - Victoire Équipe B", value=2.50, format="%.2f")
+    cote_B = st.number_input("🏟️ Cote - Victoire B", value=2.50, format="%.2f")
 
 # -------------------------------
 # Prédictions et affichage des résultats
@@ -331,8 +337,8 @@ if st.button("🔮 Prédire le Résultat"):
     st.markdown("## 📊 Résultats du Modèle de Poisson")
     data_poisson = {
         "Mesure": [
-            "🏆 Prob. Victoire Équipe A", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire Équipe B",
-            "⚽ Buts attendus Équipe A", "⚽ Buts attendus Équipe B"
+            "🏆 Prob. Victoire A", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire B",
+            "⚽ Buts attendus A", "⚽ Buts attendus B"
         ],
         "Valeur": [
             f"{victoire_A*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_B*100:.2f}%",
@@ -341,14 +347,7 @@ if st.button("🔮 Prédire le Résultat"):
     }
     st.table(pd.DataFrame(data_poisson))
     
-    # Utilisation ou entraînement des modèles de classification
-    model_log = modele_logistique
-    prec_log = precision_logistique
-    model_xgb = modele_xgb
-    prec_xgb = precision_xgb
-    model_rf = modele_rf
-    prec_rf = precision_rf
-    
+    st.markdown("## 🔍 Résultats des Modèles de Classification")
     input_features = np.array([[ 
         xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
@@ -357,32 +356,27 @@ if st.button("🔮 Prédire le Résultat"):
         interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
         possession_B, corners_B
     ]])
+    st.write("**📐 Forme de l'input :**", input_features.shape)
     
-    st.write("**📐 Forme de l'input pour la prédiction :**", input_features.shape)
+    proba_log = modele_logistique.predict_proba(input_features)[0][1]
+    prediction_log = "🏆 Victoire A" if proba_log > 0.5 else "🏟️ Victoire B"
     
-    # Régression Logistique
-    proba_log = model_log.predict_proba(input_features)[0][1]
-    prediction_log = "🏆 Victoire Équipe A" if proba_log > 0.5 else "🏟️ Victoire Équipe B"
+    proba_xgb = modele_xgb.predict_proba(input_features)[0][1]
+    prediction_xgb = "🏆 Victoire A" if proba_xgb > 0.5 else "🏟️ Victoire B"
     
-    # XGBoost
-    proba_xgb = model_xgb.predict_proba(input_features)[0][1]
-    prediction_xgb = "🏆 Victoire Équipe A" if proba_xgb > 0.5 else "🏟️ Victoire Équipe B"
+    proba_rf = modele_rf.predict_proba(input_features)[0][1]
+    prediction_rf = "🏆 Victoire A" if proba_rf > 0.5 else "🏟️ Victoire B"
     
-    # Random Forest
-    proba_rf = model_rf.predict_proba(input_features)[0][1]
-    prediction_rf = "🏆 Victoire Équipe A" if proba_rf > 0.5 else "🏟️ Victoire Équipe B"
-    
-    st.markdown("## 🔍 Résultats des Modèles de Classification")
     data_classif = {
-        "Modèle": ["Régression Logistique", "XGBoost Classifier", "Random Forest"],
+        "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
         "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
         "Probabilité": [f"{proba_log*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
-        "Précision": [f"{prec_log*100:.2f}%", f"{prec_xgb*100:.2f}%", f"{prec_rf*100:.2f}%"]
+        "Précision": [f"{precision_logistique*100:.2f}%", f"{precision_xgb*100:.2f}%", f"{precision_rf*100:.2f}%"]
     }
     st.table(pd.DataFrame(data_classif))
     
     st.markdown("## 🎲 Analyse Value Bet")
-    outcomes = ["🏆 Victoire Équipe A", "🤝 Match Nul", "🏟️ Victoire Équipe B"]
+    outcomes = ["🏆 Victoire A", "🤝 Match Nul", "🏟️ Victoire B"]
     bookmaker_cotes = [cote_A, cote_N, cote_B]
     predicted_probs = [victoire_A, match_nul, victoire_B]
     
@@ -398,19 +392,16 @@ if st.button("🔮 Prédire le Résultat"):
         value_bet_data["Value Bet ?"].append(recommendation)
     st.table(pd.DataFrame(value_bet_data))
     
-    # -------------------------------
-    # Nouvelle section : Analyse Double Chance
-    # -------------------------------
     st.markdown("## 🎯 Analyse Double Chance")
     dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
     if dc_option == "1X (🏠 ou 🤝)":
-        dc_odds = st.number_input("💰 Cote Bookmaker - Double Chance 1X", value=1.50, format="%.2f")
+        dc_odds = st.number_input("💰 Cote - Double Chance 1X", value=1.50, format="%.2f")
         dc_prob = victoire_A + match_nul
     elif dc_option == "X2 (🤝 ou 🏟️)":
-        dc_odds = st.number_input("💰 Cote Bookmaker - Double Chance X2", value=1.60, format="%.2f")
+        dc_odds = st.number_input("💰 Cote - Double Chance X2", value=1.60, format="%.2f")
         dc_prob = match_nul + victoire_B
-    else:  # "12 (🏠 ou 🏟️)"
-        dc_odds = st.number_input("💰 Cote Bookmaker - Double Chance 12", value=1.40, format="%.2f")
+    else:
+        dc_odds = st.number_input("💰 Cote - Double Chance 12", value=1.40, format="%.2f")
         dc_prob = victoire_A + victoire_B
 
     dc_implied = 1 / dc_odds
@@ -426,9 +417,6 @@ if st.button("🔮 Prédire le Résultat"):
     }
     st.table(pd.DataFrame(dc_data))
     
-    # -------------------------------
-    # Graphique pour visualiser la distribution des buts attendus pour l'équipe A
-    # -------------------------------
     buts_data = pd.DataFrame({
         "Buts": list(range(0, 6)),
         "Prob Équipe A": [poisson_prob(expected_buts_A, i) for i in range(6)],
