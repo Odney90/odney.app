@@ -293,15 +293,18 @@ modele_logistique, precision_logistique, cv_results_log = models["log"]
 modele_xgb, precision_xgb, cv_results_xgb = models["xgb"]
 modele_rf, precision_rf, cv_results_rf = models["rf"]
 
-# Affichage détaillé des métriques de validation croisée
-cv_data = pd.DataFrame({
-    "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
-    "Précision Moyenne": [
-        f"{precision_logistique*100:.2f}%", 
-        f"{precision_xgb*100:.2f}%", 
-        f"{precision_rf*100:.2f}%"
-    ],  
-}
+# Affichage détaillé des métriques de validation croisée  
+cv_data = pd.DataFrame({  
+    "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],  
+    "Précision Moyenne": [  
+        f"{precision_logistique * 100:.2f}%",   
+        f"{precision_xgb * 100:.2f}%",   
+        f"{precision_rf * 100:.2f}%"  
+    ]  
+})  
+
+# Affichage du DataFrame  
+print(cv_data)  
     
 def get_best_params(cv_results):
     """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score' si disponible."""
