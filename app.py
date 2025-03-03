@@ -300,7 +300,8 @@ cv_data = pd.DataFrame({
         f"{precision_logistique*100:.2f}%", 
         f"{precision_xgb*100:.2f}%", 
         f"{precision_rf*100:.2f}%"
-    ],
+    ],  
+    
   def get_best_params(cv_results):
     """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score' si disponible."""
     mean_scores = cv_results.get('mean_test_score', None)
