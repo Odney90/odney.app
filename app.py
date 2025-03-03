@@ -9,8 +9,25 @@ import pickle
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.model_selection import KFold, cross_val_score
 from sklearn.metrics import accuracy_score
+
+# =====================================
+# Fonction wrapper pour saisir des nombres avec virgule
+# =====================================
+def number_input_locale(label, value, key=None):
+    """
+    Permet de saisir des nombres en utilisant la virgule comme séparateur décimal.
+    On utilise st.text_input pour récupérer une chaîne que l'on convertit ensuite en float.
+    """
+    if key is None:
+        user_input = st.text_input(label, value=str(value))
+    else:
+        user_input = st.text_input(label, value=str(value), key=key)
+    try:
+        return float(user_input.replace(",", "."))
+    except:
+        return value
 
 # =====================================
 # Fonctions de base et optimisations
@@ -211,7 +228,7 @@ else:
     st.sidebar.info("Aucun fichier chargé, utilisation de données synthétiques.")
     df_entrainement = generer_donnees_foot(n_samples=200)
 
-# Définition de la liste complète des features
+# Liste complète des features
 features = [
     "xG_A", "Tirs_cadrés_A", "Taux_conversion_A", "Touches_surface_A", "Passes_clés_A",
     "Interceptions_A", "Duels_defensifs_A", "xGA_A", "Arrêts_gardien_A", "Forme_recente_A", "Points_5_matchs_A",
@@ -313,24 +330,24 @@ with col1:
         coups_frais_A = float(random.randint(0, 5))
         st.markdown("**🧪 Données fictives générées pour l'Équipe A**")
     else:
-        xG_A = st.number_input("⚽ xG (Équipe A)", value=1.50, format="%.2f")
-        tirs_cadrés_A = st.number_input("🎯 Tirs cadrés (Équipe A)", value=5.00, format="%.2f")
-        taux_conversion_A = st.number_input("🔥 Taux de conversion (Équipe A)", value=30.00, format="%.2f")
-        touches_surface_A = st.number_input("🤾‍♂️ Touches dans la surface (Équipe A)", value=25.00, format="%.2f")
-        passes_cles_A = st.number_input("🔑 Passes clés (Équipe A)", value=5.00, format="%.2f")
-        interceptions_A = st.number_input("🛡️ Interceptions (Équipe A)", value=8.00, format="%.2f")
-        duels_defensifs_A = st.number_input("⚔️ Duels défensifs (Équipe A)", value=18.00, format="%.2f")
-        xGA_A = st.number_input("🚫 xGA (Équipe A)", value=1.20, format="%.2f")
-        arrets_gardien_A = st.number_input("🧤 Arrêts du gardien (Équipe A)", value=4.00, format="%.2f")
-        forme_recente_A = st.number_input("💪 Forme récente (Équipe A)", value=10.00, format="%.2f")
-        points_5_matchs_A = st.number_input("📊 Points 5 derniers matchs (A)", value=8.00, format="%.2f")
-        possession_A = st.number_input("📈 Possession (Équipe A)", value=55.00, format="%.2f")
-        corners_A = st.number_input("⚽ Corners (Équipe A)", value=5.00, format="%.2f")
-        fautes_commises_A = st.number_input("⚽ Fautes commises (Équipe A)", value=12, step=1)
-        cartons_jaunes_A = st.number_input("🟡 Cartons jaunes (Équipe A)", value=1, step=1)
-        passes_decisives_A = st.number_input("🎯 Passes décisives (Équipe A)", value=2, step=1)
-        taux_reussite_passes_A = st.number_input("✅ Taux réussite passes (Équipe A)", value=80.00, format="%.2f")
-        coups_frais_A = st.number_input("🎯 Coups francs (Équipe A)", value=1, step=1)
+        xG_A = number_input_locale("⚽ xG (Équipe A)", 1.50, key="xg_a")
+        tirs_cadrés_A = number_input_locale("🎯 Tirs cadrés (Équipe A)", 5.00, key="tc_a")
+        taux_conversion_A = number_input_locale("🔥 Taux de conversion (Équipe A)", 30.00, key="tcvt_a")
+        touches_surface_A = number_input_locale("🤾‍♂️ Touches dans la surface (Équipe A)", 25.00, key="ts_a")
+        passes_cles_A = number_input_locale("🔑 Passes clés (Équipe A)", 5.00, key="pc_a")
+        interceptions_A = number_input_locale("🛡️ Interceptions (Équipe A)", 8.00, key="int_a")
+        duels_defensifs_A = number_input_locale("⚔️ Duels défensifs (Équipe A)", 18.00, key="dd_a")
+        xGA_A = number_input_locale("🚫 xGA (Équipe A)", 1.20, key="xga_a")
+        arrets_gardien_A = number_input_locale("🧤 Arrêts du gardien (Équipe A)", 4.00, key="ag_a")
+        forme_recente_A = number_input_locale("💪 Forme récente (Équipe A)", 10.00, key="fr_a")
+        points_5_matchs_A = number_input_locale("📊 Points 5 derniers matchs (A)", 8.00, key="p5_a")
+        possession_A = number_input_locale("📈 Possession (Équipe A)", 55.00, key="pos_a")
+        corners_A = number_input_locale("⚽ Corners (Équipe A)", 5.00, key="corners_a")
+        fautes_commises_A = number_input_locale("⚽ Fautes commises (Équipe A)", 12, key="fc_a")
+        cartons_jaunes_A = number_input_locale("🟡 Cartons jaunes (Équipe A)", 1, key="cj_a")
+        passes_decisives_A = number_input_locale("🎯 Passes décisives (Équipe A)", 2, key="pd_a")
+        taux_reussite_passes_A = number_input_locale("✅ Taux réussite passes (Équipe A)", 80.00, key="trp_a")
+        coups_frais_A = number_input_locale("🎯 Coups francs (Équipe A)", 1, key="cf_a")
 
 with col2:
     st.header("🏟️ Équipe B (Extérieur)")
@@ -355,33 +372,33 @@ with col2:
         coups_frais_B = float(random.randint(0, 5))
         st.markdown("**🧪 Données fictives générées pour l'Équipe B**")
     else:
-        xG_B = st.number_input("⚽ xG (Équipe B)", value=1.00, format="%.2f")
-        tirs_cadrés_B = st.number_input("🎯 Tirs cadrés (Équipe B)", value=3.00, format="%.2f")
-        taux_conversion_B = st.number_input("🔥 Taux de conversion (Équipe B)", value=25.00, format="%.2f")
-        touches_surface_B = st.number_input("🤾‍♂️ Touches dans la surface (Équipe B)", value=20.00, format="%.2f")
-        passes_cles_B = st.number_input("🔑 Passes clés (Équipe B)", value=4.00, format="%.2f")
-        interceptions_B = st.number_input("🛡️ Interceptions (Équipe B)", value=7.00, format="%.2f")
-        duels_defensifs_B = st.number_input("⚔️ Duels défensifs (Équipe B)", value=15.00, format="%.2f")
-        xGA_B = st.number_input("🚫 xGA (Équipe B)", value=1.50, format="%.2f")
-        arrets_gardien_B = st.number_input("🧤 Arrêts du gardien (Équipe B)", value=5.00, format="%.2f")
-        forme_recente_B = st.number_input("💪 Forme récente (Équipe B)", value=8.00, format="%.2f")
-        points_5_matchs_B = st.number_input("📊 Points 5 derniers matchs (B)", value=6.00, format="%.2f")
-        possession_B = st.number_input("📈 Possession (Équipe B)", value=50.00, format="%.2f")
-        corners_B = st.number_input("⚽ Corners (Équipe B)", value=4.00, format="%.2f")
-        fautes_commises_B = st.number_input("⚽ Fautes commises (Équipe B)", value=12, step=1)
-        cartons_jaunes_B = st.number_input("🟡 Cartons jaunes (Équipe B)", value=1, step=1)
-        passes_decisives_B = st.number_input("🎯 Passes décisives (Équipe B)", value=2, step=1)
-        taux_reussite_passes_B = st.number_input("✅ Taux réussite passes (Équipe B)", value=80.00, format="%.2f")
-        coups_frais_B = st.number_input("🎯 Coups francs (Équipe B)", value=1, step=1)
+        xG_B = number_input_locale("⚽ xG (Équipe B)", 1.00, key="xg_b")
+        tirs_cadrés_B = number_input_locale("🎯 Tirs cadrés (Équipe B)", 3.00, key="tc_b")
+        taux_conversion_B = number_input_locale("🔥 Taux de conversion (Équipe B)", 25.00, key="tcvt_b")
+        touches_surface_B = number_input_locale("🤾‍♂️ Touches dans la surface (Équipe B)", 20.00, key="ts_b")
+        passes_cles_B = number_input_locale("🔑 Passes clés (Équipe B)", 4.00, key="pc_b")
+        interceptions_B = number_input_locale("🛡️ Interceptions (Équipe B)", 7.00, key="int_b")
+        duels_defensifs_B = number_input_locale("⚔️ Duels défensifs (Équipe B)", 15.00, key="dd_b")
+        xGA_B = number_input_locale("🚫 xGA (Équipe B)", 1.50, key="xga_b")
+        arrets_gardien_B = number_input_locale("🧤 Arrêts du gardien (Équipe B)", 5.00, key="ag_b")
+        forme_recente_B = number_input_locale("💪 Forme récente (Équipe B)", 8.00, key="fr_b")
+        points_5_matchs_B = number_input_locale("📊 Points 5 derniers matchs (B)", 6.00, key="p5_b")
+        possession_B = number_input_locale("📈 Possession (Équipe B)", 50.00, key="pos_b")
+        corners_B = number_input_locale("⚽ Corners (Équipe B)", 4.00, key="corners_b")
+        fautes_commises_B = number_input_locale("⚽ Fautes commises (Équipe B)", 12, key="fc_b")
+        cartons_jaunes_B = number_input_locale("🟡 Cartons jaunes (Équipe B)", 1, key="cj_b")
+        passes_decisives_B = number_input_locale("🎯 Passes décisives (Équipe B)", 2, key="pd_b")
+        taux_reussite_passes_B = number_input_locale("✅ Taux réussite passes (Équipe B)", 80.00, key="trp_b")
+        coups_frais_B = number_input_locale("🎯 Coups francs (Équipe B)", 1, key="cf_b")
 
 st.markdown("### 🎲 Analyse Value Bet")
 col_odds1, col_odds2, col_odds3 = st.columns(3)
 with col_odds1:
-    cote_A = st.number_input("🏆 Cote - Victoire A", value=2.00, format="%.2f")
+    cote_A = number_input_locale("🏆 Cote - Victoire A", 2.00, key="cote_a")
 with col_odds2:
-    cote_N = st.number_input("🤝 Cote - Match Nul", value=3.00, format="%.2f")
+    cote_N = number_input_locale("🤝 Cote - Match Nul", 3.00, key="cote_n")
 with col_odds3:
-    cote_B = st.number_input("🏟️ Cote - Victoire B", value=2.50, format="%.2f")
+    cote_B = number_input_locale("🏟️ Cote - Victoire B", 2.50, key="cote_b")
 
 # =====================================
 # Prédictions et affichage des résultats
@@ -464,13 +481,13 @@ if st.button("🔮 Prédire le Résultat"):
     st.markdown("## 🎯 Analyse Double Chance")
     dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
     if dc_option == "1X (🏠 ou 🤝)":
-        dc_odds = st.number_input("💰 Cote - Double Chance 1X", value=1.50, format="%.2f")
+        dc_odds = number_input_locale("💰 Cote - Double Chance 1X", 1.50, key="dc1")
         dc_prob = victoire_A + match_nul
     elif dc_option == "X2 (🤝 ou 🏟️)":
-        dc_odds = st.number_input("💰 Cote - Double Chance X2", value=1.60, format="%.2f")
+        dc_odds = number_input_locale("💰 Cote - Double Chance X2", 1.60, key="dc2")
         dc_prob = match_nul + victoire_B
     else:
-        dc_odds = st.number_input("💰 Cote - Double Chance 12", value=1.40, format="%.2f")
+        dc_odds = number_input_locale("💰 Cote - Double Chance 12", 1.40, key="dc3")
         dc_prob = victoire_A + victoire_B
 
     dc_implied = 1 / dc_odds
