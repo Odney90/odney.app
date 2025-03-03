@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.metrics import accuracy_score
+from scipy.stats import poisson  # Utilisation de SciPy pour la loi de Poisson
 
 # =====================================
 # Fonction wrapper pour saisir des nombres avec virgule
@@ -43,12 +44,15 @@ def get_best_params(cv_results):
     return cv_results['params'][best_index]
 
 # =====================================
-# Fonctions de base et optimisations
+# Méthode Poisson améliorée
 # =====================================
 def poisson_prob(lam, k):
-    """Calcule la probabilité d'obtenir k buts selon la loi de Poisson."""
-    return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
+    """Utilise scipy.stats.poisson.pmf pour calculer la probabilité d'obtenir k buts."""
+    return poisson.pmf(k, lam)
 
+# =====================================
+# Prédiction de résultat de match avec amélioration du modèle Poisson
+# =====================================
 def predire_resultat_match(
     # Variables équipe Home (13 variables)
     xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
@@ -58,10 +62,13 @@ def predire_resultat_match(
     xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_decisives_away,
     interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away,
     possession_away, corners_away, fautes_commises_away,
-    max_buts=5
+    max_buts=5, home_advantage=1.05  # Facteur d'avantage domicile
 ):
+    # Appliquer le facteur d'avantage domicile sur xG de Home
+    xG_home_adj = xG_home * home_advantage
+
     # Calcul de la note offensive pour Home (à domicile)
-    Ro_home = (0.25 * xG_home +
+    Ro_home = (0.25 * xG_home_adj +
                0.20 * tirs_cadrés_home +
                0.10 * (taux_conversion_home / 100) +
                0.10 * touches_surface_home +
@@ -100,7 +107,7 @@ def predire_resultat_match(
     
     adj_xG_away = Ro_away / (Rd_home + 1)
     
-    # Utilisation de np.outer pour calculer la matrice des probabilités
+    # Calcul vectorisé de la distribution des buts via np.outer
     prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
     prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
     matrice = np.outer(prob_home, prob_away)
@@ -111,6 +118,24 @@ def predire_resultat_match(
     expected_buts_away = np.sum(np.arange(max_buts+1) * prob_away)
     
     return victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away
+
+# =====================================
+# Amélioration de la prédiction Double Chance
+# =====================================
+def predire_double_chance(prob_home, match_nul, prob_away, option, dc_factor=1.0):
+    """
+    Calcule la probabilité double chance avec un facteur correctif dc_factor.
+    Option "1X" => Home ou Match Nul, "X2" => Match Nul ou Away, "12" => Home ou Away.
+    """
+    if option == "1X (🏠 ou 🤝)":
+        base_prob = prob_home + match_nul
+    elif option == "X2 (🤝 ou 🏟️)":
+        base_prob = match_nul + prob_away
+    elif option == "12 (🏠 ou 🏟️)":
+        base_prob = prob_home + prob_away
+    else:
+        base_prob = 0
+    return dc_factor * base_prob
 
 def calculer_value_bet(prob, cote):
     """Calcule la valeur espérée et fournit une recommandation de pari."""
@@ -401,7 +426,7 @@ if st.button("🔮 Prédire le Résultat"):
     else:
         st.write("**📐 Forme de l'input :**", input_features.shape)
     
-        # Prédiction via le modèle de Poisson
+        # Prédiction via la méthode Poisson améliorée
         victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away = predire_resultat_match(
             xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
             interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
@@ -429,7 +454,6 @@ if st.button("🔮 Prédire le Résultat"):
         proba_rf = modele_rf.predict_proba(input_features)[0][1]
         prediction_rf = "🏆 Victoire Home" if proba_rf > 0.5 else "🏟️ Victoire Away"
     
-        # Création d'un tableau clair pour les modèles de classification
         classif_data = pd.DataFrame({
             "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
             "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
@@ -452,14 +476,7 @@ if st.button("🔮 Prédire le Résultat"):
         bookmaker_cotes = [cote_A, cote_N, cote_B]
         predicted_probs = [victoire_home, match_nul, victoire_away]
     
-        value_bet_data = {
-            "Issue": [],
-            "Cote Bookmaker": [],
-            "Prob. Impliquée": [],
-            "Prob. Prédite": [],
-            "Valeur Espérée": [],
-            "Value Bet ?": []
-        }
+        value_bet_data = {"Issue": [], "Cote Bookmaker": [], "Prob. Impliquée": [], "Prob. Prédite": [], "Valeur Espérée": [], "Value Bet ?": []}
         for outcome, cote, prob in zip(outcomes, bookmaker_cotes, predicted_probs):
             prob_implied = 1 / cote
             ev, recommendation = calculer_value_bet(prob, cote)
@@ -473,15 +490,18 @@ if st.button("🔮 Prédire le Résultat"):
     
         st.markdown("## 🎯 Analyse Double Chance")
         dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
+        # Amélioration : appliquer un facteur correctif dc_factor pour ajuster la somme des probabilités
+        dc_factor = 1.0  # Vous pouvez ajuster ce facteur en fonction des données historiques
         if dc_option == "1X (🏠 ou 🤝)":
-            dc_odds = number_input_locale("💰 Cote - Double Chance 1X", 1.50, key="dc1")
-            dc_prob = victoire_home + match_nul
+            dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
         elif dc_option == "X2 (🤝 ou 🏟️)":
-            dc_odds = number_input_locale("💰 Cote - Double Chance X2", 1.60, key="dc2")
-            dc_prob = match_nul + victoire_away
-        else:
-            dc_odds = number_input_locale("💰 Cote - Double Chance 12", 1.40, key="dc3")
-            dc_prob = victoire_home + victoire_away
+            dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
+        else:  # "12 (🏠 ou 🏟️)"
+            dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
+    
+        dc_odds = number_input_locale(f"💰 Cote - Double Chance ({dc_option})", 
+                                       1.50 if dc_option=="1X (🏠 ou 🤝)" else 1.60 if dc_option=="X2 (🤝 ou 🏟️)" else 1.40, 
+                                       key="dc_option")
     
         dc_implied = 1 / dc_odds
         dc_ev, dc_recommendation = calculer_value_bet(dc_prob, dc_odds)
@@ -507,3 +527,21 @@ if st.button("🔮 Prédire le Résultat"):
             color=alt.value("#4CAF50")
         ).properties(title="Distribution des buts attendus - Équipe Home")
         st.altair_chart(chart, use_container_width=True)
+
+# =====================================
+# Fonction améliorée pour prédire Double Chance
+# =====================================
+def predire_double_chance(prob_home, match_nul, prob_away, option, dc_factor=1.0):
+    """
+    Calcule la probabilité double chance avec un facteur correctif dc_factor.
+    Option "1X (🏠 ou 🤝)" => Home win or Draw, "X2 (🤝 ou 🏟️)" => Draw or Away win, "12 (🏠 ou 🏟️)" => Home win or Away win.
+    """
+    if option == "1X (🏠 ou 🤝)":
+        base_prob = prob_home + match_nul
+    elif option == "X2 (🤝 ou 🏟️)":
+        base_prob = match_nul + prob_away
+    elif option == "12 (🏠 ou 🏟️)":
+        base_prob = prob_home + prob_away
+    else:
+        base_prob = 0
+    return dc_factor * base_prob
