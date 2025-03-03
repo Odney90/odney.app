@@ -296,13 +296,20 @@ modele_rf, precision_rf, cv_results_rf = models["rf"]
 # Affichage détaillé des métriques de validation croisée
 cv_data = pd.DataFrame({
     "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
-    "Précision Moyenne": [f"{precision_logistique*100:.2f}%", f"{precision_xgb*100:.2f}%", f"{precision_rf*100:.2f}%"],
-    "Best Params": [
-        cv_results_log['params'][np.argmax(cv_results_log['mean_test_score'])],
-        cv_results_xgb['params'][np.argmax(cv_results_xgb['mean_test_score'])],
-        cv_results_rf['params'][np.argmax(cv_results_rf['mean_test_score'])]
-    ]
-})
+    "Précision Moyenne": [
+        f"{precision_logistique*100:.2f}%", 
+        f"{precision_xgb*100:.2f}%", 
+        f"{precision_rf*100:.2f}%"
+    ],
+  def get_best_params(cv_results):
+    """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score' si disponible."""
+    mean_scores = cv_results.get('mean_test_score', None)
+    if mean_scores is None:
+        return "N/A"
+    else:
+        best_index = np.argmax(mean_scores)
+        return cv_results['params'][best_index]
+
 st.sidebar.markdown("### 📈 Métriques de Validation Croisée et Meilleurs Hyperparamètres")
 st.sidebar.table(cv_data)
 
