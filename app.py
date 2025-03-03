@@ -6,34 +6,29 @@ import random
 import altair as alt
 import os
 import pickle
+from scipy.stats import poisson
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.model_selection import KFold, GridSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score
-from scipy.stats import poisson  # Utilisation de SciPy pour la loi de Poisson
 
 # =====================================
-# Fonction wrapper pour saisir des nombres avec virgule
+# Saisie utilisateur avec gestion de la virgule
 # =====================================
 def number_input_locale(label, value, key=None):
-    """
-    Permet de saisir des nombres en utilisant la virgule comme séparateur décimal.
-    """
-    if key is None:
-        user_input = st.text_input(label, value=str(value))
-    else:
-        user_input = st.text_input(label, value=str(value), key=key)
+    """Permet de saisir des nombres avec une virgule comme séparateur décimal."""
+    user_input = st.text_input(label, value=str(value), key=key)
     try:
         return float(user_input.replace(",", "."))
     except:
         return value
 
 # =====================================
-# Fonction auxiliaire pour récupérer les meilleurs hyperparamètres
+# Récupération des meilleurs hyperparamètres
 # =====================================
 def get_best_params(cv_results):
-    """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score' ou 'mean_validation_score'."""
+    """Extrait les meilleurs hyperparamètres à partir de GridSearchCV."""
     if 'mean_test_score' in cv_results:
         mean_scores = cv_results['mean_test_score']
     elif 'mean_validation_score' in cv_results:
@@ -44,27 +39,27 @@ def get_best_params(cv_results):
     return cv_results['params'][best_index]
 
 # =====================================
-# Méthode Poisson améliorée
+# Calcul de la probabilité avec la loi de Poisson (utilise SciPy)
 # =====================================
 def poisson_prob(lam, k):
-    """Utilise scipy.stats.poisson.pmf pour calculer la probabilité d'obtenir k buts."""
+    """Calcule la probabilité d'obtenir k buts en utilisant scipy.stats.poisson.pmf."""
     return poisson.pmf(k, lam)
 
 # =====================================
-# Prédiction de résultat de match avec amélioration du modèle Poisson
+# Prédiction du résultat du match (modèle Poisson amélioré)
 # =====================================
 def predire_resultat_match(
-    # Variables équipe Home (13 variables)
+    # Variables Home (13 variables)
     xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
     interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
     possession_home, corners_home, fautes_commises_home,
-    # Variables équipe Away (13 variables)
+    # Variables Away (13 variables)
     xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_decisives_away,
     interceptions_away, duels_defensifs_away, xGA_away, arrets_gardien_away, forme_recente_away,
     possession_away, corners_away, fautes_commises_away,
-    max_buts=5, home_advantage=1.05  # Facteur d'avantage domicile
+    max_buts=5, home_advantage=1.05
 ):
-    # Appliquer le facteur d'avantage domicile sur xG de Home
+    # Ajustement du xG Home avec l'avantage du terrain
     xG_home_adj = xG_home * home_advantage
 
     # Calcul de la note offensive pour Home (à domicile)
@@ -107,7 +102,7 @@ def predire_resultat_match(
     
     adj_xG_away = Ro_away / (Rd_home + 1)
     
-    # Calcul vectorisé de la distribution des buts via np.outer
+    # Calcul des distributions de buts via np.outer
     prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
     prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
     matrice = np.outer(prob_home, prob_away)
@@ -120,12 +115,15 @@ def predire_resultat_match(
     return victoire_home, victoire_away, match_nul, expected_buts_home, expected_buts_away
 
 # =====================================
-# Amélioration de la prédiction Double Chance
+# Prédiction Double Chance améliorée
 # =====================================
 def predire_double_chance(prob_home, match_nul, prob_away, option, dc_factor=1.0):
     """
-    Calcule la probabilité double chance avec un facteur correctif dc_factor.
-    Option "1X" => Home ou Match Nul, "X2" => Match Nul ou Away, "12" => Home ou Away.
+    Calcule la probabilité double chance.
+    - Option "1X (🏠 ou 🤝)" : Victoire Home ou Match Nul.
+    - Option "X2 (🤝 ou 🏟️)" : Match Nul ou Victoire Away.
+    - Option "12 (🏠 ou 🏟️)" : Victoire Home ou Victoire Away.
+    Applique un facteur correctif dc_factor.
     """
     if option == "1X (🏠 ou 🤝)":
         base_prob = prob_home + match_nul
@@ -137,14 +135,17 @@ def predire_double_chance(prob_home, match_nul, prob_away, option, dc_factor=1.0
         base_prob = 0
     return dc_factor * base_prob
 
+# =====================================
+# Calcul de la Value Bet
+# =====================================
 def calculer_value_bet(prob, cote):
-    """Calcule la valeur espérée et fournit une recommandation de pari."""
+    """Calcule la valeur espérée et renvoie la recommandation."""
     ev = (prob * cote) - 1
     recommendation = "✅ Value Bet" if ev > 0 else "❌ Pas de Value Bet"
     return ev, recommendation
 
 # =====================================
-# Sauvegarde et chargement des modèles sur disque
+# Sauvegarde et chargement des modèles
 # =====================================
 def save_models_to_disk(models):
     with open("trained_models.pkl", "wb") as f:
@@ -161,7 +162,7 @@ def load_models_from_disk():
 # =====================================
 def generer_donnees_foot(n_samples=200):
     data = {}
-    # Variables pour l'équipe Home (13 variables)
+    # Home (13 variables)
     data["xG_home"] = np.random.uniform(0.5, 2.5, n_samples)
     data["Tirs_cadrés_home"] = np.random.randint(2, 11, n_samples)
     data["Taux_conversion_home"] = np.random.uniform(20, 40, n_samples)
@@ -176,7 +177,7 @@ def generer_donnees_foot(n_samples=200):
     data["corners_home"] = np.random.randint(3, 11, n_samples)
     data["Fautes_commises_home"] = np.random.randint(8, 21, n_samples)
     
-    # Variables pour l'équipe Away (13 variables)
+    # Away (13 variables)
     data["xG_away"] = np.random.uniform(0.5, 2.5, n_samples)
     data["Tirs_cadrés_away"] = np.random.randint(2, 11, n_samples)
     data["Taux_conversion_away"] = np.random.uniform(20, 40, n_samples)
@@ -192,7 +193,7 @@ def generer_donnees_foot(n_samples=200):
     data["Fautes_commises_away"] = np.random.randint(8, 21, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat'
+    # Génération de la cible "resultat" (1 = victoire Home, 0 = victoire Away)
     results = []
     for _, row in df.iterrows():
         victoire_home, victoire_away, match_nul, _, _ = predire_resultat_match(
@@ -208,24 +209,24 @@ def generer_donnees_foot(n_samples=200):
     return df
 
 # =====================================
-# Section d'entrée des données d'entraînement (CSV ou synthétiques)
+# Données d'entraînement (CSV ou synthétiques)
 # =====================================
 st.sidebar.header("📊 Données d'Entraînement")
 st.sidebar.markdown(
     """
     **Format du CSV attendu :**
-
-    - Pour l'équipe Home (13 variables) :
-      `xG_home`, `Tirs_cadrés_home`, `Taux_conversion_home`, `Touches_surface_home`, `Passes_decisives_home`,
-      `Interceptions_home`, `xGA_home`, `Arrêts_gardien_home`, `Forme_recente_home`, `possession_home`,
-      `corners_home`, `Fautes_commises_home`
-      
-    - Pour l'équipe Away (13 variables) :
-      `xG_away`, `Tirs_cadrés_away`, `Taux_conversion_away`, `Touches_surface_away`, `Passes_decisives_away`,
-      `Interceptions_away`, `xGA_away`, `arrets_gardien_away`, `Forme_recente_away`, `possession_away`,
-      `corners_away`, `Fautes_commises_away`
-      
-    - Colonne cible : `resultat` (0 = victoire Away, 1 = victoire Home)
+    
+    *Équipe Home (13 variables)*:
+    xG_home, Tirs_cadrés_home, Taux_conversion_home, Touches_surface_home, Passes_decisives_home,
+    Interceptions_home, Duels_defensifs_home, xGA_home, Arrêts_gardien_home, Forme_recente_home,
+    possession_home, corners_home, Fautes_commises_home
+    
+    *Équipe Away (13 variables)*:
+    xG_away, Tirs_cadrés_away, Taux_conversion_away, Touches_surface_away, Passes_decisives_away,
+    Interceptions_away, Duels_defensifs_away, xGA_away, arrets_gardien_away, Forme_recente_away,
+    possession_away, corners_away, Fautes_commises_away
+    
+    Colonne cible : resultat (1 = victoire Home, 0 = victoire Away)
     """
 )
 fichier_entrainement = st.sidebar.file_uploader("Charger le CSV d'entraînement", type=["csv"])
@@ -236,7 +237,7 @@ else:
     st.sidebar.info("Aucun fichier chargé, utilisation de données synthétiques.")
     df_entrainement = generer_donnees_foot(n_samples=200)
 
-# Liste complète des features (26 variables)
+# Liste des features (26 variables)
 features = [
     "xG_home", "Tirs_cadrés_home", "Taux_conversion_home", "Touches_surface_home", "Passes_decisives_home",
     "Interceptions_home", "Duels_defensifs_home", "xGA_home", "Arrêts_gardien_home", "Forme_recente_home",
@@ -249,12 +250,11 @@ X_reel = df_entrainement[features]
 y_reel = df_entrainement["resultat"]
 
 # =====================================
-# Pré-chargement et optimisation automatique des modèles via GridSearchCV
+# Chargement et entraînement des modèles
 # =====================================
 @st.cache_resource(show_spinner=False)
 def load_models(X, y):
     saved = load_models_from_disk()
-    # Vérification du nombre de caractéristiques pour le modèle logistique
     if saved is not None:
         if hasattr(saved["log"][0], "n_features_in_") and saved["log"][0].n_features_in_ != len(features):
             os.remove("trained_models.pkl")
@@ -308,7 +308,7 @@ modele_logistique, precision_logistique, cv_results_log = models["log"]
 modele_xgb, precision_xgb, cv_results_xgb = models["xgb"]
 modele_rf, precision_rf, cv_results_rf = models["rf"]
 
-# Affichage détaillé dans la sidebar
+# Affichage dans la sidebar
 cv_data = pd.DataFrame({
     "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
     "Précision Moyenne": [
@@ -420,7 +420,7 @@ if st.button("🔮 Prédire le Résultat"):
         possession_away, corners_away, fautes_commises_away
     ]])
     
-    # Vérifier la cohérence des dimensions
+    # Vérification de la dimension d'input
     if input_features.shape[1] != modele_logistique.n_features_in_:
         st.error(f"Erreur: Le modèle attend {modele_logistique.n_features_in_} caractéristiques, mais l'input possède {input_features.shape[1]}. Veuillez supprimer le fichier 'trained_models.pkl' pour réentraîner les modèles.")
     else:
@@ -490,19 +490,12 @@ if st.button("🔮 Prédire le Résultat"):
     
         st.markdown("## 🎯 Analyse Double Chance")
         dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
-        # Amélioration : appliquer un facteur correctif dc_factor pour ajuster la somme des probabilités
-        dc_factor = 1.0  # Vous pouvez ajuster ce facteur en fonction des données historiques
-        if dc_option == "1X (🏠 ou 🤝)":
-            dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
-        elif dc_option == "X2 (🤝 ou 🏟️)":
-            dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
-        else:  # "12 (🏠 ou 🏟️)"
-            dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
+        dc_factor = 1.0  # Facteur correctif ajustable
+        dc_prob = predire_double_chance(victoire_home, match_nul, victoire_away, option=dc_option, dc_factor=dc_factor)
     
         dc_odds = number_input_locale(f"💰 Cote - Double Chance ({dc_option})", 
                                        1.50 if dc_option=="1X (🏠 ou 🤝)" else 1.60 if dc_option=="X2 (🤝 ou 🏟️)" else 1.40, 
                                        key="dc_option")
-    
         dc_implied = 1 / dc_odds
         dc_ev, dc_recommendation = calculer_value_bet(dc_prob, dc_odds)
     
@@ -529,12 +522,15 @@ if st.button("🔮 Prédire le Résultat"):
         st.altair_chart(chart, use_container_width=True)
 
 # =====================================
-# Fonction améliorée pour prédire Double Chance
+# Fonction pour prédire la Double Chance
 # =====================================
 def predire_double_chance(prob_home, match_nul, prob_away, option, dc_factor=1.0):
     """
-    Calcule la probabilité double chance avec un facteur correctif dc_factor.
-    Option "1X (🏠 ou 🤝)" => Home win or Draw, "X2 (🤝 ou 🏟️)" => Draw or Away win, "12 (🏠 ou 🏟️)" => Home win or Away win.
+    Calcule la probabilité pour l'option Double Chance choisie.
+      - "1X (🏠 ou 🤝)" : somme des probabilités Home et Match Nul.
+      - "X2 (🤝 ou 🏟️)" : somme des probabilités Match Nul et Away.
+      - "12 (🏠 ou 🏟️)" : somme des probabilités Home et Away.
+    Applique ensuite un facteur correctif dc_factor.
     """
     if option == "1X (🏠 ou 🤝)":
         base_prob = prob_home + match_nul
