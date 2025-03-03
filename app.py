@@ -99,7 +99,7 @@ def predire_resultat_match(
     
     adj_xG_away = Ro_away / (Rd_home + 1)
     
-    # Calcul vectorisé de la distribution de buts via np.outer
+    # Calcul vectorisé de la distribution des buts via np.outer
     prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
     prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
     matrice = np.outer(prob_home, prob_away)
@@ -166,8 +166,7 @@ def generer_donnees_foot(n_samples=200):
     data["Fautes_commises_away"] = np.random.randint(8, 21, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat'
-    # Si la probabilité de victoire Home (calculée par le modèle) est supérieure ou égale à celle d'Away, label = 1 (victoire Home), sinon 0.
+    # Génération de la cible 'resultat' : victoire Home si prob Home >= prob Away, sinon victoire Away
     results = []
     for _, row in df.iterrows():
         victoire_home, victoire_away, match_nul, _, _ = predire_resultat_match(
