@@ -283,7 +283,7 @@ modele_logistique, precision_logistique, cv_results_log = models["log"]
 modele_xgb, precision_xgb, cv_results_xgb = models["xgb"]
 modele_rf, precision_rf, cv_results_rf = models["rf"]
 
-# Affichage détaillé des métriques de validation croisée et des meilleurs hyperparamètres
+# Affichage détaillé dans la sidebar
 cv_data = pd.DataFrame({
     "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
     "Précision Moyenne": [
@@ -291,14 +291,13 @@ cv_data = pd.DataFrame({
         f"{precision_xgb*100:.2f}%",
         f"{precision_rf*100:.2f}%"
     ],
-    "Best Params": [
+    "Meilleurs Paramètres": [
         get_best_params(cv_results_log),
         get_best_params(cv_results_xgb),
         get_best_params(cv_results_rf)
     ]
 })
-st.sidebar.markdown("### 📈 Métriques de Validation Croisée et Meilleurs Hyperparamètres")
-st.sidebar.table(cv_data)
+st.sidebar.dataframe(cv_data)
 
 # =====================================
 # Interface principale de saisie des données de match
@@ -413,17 +412,12 @@ if st.button("🔮 Prédire le Résultat"):
         )
     
         st.markdown("## 📊 Résultats du Modèle de Poisson")
-        data_poisson = {
-            "Mesure": [
-                "🏆 Prob. Victoire Home", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire Away",
-                "⚽ Buts attendus Home", "⚽ Buts attendus Away"
-            ],
-            "Valeur": [
-                f"{victoire_home*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_away*100:.2f}%",
-                f"{expected_buts_home:.2f}", f"{expected_buts_away:.2f}"
-            ]
-        }
-        st.table(pd.DataFrame(data_poisson))
+        data_poisson = pd.DataFrame({
+            "Mesure": ["🏆 Prob. Victoire Home", "🤝 Prob. Match Nul", "🏟️ Prob. Victoire Away", "⚽ Buts attendus Home", "⚽ Buts attendus Away"],
+            "Valeur": [f"{victoire_home*100:.2f}%", f"{match_nul*100:.2f}%", f"{victoire_away*100:.2f}%",
+                       f"{expected_buts_home:.2f}", f"{expected_buts_away:.2f}"]
+        })
+        st.table(data_poisson)
     
         st.markdown("## 🔍 Résultats des Modèles de Classification")
         proba_log = modele_logistique.predict_proba(input_features)[0][1]
@@ -435,24 +429,37 @@ if st.button("🔮 Prédire le Résultat"):
         proba_rf = modele_rf.predict_proba(input_features)[0][1]
         prediction_rf = "🏆 Victoire Home" if proba_rf > 0.5 else "🏟️ Victoire Away"
     
-        data_classif = {
+        # Création d'un tableau clair pour les modèles de classification
+        classif_data = pd.DataFrame({
             "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
             "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
             "Probabilité": [f"{proba_log*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
-            "Précision (moyenne / Best Params)": [
-                f"{precision_logistique*100:.2f}% / {get_best_params(cv_results_log)}",
-                f"{precision_xgb*100:.2f}% / {get_best_params(cv_results_xgb)}",
-                f"{precision_rf*100:.2f}% / {get_best_params(cv_results_rf)}"
+            "Précision Moyenne": [
+                f"{precision_logistique*100:.2f}%",
+                f"{precision_xgb*100:.2f}%",
+                f"{precision_rf*100:.2f}%"
+            ],
+            "Meilleurs Paramètres": [
+                get_best_params(cv_results_log),
+                get_best_params(cv_results_xgb),
+                get_best_params(cv_results_rf)
             ]
-        }
-        st.table(pd.DataFrame(data_classif))
+        })
+        st.dataframe(classif_data)
     
         st.markdown("## 🎲 Analyse Value Bet")
         outcomes = ["🏆 Victoire Home", "🤝 Match Nul", "🏟️ Victoire Away"]
         bookmaker_cotes = [cote_A, cote_N, cote_B]
         predicted_probs = [victoire_home, match_nul, victoire_away]
     
-        value_bet_data = {"Issue": [], "Cote Bookmaker": [], "Prob. Impliquée": [], "Prob. Prédite": [], "Valeur Espérée": [], "Value Bet ?": []}
+        value_bet_data = {
+            "Issue": [],
+            "Cote Bookmaker": [],
+            "Prob. Impliquée": [],
+            "Prob. Prédite": [],
+            "Valeur Espérée": [],
+            "Value Bet ?": []
+        }
         for outcome, cote, prob in zip(outcomes, bookmaker_cotes, predicted_probs):
             prob_implied = 1 / cote
             ev, recommendation = calculer_value_bet(prob, cote)
@@ -462,7 +469,7 @@ if st.button("🔮 Prédire le Résultat"):
             value_bet_data["Prob. Prédite"].append(f"{prob*100:.2f}%")
             value_bet_data["Valeur Espérée"].append(f"{ev:.2f}")
             value_bet_data["Value Bet ?"].append(recommendation)
-        st.table(pd.DataFrame(value_bet_data))
+        st.dataframe(pd.DataFrame(value_bet_data))
     
         st.markdown("## 🎯 Analyse Double Chance")
         dc_option = st.selectbox("Sélectionnez l'option Double Chance", ["1X (🏠 ou 🤝)", "X2 (🤝 ou 🏟️)", "12 (🏠 ou 🏟️)"])
@@ -479,15 +486,15 @@ if st.button("🔮 Prédire le Résultat"):
         dc_implied = 1 / dc_odds
         dc_ev, dc_recommendation = calculer_value_bet(dc_prob, dc_odds)
     
-        dc_data = {
+        dc_data = pd.DataFrame({
             "Option": [dc_option],
             "Cote": [dc_odds],
             "Prob. Impliquée": [f"{dc_implied*100:.2f}%"],
             "Prob. Prédite": [f"{dc_prob*100:.2f}%"],
             "Valeur Espérée": [f"{dc_ev:.2f}"],
             "Double Chance": [dc_recommendation]
-        }
-        st.table(pd.DataFrame(dc_data))
+        })
+        st.dataframe(dc_data)
     
         buts_data = pd.DataFrame({
             "Buts": list(range(0, 6)),
