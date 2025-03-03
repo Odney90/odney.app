@@ -29,6 +29,20 @@ def number_input_locale(label, value, key=None):
         return value
 
 # =====================================
+# Fonction auxiliaire pour récupérer les meilleurs hyperparamètres
+# =====================================
+def get_best_params(cv_results):
+    """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score' ou 'mean_validation_score'."""
+    if 'mean_test_score' in cv_results:
+        mean_scores = cv_results['mean_test_score']
+    elif 'mean_validation_score' in cv_results:
+        mean_scores = cv_results['mean_validation_score']
+    else:
+        return "N/A"
+    best_index = np.argmax(mean_scores)
+    return cv_results['params'][best_index]
+
+# =====================================
 # Fonctions de base et optimisations
 # =====================================
 def poisson_prob(lam, k):
@@ -36,18 +50,17 @@ def poisson_prob(lam, k):
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
 
 def predire_resultat_match(
-    # Variables pour l'équipe Home (13 variables)
+    # Variables pour l'équipe Home (Domicile) – 13 variables
     xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_cles_home,
     interceptions_home, xGA_home, arrets_gardien_home, forme_recente_home, Points_5_matchs_home,
     possession_home, corners_home, fautes_commises_home,
-    # Variables pour l'équipe Away (13 variables)
+    # Variables pour l'équipe Away (Extérieur) – 13 variables
     xG_away, tirs_cadrés_away, taux_conversion_away, touches_surface_away, passes_cles_away,
     interceptions_away, xGA_away, arrets_gardien_away, forme_recente_away, Points_5_matchs_away,
     possession_away, corners_away, fautes_commises_away,
     max_buts=5
 ):
     # Calcul de la note offensive pour Home (à domicile)
-    # On ajoute Points_5_matchs_home pour refléter la forme récente globale
     Ro_home = (0.3 * xG_home +
                0.2 * tirs_cadrés_home +
                0.1 * (taux_conversion_home / 100) +
@@ -68,7 +81,7 @@ def predire_resultat_match(
     
     adj_xG_home = Ro_home / (Rd_away + 1)
     
-    # Pour l'équipe Away, calcul de la note offensive
+    # Calcul de la note offensive pour Away (à l'extérieur)
     Ro_away = (0.3 * xG_away +
                0.2 * tirs_cadrés_away +
                0.1 * (taux_conversion_away / 100) +
@@ -89,7 +102,7 @@ def predire_resultat_match(
     
     adj_xG_away = Ro_away / (Rd_home + 1)
     
-    # Calcul vectorisé de la distribution de buts via np.outer
+    # Calcul vectorisé de la distribution des buts via np.outer
     prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
     prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
     matrice = np.outer(prob_home, prob_away)
@@ -121,8 +134,7 @@ def load_models_from_disk():
     return None
 
 # =====================================
-# Génération de données d'entraînement synthétiques réalistes
-# (Données moyennes par match)
+# Génération de données d'entraînement synthétiques réalistes (moyennes par match)
 # =====================================
 def generer_donnees_foot(n_samples=200):
     data = {}
@@ -157,8 +169,7 @@ def generer_donnees_foot(n_samples=200):
     data["Fautes_commises_away"] = np.random.randint(8, 21, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat' : si la performance Home (en calculant la probabilité de victoire Home)
-    # est supérieure ou égale à celle d'Away, alors label = 1 (victoire Home), sinon 0 (victoire Away)
+    # Génération de la cible 'resultat' : victoire Home si la probabilité Home >= Away, sinon victoire Away
     results = []
     for _, row in df.iterrows():
         victoire_home, victoire_away, match_nul, _, _ = predire_resultat_match(
@@ -213,18 +224,6 @@ features = [
 ]
 X_reel = df_entrainement[features]
 y_reel = df_entrainement["resultat"]
-
-# =====================================
-# Fonction auxiliaire pour récupérer les meilleurs hyperparamètres
-# =====================================
-def get_best_params(cv_results):
-    """Renvoie les meilleurs hyperparamètres en se basant sur 'mean_test_score'."""
-    mean_scores = cv_results.get('mean_test_score', None)
-    if mean_scores is None:
-        return "N/A"
-    else:
-        best_index = np.argmax(mean_scores)
-        return cv_results['params'][best_index]
 
 # =====================================
 # Pré-chargement et optimisation automatique des modèles via GridSearchCV
