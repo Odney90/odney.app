@@ -9,7 +9,7 @@ import pickle
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import KFold, cross_val_score, GridSearchCV
 from sklearn.metrics import accuracy_score
 
 # =====================================
@@ -49,7 +49,7 @@ def predire_resultat_match(
     fautes_commises_away, cartons_jaunes_away, passes_decisives_away, taux_reussite_passes_away, coups_frais_away,
     max_buts=5
 ):
-    # Calcul du score offensif pour l'équipe Home (en jouant à domicile)
+    # Calcul du score offensif pour l'équipe Home (à domicile)
     note_offensive_home = (
         xG_home * 0.2 +
         tirs_cadrés_home * 0.15 +
@@ -62,7 +62,7 @@ def predire_resultat_match(
         (possession_home / 100) * 0.1 +
         (corners_home / 10) * 0.15
     )
-    # Pour l'adversaire, on utilisera ses stats à l'extérieur
+    # Pour l'adversaire, on utilise ses stats à l'extérieur
     note_defensive_away = (
         xGA_away * 0.2 +
         arrets_gardien_away * 0.15 +
@@ -76,7 +76,7 @@ def predire_resultat_match(
     multiplicateur_home = 1 + (forme_recente_home / 10) + (points_5_matchs_home / 15)
     adj_xG_home = (note_offensive_home * multiplicateur_home) / (note_defensive_away + 1)
     
-    # Calcul du score offensif pour l'équipe Away (en jouant à l'extérieur)
+    # Calcul du score offensif pour l'équipe Away (à l'extérieur)
     note_offensive_away = (
         xG_away * 0.2 +
         tirs_cadrés_away * 0.15 +
@@ -89,7 +89,7 @@ def predire_resultat_match(
         (possession_away / 100) * 0.1 +
         (corners_away / 10) * 0.15
     )
-    # Pour l'équipe adverse (Home), on utilise ses stats à domicile
+    # Pour l'équipe Home, on utilise ses stats à domicile pour l'aspect défensif
     note_defensive_home = (
         xGA_home * 0.2 +
         arrets_gardien_home * 0.15 +
@@ -180,7 +180,7 @@ def generer_donnees_foot(n_samples=200):
     data["Coups_frais_away"] = np.random.randint(0, 6, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat' en comparant les performances de Home vs Away
+    # Génération de la cible 'resultat' en comparant les performances Home vs Away
     results = []
     for _, row in df.iterrows():
         victoire_home, victoire_away, match_nul, _, _ = predire_resultat_match(
@@ -241,7 +241,7 @@ X_reel = df_entrainement[features]
 y_reel = df_entrainement["resultat"]
 
 # =====================================
-# Pré-chargement et sauvegarde des modèles
+# Pré-chargement et optimisation automatique des modèles via GridSearchCV
 # =====================================
 @st.cache_resource(show_spinner=False)
 def load_models(X, y):
@@ -249,53 +249,61 @@ def load_models(X, y):
     if saved is not None:
         return saved
     else:
-        model_log, prec_log, cv_scores_log = entrainer_modele_logistique(X, y)
-        model_xgb, prec_xgb, cv_scores_xgb = entrainer_modele_xgb(X, y)
-        model_rf, prec_rf, cv_scores_rf = entrainer_modele_rf(X, y)
+        model_log, best_score_log, cv_results_log = entrainer_modele_logistique(X, y)
+        model_xgb, best_score_xgb, cv_results_xgb = entrainer_modele_xgb(X, y)
+        model_rf, best_score_rf, cv_results_rf = entrainer_modele_rf(X, y)
         models = {
-            "log": (model_log, prec_log, cv_scores_log),
-            "xgb": (model_xgb, prec_xgb, cv_scores_xgb),
-            "rf": (model_rf, prec_rf, cv_scores_rf)
+            "log": (model_log, best_score_log, cv_results_log),
+            "xgb": (model_xgb, best_score_xgb, cv_results_xgb),
+            "rf": (model_rf, best_score_rf, cv_results_rf)
         }
         save_models_to_disk(models)
         return models
 
 @st.cache_resource(show_spinner=False)
 def entrainer_modele_logistique(X, y):
-    model = LogisticRegression(max_iter=1000)
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    cv_scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
-    model.fit(X, y)
-    return model, np.mean(cv_scores), cv_scores
+    from sklearn.model_selection import GridSearchCV
+    param_grid = {'C': [0.01, 0.1, 1, 10, 100], 'penalty': ['l1', 'l2']}
+    lr = LogisticRegression(max_iter=1000, solver='liblinear')
+    grid = GridSearchCV(lr, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+    grid.fit(X, y)
+    return grid.best_estimator_, grid.best_score_, grid.cv_results_
 
 @st.cache_resource(show_spinner=False)
 def entrainer_modele_xgb(X, y):
-    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    cv_scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
-    model.fit(X, y)
-    return model, np.mean(cv_scores), cv_scores
+    from sklearn.model_selection import GridSearchCV
+    param_grid = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7], 'learning_rate': [0.01, 0.1, 0.2], 'subsample': [0.7, 1.0]}
+    xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    grid = GridSearchCV(xgb, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+    grid.fit(X, y)
+    return grid.best_estimator_, grid.best_score_, grid.cv_results_
 
 @st.cache_resource(show_spinner=False)
 def entrainer_modele_rf(X, y):
-    model = RandomForestClassifier(random_state=42)
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    cv_scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
-    model.fit(X, y)
-    return model, np.mean(cv_scores), cv_scores
+    from sklearn.model_selection import GridSearchCV
+    param_grid = {'n_estimators': [50, 100, 200], 'max_depth': [None, 10, 20, 30],
+                  'max_features': ['sqrt', 'log2'], 'min_samples_split': [2, 5, 10]}
+    rf = RandomForestClassifier(random_state=42)
+    grid = GridSearchCV(rf, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+    grid.fit(X, y)
+    return grid.best_estimator_, grid.best_score_, grid.cv_results_
 
 models = load_models(X_reel, y_reel)
-modele_logistique, precision_logistique, cv_scores_log = models["log"]
-modele_xgb, precision_xgb, cv_scores_xgb = models["xgb"]
-modele_rf, precision_rf, cv_scores_rf = models["rf"]
+modele_logistique, precision_logistique, cv_results_log = models["log"]
+modele_xgb, precision_xgb, cv_results_xgb = models["xgb"]
+modele_rf, precision_rf, cv_results_rf = models["rf"]
 
 # Affichage détaillé des métriques de validation croisée
 cv_data = pd.DataFrame({
     "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
     "Précision Moyenne": [f"{precision_logistique*100:.2f}%", f"{precision_xgb*100:.2f}%", f"{precision_rf*100:.2f}%"],
-    "CV Scores": [str(cv_scores_log), str(cv_scores_xgb), str(cv_scores_rf)]
+    "Best Params": [
+        cv_results_log['params'][np.argmax(cv_results_log['mean_test_score'])],
+        cv_results_xgb['params'][np.argmax(cv_results_xgb['mean_test_score'])],
+        cv_results_rf['params'][np.argmax(cv_results_rf['mean_test_score'])]
+    ]
 })
-st.sidebar.markdown("### 📈 Métriques de Validation Croisée")
+st.sidebar.markdown("### 📈 Métriques de Validation Croisée et Meilleurs Hyperparamètres")
 st.sidebar.table(cv_data)
 
 # =====================================
@@ -454,9 +462,9 @@ if st.button("🔮 Prédire le Résultat"):
         "Prédiction": [prediction_log, prediction_xgb, prediction_rf],
         "Probabilité": [f"{proba_log*100:.2f}%", f"{proba_xgb*100:.2f}%", f"{proba_rf*100:.2f}%"],
         "Précision (moyenne / CV scores)": [
-            f"{precision_logistique*100:.2f}% / {cv_scores_log}",
-            f"{precision_xgb*100:.2f}% / {cv_scores_xgb}",
-            f"{precision_rf*100:.2f}% / {cv_scores_rf}"
+            f"{precision_logistique*100:.2f}% / {cv_results_log['mean_test_score'][np.argmax(cv_results_log['mean_test_score'])]}",
+            f"{precision_xgb*100:.2f}% / {cv_results_xgb['mean_test_score'][np.argmax(cv_results_xgb['mean_test_score'])]}",
+            f"{precision_rf*100:.2f}% / {cv_results_rf['mean_test_score'][np.argmax(cv_results_rf['mean_test_score'])]}"
         ]
     }
     st.table(pd.DataFrame(data_classif))
