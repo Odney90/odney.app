@@ -13,24 +13,22 @@ from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import accuracy_score
 
 # =====================================
-# Fonctions de base
+# Fonctions de base et optimisations
 # =====================================
 def poisson_prob(lam, k):
     """Calcule la probabilité d'obtenir k buts selon la loi de Poisson."""
     return (np.exp(-lam) * (lam ** k)) / math.factorial(k)
 
 def predire_resultat_match(
-    # Variables Équipe A (Domicile) – 13 variables initiales
+    # Variables Équipe A (Domicile) – 18 variables (13 initiales + 5 nouvelles)
     xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
     interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
     possession_A, corners_A,
-    # Nouvelles variables pour l'Équipe A
     fautes_commises_A, cartons_jaunes_A, passes_decisives_A, taux_reussite_passes_A, coups_frais_A,
-    # Variables Équipe B (Extérieur) – 13 variables initiales
+    # Variables Équipe B (Extérieur) – 18 variables (13 initiales + 5 nouvelles)
     xG_B, tirs_cadrés_B, taux_conversion_B, touches_surface_B, passes_cles_B,
     interceptions_B, duels_defensifs_B, xGA_B, arrets_gardien_B, forme_recente_B, points_5_matchs_B,
     possession_B, corners_B,
-    # Nouvelles variables pour l'Équipe B
     fautes_commises_B, cartons_jaunes_B, passes_decisives_B, taux_reussite_passes_B, coups_frais_B,
     max_buts=5
 ):
@@ -47,7 +45,6 @@ def predire_resultat_match(
         (possession_A / 100) * 0.1 +
         (corners_A / 10) * 0.15
     )
-    # Le côté défensif de l'adversaire influence la performance offensive
     note_defensive_B = (
         xGA_B * 0.2 +
         arrets_gardien_B * 0.15 +
@@ -87,23 +84,15 @@ def predire_resultat_match(
     multiplicateur_B = 1 + (forme_recente_B / 10) + (points_5_matchs_B / 15)
     adj_xG_B = (note_offensive_B * multiplicateur_B) / (note_defensive_A + 1)
     
-    # Distribution des buts selon la loi de Poisson
-    prob_A = [poisson_prob(adj_xG_A, i) for i in range(max_buts+1)]
-    prob_B = [poisson_prob(adj_xG_B, i) for i in range(max_buts+1)]
-    
-    victoire_A, victoire_B, match_nul = 0, 0, 0
-    for i in range(max_buts+1):
-        for j in range(max_buts+1):
-            p = prob_A[i] * prob_B[j]
-            if i > j:
-                victoire_A += p
-            elif i < j:
-                victoire_B += p
-            else:
-                match_nul += p
-                
-    expected_buts_A = sum(i * prob_A[i] for i in range(max_buts+1))
-    expected_buts_B = sum(i * prob_B[i] for i in range(max_buts+1))
+    # Calcul vectorisé de la distribution de buts via np.outer
+    prob_A = np.array([poisson_prob(adj_xG_A, i) for i in range(max_buts+1)])
+    prob_B = np.array([poisson_prob(adj_xG_B, i) for i in range(max_buts+1)])
+    matrice = np.outer(prob_A, prob_B)
+    victoire_A = np.sum(np.triu(matrice, k=1))
+    victoire_B = np.sum(np.tril(matrice, k=-1))
+    match_nul = np.sum(np.diag(matrice))
+    expected_buts_A = np.sum(np.arange(max_buts+1) * prob_A)
+    expected_buts_B = np.sum(np.arange(max_buts+1) * prob_B)
     
     return victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B
 
@@ -114,7 +103,7 @@ def calculer_value_bet(prob, cote):
     return ev, recommendation
 
 # =====================================
-# Gestion de la sauvegarde des modèles sur disque
+# Sauvegarde et chargement des modèles sur disque
 # =====================================
 def save_models_to_disk(models):
     with open("trained_models.pkl", "wb") as f:
@@ -174,9 +163,9 @@ def generer_donnees_foot(n_samples=200):
     data["Coups_frais_B"] = np.random.randint(0, 6, n_samples)
     
     df = pd.DataFrame(data)
-    # Génération de la cible 'resultat' en se basant sur la comparaison des probabilités
+    # Génération de la cible 'resultat'
     results = []
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
         victoire_A, victoire_B, match_nul, _, _ = predire_resultat_match(
             row["xG_A"], row["Tirs_cadrés_A"], row["Taux_conversion_A"], row["Touches_surface_A"], row["Passes_clés_A"],
             row["Interceptions_A"], row["Duels_defensifs_A"], row["xGA_A"], row["Arrêts_gardien_A"], row["Forme_recente_A"], row["Points_5_matchs_A"],
@@ -187,8 +176,7 @@ def generer_donnees_foot(n_samples=200):
             row["possession_B"], row["corners_B"],
             row["Fautes_commises_B"], row["Cartons_jaunes_B"], row["Passes_decisives_B"], row["Taux_reussite_passes_B"], row["Coups_frais_B"]
         )
-        label = 1 if victoire_A >= victoire_B else 0
-        results.append(label)
+        results.append(1 if victoire_A >= victoire_B else 0)
     df["resultat"] = results
     return df
 
@@ -284,7 +272,7 @@ modele_logistique, precision_logistique, cv_scores_log = models["log"]
 modele_xgb, precision_xgb, cv_scores_xgb = models["xgb"]
 modele_rf, precision_rf, cv_scores_rf = models["rf"]
 
-# Affichage des métriques de validation croisée détaillées
+# Affichage détaillé des métriques de validation croisée
 cv_data = pd.DataFrame({
     "Modèle": ["Régression Logistique", "XGBoost", "Random Forest"],
     "Précision Moyenne": [f"{precision_logistique*100:.2f}%", f"{precision_xgb*100:.2f}%", f"{precision_rf*100:.2f}%"],
@@ -305,7 +293,6 @@ col1, col2 = st.columns(2)
 with col1:
     st.header("🏠 Équipe A (Domicile)")
     if use_fictives:
-        # Variables initiales
         xG_A = round(random.uniform(0.5, 2.5), 2)
         tirs_cadrés_A = float(random.randint(2, 10))
         taux_conversion_A = round(random.uniform(20, 40), 2)
@@ -319,7 +306,6 @@ with col1:
         points_5_matchs_A = float(random.randint(5, 15))
         possession_A = round(random.uniform(45, 70), 2)
         corners_A = float(random.randint(3, 10))
-        # Nouvelles variables pour l'équipe A
         fautes_commises_A = float(random.randint(8, 20))
         cartons_jaunes_A = float(random.randint(0, 3))
         passes_decisives_A = float(random.randint(0, 5))
@@ -340,7 +326,6 @@ with col1:
         points_5_matchs_A = st.number_input("📊 Points 5 derniers matchs (A)", value=8.00, format="%.2f")
         possession_A = st.number_input("📈 Possession (Équipe A)", value=55.00, format="%.2f")
         corners_A = st.number_input("⚽ Corners (Équipe A)", value=5.00, format="%.2f")
-        # Nouvelles variables pour l'équipe A
         fautes_commises_A = st.number_input("⚽ Fautes commises (Équipe A)", value=12, step=1)
         cartons_jaunes_A = st.number_input("🟡 Cartons jaunes (Équipe A)", value=1, step=1)
         passes_decisives_A = st.number_input("🎯 Passes décisives (Équipe A)", value=2, step=1)
@@ -402,7 +387,7 @@ with col_odds3:
 # Prédictions et affichage des résultats
 # =====================================
 if st.button("🔮 Prédire le Résultat"):
-    # Prédiction via le modèle de Poisson en passant l'ensemble des 36 variables
+    # Prédiction via le modèle de Poisson (en passant 36 variables)
     victoire_A, victoire_B, match_nul, expected_buts_A, expected_buts_B = predire_resultat_match(
         xG_A, tirs_cadrés_A, taux_conversion_A, touches_surface_A, passes_cles_A,
         interceptions_A, duels_defensifs_A, xGA_A, arrets_gardien_A, forme_recente_A, points_5_matchs_A,
