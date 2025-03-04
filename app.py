@@ -64,8 +64,8 @@ def predire_resultat_match(
 
     # --- Calcul des scores offensifs et défensifs ---
     # Pour l'équipe Home, on pondère davantage le xG et on ajoute une petite contribution des corners
-    Ro_home = (0.35 * xG_home_adj +
-               0.25 * tirs_cadrés_home +
+    Ro_home = (0.25 * xG_home_adj +
+               0.20 * tirs_cadrés_home +
                0.10 * (taux_conversion_home / 100) +
                0.10 * touches_surface_home +
                0.10 * passes_decisives_home +
@@ -74,19 +74,19 @@ def predire_resultat_match(
                0.02 * (corners_home / 10))
     
     # Pour l'équipe Away, on calcule la défense en tenant compte de l'efficacité générale
-    Rd_away = (0.30 * xGA_away +
+    Rd_away = (0.25 * xGA_away +
                0.25 * arrets_gardien_away +
-               0.10 * interceptions_away +
+               0.15 * interceptions_away +
                0.10 * duels_defensifs_away +
                0.05 * fautes_commises_away +
                0.02 * (corners_away / 10))
     
-    # Le λ (buts attendus) pour Home est obtenu en ajoutant un offset (ici +1) pour éviter des valeurs trop faibles
+    # Le λ (buts attendus) pour Home est obtenu en ajoutant un offset (ici +0.5) pour éviter des valeurs trop faibles
     adj_xG_home = (Ro_home + 1) / (Rd_away + 1)
     
     # Même démarche pour l'équipe Away
-    Ro_away = (0.35 * xG_away +
-               0.25 * tirs_cadrés_away +
+    Ro_away = (0.25 * xG_away +
+               0.20 * tirs_cadrés_away +
                0.10 * (taux_conversion_away / 100) +
                0.10 * touches_surface_away +
                0.10 * passes_decisives_away +
