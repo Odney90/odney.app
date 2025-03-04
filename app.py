@@ -62,47 +62,48 @@ def predire_resultat_match(
     # Ajustement du xG Home avec l'avantage du terrain
     xG_home_adj = xG_home * home_advantage
 
-    # Calcul de la note offensive pour Home (à domicile)
-    Ro_home = (0.25 * xG_home_adj +
-               0.20 * tirs_cadrés_home +
+    # --- Calcul des scores offensifs et défensifs ---
+    # Pour l'équipe Home, on pondère davantage le xG et on ajoute une petite contribution des corners
+    Ro_home = (0.35 * xG_home_adj +
+               0.25 * tirs_cadrés_home +
                0.10 * (taux_conversion_home / 100) +
                0.10 * touches_surface_home +
                0.10 * passes_decisives_home +
                0.05 * forme_recente_home +
                0.05 * (possession_home / 100) +
-               0.05 * (corners_home / 10))
+               0.02 * (corners_home / 10))
     
-    # Calcul de la note défensive pour Away (en déplacement)
-    Rd_away = (0.25 * xGA_away +
-               0.20 * arrets_gardien_away +
+    # Pour l'équipe Away, on calcule la défense en tenant compte de l'efficacité générale
+    Rd_away = (0.30 * xGA_away +
+               0.25 * arrets_gardien_away +
                0.10 * interceptions_away +
                0.10 * duels_defensifs_away +
-               0.05 * (corners_away / 10) +
-               0.05 * fautes_commises_away)
+               0.05 * fautes_commises_away +
+               0.02 * (corners_away / 10))
     
-    adj_xG_home = Ro_home / (Rd_away + 1)
+    # Le λ (buts attendus) pour Home est obtenu en ajoutant un offset (ici +1) pour éviter des valeurs trop faibles
+    adj_xG_home = (Ro_home + 1) / (Rd_away + 1)
     
-    # Calcul de la note offensive pour Away (à l'extérieur)
-    Ro_away = (0.25 * xG_away +
-               0.20 * tirs_cadrés_away +
+    # Même démarche pour l'équipe Away
+    Ro_away = (0.35 * xG_away +
+               0.25 * tirs_cadrés_away +
                0.10 * (taux_conversion_away / 100) +
                0.10 * touches_surface_away +
                0.10 * passes_decisives_away +
                0.05 * forme_recente_away +
                0.05 * (possession_away / 100) +
-               0.05 * (corners_away / 10))
+               0.02 * (corners_away / 10))
     
-    # Calcul de la note défensive pour Home
-    Rd_home = (0.25 * xGA_home +
-               0.20 * arrets_gardien_home +
+    Rd_home = (0.30 * xGA_home +
+               0.25 * arrets_gardien_home +
                0.10 * interceptions_home +
                0.10 * duels_defensifs_home +
-               0.05 * (corners_home / 10) +
-               0.05 * fautes_commises_home)
+               0.05 * fautes_commises_home +
+               0.02 * (corners_home / 10))
     
-    adj_xG_away = Ro_away / (Rd_home + 1)
+    adj_xG_away = (Ro_away + 1) / (Rd_home + 1)
     
-    # Calcul des distributions de buts via np.outer
+    # --- Calcul des distributions de buts ---
     prob_home = np.array([poisson_prob(adj_xG_home, i) for i in range(max_buts+1)])
     prob_away = np.array([poisson_prob(adj_xG_away, i) for i in range(max_buts+1)])
     matrice = np.outer(prob_home, prob_away)
@@ -411,7 +412,7 @@ with col_odds3:
 # =====================================
 if st.button("🔮 Prédire le Résultat"):
     # Préparation de l'input_features (forme (1, 26))
-    input_features = np.array([[
+    input_features = np.array([[ 
         xG_home, tirs_cadrés_home, taux_conversion_home, touches_surface_home, passes_decisives_home,
         interceptions_home, duels_defensifs_home, xGA_home, arrets_gardien_home, forme_recente_home,
         possession_home, corners_home, fautes_commises_home,
@@ -520,24 +521,3 @@ if st.button("🔮 Prédire le Résultat"):
             color=alt.value("#4CAF50")
         ).properties(title="Distribution des buts attendus - Équipe Home")
         st.altair_chart(chart, use_container_width=True)
-
-# =====================================
-# Fonction pour prédire la Double Chance
-# =====================================
-def predire_double_chance(prob_home, match_nul, prob_away, option, dc_factor=1.0):
-    """
-    Calcule la probabilité pour l'option Double Chance choisie.
-      - "1X (🏠 ou 🤝)" : somme des probabilités Home et Match Nul.
-      - "X2 (🤝 ou 🏟️)" : somme des probabilités Match Nul et Away.
-      - "12 (🏠 ou 🏟️)" : somme des probabilités Home et Away.
-    Applique ensuite un facteur correctif dc_factor.
-    """
-    if option == "1X (🏠 ou 🤝)":
-        base_prob = prob_home + match_nul
-    elif option == "X2 (🤝 ou 🏟️)":
-        base_prob = match_nul + prob_away
-    elif option == "12 (🏠 ou 🏟️)":
-        base_prob = prob_home + prob_away
-    else:
-        base_prob = 0
-    return dc_factor * base_prob
